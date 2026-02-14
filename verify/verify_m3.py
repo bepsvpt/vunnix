@@ -1712,6 +1712,203 @@ checker.check(
     ),
 )
 
+# ============================================================
+#  T61: Vue SPA Scaffold
+# ============================================================
+section("T61: Vue SPA Scaffold")
+
+# Vue 3 + Vite + Pinia + Vue Router installed
+checker.check(
+    "Vue 3 is installed in package.json",
+    file_contains("package.json", '"vue"'),
+)
+checker.check(
+    "Vue Router is installed",
+    file_contains("package.json", '"vue-router"'),
+)
+checker.check(
+    "Pinia is installed",
+    file_contains("package.json", '"pinia"'),
+)
+checker.check(
+    "Vitest is installed",
+    file_contains("package.json", '"vitest"'),
+)
+checker.check(
+    "@vue/test-utils is installed",
+    file_contains("package.json", '"@vue/test-utils"'),
+)
+checker.check(
+    "@vitejs/plugin-vue is installed",
+    file_contains("package.json", '"@vitejs/plugin-vue"'),
+)
+checker.check(
+    "markdown-it is installed",
+    file_contains("package.json", '"markdown-it"'),
+)
+
+# Vite config includes Vue plugin
+checker.check(
+    "Vite config imports Vue plugin",
+    file_contains("vite.config.js", "@vitejs/plugin-vue"),
+)
+checker.check(
+    "Vite config uses Vue plugin",
+    file_contains("vite.config.js", "vue("),
+)
+
+# Vitest config exists
+checker.check(
+    "Vitest config file exists",
+    file_exists("vitest.config.js"),
+)
+checker.check(
+    "Vitest uses jsdom environment",
+    file_contains("vitest.config.js", "jsdom"),
+)
+
+# SPA Blade template
+checker.check(
+    "SPA Blade template exists",
+    file_exists("resources/views/app.blade.php"),
+)
+checker.check(
+    "SPA template has Vue mount point",
+    file_contains("resources/views/app.blade.php", 'id="app"'),
+)
+checker.check(
+    "SPA template uses Vite directive",
+    file_contains("resources/views/app.blade.php", "@vite"),
+)
+
+# Catch-all route for history mode
+checker.check(
+    "Web routes include SPA catch-all",
+    file_contains("routes/web.php", "{any}"),
+)
+checker.check(
+    "Catch-all returns app view",
+    file_contains("routes/web.php", "view('app')"),
+)
+
+# Vue app entry point
+checker.check(
+    "App entry point mounts Vue app",
+    file_contains("resources/js/app.js", "createApp"),
+)
+checker.check(
+    "App entry point uses Pinia",
+    file_contains("resources/js/app.js", "createPinia"),
+)
+checker.check(
+    "App entry point uses router",
+    file_contains("resources/js/app.js", "app.use(router)"),
+)
+
+# Root App.vue component
+checker.check(
+    "Root App.vue exists",
+    file_exists("resources/js/App.vue"),
+)
+checker.check(
+    "App.vue includes router-view",
+    file_contains("resources/js/App.vue", "router-view"),
+)
+checker.check(
+    "App.vue imports AppNavigation",
+    file_contains("resources/js/App.vue", "AppNavigation"),
+)
+
+# Router with history mode
+checker.check(
+    "Router config exists",
+    file_exists("resources/js/router/index.js"),
+)
+checker.check(
+    "Router uses createWebHistory (history mode)",
+    file_contains("resources/js/router/index.js", "createWebHistory"),
+)
+checker.check(
+    "Router has chat route",
+    file_contains("resources/js/router/index.js", "'/chat'"),
+)
+checker.check(
+    "Router has dashboard route",
+    file_contains("resources/js/router/index.js", "'/dashboard'"),
+)
+checker.check(
+    "Router has admin route",
+    file_contains("resources/js/router/index.js", "'/admin'"),
+)
+checker.check(
+    "Root path redirects to /chat",
+    file_contains("resources/js/router/index.js", "redirect"),
+)
+
+# Three page components
+checker.check(
+    "ChatPage component exists",
+    file_exists("resources/js/pages/ChatPage.vue"),
+)
+checker.check(
+    "DashboardPage component exists",
+    file_exists("resources/js/pages/DashboardPage.vue"),
+)
+checker.check(
+    "AdminPage component exists",
+    file_exists("resources/js/pages/AdminPage.vue"),
+)
+
+# Navigation component
+checker.check(
+    "AppNavigation component exists",
+    file_exists("resources/js/components/AppNavigation.vue"),
+)
+checker.check(
+    "Navigation uses script setup",
+    file_contains("resources/js/components/AppNavigation.vue", "<script setup>"),
+)
+checker.check(
+    "Navigation includes mobile hamburger menu",
+    file_contains(
+        "resources/js/components/AppNavigation.vue", "mobileMenuOpen"
+    ),
+)
+checker.check(
+    "Navigation uses responsive breakpoint (md:hidden or md:flex)",
+    file_contains("resources/js/components/AppNavigation.vue", "md:"),
+)
+
+# Auth store placeholder
+checker.check(
+    "Auth Pinia store exists",
+    file_exists("resources/js/stores/auth.js"),
+)
+checker.check(
+    "Auth store uses defineStore",
+    file_contains("resources/js/stores/auth.js", "defineStore"),
+)
+
+# Tailwind scans Vue files
+checker.check(
+    "Tailwind CSS scans Vue files",
+    file_contains("resources/css/app.css", "*.vue"),
+)
+
+# Vitest tests exist
+checker.check(
+    "Router tests exist",
+    file_exists("resources/js/router/index.test.js"),
+)
+checker.check(
+    "App component tests exist",
+    file_exists("resources/js/App.test.js"),
+)
+checker.check(
+    "Navigation component tests exist",
+    file_exists("resources/js/components/AppNavigation.test.js"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()
