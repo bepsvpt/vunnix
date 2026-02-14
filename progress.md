@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 28 / 116 (24%)
-- **Current Task:** T29 — Runner result API endpoint
-- **Last Verified:** T28
+- **Tasks Complete:** 29 / 116 (25%)
+- **Current Task:** T30 — Structured output schema — code review
+- **Last Verified:** T29
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (17/35)
+## M2 — Path A Functional (18/35)
 
 ### Webhook & Event Routing
 
@@ -53,8 +53,8 @@
 
 ### Runner ↔ Vunnix Interface
 
-- [ ] **T29:** Runner result API endpoint [Depends: T15, T18]
-- [ ] T30: Structured output schema — code review [Depends: —]
+- [x] T29: Runner result API endpoint [Depends: T15, T18]
+- [ ] **T30:** Structured output schema — code review [Depends: —]
 - [ ] T31: Structured output schema — feature dev + UI adjustment [Depends: —]
 
 ### Result Processor

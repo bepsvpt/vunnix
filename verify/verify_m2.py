@@ -2248,6 +2248,239 @@ checker.check(
 )
 
 # ============================================================
+#  T29: Runner result API endpoint
+# ============================================================
+section("T29: Runner Result API Endpoint")
+
+# API route file
+checker.check(
+    "API routes file exists",
+    file_exists("routes/api.php"),
+)
+checker.check(
+    "API routes define tasks result endpoint",
+    file_contains("routes/api.php", "tasks/{task}/result"),
+)
+checker.check(
+    "API routes use v1 prefix",
+    file_contains("routes/api.php", "v1"),
+)
+checker.check(
+    "API routes use task.token middleware",
+    file_contains("routes/api.php", "task.token"),
+)
+
+# Route registration in bootstrap/app.php
+checker.check(
+    "API routes registered in bootstrap/app.php",
+    file_contains("bootstrap/app.php", "api:"),
+)
+checker.check(
+    "task.token middleware alias registered",
+    file_contains("bootstrap/app.php", "task.token"),
+)
+checker.check(
+    "AuthenticateTaskToken middleware referenced",
+    file_contains("bootstrap/app.php", "AuthenticateTaskToken"),
+)
+
+# AuthenticateTaskToken middleware
+checker.check(
+    "AuthenticateTaskToken middleware exists",
+    file_exists("app/Http/Middleware/AuthenticateTaskToken.php"),
+)
+checker.check(
+    "Middleware validates bearer token",
+    file_contains(
+        "app/Http/Middleware/AuthenticateTaskToken.php",
+        "bearerToken",
+    ),
+)
+checker.check(
+    "Middleware uses TaskTokenService for validation",
+    file_contains(
+        "app/Http/Middleware/AuthenticateTaskToken.php",
+        "TaskTokenService",
+    ),
+)
+checker.check(
+    "Middleware returns 401 on invalid token",
+    file_contains(
+        "app/Http/Middleware/AuthenticateTaskToken.php",
+        "401",
+    ),
+)
+
+# StoreTaskResultRequest FormRequest
+checker.check(
+    "StoreTaskResultRequest exists",
+    file_exists("app/Http/Requests/StoreTaskResultRequest.php"),
+)
+checker.check(
+    "FormRequest validates status field",
+    file_contains(
+        "app/Http/Requests/StoreTaskResultRequest.php",
+        "'status'",
+    ),
+)
+checker.check(
+    "FormRequest validates completed/failed status values",
+    file_contains(
+        "app/Http/Requests/StoreTaskResultRequest.php",
+        "completed",
+    )
+    and file_contains(
+        "app/Http/Requests/StoreTaskResultRequest.php",
+        "failed",
+    ),
+)
+checker.check(
+    "FormRequest validates tokens fields",
+    file_contains(
+        "app/Http/Requests/StoreTaskResultRequest.php",
+        "tokens.input",
+    ),
+)
+checker.check(
+    "FormRequest validates duration_seconds",
+    file_contains(
+        "app/Http/Requests/StoreTaskResultRequest.php",
+        "duration_seconds",
+    ),
+)
+checker.check(
+    "FormRequest validates prompt_version fields",
+    file_contains(
+        "app/Http/Requests/StoreTaskResultRequest.php",
+        "prompt_version.skill",
+    ),
+)
+checker.check(
+    "FormRequest requires result when status is completed",
+    file_contains(
+        "app/Http/Requests/StoreTaskResultRequest.php",
+        "required_if:status,completed",
+    ),
+)
+
+# TaskResultController
+checker.check(
+    "TaskResultController exists",
+    file_exists("app/Http/Controllers/TaskResultController.php"),
+)
+checker.check(
+    "Controller uses StoreTaskResultRequest",
+    file_contains(
+        "app/Http/Controllers/TaskResultController.php",
+        "StoreTaskResultRequest",
+    ),
+)
+checker.check(
+    "Controller transitions task to completed",
+    file_contains(
+        "app/Http/Controllers/TaskResultController.php",
+        "TaskStatus::Completed",
+    ),
+)
+checker.check(
+    "Controller transitions task to failed",
+    file_contains(
+        "app/Http/Controllers/TaskResultController.php",
+        "TaskStatus::Failed",
+    ),
+)
+checker.check(
+    "Controller checks task is in running state",
+    file_contains(
+        "app/Http/Controllers/TaskResultController.php",
+        "TaskStatus::Running",
+    ),
+)
+checker.check(
+    "Controller returns 409 for non-running tasks",
+    file_contains(
+        "app/Http/Controllers/TaskResultController.php",
+        "409",
+    ),
+)
+
+# Tests
+checker.check(
+    "TaskResultApi feature test exists",
+    file_exists("tests/Feature/TaskResultApiTest.php"),
+)
+checker.check(
+    "Test covers completed result acceptance",
+    file_contains(
+        "tests/Feature/TaskResultApiTest.php",
+        "accepts a completed result",
+    ),
+)
+checker.check(
+    "Test covers failed result acceptance",
+    file_contains(
+        "tests/Feature/TaskResultApiTest.php",
+        "accepts a failed result",
+    ),
+)
+checker.check(
+    "Test covers 401 — missing token",
+    file_contains(
+        "tests/Feature/TaskResultApiTest.php",
+        "401 when bearer token is missing",
+    ),
+)
+checker.check(
+    "Test covers 401 — invalid token",
+    file_contains(
+        "tests/Feature/TaskResultApiTest.php",
+        "401 when bearer token is invalid",
+    ),
+)
+checker.check(
+    "Test covers 401 — wrong task (token scoping)",
+    file_contains(
+        "tests/Feature/TaskResultApiTest.php",
+        "token belongs to a different task",
+    ),
+)
+checker.check(
+    "Test covers 401 — expired token",
+    file_contains(
+        "tests/Feature/TaskResultApiTest.php",
+        "401 when bearer token is expired",
+    ),
+)
+checker.check(
+    "Test covers 404 — non-existent task",
+    file_contains(
+        "tests/Feature/TaskResultApiTest.php",
+        "404 when task does not exist",
+    ),
+)
+checker.check(
+    "Test covers 422 — validation errors",
+    file_contains(
+        "tests/Feature/TaskResultApiTest.php",
+        "422 when status field is missing",
+    ),
+)
+checker.check(
+    "Test covers 409 — non-running task",
+    file_contains(
+        "tests/Feature/TaskResultApiTest.php",
+        "409 when task is already completed",
+    ),
+)
+checker.check(
+    "Test covers cross-task token reuse security",
+    file_contains(
+        "tests/Feature/TaskResultApiTest.php",
+        "cross-task token reuse",
+    ),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")
