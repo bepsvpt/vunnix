@@ -2,6 +2,8 @@
 
 namespace App\Jobs;
 
+use App\Enums\TaskStatus;
+use App\Enums\TaskType;
 use App\Jobs\Middleware\RetryWithBackoff;
 use App\Models\Task;
 use App\Services\GitLabClient;
@@ -65,6 +67,37 @@ class PostPlaceholderComment implements ShouldQueue
             return;
         }
 
+        // T40: Check for a previous completed review on the same MR
+        // to reuse its summary comment (update in-place instead of creating new)
+        $previousCommentId = $this->findPreviousCommentId($task);
+
+        if ($previousCommentId !== null) {
+            try {
+                $gitLab->updateMergeRequestNote(
+                    $task->project->gitlab_project_id,
+                    $task->mr_iid,
+                    $previousCommentId,
+                    '🤖 AI Review in progress… (re-reviewing after new commits)',
+                );
+
+                $task->comment_id = $previousCommentId;
+                $task->save();
+
+                Log::info('PostPlaceholderComment: reusing previous review comment (T40)', [
+                    'task_id' => $this->taskId,
+                    'previous_comment_id' => $previousCommentId,
+                ]);
+
+                return;
+            } catch (\Throwable $e) {
+                Log::warning('PostPlaceholderComment: failed to update previous comment, creating new', [
+                    'task_id' => $this->taskId,
+                    'error' => $e->getMessage(),
+                ]);
+                // Fall through to create a new comment
+            }
+        }
+
         try {
             $note = $gitLab->createMergeRequestNote(
                 $task->project->gitlab_project_id,
@@ -87,5 +120,20 @@ class PostPlaceholderComment implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Find the comment_id from the most recent completed review on the same MR.
+     */
+    private function findPreviousCommentId(Task $task): ?int
+    {
+        return Task::where('project_id', $task->project_id)
+            ->where('mr_iid', $task->mr_iid)
+            ->where('type', TaskType::CodeReview)
+            ->where('status', TaskStatus::Completed)
+            ->where('id', '!=', $task->id)
+            ->whereNotNull('comment_id')
+            ->orderByDesc('completed_at')
+            ->value('comment_id');
     }
 }

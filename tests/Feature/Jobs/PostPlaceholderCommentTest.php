@@ -91,6 +91,85 @@ it('skips posting if task already has a comment_id', function () {
     expect($task->comment_id)->toBe(9999);
 });
 
+// ─── Incremental review: reuse previous comment_id (T40) ────────
+
+it('reuses previous review comment_id for incremental review on same MR', function () {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/*/notes/*' => Http::response([
+            'id' => 99001,
+            'body' => '🤖 AI Review in progress… (re-reviewing after new commits)',
+        ], 200),
+    ]);
+
+    $previousTask = Task::factory()->create([
+        'type' => TaskType::CodeReview,
+        'status' => TaskStatus::Completed,
+        'started_at' => now()->subHour(),
+        'completed_at' => now()->subMinutes(30),
+        'mr_iid' => 42,
+        'comment_id' => 99001,
+    ]);
+
+    $newTask = Task::factory()->create([
+        'project_id' => $previousTask->project_id,
+        'type' => TaskType::CodeReview,
+        'status' => TaskStatus::Running,
+        'started_at' => now(),
+        'mr_iid' => 42,
+        'comment_id' => null,
+    ]);
+
+    $job = new PostPlaceholderComment($newTask->id);
+    $job->handle(app(GitLabClient::class));
+
+    $newTask->refresh();
+    expect($newTask->comment_id)->toBe(99001);
+
+    // Should PUT (update) existing note, not POST (create) new one
+    Http::assertSent(function ($request) {
+        return $request->method() === 'PUT'
+            && str_contains($request->url(), '/notes/99001');
+    });
+    Http::assertNotSent(function ($request) {
+        return $request->method() === 'POST'
+            && str_contains($request->url(), '/notes');
+    });
+});
+
+it('falls back to creating new placeholder when updating previous comment fails', function () {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/*/notes/99001' => Http::response([], 404),
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response([
+            'id' => 8888,
+            'body' => '🤖 AI Review in progress…',
+        ], 201),
+    ]);
+
+    $previousTask = Task::factory()->create([
+        'type' => TaskType::CodeReview,
+        'status' => TaskStatus::Completed,
+        'started_at' => now()->subHour(),
+        'completed_at' => now()->subMinutes(30),
+        'mr_iid' => 42,
+        'comment_id' => 99001,
+    ]);
+
+    $newTask = Task::factory()->create([
+        'project_id' => $previousTask->project_id,
+        'type' => TaskType::CodeReview,
+        'status' => TaskStatus::Running,
+        'started_at' => now(),
+        'mr_iid' => 42,
+        'comment_id' => null,
+    ]);
+
+    $job = new PostPlaceholderComment($newTask->id);
+    $job->handle(app(GitLabClient::class));
+
+    $newTask->refresh();
+    expect($newTask->comment_id)->toBe(8888);
+});
+
 // ─── Best-effort: failure does not throw ────────────────────────
 
 it('logs warning but does not throw when GitLab API fails', function () {
