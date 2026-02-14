@@ -9,6 +9,7 @@ use App\Events\Webhook\MergeRequestMerged;
 use App\Events\Webhook\MergeRequestOpened;
 use App\Events\Webhook\NoteOnIssue;
 use App\Events\Webhook\NoteOnMR;
+use App\Events\Webhook\PushToMRBranch;
 use App\Jobs\ProcessTask;
 use App\Models\Project;
 use App\Models\Task;
@@ -16,6 +17,7 @@ use App\Models\User;
 use App\Services\RoutingResult;
 use App\Services\TaskDispatchService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
@@ -234,6 +236,58 @@ it('returns null for acceptance_tracking intent (not a task)', function () {
 
     $event = new MergeRequestMerged($project->id, $project->gitlab_project_id, [], 1, 'feature', 'main', $user->gitlab_id, 'abc123');
     $result = makeRoutingResult('acceptance_tracking', 'normal', $event);
+
+    $service = app(TaskDispatchService::class);
+    $task = $service->dispatch($result);
+
+    expect($task)->toBeNull();
+    Queue::assertNothingPushed();
+});
+
+// ─── Push → MR resolution (T40) ──────────────────────────────────
+
+it('resolves mr_iid from push event via GitLab API', function () {
+    Queue::fake();
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests*' => Http::response([
+            ['iid' => 42, 'source_branch' => 'feature/login', 'state' => 'opened'],
+        ], 200),
+    ]);
+
+    $project = Project::factory()->create();
+    $user = User::factory()->create();
+
+    $event = new PushToMRBranch(
+        $project->id, $project->gitlab_project_id, [],
+        'refs/heads/feature/login', '000000', 'abc123',
+        $user->gitlab_id, [['id' => 'abc123', 'message' => 'fix typo']], 1,
+    );
+    $result = makeRoutingResult('incremental_review', 'normal', $event);
+
+    $service = app(TaskDispatchService::class);
+    $task = $service->dispatch($result);
+
+    expect($task)->not->toBeNull()
+        ->and($task->mr_iid)->toBe(42)
+        ->and($task->commit_sha)->toBe('abc123')
+        ->and($task->type)->toBe(TaskType::CodeReview);
+});
+
+it('skips dispatch for incremental_review when no open MR exists for branch', function () {
+    Queue::fake();
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests*' => Http::response([], 200),
+    ]);
+
+    $project = Project::factory()->create();
+    $user = User::factory()->create();
+
+    $event = new PushToMRBranch(
+        $project->id, $project->gitlab_project_id, [],
+        'refs/heads/feature/orphan', '000000', 'abc123',
+        $user->gitlab_id, [['id' => 'abc123', 'message' => 'wip']], 1,
+    );
+    $result = makeRoutingResult('incremental_review', 'normal', $event);
 
     $service = app(TaskDispatchService::class);
     $task = $service->dispatch($result);

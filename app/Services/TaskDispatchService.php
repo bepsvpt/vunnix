@@ -57,6 +57,17 @@ class TaskDispatchService
         $event = $routingResult->event;
         $priority = TaskPriority::from($routingResult->priority);
 
+        $mrIid = $this->extractMrIid($event);
+
+        // Incremental reviews require an MR — skip if branch has no open MR
+        if ($routingResult->intent === 'incremental_review' && $mrIid === null) {
+            Log::info('TaskDispatchService: incremental_review has no MR, skipping dispatch', [
+                'project_id' => $event->projectId,
+            ]);
+
+            return null;
+        }
+
         $userId = $this->resolveUserId($event);
 
         $task = Task::create([
@@ -66,7 +77,7 @@ class TaskDispatchService
             'project_id' => $event->projectId,
             'priority' => $priority,
             'status' => TaskStatus::Received,
-            'mr_iid' => $this->extractMrIid($event),
+            'mr_iid' => $mrIid,
             'issue_iid' => $this->extractIssueIid($event),
             'commit_sha' => $this->extractCommitSha($event),
         ]);
@@ -120,8 +131,44 @@ class TaskDispatchService
             $event instanceof MergeRequestUpdated,
             $event instanceof MergeRequestMerged => $event->mergeRequestIid,
             $event instanceof NoteOnMR => $event->mergeRequestIid,
+            $event instanceof PushToMRBranch => $this->resolveMrIidFromPush($event),
             default => null,
         };
+    }
+
+    /**
+     * Resolve the MR IID for a push event by querying GitLab for open MRs on the branch.
+     *
+     * Per §3.1: "The Event Router queries the GitLab API to check whether the
+     * pushed branch has an associated open MR."
+     */
+    private function resolveMrIidFromPush(PushToMRBranch $event): ?int
+    {
+        try {
+            $gitLab = app(GitLabClient::class);
+            $mr = $gitLab->findOpenMergeRequestForBranch(
+                $event->gitlabProjectId,
+                $event->branchName(),
+            );
+
+            if ($mr === null) {
+                Log::info('TaskDispatchService: no open MR for pushed branch, skipping', [
+                    'branch' => $event->branchName(),
+                    'project_id' => $event->projectId,
+                ]);
+
+                return null;
+            }
+
+            return (int) $mr['iid'];
+        } catch (\Throwable $e) {
+            Log::warning('TaskDispatchService: failed to resolve MR for push event', [
+                'branch' => $event->branchName(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     private function extractIssueIid(WebhookEvent $event): ?int
