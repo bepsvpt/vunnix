@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Observers\TaskObserver;
+use App\Services\TaskTokenService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -18,7 +19,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(TaskTokenService::class, function ($app) {
+            $appKey = $app['config']['app.key'];
+
+            // Strip the base64: prefix if present
+            if (str_starts_with($appKey, 'base64:')) {
+                $appKey = base64_decode(substr($appKey, 7));
+            }
+
+            return new TaskTokenService(
+                appKey: $appKey,
+                budgetMinutes: (int) $app['config']['vunnix.task_budget_minutes'],
+            );
+        });
     }
 
     /**

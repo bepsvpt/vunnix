@@ -5,6 +5,7 @@ use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
 use App\Models\Project;
+use App\Models\ProjectConfig;
 use App\Models\Task;
 use App\Services\GitLabClient;
 use App\Services\StrategyResolver;
@@ -36,12 +37,20 @@ it('routes server-side task (PrdCreation) without GitLab API call', function () 
 
 it('routes runner task (CodeReview) and transitions to running', function () {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
 
     Http::fake([
         '*/api/v4/projects/100/merge_requests/1/changes' => Http::response([
             'changes' => [
                 ['new_path' => 'app/Models/User.php', 'old_path' => 'app/Models/User.php'],
             ],
+        ]),
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
         ]),
     ]);
 
@@ -60,10 +69,22 @@ it('routes runner task (CodeReview) and transitions to running', function () {
 });
 
 it('routes runner FeatureDev task to running', function () {
-    Http::fake();
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
 
     $task = Task::factory()->queued()->create([
         'type' => TaskType::FeatureDev,
+        'project_id' => $project->id,
         'mr_iid' => null,
         'issue_iid' => 5,
     ]);
@@ -80,6 +101,10 @@ it('routes runner FeatureDev task to running', function () {
 
 it('selects frontend-review strategy for .vue files', function () {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
 
     Http::fake([
         '*/api/v4/projects/100/merge_requests/1/changes' => Http::response([
@@ -87,6 +112,10 @@ it('selects frontend-review strategy for .vue files', function () {
                 ['new_path' => 'src/components/Header.vue'],
                 ['new_path' => 'src/pages/Dashboard.vue'],
             ],
+        ]),
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
         ]),
     ]);
 
@@ -106,6 +135,10 @@ it('selects frontend-review strategy for .vue files', function () {
 
 it('selects backend-review strategy for .php files', function () {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
 
     Http::fake([
         '*/api/v4/projects/100/merge_requests/1/changes' => Http::response([
@@ -113,6 +146,10 @@ it('selects backend-review strategy for .php files', function () {
                 ['new_path' => 'app/Models/User.php'],
                 ['new_path' => 'app/Services/TaskService.php'],
             ],
+        ]),
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
         ]),
     ]);
 
@@ -132,6 +169,10 @@ it('selects backend-review strategy for .php files', function () {
 
 it('selects mixed-review strategy for frontend + backend files', function () {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
 
     Http::fake([
         '*/api/v4/projects/100/merge_requests/1/changes' => Http::response([
@@ -139,6 +180,10 @@ it('selects mixed-review strategy for frontend + backend files', function () {
                 ['new_path' => 'app/Http/Controllers/UserController.php'],
                 ['new_path' => 'resources/js/components/UserForm.vue'],
             ],
+        ]),
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
         ]),
     ]);
 
@@ -158,6 +203,10 @@ it('selects mixed-review strategy for frontend + backend files', function () {
 
 it('selects security-audit strategy for security-sensitive files', function () {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
 
     Http::fake([
         '*/api/v4/projects/100/merge_requests/1/changes' => Http::response([
@@ -165,6 +214,10 @@ it('selects security-audit strategy for security-sensitive files', function () {
                 ['new_path' => 'config/auth.php'],
                 ['new_path' => 'app/Models/User.php'],
             ],
+        ]),
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
         ]),
     ]);
 
@@ -185,10 +238,22 @@ it('selects security-audit strategy for security-sensitive files', function () {
 // ─── Strategy selection — non-review task types ─────────────────
 
 it('uses security-audit strategy for SecurityAudit task type', function () {
-    Http::fake();
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
 
     $task = Task::factory()->queued()->create([
         'type' => TaskType::SecurityAudit,
+        'project_id' => $project->id,
         'mr_iid' => 1,
     ]);
 
@@ -201,10 +266,22 @@ it('uses security-audit strategy for SecurityAudit task type', function () {
 });
 
 it('uses frontend-review strategy for UiAdjustment task type', function () {
-    Http::fake();
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
 
     $task = Task::factory()->queued()->create([
         'type' => TaskType::UiAdjustment,
+        'project_id' => $project->id,
         'mr_iid' => null,
         'issue_iid' => 1,
     ]);
@@ -218,10 +295,22 @@ it('uses frontend-review strategy for UiAdjustment task type', function () {
 });
 
 it('uses backend-review strategy for IssueDiscussion task type', function () {
-    Http::fake();
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
 
     $task = Task::factory()->queued()->create([
         'type' => TaskType::IssueDiscussion,
+        'project_id' => $project->id,
         'mr_iid' => null,
         'issue_iid' => 1,
     ]);
@@ -235,10 +324,22 @@ it('uses backend-review strategy for IssueDiscussion task type', function () {
 });
 
 it('uses backend-review strategy for FeatureDev task type', function () {
-    Http::fake();
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
 
     $task = Task::factory()->queued()->create([
         'type' => TaskType::FeatureDev,
+        'project_id' => $project->id,
         'mr_iid' => null,
         'issue_iid' => 1,
     ]);
@@ -255,9 +356,17 @@ it('uses backend-review strategy for FeatureDev task type', function () {
 
 it('falls back to mixed-review when GitLab API fails', function () {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
 
     Http::fake([
         '*/api/v4/projects/100/merge_requests/1/changes' => Http::response([], 500),
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
     ]);
 
     $task = Task::factory()->queued()->create([

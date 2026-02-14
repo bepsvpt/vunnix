@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 17 / 116 (15%)
-- **Current Task:** T18 — Pipeline trigger integration (task-scoped token D127)
-- **Last Verified:** T17
+- **Tasks Complete:** 18 / 116 (16%)
+- **Current Task:** T19 — Executor Dockerfile + entrypoint (Playwright, screenshots D131)
+- **Last Verified:** T18
 
 ---
 
@@ -36,11 +36,11 @@
 - [x] T15: Task model + lifecycle (state machine) [Depends: T4]
 - [x] T16: Task queue — Redis with priority + queue isolation (D134) [Depends: T15]
 - [x] T17: Task Dispatcher — strategy selection + execution mode routing [Depends: T16, T11]
-- [ ] **T18:** Pipeline trigger integration (task-scoped token D127) [Depends: T17]
+- [x] T18: Pipeline trigger integration (task-scoped token D127) [Depends: T17]
 
 ### Executor Image
 
-- [ ] T19: Executor Dockerfile + entrypoint (Playwright, screenshots D131) [Depends: —]
+- [ ] **T19:** Executor Dockerfile + entrypoint (Playwright, screenshots D131) [Depends: —]
 - [ ] T20: Executor CLAUDE.md (output format, severity, safety) [Depends: —]
 - [ ] T21: Frontend-review skill [Depends: T20]
 - [ ] T22: Backend-review skill [Depends: T20]

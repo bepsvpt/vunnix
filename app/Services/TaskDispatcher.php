@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
  *
  * Execution modes:
  * - Server: task is executed immediately inline (e.g., PRD creation via GitLab API).
- * - Runner: task is dispatched to a GitLab CI pipeline (T18 adds pipeline trigger).
+ * - Runner: task is dispatched to a GitLab CI pipeline with task-scoped token (D127).
  *
  * @see §3.4 Task Dispatcher & Task Executor
  */
@@ -23,6 +23,7 @@ class TaskDispatcher
     public function __construct(
         private readonly GitLabClient $gitLabClient,
         private readonly StrategyResolver $strategyResolver,
+        private readonly TaskTokenService $taskTokenService,
     ) {}
 
     /**
@@ -72,8 +73,8 @@ class TaskDispatcher
     /**
      * Handle runner execution (CI pipeline).
      *
-     * Resolves the review strategy from changed files, stores it on the task,
-     * and transitions to Running. T18 will add the actual pipeline trigger call.
+     * Resolves the review strategy, generates a task-scoped token,
+     * and triggers a GitLab CI pipeline with VUNNIX_* variables.
      */
     private function dispatchToRunner(Task $task): void
     {
@@ -91,14 +92,55 @@ class TaskDispatcher
             'strategy' => $strategy->value,
         ]);
 
+        // Look up the CI trigger token from project config
+        $triggerToken = $task->project->projectConfig?->ci_trigger_token;
+
+        if (empty($triggerToken)) {
+            Log::error('TaskDispatcher: missing CI trigger token', [
+                'task_id' => $task->id,
+                'project_id' => $task->project_id,
+            ]);
+
+            $task->transitionTo(TaskStatus::Failed, 'missing_trigger_token');
+
+            return;
+        }
+
         $task->transitionTo(TaskStatus::Running);
 
-        // T18 will add: pipeline trigger via GitLabClient::triggerPipeline()
-        // passing task ID, type, strategy, and skill names as pipeline variables.
-        Log::info('TaskDispatcher: runner task ready for pipeline trigger (T18)', [
-            'task_id' => $task->id,
-            'strategy' => $strategy->value,
-        ]);
+        // Generate a task-scoped bearer token for executor authentication
+        $taskToken = $this->taskTokenService->generate($task->id);
+
+        try {
+            $pipelineResult = $this->gitLabClient->triggerPipeline(
+                projectId: $task->project->gitlab_project_id,
+                ref: $task->commit_sha ?? 'main',
+                triggerToken: $triggerToken,
+                variables: [
+                    'VUNNIX_TASK_ID' => (string) $task->id,
+                    'VUNNIX_TASK_TYPE' => $task->type->value,
+                    'VUNNIX_STRATEGY' => $strategy->value,
+                    'VUNNIX_SKILLS' => implode(',', $strategy->skills()),
+                    'VUNNIX_TOKEN' => $taskToken,
+                    'VUNNIX_API_URL' => config('vunnix.api_url'),
+                ],
+            );
+
+            $task->pipeline_id = $pipelineResult['id'];
+            $task->save();
+
+            Log::info('TaskDispatcher: pipeline triggered', [
+                'task_id' => $task->id,
+                'pipeline_id' => $pipelineResult['id'],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('TaskDispatcher: pipeline trigger failed', [
+                'task_id' => $task->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            $task->transitionTo(TaskStatus::Failed, 'pipeline_trigger_failed');
+        }
     }
 
     /**

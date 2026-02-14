@@ -27,6 +27,7 @@ class Task extends Model
         'issue_iid',
         'comment_id',
         'commit_sha',
+        'pipeline_id',
         'conversation_id',
         'prompt',
         'response',

@@ -14,6 +14,7 @@ class ProjectConfig extends Model
         'project_id',
         'webhook_secret',
         'webhook_token_validation',
+        'ci_trigger_token',
         'settings',
     ];
 
@@ -22,6 +23,7 @@ class ProjectConfig extends Model
         return [
             'webhook_secret' => 'encrypted',
             'webhook_token_validation' => 'boolean',
+            'ci_trigger_token' => 'encrypted',
             'settings' => 'array',
         ];
     }
