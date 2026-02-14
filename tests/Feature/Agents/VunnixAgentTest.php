@@ -403,6 +403,63 @@ it('supports quality gate conversation flow: vague request → challenge → cla
     expect($userMessages->last()->content)->toBe('Credit card only, via Stripe, ~500 txn/day');
 });
 
+// ─── Action Dispatch Integration (T55) ──────────────────────────
+
+it('dispatches action when user has chat.dispatch_task permission', function () {
+    VunnixAgent::fake([
+        'Task dispatched successfully. Feature implementation "Add payments" has been dispatched as Task #1.',
+    ]);
+
+    $project = Project::factory()->create();
+    $user = agentTestUser($project);
+
+    // Give user chat.dispatch_task permission
+    $permission = Permission::firstOrCreate(
+        ['name' => 'chat.dispatch_task'],
+        ['description' => 'Can trigger AI actions from chat', 'group' => 'chat'],
+    );
+    $role = $user->rolesForProject($project)->first();
+    $role->permissions()->syncWithoutDetaching([$permission->id]);
+
+    $conversation = Conversation::factory()->forUser($user)->forProject($project)->create();
+
+    $response = $this->actingAs($user)
+        ->post("/api/v1/conversations/{$conversation->id}/stream", [
+            'content' => 'Yes, please implement the payment feature',
+        ]);
+
+    $response->assertOk();
+    $response->streamedContent();
+
+    VunnixAgent::assertPrompted(
+        fn ($prompt) => str_contains($prompt->prompt, 'implement the payment feature')
+    );
+});
+
+it('explains permission denial when user lacks chat.dispatch_task', function () {
+    VunnixAgent::fake([
+        'I apologize, but you do not have permission to dispatch actions on this project.',
+    ]);
+
+    $project = Project::factory()->create();
+    $user = agentTestUser($project);
+    // Do NOT assign chat.dispatch_task permission
+
+    $conversation = Conversation::factory()->forUser($user)->forProject($project)->create();
+
+    $response = $this->actingAs($user)
+        ->post("/api/v1/conversations/{$conversation->id}/stream", [
+            'content' => 'Please create an issue for adding dark mode',
+        ]);
+
+    $response->assertOk();
+    $response->streamedContent();
+
+    VunnixAgent::assertPrompted(
+        fn ($prompt) => str_contains($prompt->prompt, 'create an issue')
+    );
+});
+
 // ─── System Prompt Dynamic Behavior ─────────────────────────────
 
 it('generates different instructions based on language config', function () {
