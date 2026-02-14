@@ -3882,6 +3882,171 @@ checker.check(
 )
 
 # ============================================================
+#  T40: Incremental review
+# ============================================================
+section("T40: Incremental Review")
+
+# T40.1: GitLabClient methods
+checker.check(
+    "GitLabClient has listMergeRequestDiscussions",
+    file_contains(
+        "app/Services/GitLabClient.php",
+        "function listMergeRequestDiscussions",
+    ),
+)
+checker.check(
+    "GitLabClient has findOpenMergeRequestForBranch",
+    file_contains(
+        "app/Services/GitLabClient.php",
+        "function findOpenMergeRequestForBranch",
+    ),
+)
+checker.check(
+    "GitLabClient has removeMergeRequestLabels",
+    file_contains(
+        "app/Services/GitLabClient.php",
+        "function removeMergeRequestLabels",
+    ),
+)
+
+# T40.2: MR IID resolution from push events
+checker.check(
+    "TaskDispatchService resolves MR IID from push events",
+    file_contains(
+        "app/Services/TaskDispatchService.php",
+        "resolveMrIidFromPush",
+    ),
+)
+checker.check(
+    "TaskDispatchService skips incremental_review with no MR",
+    file_contains(
+        "app/Services/TaskDispatchService.php",
+        "incremental_review",
+    ),
+)
+
+# T40.3: Reuse previous review comment_id
+checker.check(
+    "PostPlaceholderComment finds previous comment_id",
+    file_contains(
+        "app/Jobs/PostPlaceholderComment.php",
+        "findPreviousCommentId",
+    ),
+)
+checker.check(
+    "PostPlaceholderComment reuses comment via updateMergeRequestNote",
+    file_contains(
+        "app/Jobs/PostPlaceholderComment.php",
+        "updateMergeRequestNote",
+    ),
+)
+
+# T40.4: SummaryCommentFormatter accepts optional timestamp
+checker.check(
+    "SummaryCommentFormatter accepts optional timestamp parameter",
+    file_contains(
+        "app/Services/SummaryCommentFormatter.php",
+        "updatedAt",
+    ),
+)
+checker.check(
+    "SummaryCommentFormatter includes 'Updated' text for incremental reviews",
+    file_contains(
+        "app/Services/SummaryCommentFormatter.php",
+        "Updated:",
+    ),
+)
+
+# T40.5: PostSummaryComment detects incremental review
+checker.check(
+    "PostSummaryComment has isIncrementalReview method",
+    file_contains(
+        "app/Jobs/PostSummaryComment.php",
+        "isIncrementalReview",
+    ),
+)
+
+# T40.6: Thread deduplication (D33)
+checker.check(
+    "PostInlineThreads has hasExistingThread method",
+    file_contains(
+        "app/Jobs/PostInlineThreads.php",
+        "hasExistingThread",
+    ),
+)
+checker.check(
+    "PostInlineThreads fetches existing discussions for dedup",
+    file_contains(
+        "app/Jobs/PostInlineThreads.php",
+        "fetchExistingDiscussions",
+    ),
+)
+checker.check(
+    "PostInlineThreads references D33 dedup decision",
+    file_contains(
+        "app/Jobs/PostInlineThreads.php",
+        "D33",
+    ),
+)
+
+# T40.7: Label replacement (D56)
+checker.check(
+    "PostLabelsAndStatus removes stale risk labels",
+    file_contains(
+        "app/Jobs/PostLabelsAndStatus.php",
+        "removeMergeRequestLabels",
+    ),
+)
+checker.check(
+    "PostLabelsAndStatus references D56 decision",
+    file_contains(
+        "app/Jobs/PostLabelsAndStatus.php",
+        "D56",
+    ),
+)
+
+# T40.8: E2E integration test
+checker.check(
+    "Incremental review E2E test exists",
+    file_exists("tests/Feature/IncrementalReviewEndToEndTest.php"),
+)
+checker.check(
+    "E2E test verifies summary timestamp for incremental review",
+    file_contains(
+        "tests/Feature/IncrementalReviewEndToEndTest.php",
+        "Updated:",
+    ),
+)
+checker.check(
+    "E2E test verifies thread deduplication",
+    file_contains(
+        "tests/Feature/IncrementalReviewEndToEndTest.php",
+        "deduplicates threads",
+    ),
+)
+checker.check(
+    "E2E test verifies label replacement",
+    file_contains(
+        "tests/Feature/IncrementalReviewEndToEndTest.php",
+        "remove_labels",
+    ),
+)
+checker.check(
+    "E2E test covers both phases (initial + incremental)",
+    file_contains(
+        "tests/Feature/IncrementalReviewEndToEndTest.php",
+        "PHASE 2",
+    ),
+)
+checker.check(
+    "E2E test verifies placeholder reuse",
+    file_contains(
+        "tests/Feature/IncrementalReviewEndToEndTest.php",
+        "comment_id",
+    ),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
