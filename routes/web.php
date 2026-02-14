@@ -23,3 +23,9 @@ Route::post('/auth/logout', [AuthController::class, 'logout'])
 Route::post('/webhook', WebhookController::class)
     ->middleware('webhook.verify')
     ->name('webhook');
+
+// SPA catch-all — serves Vue app for all non-API, non-asset routes
+// Must be the LAST route defined
+Route::get('/{any}', function () {
+    return view('app');
+})->where('any', '^(?!api|health|auth|webhook|up).*$');
