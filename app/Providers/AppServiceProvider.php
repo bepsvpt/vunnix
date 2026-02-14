@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Conversation;
 use App\Models\Permission;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Observers\TaskObserver;
+use App\Policies\ConversationPolicy;
 use App\Services\TaskTokenService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
@@ -40,6 +42,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Task::observe(TaskObserver::class);
+
+        Gate::policy(Conversation::class, ConversationPolicy::class);
 
         $this->registerPermissionGates();
     }

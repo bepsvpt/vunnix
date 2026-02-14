@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 46 / 116 (40%)
-- **Current Task:** T47 — Chat API endpoints
-- **Last Verified:** T46
+- **Tasks Complete:** 47 / 116 (41%)
+- **Current Task:** T48 — SSE streaming endpoint
+- **Last Verified:** T47
 
 ---
 
@@ -81,12 +81,12 @@
 - [x] T45: CI pipeline template [Depends: T19]
 - [x] T46: Executor image CI/CD + version alignment [Depends: T19]
 
-## M3 — Path B Functional (0/27)
+## M3 — Path B Functional (1/27)
 
 ### Chat Backend
 
-- [ ] **T47:** Chat API endpoints (search D148, archiving D141, title D142) [Depends: T4, T9]
-- [ ] T48: SSE streaming endpoint [Depends: T47]
+- [x] T47: Chat API endpoints (search D148, archiving D141, title D142) [Depends: T4, T9]
+- [ ] **T48:** SSE streaming endpoint [Depends: T47]
 - [ ] T49: Conversation Engine — AI SDK Agent class [Depends: T47, T48, T10]
 - [ ] T50: GitLab tools — repo browsing (BrowseRepoTree, ReadFile, SearchCode) [Depends: T49, T11]
 - [ ] T51: GitLab tools — Issues (ListIssues, ReadIssue) [Depends: T49, T11]
