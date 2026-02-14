@@ -3255,6 +3255,145 @@ checker.check(
 )
 
 # ============================================================
+#  T35: Labels + commit status — Layer 3
+# ============================================================
+section("T35: Labels + Commit Status — Layer 3")
+
+# LabelMapper service
+checker.check(
+    "LabelMapper service exists",
+    file_exists("app/Services/LabelMapper.php"),
+)
+checker.check(
+    "LabelMapper has mapLabels method",
+    file_contains("app/Services/LabelMapper.php", "function mapLabels(array"),
+)
+checker.check(
+    "LabelMapper has mapCommitStatus method",
+    file_contains("app/Services/LabelMapper.php", "function mapCommitStatus(array"),
+)
+checker.check(
+    "LabelMapper maps risk_level to ai::risk-high",
+    file_contains("app/Services/LabelMapper.php", "ai::risk-high"),
+)
+checker.check(
+    "LabelMapper maps risk_level to ai::risk-medium",
+    file_contains("app/Services/LabelMapper.php", "ai::risk-medium"),
+)
+checker.check(
+    "LabelMapper maps risk_level to ai::risk-low",
+    file_contains("app/Services/LabelMapper.php", "ai::risk-low"),
+)
+checker.check(
+    "LabelMapper always includes ai::reviewed label",
+    file_contains("app/Services/LabelMapper.php", "ai::reviewed"),
+)
+checker.check(
+    "LabelMapper detects security findings for ai::security label",
+    file_contains("app/Services/LabelMapper.php", "ai::security"),
+)
+checker.check(
+    "LabelMapper returns failed for critical findings",
+    file_contains("app/Services/LabelMapper.php", "'failed'"),
+)
+checker.check(
+    "LabelMapper returns success for non-critical findings",
+    file_contains("app/Services/LabelMapper.php", "'success'"),
+)
+
+# PostLabelsAndStatus job
+checker.check(
+    "PostLabelsAndStatus job exists",
+    file_exists("app/Jobs/PostLabelsAndStatus.php"),
+)
+checker.check(
+    "PostLabelsAndStatus implements ShouldQueue",
+    file_contains("app/Jobs/PostLabelsAndStatus.php", "ShouldQueue"),
+)
+checker.check(
+    "PostLabelsAndStatus uses vunnix-server queue",
+    file_contains("app/Jobs/PostLabelsAndStatus.php", "QueueNames::SERVER"),
+)
+checker.check(
+    "PostLabelsAndStatus calls addMergeRequestLabels",
+    file_contains("app/Jobs/PostLabelsAndStatus.php", "addMergeRequestLabels"),
+)
+checker.check(
+    "PostLabelsAndStatus calls setCommitStatus",
+    file_contains("app/Jobs/PostLabelsAndStatus.php", "setCommitStatus"),
+)
+checker.check(
+    "PostLabelsAndStatus fetches MR for commit SHA",
+    file_contains("app/Jobs/PostLabelsAndStatus.php", "getMergeRequest"),
+)
+checker.check(
+    "PostLabelsAndStatus uses LabelMapper",
+    file_contains("app/Jobs/PostLabelsAndStatus.php", "LabelMapper"),
+)
+checker.check(
+    "PostLabelsAndStatus sets vunnix-code-review as status name",
+    file_contains("app/Jobs/PostLabelsAndStatus.php", "vunnix-code-review"),
+)
+
+# ProcessTaskResult dispatches PostLabelsAndStatus
+checker.check(
+    "ProcessTaskResult dispatches PostLabelsAndStatus",
+    file_contains("app/Jobs/ProcessTaskResult.php", "PostLabelsAndStatus"),
+)
+
+# Tests
+checker.check(
+    "LabelMapper unit test exists",
+    file_exists("tests/Unit/Services/LabelMapperTest.php"),
+)
+checker.check(
+    "Test covers label mapping for risk levels",
+    file_contains(
+        "tests/Unit/Services/LabelMapperTest.php",
+        "ai::risk-high",
+    ),
+)
+checker.check(
+    "Test covers commit status mapping",
+    file_contains(
+        "tests/Unit/Services/LabelMapperTest.php",
+        "mapCommitStatus",
+    ),
+)
+checker.check(
+    "PostLabelsAndStatus feature test exists",
+    file_exists("tests/Feature/Jobs/PostLabelsAndStatusTest.php"),
+)
+checker.check(
+    "Test covers label application via GitLab API",
+    file_contains(
+        "tests/Feature/Jobs/PostLabelsAndStatusTest.php",
+        "add_labels",
+    ),
+)
+checker.check(
+    "Test covers commit status via GitLab API",
+    file_contains(
+        "tests/Feature/Jobs/PostLabelsAndStatusTest.php",
+        "statuses",
+    ),
+)
+checker.check(
+    "ProcessTaskResult dispatch test covers PostLabelsAndStatus",
+    file_contains(
+        "tests/Feature/Jobs/ProcessTaskResultDispatchTest.php",
+        "PostLabelsAndStatus",
+    ),
+)
+checker.check(
+    "Sync pipeline test covers all 3 layers including labels + status",
+    file_contains(
+        "tests/Feature/TaskResultApiTest.php",
+        "3 layers",
+    ),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")
