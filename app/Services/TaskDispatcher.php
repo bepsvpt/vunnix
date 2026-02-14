@@ -6,6 +6,7 @@ use App\Enums\ReviewStrategy;
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
 use App\Jobs\PostPlaceholderComment;
+use App\Jobs\ProcessTaskResult;
 use App\Models\Task;
 use Illuminate\Support\Facades\Log;
 
@@ -66,7 +67,12 @@ class TaskDispatcher
 
         $this->dispatchPlaceholder($task);
 
-        Log::info('TaskDispatcher: server-side task ready for Result Processor', [
+        // Dispatch to Result Processor immediately — server-side tasks
+        // use the same lifecycle pipeline as runner tasks (D123/D134),
+        // just without the CI pipeline step.
+        ProcessTaskResult::dispatch($task->id);
+
+        Log::info('TaskDispatcher: server-side task dispatched to Result Processor', [
             'task_id' => $task->id,
         ]);
     }

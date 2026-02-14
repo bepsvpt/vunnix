@@ -101,6 +101,11 @@ class ProcessTaskResult implements ShouldQueue
         if ($this->shouldPostFeatureDevResult($task)) {
             PostFeatureDevResult::dispatch($task->id);
         }
+
+        // T56: Create GitLab Issue for server-side PrdCreation
+        if ($this->shouldCreateGitLabIssue($task)) {
+            CreateGitLabIssue::dispatch($task->id);
+        }
     }
 
     private function shouldPostSummaryComment(Task $task): bool
@@ -157,6 +162,17 @@ class ProcessTaskResult implements ShouldQueue
     {
         return $task->issue_iid !== null
             && $task->type === TaskType::FeatureDev;
+    }
+
+    /**
+     * T56: Create GitLab Issue for PrdCreation tasks (server-side execution).
+     *
+     * Fires for PrdCreation tasks dispatched from conversation. These bypass
+     * the CI pipeline — the job calls GitLabClient::createIssue() directly.
+     */
+    private function shouldCreateGitLabIssue(Task $task): bool
+    {
+        return $task->type === TaskType::PrdCreation;
     }
 
     /**

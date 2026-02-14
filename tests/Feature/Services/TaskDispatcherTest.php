@@ -20,6 +20,7 @@ uses(RefreshDatabase::class);
 // ─── Execution mode routing ─────────────────────────────────────
 
 it('routes server-side task (PrdCreation) without GitLab API call', function () {
+    Queue::fake([\App\Jobs\ProcessTaskResult::class]);
     Http::fake();
 
     $task = Task::factory()->queued()->create([
@@ -551,4 +552,34 @@ it('does not dispatch PostPlaceholderComment for non-review task types', functio
 
     // PrdCreation is server-side — no placeholder needed
     Http::assertNothingSent();
+});
+
+// ─── T56: Server-side dispatches ProcessTaskResult ──────────
+
+it('dispatches ProcessTaskResult for server-side PrdCreation tasks', function () {
+    Queue::fake([\App\Jobs\ProcessTaskResult::class]);
+    Http::fake();
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::PrdCreation,
+        'mr_iid' => null,
+        'issue_iid' => null,
+        'result' => [
+            'action_type' => 'create_issue',
+            'title' => 'Test issue',
+            'description' => 'Test description.',
+            'dispatched_from' => 'conversation',
+        ],
+    ]);
+
+    $dispatcher = app(TaskDispatcher::class);
+    $dispatcher->dispatch($task);
+
+    $task->refresh();
+
+    expect($task->status)->toBe(TaskStatus::Running);
+
+    Queue::assertPushed(\App\Jobs\ProcessTaskResult::class, function ($job) use ($task) {
+        return $job->taskId === $task->id;
+    });
 });

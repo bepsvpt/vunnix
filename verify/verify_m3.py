@@ -1174,6 +1174,134 @@ checker.check(
     ),
 )
 
+# ============================================================
+#  T56: Server-side execution mode (create Issue bypass)
+# ============================================================
+section("T56: Server-Side Execution Mode")
+
+# CreateGitLabIssue job
+checker.check(
+    "CreateGitLabIssue job exists",
+    file_exists("app/Jobs/CreateGitLabIssue.php"),
+)
+checker.check(
+    "CreateGitLabIssue implements ShouldQueue",
+    file_contains("app/Jobs/CreateGitLabIssue.php", "implements ShouldQueue"),
+)
+checker.check(
+    "CreateGitLabIssue uses vunnix-server queue",
+    file_contains("app/Jobs/CreateGitLabIssue.php", "QueueNames::SERVER"),
+)
+checker.check(
+    "CreateGitLabIssue uses RetryWithBackoff middleware",
+    file_contains("app/Jobs/CreateGitLabIssue.php", "RetryWithBackoff"),
+)
+checker.check(
+    "CreateGitLabIssue calls GitLabClient::createIssue",
+    file_contains("app/Jobs/CreateGitLabIssue.php", "createIssue"),
+)
+checker.check(
+    "CreateGitLabIssue stores issue_iid on task",
+    file_contains("app/Jobs/CreateGitLabIssue.php", "issue_iid"),
+)
+checker.check(
+    "CreateGitLabIssue sets PM as assignee via assignee_ids",
+    file_contains("app/Jobs/CreateGitLabIssue.php", "assignee_ids"),
+)
+checker.check(
+    "CreateGitLabIssue stores gitlab_issue_url in result",
+    file_contains("app/Jobs/CreateGitLabIssue.php", "gitlab_issue_url"),
+)
+checker.check(
+    "CreateGitLabIssue handles labels",
+    file_contains("app/Jobs/CreateGitLabIssue.php", "labels"),
+)
+checker.check(
+    "CreateGitLabIssue rethrows errors for retry",
+    file_contains("app/Jobs/CreateGitLabIssue.php", "throw $e"),
+)
+
+# ProcessTaskResult wiring — dispatches CreateGitLabIssue for PrdCreation
+checker.check(
+    "ProcessTaskResult dispatches CreateGitLabIssue",
+    file_contains("app/Jobs/ProcessTaskResult.php", "CreateGitLabIssue::dispatch"),
+)
+checker.check(
+    "ProcessTaskResult has shouldCreateGitLabIssue method",
+    file_contains("app/Jobs/ProcessTaskResult.php", "shouldCreateGitLabIssue"),
+)
+checker.check(
+    "shouldCreateGitLabIssue checks PrdCreation type",
+    file_contains("app/Jobs/ProcessTaskResult.php", "TaskType::PrdCreation"),
+)
+
+# TaskDispatcher wiring — dispatches ProcessTaskResult for server-side tasks
+checker.check(
+    "TaskDispatcher dispatches ProcessTaskResult for server-side tasks",
+    file_contains("app/Services/TaskDispatcher.php", "ProcessTaskResult::dispatch"),
+)
+
+# Tests
+checker.check(
+    "CreateGitLabIssue feature tests exist",
+    file_exists("tests/Feature/Jobs/CreateGitLabIssueTest.php"),
+)
+checker.check(
+    "CreateGitLabIssue test covers happy path with assignee and labels",
+    file_contains(
+        "tests/Feature/Jobs/CreateGitLabIssueTest.php",
+        "creates a GitLab Issue via bot PAT and stores issue_iid on task",
+    ),
+)
+checker.check(
+    "CreateGitLabIssue test covers missing assignee",
+    file_contains(
+        "tests/Feature/Jobs/CreateGitLabIssueTest.php",
+        "without assignee when assignee_id is not provided",
+    ),
+)
+checker.check(
+    "CreateGitLabIssue test covers error rethrow for retry",
+    file_contains(
+        "tests/Feature/Jobs/CreateGitLabIssueTest.php",
+        "rethrows GitLab API errors for retry",
+    ),
+)
+checker.check(
+    "ProcessTaskResult dispatch test covers CreateGitLabIssue",
+    file_contains(
+        "tests/Feature/Jobs/ProcessTaskResultDispatchTest.php",
+        "CreateGitLabIssue after successful PrdCreation",
+    ),
+)
+checker.check(
+    "TaskDispatcher test covers ProcessTaskResult dispatch",
+    file_contains(
+        "tests/Feature/Services/TaskDispatcherTest.php",
+        "dispatches ProcessTaskResult for server-side PrdCreation",
+    ),
+)
+
+# Integration test — full pipeline
+checker.check(
+    "Server-side integration test exists",
+    file_exists("tests/Feature/Integration/ServerSideExecutionTest.php"),
+)
+checker.check(
+    "Integration test covers full pipeline: dispatch → process → create Issue",
+    file_contains(
+        "tests/Feature/Integration/ServerSideExecutionTest.php",
+        "full server-side pipeline",
+    ),
+)
+checker.check(
+    "Integration test verifies no CI pipeline triggered",
+    file_contains(
+        "tests/Feature/Integration/ServerSideExecutionTest.php",
+        "does not trigger a CI pipeline",
+    ),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()

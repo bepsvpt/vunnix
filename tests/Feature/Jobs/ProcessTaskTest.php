@@ -48,12 +48,28 @@ it('delegates to TaskDispatcher for queued runner tasks', function () {
 });
 
 it('delegates to TaskDispatcher for queued server-side tasks', function () {
-    Http::fake();
+    $project = Project::factory()->create(['gitlab_project_id' => 200]);
+
+    Http::fake([
+        '*/api/v4/projects/200/issues' => Http::response([
+            'iid' => 10,
+            'id' => 2001,
+            'title' => 'Test issue',
+            'web_url' => 'https://gitlab.example.com/project/issues/10',
+        ], 201),
+    ]);
 
     $task = Task::factory()->queued()->create([
         'type' => TaskType::PrdCreation,
+        'project_id' => $project->id,
         'mr_iid' => null,
-        'issue_iid' => 10,
+        'issue_iid' => null,
+        'result' => [
+            'action_type' => 'create_issue',
+            'title' => 'Test issue',
+            'description' => 'Test description.',
+            'dispatched_from' => 'conversation',
+        ],
     ]);
 
     $job = new ProcessTask($task->id);
@@ -61,7 +77,10 @@ it('delegates to TaskDispatcher for queued server-side tasks', function () {
 
     $task->refresh();
 
-    expect($task->status)->toBe(TaskStatus::Running);
+    // Full server-side pipeline runs synchronously:
+    // TaskDispatcher → ProcessTaskResult → CreateGitLabIssue → Completed
+    expect($task->status)->toBe(TaskStatus::Completed);
+    expect($task->issue_iid)->toBe(10);
 });
 
 it('skips tasks already in terminal state', function () {

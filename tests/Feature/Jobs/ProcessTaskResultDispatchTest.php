@@ -390,3 +390,72 @@ it('does not dispatch PostLabelsAndStatus for tasks without mr_iid', function ()
 
     Queue::assertNotPushed(PostLabelsAndStatus::class);
 });
+
+// ─── T56: CreateGitLabIssue dispatch for PrdCreation ─────────
+
+it('dispatches CreateGitLabIssue after successful PrdCreation processing', function () {
+    Queue::fake([\App\Jobs\CreateGitLabIssue::class]);
+
+    $task = Task::factory()->running()->create([
+        'type' => TaskType::PrdCreation,
+        'mr_iid' => null,
+        'result' => [
+            'action_type' => 'create_issue',
+            'title' => 'New feature request',
+            'description' => 'Build a new dashboard widget.',
+            'assignee_id' => 42,
+            'labels' => ['feature', 'ai::created'],
+            'dispatched_from' => 'conversation',
+        ],
+    ]);
+
+    $job = new ProcessTaskResult($task->id);
+    $job->handle(app(\App\Services\ResultProcessor::class));
+
+    Queue::assertPushed(\App\Jobs\CreateGitLabIssue::class, function ($job) use ($task) {
+        return $job->taskId === $task->id;
+    });
+});
+
+it('does not dispatch CreateGitLabIssue for non-PrdCreation task types', function () {
+    Queue::fake([\App\Jobs\CreateGitLabIssue::class]);
+
+    $task = Task::factory()->running()->create([
+        'type' => TaskType::CodeReview,
+        'mr_iid' => 42,
+        'result' => [
+            'version' => '1.0',
+            'summary' => [
+                'risk_level' => 'low',
+                'total_findings' => 0,
+                'findings_by_severity' => ['critical' => 0, 'major' => 0, 'minor' => 0],
+                'walkthrough' => [
+                    ['file' => 'README.md', 'change_summary' => 'Updated docs'],
+                ],
+            ],
+            'findings' => [],
+            'labels' => ['ai::reviewed', 'ai::risk-low'],
+            'commit_status' => 'success',
+        ],
+    ]);
+
+    $job = new ProcessTaskResult($task->id);
+    $job->handle(app(\App\Services\ResultProcessor::class));
+
+    Queue::assertNotPushed(\App\Jobs\CreateGitLabIssue::class);
+});
+
+it('does not dispatch CreateGitLabIssue when PrdCreation result is null', function () {
+    Queue::fake([\App\Jobs\CreateGitLabIssue::class]);
+
+    $task = Task::factory()->running()->create([
+        'type' => TaskType::PrdCreation,
+        'mr_iid' => null,
+        'result' => null,
+    ]);
+
+    $job = new ProcessTaskResult($task->id);
+    $job->handle(app(\App\Services\ResultProcessor::class));
+
+    Queue::assertNotPushed(\App\Jobs\CreateGitLabIssue::class);
+});

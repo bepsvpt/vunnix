@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 55 / 116 (47%)
-- **Current Task:** T56 — Server-side execution mode
-- **Last Verified:** T55
+- **Tasks Complete:** 56 / 116 (48%)
+- **Current Task:** T57 — Structured output schema — action dispatch
+- **Last Verified:** T56
 
 ---
 
@@ -81,7 +81,7 @@
 - [x] T45: CI pipeline template [Depends: T19]
 - [x] T46: Executor image CI/CD + version alignment [Depends: T19]
 
-## M3 — Path B Functional (8/27)
+## M3 — Path B Functional (9/27)
 
 ### Chat Backend
 
@@ -94,8 +94,8 @@
 - [x] T53: Cross-project tool-use access check [Depends: T50, T51, T52, T9]
 - [x] T54: Quality gate behavior [Depends: T49]
 - [x] T55: Action dispatch from conversation (deep analysis D132) [Depends: T49, T15, T16, T9]
-- [ ] **T56:** Server-side execution mode (create Issue bypass) [Depends: T55, T32, T11]
-- [ ] T57: Structured output schema — action dispatch [Depends: T49]
+- [x] T56: Server-side execution mode (create Issue bypass) [Depends: T55, T32, T11]
+- [ ] **T57:** Structured output schema — action dispatch [Depends: T49]
 - [ ] T58: Conversation pruning middleware (>20 turns) [Depends: T49]
 - [ ] T59: Language configuration injection [Depends: T49, T10]
 - [ ] T60: Prompt injection hardening [Depends: T49]
