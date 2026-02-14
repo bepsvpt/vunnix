@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 20 / 116 (17%)
-- **Current Task:** T21 — Frontend-review skill
-- **Last Verified:** T20
+- **Tasks Complete:** 21 / 116 (18%)
+- **Current Task:** T22 — Backend-review skill
+- **Last Verified:** T21
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (9/35)
+## M2 — Path A Functional (10/35)
 
 ### Webhook & Event Routing
 
@@ -42,8 +42,8 @@
 
 - [x] T19: Executor Dockerfile + entrypoint (Playwright, screenshots D131) [Depends: —]
 - [x] T20: Executor CLAUDE.md (output format, severity, safety) [Depends: —]
-- [ ] **T21:** Frontend-review skill [Depends: T20]
-- [ ] T22: Backend-review skill [Depends: T20]
+- [x] T21: Frontend-review skill [Depends: T20]
+- [ ] **T22:** Backend-review skill [Depends: T20]
 - [ ] T23: Mixed-review skill [Depends: T21, T22]
 - [ ] T24: Security-audit skill [Depends: T20]
 - [ ] T25: UI-adjustment skill (screenshots D131) [Depends: T20, T19]

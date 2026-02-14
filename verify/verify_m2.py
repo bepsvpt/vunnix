@@ -874,6 +874,149 @@ checker.check(
 )
 
 # ============================================================
+#  T21: Frontend-review skill
+# ============================================================
+section("T21: Frontend-Review Skill")
+
+# Skill file existence and version header
+checker.check(
+    "frontend-review.md skill exists",
+    file_exists("executor/.claude/skills/frontend-review.md"),
+)
+checker.check(
+    "frontend-review.md has version header",
+    file_matches("executor/.claude/skills/frontend-review.md", r'version:\s*"\d+\.\d+"'),
+)
+checker.check(
+    "frontend-review.md has updated date header",
+    file_matches("executor/.claude/skills/frontend-review.md", r'updated:\s*"\d{4}-\d{2}-\d{2}"'),
+)
+
+# Component structure coverage
+checker.check(
+    "Skill covers component structure",
+    file_contains("executor/.claude/skills/frontend-review.md", "Component Structure"),
+)
+checker.check(
+    "Skill checks Composition API usage",
+    file_contains("executor/.claude/skills/frontend-review.md", "Composition API"),
+)
+checker.check(
+    "Skill checks script setup",
+    file_contains("executor/.claude/skills/frontend-review.md", "<script setup>"),
+)
+
+# Reactivity patterns coverage
+checker.check(
+    "Skill covers reactivity patterns",
+    file_contains("executor/.claude/skills/frontend-review.md", "Reactivity"),
+)
+checker.check(
+    "Skill checks ref vs reactive",
+    file_contains("executor/.claude/skills/frontend-review.md", "ref()"),
+)
+checker.check(
+    "Skill checks computed properties",
+    file_contains("executor/.claude/skills/frontend-review.md", "computed"),
+)
+checker.check(
+    "Skill checks watch usage",
+    file_contains("executor/.claude/skills/frontend-review.md", "watch"),
+)
+
+# Accessibility coverage
+checker.check(
+    "Skill covers accessibility",
+    file_contains("executor/.claude/skills/frontend-review.md", "Accessibility"),
+)
+checker.check(
+    "Skill checks ARIA attributes",
+    file_contains("executor/.claude/skills/frontend-review.md", "aria-label"),
+)
+checker.check(
+    "Skill checks keyboard navigation",
+    file_contains("executor/.claude/skills/frontend-review.md", "keyboard"),
+)
+checker.check(
+    "Skill checks semantic HTML",
+    file_contains("executor/.claude/skills/frontend-review.md", "Semantic HTML"),
+)
+
+# CSS specificity coverage
+checker.check(
+    "Skill covers CSS specificity",
+    file_contains("executor/.claude/skills/frontend-review.md", "Specificity"),
+)
+checker.check(
+    "Skill checks scoped styles",
+    file_contains("executor/.claude/skills/frontend-review.md", "scoped"),
+)
+checker.check(
+    "Skill flags !important usage",
+    file_contains("executor/.claude/skills/frontend-review.md", "!important"),
+)
+
+# i18n coverage
+checker.check(
+    "Skill covers internationalization",
+    file_contains("executor/.claude/skills/frontend-review.md", "i18n"),
+)
+checker.check(
+    "Skill checks hardcoded strings",
+    file_contains("executor/.claude/skills/frontend-review.md", "Hardcoded"),
+)
+
+# Design tokens coverage
+checker.check(
+    "Skill references design tokens",
+    file_contains("executor/.claude/skills/frontend-review.md", "design tokens"),
+)
+
+# ESLint severity classification
+checker.check(
+    "Skill integrates eslint findings",
+    file_contains("executor/.claude/skills/frontend-review.md", "eslint"),
+)
+checker.check(
+    "Skill classifies eslint findings by severity",
+    file_contains("executor/.claude/skills/frontend-review.md", "vue3-essential"),
+)
+checker.check(
+    "Skill maps eslint errors to Major severity",
+    file_contains("executor/.claude/skills/frontend-review.md", "Major"),
+)
+
+# Stylelint integration
+checker.check(
+    "Skill integrates stylelint findings",
+    file_contains("executor/.claude/skills/frontend-review.md", "stylelint"),
+)
+
+# Large diff handling
+checker.check(
+    "Skill handles large diffs",
+    file_contains("executor/.claude/skills/frontend-review.md", "Large Diff"),
+)
+checker.check(
+    "Skill summarizes patterns across similar changes",
+    file_contains("executor/.claude/skills/frontend-review.md", "Summarize patterns"),
+)
+
+# Output schema reference
+checker.check(
+    "Skill references code review JSON schema output",
+    file_contains("executor/.claude/skills/frontend-review.md", "code review schema"),
+)
+checker.check(
+    "Skill specifies commit_status logic",
+    file_contains("executor/.claude/skills/frontend-review.md", "commit_status"),
+)
+checker.check(
+    "Skill specifies label output",
+    file_contains("executor/.claude/skills/frontend-review.md", "ai::reviewed"),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")
