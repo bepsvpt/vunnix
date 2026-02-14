@@ -100,9 +100,10 @@ function fakeDiscussionResponse(string $id = 'disc-1'): array
 it('creates discussion threads for critical and major findings only', function () {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::response(fakeMrResponse(), 200),
-        '*/api/v4/projects/*/merge_requests/42/discussions' => Http::sequence()
-            ->push(fakeDiscussionResponse('disc-1'), 201)
-            ->push(fakeDiscussionResponse('disc-2'), 201),
+        '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::sequence()
+            ->push([], 200)                                    // T40: GET existing discussions (empty)
+            ->push(fakeDiscussionResponse('disc-1'), 201)      // POST finding #1
+            ->push(fakeDiscussionResponse('disc-2'), 201),     // POST finding #2
     ]);
 
     $task = taskWithFindings();
@@ -110,8 +111,8 @@ it('creates discussion threads for critical and major findings only', function (
     $job = new PostInlineThreads($task->id);
     $job->handle(app(GitLabClient::class));
 
-    // Should create exactly 2 discussions (critical + major, not minor)
-    Http::assertSentCount(3); // 1 MR fetch + 2 discussion creates
+    // 1 MR GET + 1 discussions GET (T40 dedup) + 2 discussion POSTs
+    Http::assertSentCount(4);
 });
 
 // ─── Sends correct position data ─────────────────────────────────
@@ -119,7 +120,10 @@ it('creates discussion threads for critical and major findings only', function (
 it('sends correct position data from MR diff_refs', function () {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::response(fakeMrResponse(), 200),
-        '*/api/v4/projects/*/merge_requests/42/discussions' => Http::response(fakeDiscussionResponse(), 201),
+        '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::sequence()
+            ->push([], 200)                                    // T40: GET existing discussions
+            ->push(fakeDiscussionResponse('disc-1'), 201)      // POST finding #1
+            ->push(fakeDiscussionResponse('disc-2'), 201),     // POST finding #2
     ]);
 
     $task = taskWithFindings();
@@ -148,7 +152,10 @@ it('sends correct position data from MR diff_refs', function () {
 it('sends formatted finding body with severity tag', function () {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::response(fakeMrResponse(), 200),
-        '*/api/v4/projects/*/merge_requests/42/discussions' => Http::response(fakeDiscussionResponse(), 201),
+        '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::sequence()
+            ->push([], 200)                                    // T40: GET existing discussions
+            ->push(fakeDiscussionResponse('disc-1'), 201)      // POST finding #1
+            ->push(fakeDiscussionResponse('disc-2'), 201),     // POST finding #2
     ]);
 
     $task = taskWithFindings();
@@ -216,6 +223,81 @@ it('returns early if the task has no result', function () {
     $job->handle(app(GitLabClient::class));
 
     Http::assertNothingSent();
+});
+
+// ─── Skips if no high/medium findings ───────────────────────────
+
+// ─── T40: Deduplicates threads for incremental review (D33) ──────
+
+it('does not create duplicate threads for findings that already have unresolved discussions', function () {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/42' => Http::response(fakeMrResponse(), 200),
+        '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::sequence()
+            // GET existing discussions — returns one matching finding #1 (SQL injection)
+            ->push([
+                [
+                    'id' => 'existing-disc-1',
+                    'notes' => [[
+                        'body' => "🔴 **Critical** | Security\n\n**SQL injection risk**\n\nUser input in SQL query.",
+                        'position' => [
+                            'new_path' => 'src/auth.py',
+                            'new_line' => 42,
+                        ],
+                    ]],
+                ],
+            ], 200)
+            // POST creates new thread for finding #2 (not duplicated)
+            ->push(fakeDiscussionResponse('new-disc-1'), 201),
+    ]);
+
+    $task = taskWithFindings();
+
+    $job = new PostInlineThreads($task->id);
+    $job->handle(app(GitLabClient::class));
+
+    // Only 1 new discussion created (finding #2: Null pointer dereference), not 2
+    // Total: 1 MR GET + 1 discussions GET + 1 discussion POST = 3
+    Http::assertSentCount(3);
+
+    // Verify the POST was for the second finding (Null pointer), not the first (SQL injection)
+    Http::assertSent(function ($request) {
+        if ($request->method() !== 'POST' || ! str_contains($request->url(), '/discussions')) {
+            return false;
+        }
+
+        $body = $request['body'] ?? '';
+
+        return str_contains($body, 'Null pointer dereference');
+    });
+
+    // Verify NO POST was made for the SQL injection finding
+    Http::assertNotSent(function ($request) {
+        if ($request->method() !== 'POST' || ! str_contains($request->url(), '/discussions')) {
+            return false;
+        }
+
+        $body = $request['body'] ?? '';
+
+        return str_contains($body, 'SQL injection risk');
+    });
+});
+
+it('creates all threads when discussion fetch fails gracefully', function () {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/42' => Http::response(fakeMrResponse(), 200),
+        '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::sequence()
+            ->push(null, 500)                                  // T40: GET discussions fails
+            ->push(fakeDiscussionResponse('disc-1'), 201)      // POST finding #1
+            ->push(fakeDiscussionResponse('disc-2'), 201),     // POST finding #2
+    ]);
+
+    $task = taskWithFindings();
+
+    $job = new PostInlineThreads($task->id);
+    $job->handle(app(GitLabClient::class));
+
+    // Graceful fallback: 1 MR GET + 1 failed discussions GET + 2 discussion POSTs = 4
+    Http::assertSentCount(4);
 });
 
 // ─── Skips if no high/medium findings ───────────────────────────

@@ -86,7 +86,22 @@ class PostInlineThreads implements ShouldQueue
 
         $diffRefs = $mr['diff_refs'] ?? [];
 
+        // T40: Fetch existing discussions to avoid duplicating threads (D33)
+        $existingDiscussions = $this->fetchExistingDiscussions($gitLab, $projectId, $task->mr_iid);
+
         foreach ($findings as $finding) {
+            // T40: Skip if this finding already has an unresolved discussion thread
+            if ($this->hasExistingThread($finding, $existingDiscussions)) {
+                Log::info('PostInlineThreads: skipping duplicate finding (D33)', [
+                    'task_id' => $this->taskId,
+                    'finding_id' => $finding['id'],
+                    'file' => $finding['file'],
+                    'line' => $finding['line'],
+                ]);
+
+                continue;
+            }
+
             $body = $formatter->format($finding);
 
             $position = [
@@ -122,5 +137,55 @@ class PostInlineThreads implements ShouldQueue
                 throw $e;
             }
         }
+    }
+
+    /**
+     * Fetch existing discussion threads for an MR to check for duplicates.
+     *
+     * @return array<int, array>
+     */
+    private function fetchExistingDiscussions(GitLabClient $gitLab, int $projectId, int $mrIid): array
+    {
+        try {
+            return $gitLab->listMergeRequestDiscussions($projectId, $mrIid);
+        } catch (\Throwable $e) {
+            Log::warning('PostInlineThreads: failed to fetch discussions for dedup, proceeding without', [
+                'task_id' => $this->taskId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+    }
+
+    /**
+     * Check if a finding already has an unresolved discussion thread.
+     *
+     * Matches by file path and finding title in the discussion body.
+     * Per D33: "Same issue = same discussion thread. No duplicate threads."
+     */
+    private function hasExistingThread(array $finding, array $discussions): bool
+    {
+        foreach ($discussions as $discussion) {
+            $notes = $discussion['notes'] ?? [];
+
+            if (empty($notes)) {
+                continue;
+            }
+
+            $firstNote = $notes[0];
+            $body = $firstNote['body'] ?? '';
+            $position = $firstNote['position'] ?? [];
+
+            // Match by file path + finding title
+            $sameFile = ($position['new_path'] ?? '') === $finding['file'];
+            $sameTitle = str_contains($body, $finding['title']);
+
+            if ($sameFile && $sameTitle) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
