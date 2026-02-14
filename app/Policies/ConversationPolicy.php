@@ -9,11 +9,30 @@ class ConversationPolicy
 {
     /**
      * Can the user view this conversation?
-     * User must be a member of the conversation's project.
+     * User must be a member of the primary project or any additional pivot project.
      */
     public function view(User $user, Conversation $conversation): bool
     {
-        return $user->projects()->where('projects.id', $conversation->project_id)->exists();
+        $userProjectIds = $user->projects()->pluck('projects.id')->toArray();
+
+        // Check primary project
+        if (in_array($conversation->project_id, $userProjectIds)) {
+            return true;
+        }
+
+        // Check additional projects via pivot
+        return $conversation->projects()
+            ->whereIn('projects.id', $userProjectIds)
+            ->exists();
+    }
+
+    /**
+     * Can the user add a project to this conversation?
+     * Must be able to view the conversation AND have access to the new project.
+     */
+    public function addProject(User $user, Conversation $conversation): bool
+    {
+        return $this->view($user, $conversation);
     }
 
     /**
