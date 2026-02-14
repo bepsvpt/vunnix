@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Services\TaskTokenService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
@@ -65,6 +66,11 @@ function generateToken(int $taskId): string
 // ─── Happy path: completed result ────────────────────────────────
 
 it('accepts a completed result and transitions task to completed via Result Processor', function () {
+    // Fake GitLab API — PostSummaryComment runs inline on sync queue
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1, 'body' => 'mocked'], 201),
+    ]);
+
     $task = Task::factory()->running()->create();
     $token = generateToken($task->id);
 

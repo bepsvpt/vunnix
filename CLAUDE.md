@@ -253,6 +253,7 @@ Persistent lessons discovered during development. **Add entries here when you so
 - **Use `config('key') ?: 'default'` not `config('key', 'default')` for nullable env vars:** `config('key', 'default')` only uses the default when the key is completely missing from config. If the env var is unset, `env()` returns `null`, the config key exists as `null`, and the default is ignored. Use `?: 'fallback'` to handle both `null` and empty string.
 - **Laravel 12 CSRF exclusion uses named parameter syntax:** Use `$middleware->validateCsrfTokens(except: ['webhook'])` — the method `validateCsrfTokenExcept()` does not exist.
 - **Use `present` not `required` for array fields that can be empty:** Laravel's `required` rule rejects empty arrays `[]`. For schema fields like `findings` where zero items is valid (e.g., clean code review), use `'present', 'array'` instead of `'required', 'array'`.
+- **Sync queue tests that dispatch jobs making HTTP calls need `Http::fake()`:** When a test uses the sync queue driver (no `Queue::fake()`), dispatched jobs run inline. If those jobs call external APIs (e.g., GitLab), the real HTTP call executes and failures (401, 500) bubble up as the test's HTTP response. Always add `Http::fake()` for external API endpoints in sync-queue integration tests.
 
 ## Key Files
 
