@@ -580,6 +580,149 @@ checker.check(
     file_contains("tests/Unit/Agents/VunnixAgentTest.php", "T50 repo browsing tools"),
 )
 
+# ============================================================
+#  T51: GitLab tools — Issues
+# ============================================================
+section("T51: GitLab Tools — Issues")
+
+# Tool classes exist
+checker.check(
+    "ListIssues tool class exists",
+    file_exists("app/Agents/Tools/ListIssues.php"),
+)
+checker.check(
+    "ReadIssue tool class exists",
+    file_exists("app/Agents/Tools/ReadIssue.php"),
+)
+
+# Tool interface implementation
+checker.check(
+    "ListIssues implements Tool contract",
+    file_contains("app/Agents/Tools/ListIssues.php", "implements Tool"),
+)
+checker.check(
+    "ReadIssue implements Tool contract",
+    file_contains("app/Agents/Tools/ReadIssue.php", "implements Tool"),
+)
+
+# handle() and schema() methods
+checker.check(
+    "ListIssues has handle() method",
+    file_contains("app/Agents/Tools/ListIssues.php", "public function handle"),
+)
+checker.check(
+    "ListIssues has schema() method",
+    file_contains("app/Agents/Tools/ListIssues.php", "public function schema"),
+)
+checker.check(
+    "ReadIssue has handle() method",
+    file_contains("app/Agents/Tools/ReadIssue.php", "public function handle"),
+)
+checker.check(
+    "ReadIssue has schema() method",
+    file_contains("app/Agents/Tools/ReadIssue.php", "public function schema"),
+)
+
+# GitLabClient integration
+checker.check(
+    "ListIssues uses GitLabClient::listIssues",
+    file_contains("app/Agents/Tools/ListIssues.php", "listIssues"),
+)
+checker.check(
+    "ReadIssue uses GitLabClient::getIssue",
+    file_contains("app/Agents/Tools/ReadIssue.php", "getIssue"),
+)
+
+# Filter parameters in ListIssues schema
+checker.check(
+    "ListIssues schema has state filter",
+    file_contains("app/Agents/Tools/ListIssues.php", "'state'"),
+)
+checker.check(
+    "ListIssues schema has labels filter",
+    file_contains("app/Agents/Tools/ListIssues.php", "'labels'"),
+)
+checker.check(
+    "ListIssues schema has search filter",
+    file_contains("app/Agents/Tools/ListIssues.php", "'search'"),
+)
+checker.check(
+    "ListIssues schema has per_page parameter",
+    file_contains("app/Agents/Tools/ListIssues.php", "'per_page'"),
+)
+
+# ReadIssue parameters
+checker.check(
+    "ReadIssue schema has issue_iid parameter",
+    file_contains("app/Agents/Tools/ReadIssue.php", "'issue_iid'"),
+)
+
+# Error handling — tools return messages, not exceptions
+checker.check(
+    "ListIssues catches GitLabApiException",
+    file_contains("app/Agents/Tools/ListIssues.php", "catch (GitLabApiException"),
+)
+checker.check(
+    "ReadIssue catches GitLabApiException",
+    file_contains("app/Agents/Tools/ReadIssue.php", "catch (GitLabApiException"),
+)
+
+# ReadIssue parses full details
+checker.check(
+    "ReadIssue includes description in output",
+    file_contains("app/Agents/Tools/ReadIssue.php", "description"),
+)
+checker.check(
+    "ReadIssue includes labels in output",
+    file_contains("app/Agents/Tools/ReadIssue.php", "labels"),
+)
+checker.check(
+    "ReadIssue includes assignees in output",
+    file_contains("app/Agents/Tools/ReadIssue.php", "assignees"),
+)
+
+# Tools registered in VunnixAgent
+checker.check(
+    "VunnixAgent registers ListIssues tool",
+    file_contains("app/Agents/VunnixAgent.php", "ListIssues"),
+)
+checker.check(
+    "VunnixAgent registers ReadIssue tool",
+    file_contains("app/Agents/VunnixAgent.php", "ReadIssue"),
+)
+
+# Unit tests
+checker.check(
+    "ListIssues unit tests exist",
+    file_exists("tests/Unit/Agents/Tools/ListIssuesTest.php"),
+)
+checker.check(
+    "ReadIssue unit tests exist",
+    file_exists("tests/Unit/Agents/Tools/ReadIssueTest.php"),
+)
+
+# Test coverage of key scenarios
+checker.check(
+    "ListIssues test covers filter parameters",
+    file_contains("tests/Unit/Agents/Tools/ListIssuesTest.php", "passes state filter"),
+)
+checker.check(
+    "ListIssues test covers error handling",
+    file_contains("tests/Unit/Agents/Tools/ListIssuesTest.php", "Error listing issues"),
+)
+checker.check(
+    "ReadIssue test covers full details parsing",
+    file_contains("tests/Unit/Agents/Tools/ReadIssueTest.php", "formatted issue details"),
+)
+checker.check(
+    "ReadIssue test covers error handling",
+    file_contains("tests/Unit/Agents/Tools/ReadIssueTest.php", "Error reading issue"),
+)
+checker.check(
+    "VunnixAgent test verifies T51 tools",
+    file_contains("tests/Unit/Agents/VunnixAgentTest.php", "T51 issue tools"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()

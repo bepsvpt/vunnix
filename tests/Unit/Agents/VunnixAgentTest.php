@@ -1,7 +1,9 @@
 <?php
 
 use App\Agents\Tools\BrowseRepoTree;
+use App\Agents\Tools\ListIssues;
 use App\Agents\Tools\ReadFile;
+use App\Agents\Tools\ReadIssue;
 use App\Agents\Tools\SearchCode;
 use App\Agents\VunnixAgent;
 use Laravel\Ai\Contracts\Agent;
@@ -37,10 +39,18 @@ it('returns the T50 repo browsing tools', function () {
     $agent = new VunnixAgent;
     $tools = iterator_to_array($agent->tools());
 
-    expect($tools)->toHaveCount(3);
     expect($tools[0])->toBeInstanceOf(BrowseRepoTree::class);
     expect($tools[1])->toBeInstanceOf(ReadFile::class);
     expect($tools[2])->toBeInstanceOf(SearchCode::class);
+});
+
+it('returns the T51 issue tools', function () {
+    $agent = new VunnixAgent;
+    $tools = iterator_to_array($agent->tools());
+
+    expect($tools)->toHaveCount(5);
+    expect($tools[3])->toBeInstanceOf(ListIssues::class);
+    expect($tools[4])->toBeInstanceOf(ReadIssue::class);
 });
 
 it('returns tools that implement the Tool interface', function () {

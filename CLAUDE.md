@@ -258,6 +258,7 @@ Persistent lessons discovered during development. **Add entries here when you so
 - **Use `Log::shouldReceive` (mock) not `Log::spy()` + `shouldHaveReceived` for per-test log assertions:** `Log::spy()` in `beforeEach` accumulates calls across all tests in the file. `shouldHaveReceived('warning')->once()` then sees calls from previous tests. Use `Log::shouldReceive` (strict mock) with expectations *before* the action for tests that assert specific log calls.
 - **Laravel 11+ base Controller needs `AuthorizesRequests` trait:** The default `Controller` class no longer includes `AuthorizesRequests`. If any controller uses `$this->authorize()`, add `use Illuminate\Foundation\Auth\Access\AuthorizesRequests;` and `use AuthorizesRequests;` to the base `Controller` class.
 - **AI SDK Tool schema tests: use `new JsonSchemaTypeFactory` not `app(JsonSchema::class)` in unit tests:** `app()` requires the Laravel container. For pure unit tests (no `uses(TestCase::class)`), instantiate `Illuminate\JsonSchema\JsonSchemaTypeFactory` directly. Keep tool tests as pure unit tests with Mockery — they don't need the framework.
+- **AI SDK `Request::string()` returns `Stringable`, not `string`:** The `InteractsWithData` trait's `string()` method returns `Illuminate\Support\Stringable`. Comparing with `!== ''` always evaluates to `true` (object vs string). Cast to `(string)` before comparison or when building arrays that will be matched by Mockery.
 
 ## Key Files
 
