@@ -189,6 +189,27 @@ it('formats an all-critical review with high risk correctly', function () {
         ->and($markdown)->toContain('| 2 | 🔴 Critical | Security |');
 });
 
+// ─── T40: Incremental review timestamp ──────────────────────────
+
+it('appends updated timestamp for incremental reviews', function () {
+    $formatter = new SummaryCommentFormatter();
+    $result = mixedReviewResult();
+
+    $markdown = $formatter->format($result, new \DateTimeImmutable('2026-02-14 14:32'));
+
+    expect($markdown)->toContain('## 🤖 AI Code Review')
+        ->and($markdown)->toContain('📝 Updated: 2026-02-14 14:32');
+});
+
+it('does not include timestamp for initial reviews', function () {
+    $formatter = new SummaryCommentFormatter();
+    $result = mixedReviewResult();
+
+    $markdown = $formatter->format($result);
+
+    expect($markdown)->not->toContain('📝 Updated');
+});
+
 // ─── Edge: category display uses title case ─────────────────────
 
 it('capitalizes category names in the findings table', function () {

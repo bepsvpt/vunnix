@@ -28,8 +28,9 @@ class SummaryCommentFormatter
      * Format a validated code review result as a markdown summary comment.
      *
      * @param  array  $result  A validated CodeReviewSchema array.
+     * @param  \DateTimeInterface|null  $updatedAt  If set, adds an "Updated" timestamp (T40 incremental review).
      */
-    public function format(array $result): string
+    public function format(array $result, ?\DateTimeInterface $updatedAt = null): string
     {
         $summary = $result['summary'];
         $findings = $result['findings'];
@@ -45,6 +46,12 @@ class SummaryCommentFormatter
         $lines[] = '';
         $lines[] = "**Risk Level:** {$riskBadge} | **Issues Found:** {$issueCount} | **Files Changed:** {$filesChanged}";
         $lines[] = '';
+
+        // T40: Incremental review timestamp
+        if ($updatedAt !== null) {
+            $lines[] = '📝 Updated: '.$updatedAt->format('Y-m-d H:i').' — re-reviewed after new commits';
+            $lines[] = '';
+        }
 
         // Walkthrough (collapsible)
         $lines[] = '<details>';
