@@ -4773,6 +4773,157 @@ checker.check(
 )
 
 # ============================================================
+#  T46: Executor Image CI/CD + Version Alignment
+# ============================================================
+section("T46: Executor Image CI/CD + Version Alignment")
+
+# T46.1: GitLab CI pipeline file exists
+checker.check(
+    "GitLab CI pipeline file exists",
+    file_exists(".gitlab-ci.yml"),
+)
+
+# T46.2: Pipeline defines stages
+checker.check(
+    "Pipeline defines check stage",
+    file_contains(".gitlab-ci.yml", "check"),
+)
+checker.check(
+    "Pipeline defines build stage",
+    file_contains(".gitlab-ci.yml", "build"),
+)
+
+# T46.3: Build job uses Docker-in-Docker
+checker.check(
+    "Build job uses Docker image",
+    file_contains(".gitlab-ci.yml", "image: docker:"),
+)
+checker.check(
+    "Build job uses DinD service",
+    file_contains(".gitlab-ci.yml", "docker:"),
+)
+
+# T46.4: Build job authenticates to registry
+checker.check(
+    "Build job logs in to CI_REGISTRY",
+    file_contains(".gitlab-ci.yml", "CI_REGISTRY"),
+)
+checker.check(
+    "Build job uses CI_REGISTRY_PASSWORD",
+    file_contains(".gitlab-ci.yml", "CI_REGISTRY_PASSWORD"),
+)
+
+# T46.5: Build job builds from executor/ directory
+checker.check(
+    "Build job builds from executor/Dockerfile",
+    file_contains(".gitlab-ci.yml", "executor/Dockerfile"),
+)
+checker.check(
+    "Build job uses executor/ as build context",
+    file_contains(".gitlab-ci.yml", "executor/"),
+)
+
+# T46.6: Build job tags with version and SHA
+checker.check(
+    "Build job tags with commit SHA",
+    file_contains(".gitlab-ci.yml", "CI_COMMIT_SHORT_SHA"),
+)
+checker.check(
+    "Build job extracts version from Dockerfile",
+    file_contains(".gitlab-ci.yml", "VUNNIX_EXECUTOR_VERSION"),
+)
+checker.check(
+    "Build job tags with 'latest' on default branch",
+    file_contains(".gitlab-ci.yml", "latest"),
+)
+
+# T46.7: Build triggers on executor/ changes
+checker.check(
+    "Build triggers on executor/ changes",
+    file_contains(".gitlab-ci.yml", "executor/**/*"),
+)
+
+# T46.8: Build job pushes to registry
+checker.check(
+    "Build job pushes image",
+    file_contains(".gitlab-ci.yml", "docker push"),
+)
+
+# T46.9: Version alignment check job exists
+checker.check(
+    "Version alignment job defined",
+    file_contains(".gitlab-ci.yml", "version-alignment"),
+)
+checker.check(
+    "Alignment job references D126",
+    file_contains(".gitlab-ci.yml", "D126"),
+)
+checker.check(
+    "Alignment job runs check script",
+    file_contains(".gitlab-ci.yml", "check-version-alignment"),
+)
+
+# T46.10: Build depends on alignment check
+checker.check(
+    "Build depends on alignment check (needs)",
+    file_contains(".gitlab-ci.yml", "version-alignment"),
+)
+
+# T46.11: Version alignment check script exists
+checker.check(
+    "Version alignment check script exists",
+    file_exists("scripts/check-version-alignment.sh"),
+)
+
+# T46.12: Alignment script validates executor CLAUDE.md
+checker.check(
+    "Alignment script checks severity definitions",
+    file_contains("scripts/check-version-alignment.sh", "Severity"),
+)
+checker.check(
+    "Alignment script checks Critical severity",
+    file_contains("scripts/check-version-alignment.sh", "Critical"),
+)
+checker.check(
+    "Alignment script checks Major severity",
+    file_contains("scripts/check-version-alignment.sh", "Major"),
+)
+checker.check(
+    "Alignment script checks Minor severity",
+    file_contains("scripts/check-version-alignment.sh", "Minor"),
+)
+checker.check(
+    "Alignment script checks safety boundaries",
+    file_contains("scripts/check-version-alignment.sh", "Safety"),
+)
+checker.check(
+    "Alignment script checks output format",
+    file_contains("scripts/check-version-alignment.sh", "Output"),
+)
+
+# T46.13: Alignment script documents T49 deferral
+checker.check(
+    "Alignment script documents T49 deferral",
+    file_contains("scripts/check-version-alignment.sh", "T49"),
+)
+checker.check(
+    "Alignment script mentions CE Agent class",
+    file_contains("scripts/check-version-alignment.sh", "CE Agent"),
+)
+
+# T46.14: Alignment script is executable
+checker.check(
+    "Alignment script passes when run",
+    run_command("bash scripts/check-version-alignment.sh"),
+)
+
+# T46.15: Pipeline includes OCI labels
+checker.check(
+    "Build adds OCI image labels",
+    file_contains(".gitlab-ci.yml", "opencontainers"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()

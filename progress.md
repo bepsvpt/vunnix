@@ -2,10 +2,10 @@
 
 ## Summary
 
-- **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 45 / 116 (39%)
-- **Current Task:** T46 — Executor image CI/CD + version alignment
-- **Last Verified:** T45
+- **Current Milestone:** M3 — Path B Functional
+- **Tasks Complete:** 46 / 116 (40%)
+- **Current Task:** T47 — Chat API endpoints
+- **Last Verified:** T46
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (33/35)
+## M2 — Path A Functional (35/35) ✅
 
 ### Webhook & Event Routing
 
@@ -79,13 +79,13 @@
 - [x] T43: Issue discussion — @ai on Issue [Depends: T39, T26]
 - [x] T44: Feature development — ai::develop label [Depends: T39, T27]
 - [x] T45: CI pipeline template [Depends: T19]
-- [ ] **T46:** Executor image CI/CD + version alignment [Depends: T19]
+- [x] T46: Executor image CI/CD + version alignment [Depends: T19]
 
 ## M3 — Path B Functional (0/27)
 
 ### Chat Backend
 
-- [ ] T47: Chat API endpoints (search D148, archiving D141, title D142) [Depends: T4, T9]
+- [ ] **T47:** Chat API endpoints (search D148, archiving D141, title D142) [Depends: T4, T9]
 - [ ] T48: SSE streaming endpoint [Depends: T47]
 - [ ] T49: Conversation Engine — AI SDK Agent class [Depends: T47, T48, T10]
 - [ ] T50: GitLab tools — repo browsing (BrowseRepoTree, ReadFile, SearchCode) [Depends: T49, T11]

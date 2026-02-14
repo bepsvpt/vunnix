@@ -1,0 +1,122 @@
+# Vunnix CI/CD Pipeline
+#
+# Builds and publishes the executor Docker image to GitLab Container Registry.
+# Target projects pull this image to run AI-powered code reviews and tasks.
+#
+# Image path: $CI_REGISTRY_IMAGE/executor:<tag>
+#   - Tagged as 'latest' on main branch
+#   - Tagged with version from executor/Dockerfile ENV on main branch
+#   - Tagged with short commit SHA on all branches
+#
+# Version alignment check (D126):
+#   Verifies shared constants (severity definitions, safety rules, output field
+#   names) between executor CLAUDE.md and Conversation Engine Agent class.
+#   NOTE: Deferred until T49 (CE Agent class) is complete — currently a
+#   placeholder that passes. The build pipeline is fully functional without it.
+#
+# @see §6.7 Executor Image
+# @see §14.1 Prompt Architecture (version alignment)
+
+stages:
+  - check
+  - build
+
+variables:
+  # Docker-in-Docker configuration
+  DOCKER_TLS_CERTDIR: "/certs"
+  # Executor image version — read from Dockerfile at build time
+  EXECUTOR_IMAGE: "${CI_REGISTRY_IMAGE}/executor"
+
+# ── Version Alignment Check ─────────────────────────────────────
+# Verifies executor CLAUDE.md and CE Agent class share the same
+# severity definitions, safety rules, and output field names.
+#
+# Currently a placeholder (T49 not yet implemented).
+# After T49: this job will run scripts/check-version-alignment.sh
+# and fail the pipeline if drift is detected.
+version-alignment:
+  stage: check
+  image: alpine:3.19
+  script:
+    - apk add --no-cache bash
+    - bash scripts/check-version-alignment.sh
+  rules:
+    # Run on changes to executor/ or CE Agent class (when it exists)
+    - if: $CI_COMMIT_BRANCH
+      changes:
+        - executor/**/*
+        - executor/*
+        - app/AI/**/*
+      when: always
+    # Also run on MR pipelines touching these paths
+    - if: $CI_MERGE_REQUEST_IID
+      changes:
+        - executor/**/*
+        - executor/*
+        - app/AI/**/*
+      when: always
+  allow_failure: false
+
+# ── Build Executor Image ────────────────────────────────────────
+# Builds the Docker image from executor/ and pushes to GitLab
+# Container Registry. Uses Docker-in-Docker (DinD) service.
+#
+# Tags applied:
+#   - $CI_COMMIT_SHORT_SHA (always)
+#   - Version from Dockerfile ENV (main branch only)
+#   - 'latest' (main branch only)
+build-executor:
+  stage: build
+  image: docker:27
+  services:
+    - docker:27-dind
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+  script:
+    # Extract version from Dockerfile ENV
+    - EXECUTOR_VERSION=$(grep -oP 'VUNNIX_EXECUTOR_VERSION="\K[^"]+' executor/Dockerfile)
+    - echo "Building executor image version ${EXECUTOR_VERSION}"
+
+    # Build the image
+    - >-
+      docker build
+      --pull
+      --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      --label "org.opencontainers.image.revision=${CI_COMMIT_SHA}"
+      --label "org.opencontainers.image.version=${EXECUTOR_VERSION}"
+      --label "org.opencontainers.image.source=${CI_PROJECT_URL}"
+      --label "org.opencontainers.image.title=Vunnix Executor"
+      -t "${EXECUTOR_IMAGE}:${CI_COMMIT_SHORT_SHA}"
+      -f executor/Dockerfile
+      executor/
+
+    # Tag and push — always push commit SHA tag
+    - docker push "${EXECUTOR_IMAGE}:${CI_COMMIT_SHORT_SHA}"
+
+    # On main branch, also tag with version and 'latest'
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
+        docker tag "${EXECUTOR_IMAGE}:${CI_COMMIT_SHORT_SHA}" "${EXECUTOR_IMAGE}:${EXECUTOR_VERSION}"
+        docker tag "${EXECUTOR_IMAGE}:${CI_COMMIT_SHORT_SHA}" "${EXECUTOR_IMAGE}:latest"
+        docker push "${EXECUTOR_IMAGE}:${EXECUTOR_VERSION}"
+        docker push "${EXECUTOR_IMAGE}:latest"
+        echo "Published: ${EXECUTOR_IMAGE}:${EXECUTOR_VERSION} and ${EXECUTOR_IMAGE}:latest"
+      else
+        echo "Non-default branch — only SHA tag pushed: ${EXECUTOR_IMAGE}:${CI_COMMIT_SHORT_SHA}"
+      fi
+  rules:
+    # Build on changes to executor/ on any branch
+    - if: $CI_COMMIT_BRANCH
+      changes:
+        - executor/**/*
+        - executor/*
+      when: always
+    # Build on MR pipelines touching executor/
+    - if: $CI_MERGE_REQUEST_IID
+      changes:
+        - executor/**/*
+        - executor/*
+      when: always
+  needs:
+    - job: version-alignment
+      optional: false
