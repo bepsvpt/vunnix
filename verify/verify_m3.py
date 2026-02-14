@@ -1302,6 +1302,137 @@ checker.check(
     ),
 )
 
+# ============================================================
+#  T57: Structured output schema — action dispatch
+# ============================================================
+section("T57: Structured Output Schema — Action Dispatch")
+
+# Schema class exists
+checker.check(
+    "ActionDispatchSchema class exists",
+    file_exists("app/Schemas/ActionDispatchSchema.php"),
+)
+checker.check(
+    "ActionDispatchSchema has VERSION constant",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "VERSION"),
+)
+checker.check(
+    "ActionDispatchSchema has ACTION_TYPES constant",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "ACTION_TYPES"),
+)
+
+# Core methods (validate, strip, validateAndStrip, rules)
+checker.check(
+    "ActionDispatchSchema has validate method",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "public static function validate"),
+)
+checker.check(
+    "ActionDispatchSchema has strip method",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "public static function strip"),
+)
+checker.check(
+    "ActionDispatchSchema has validateAndStrip method",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "public static function validateAndStrip"),
+)
+checker.check(
+    "ActionDispatchSchema has rules method",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "public static function rules"),
+)
+
+# Required schema fields (§14.4)
+checker.check(
+    "Schema validates action_type field",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "'action_type'"),
+)
+checker.check(
+    "Schema validates project_id field",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "'project_id'"),
+)
+checker.check(
+    "Schema validates title field",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "'title'"),
+)
+checker.check(
+    "Schema validates description field",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "'description'"),
+)
+
+# Optional fields
+checker.check(
+    "Schema has branch_name field (nullable)",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "'branch_name'"),
+)
+checker.check(
+    "Schema has target_branch field (nullable)",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "'target_branch'"),
+)
+checker.check(
+    "Schema has assignee_id field (nullable)",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "'assignee_id'"),
+)
+checker.check(
+    "Schema has labels array field",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "'labels'"),
+)
+
+# Action type enum validation
+checker.check(
+    "Schema validates action_type via Rule::in",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "Rule::in(self::ACTION_TYPES)"),
+)
+checker.check(
+    "Schema includes all 5 action types",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "deep_analysis"),
+)
+
+# Unit tests
+checker.check(
+    "ActionDispatchSchema test file exists",
+    file_exists("tests/Unit/Schemas/ActionDispatchSchemaTest.php"),
+)
+checker.check(
+    "Test covers valid action dispatch",
+    file_contains(
+        "tests/Unit/Schemas/ActionDispatchSchemaTest.php",
+        "validates a complete valid action dispatch",
+    ),
+)
+checker.check(
+    "Test covers all action types",
+    file_contains(
+        "tests/Unit/Schemas/ActionDispatchSchemaTest.php",
+        "validates all action types",
+    ),
+)
+checker.check(
+    "Test covers invalid action type rejection",
+    file_contains(
+        "tests/Unit/Schemas/ActionDispatchSchemaTest.php",
+        "fails when action_type has an invalid value",
+    ),
+)
+checker.check(
+    "Test covers field stripping",
+    file_contains(
+        "tests/Unit/Schemas/ActionDispatchSchemaTest.php",
+        "strips unknown top-level fields",
+    ),
+)
+checker.check(
+    "Test covers validateAndStrip",
+    file_contains(
+        "tests/Unit/Schemas/ActionDispatchSchemaTest.php",
+        "returns stripped data when valid via validateAndStrip",
+    ),
+)
+checker.check(
+    "Test cross-validates against DispatchAction tool types",
+    file_contains(
+        "tests/Unit/Schemas/ActionDispatchSchemaTest.php",
+        "action types match DispatchAction tool mapping",
+    ),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()
