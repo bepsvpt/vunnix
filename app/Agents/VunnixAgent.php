@@ -3,6 +3,7 @@
 namespace App\Agents;
 
 use App\Agents\Tools\BrowseRepoTree;
+use App\Agents\Tools\DispatchAction;
 use App\Agents\Tools\ListIssues;
 use App\Agents\Tools\ListMergeRequests;
 use App\Agents\Tools\ReadFile;
@@ -72,6 +73,7 @@ class VunnixAgent implements Agent, Conversational, HasTools, HasMiddleware
      * - T50: BrowseRepoTree, ReadFile, SearchCode
      * - T51: ListIssues, ReadIssue
      * - T52: ListMergeRequests, ReadMergeRequest, ReadMRDiff
+     * - T55: DispatchAction
      *
      * @return array<\Laravel\Ai\Contracts\Tool>
      */
@@ -89,6 +91,8 @@ class VunnixAgent implements Agent, Conversational, HasTools, HasMiddleware
             app(ListMergeRequests::class),
             app(ReadMergeRequest::class),
             app(ReadMRDiff::class),
+            // T55: Action dispatch
+            app(DispatchAction::class),
         ];
     }
 

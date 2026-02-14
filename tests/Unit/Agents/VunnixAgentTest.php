@@ -1,6 +1,7 @@
 <?php
 
 use App\Agents\Tools\BrowseRepoTree;
+use App\Agents\Tools\DispatchAction;
 use App\Agents\Tools\ListIssues;
 use App\Agents\Tools\ListMergeRequests;
 use App\Agents\Tools\ReadFile;
@@ -59,10 +60,17 @@ it('returns the T52 merge request tools', function () {
     $agent = new VunnixAgent;
     $tools = iterator_to_array($agent->tools());
 
-    expect($tools)->toHaveCount(8);
     expect($tools[5])->toBeInstanceOf(ListMergeRequests::class);
     expect($tools[6])->toBeInstanceOf(ReadMergeRequest::class);
     expect($tools[7])->toBeInstanceOf(ReadMRDiff::class);
+});
+
+it('returns the T55 dispatch action tool', function () {
+    $agent = new VunnixAgent;
+    $tools = iterator_to_array($agent->tools());
+
+    expect($tools)->toHaveCount(9);
+    expect($tools[8])->toBeInstanceOf(DispatchAction::class);
 });
 
 it('returns tools that implement the Tool interface', function () {
