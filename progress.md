@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 16 / 116 (14%)
-- **Current Task:** T17 — Task Dispatcher — strategy selection + execution mode routing
-- **Last Verified:** T16
+- **Tasks Complete:** 17 / 116 (15%)
+- **Current Task:** T18 — Pipeline trigger integration (task-scoped token D127)
+- **Last Verified:** T17
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (5/35)
+## M2 — Path A Functional (6/35)
 
 ### Webhook & Event Routing
 
@@ -35,8 +35,8 @@
 
 - [x] T15: Task model + lifecycle (state machine) [Depends: T4]
 - [x] T16: Task queue — Redis with priority + queue isolation (D134) [Depends: T15]
-- [ ] **T17:** Task Dispatcher — strategy selection + execution mode routing [Depends: T16, T11]
-- [ ] T18: Pipeline trigger integration (task-scoped token D127) [Depends: T17]
+- [x] T17: Task Dispatcher — strategy selection + execution mode routing [Depends: T16, T11]
+- [ ] **T18:** Pipeline trigger integration (task-scoped token D127) [Depends: T17]
 
 ### Executor Image
 

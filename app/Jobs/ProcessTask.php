@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Task;
+use App\Services\TaskDispatcher;
 use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -33,10 +34,9 @@ class ProcessTask implements ShouldQueue
     /**
      * Execute the job.
      *
-     * Stub — T17 (Task Dispatcher) will add strategy selection
-     * and pipeline trigger / server-side execution logic.
+     * Delegates to TaskDispatcher for strategy selection and execution mode routing.
      */
-    public function handle(): void
+    public function handle(TaskDispatcher $dispatcher): void
     {
         $task = Task::find($this->taskId);
 
@@ -55,11 +55,13 @@ class ProcessTask implements ShouldQueue
             return;
         }
 
-        Log::info('ProcessTask: picked up task (T17 will implement dispatch logic)', [
+        Log::info('ProcessTask: dispatching task', [
             'task_id' => $this->taskId,
             'type' => $task->type->value,
             'priority' => $task->priority->value,
             'execution_mode' => $task->type->executionMode(),
         ]);
+
+        $dispatcher->dispatch($task);
     }
 }
