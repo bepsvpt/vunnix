@@ -3784,6 +3784,104 @@ checker.check(
 )
 
 # ============================================================
+#  T39: Code review — end-to-end
+# ============================================================
+section("T39: Code Review — End-to-End")
+
+# WebhookController wiring
+checker.check(
+    "WebhookController imports TaskDispatchService",
+    file_contains(
+        "app/Http/Controllers/WebhookController.php",
+        "use App\\Services\\TaskDispatchService",
+    ),
+)
+checker.check(
+    "WebhookController calls taskDispatchService->dispatch()",
+    file_contains(
+        "app/Http/Controllers/WebhookController.php",
+        "taskDispatchService->dispatch(",
+    ),
+)
+checker.check(
+    "WebhookController returns task_id in response",
+    file_contains(
+        "app/Http/Controllers/WebhookController.php",
+        "'task_id'",
+    ),
+)
+
+# E2E integration test
+checker.check(
+    "CodeReviewEndToEndTest exists",
+    file_exists("tests/Feature/CodeReviewEndToEndTest.php"),
+)
+checker.check(
+    "E2E test covers full flow (webhook to comments)",
+    file_contains(
+        "tests/Feature/CodeReviewEndToEndTest.php",
+        "completes full code review flow from webhook to 3-layer GitLab comments",
+    ),
+)
+checker.check(
+    "E2E test covers placeholder-then-update pattern",
+    file_contains(
+        "tests/Feature/CodeReviewEndToEndTest.php",
+        "placeholder-then-update pattern",
+    ),
+)
+checker.check(
+    "E2E test covers all 3 layers (summary, threads, labels)",
+    file_contains(
+        "tests/Feature/CodeReviewEndToEndTest.php",
+        "PostSummaryComment",
+    )
+    and file_contains(
+        "tests/Feature/CodeReviewEndToEndTest.php",
+        "PostInlineThreads",
+    )
+    and file_contains(
+        "tests/Feature/CodeReviewEndToEndTest.php",
+        "PostLabelsAndStatus",
+    ),
+)
+checker.check(
+    "E2E test verifies pipeline trigger with VUNNIX_* variables",
+    file_contains(
+        "tests/Feature/CodeReviewEndToEndTest.php",
+        "VUNNIX_TASK_ID",
+    ),
+)
+checker.check(
+    "E2E test verifies commit status based on findings",
+    file_contains(
+        "tests/Feature/CodeReviewEndToEndTest.php",
+        "commit status to success when no critical findings",
+    ),
+)
+checker.check(
+    "E2E test verifies task completed status",
+    file_contains(
+        "tests/Feature/CodeReviewEndToEndTest.php",
+        "TaskStatus::Completed",
+    ),
+)
+checker.check(
+    "E2E test uses Http::fake for GitLab API",
+    file_contains(
+        "tests/Feature/CodeReviewEndToEndTest.php",
+        "Http::fake(",
+    ),
+)
+checker.check(
+    "E2E test uses CodeReviewSchema-valid result data",
+    file_contains(
+        "tests/Feature/CodeReviewEndToEndTest.php",
+        "codeReviewResult",
+    ),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
