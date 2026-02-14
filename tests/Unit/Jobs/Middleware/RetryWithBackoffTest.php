@@ -4,6 +4,8 @@ use App\Exceptions\GitLabApiException;
 use App\Jobs\Middleware\RetryWithBackoff;
 use Illuminate\Support\Facades\Log;
 
+uses(Tests\TestCase::class);
+
 beforeEach(function () {
     Log::spy();
 });

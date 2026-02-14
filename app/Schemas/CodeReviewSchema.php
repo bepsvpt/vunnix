@@ -23,7 +23,7 @@ class CodeReviewSchema
 
     public const SEVERITIES = ['critical', 'major', 'minor'];
 
-    public const CATEGORIES = ['security', 'bug', 'performance', 'style', 'convention'];
+    public const CATEGORIES = ['security', 'bug', 'performance', 'style', 'convention', 'prompt-injection'];
 
     public const RISK_LEVELS = ['high', 'medium', 'low'];
 

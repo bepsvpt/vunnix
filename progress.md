@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 59 / 116 (50.9%)
-- **Current Task:** T60 — Prompt injection hardening
-- **Last Verified:** T59
+- **Tasks Complete:** 60 / 116 (51.7%)
+- **Current Task:** T61 — Vue SPA scaffold
+- **Last Verified:** T60
 
 ---
 
@@ -81,7 +81,7 @@
 - [x] T45: CI pipeline template [Depends: T19]
 - [x] T46: Executor image CI/CD + version alignment [Depends: T19]
 
-## M3 — Path B Functional (12/27)
+## M3 — Path B Functional (13/27)
 
 ### Chat Backend
 
@@ -98,11 +98,11 @@
 - [x] T57: Structured output schema — action dispatch [Depends: T49]
 - [x] T58: Conversation pruning middleware (>20 turns) [Depends: T49]
 - [x] T59: Language configuration injection [Depends: T49, T10]
-- [ ] **T60:** Prompt injection hardening [Depends: T49]
+- [x] T60: Prompt injection hardening [Depends: T49]
 
 ### Chat Frontend
 
-- [ ] T61: Vue SPA scaffold (responsive D135, history mode) [Depends: T1]
+- [ ] **T61:** Vue SPA scaffold (responsive D135, history mode) [Depends: T1]
 - [ ] T62: Auth state management (Pinia) [Depends: T61, T7]
 - [ ] T63: Chat page — conversation list [Depends: T62, T47]
 - [ ] T64: Chat page — new conversation flow (cross-project warning D128) [Depends: T63]
