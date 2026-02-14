@@ -1338,6 +1338,276 @@ checker.check(
 )
 
 # ============================================================
+#  T24: Security-audit skill
+# ============================================================
+section("T24: Security-Audit Skill")
+
+# File existence and metadata
+checker.check(
+    "security-audit.md skill exists",
+    file_exists("executor/.claude/skills/security-audit.md"),
+)
+checker.check(
+    "Skill has version header",
+    file_contains("executor/.claude/skills/security-audit.md", 'version: "1.0"'),
+)
+checker.check(
+    "Skill has updated date header",
+    file_contains("executor/.claude/skills/security-audit.md", "updated:"),
+)
+
+# Severity floor — the defining characteristic of this skill
+checker.check(
+    "Skill enforces Major minimum severity for all security findings",
+    file_contains("executor/.claude/skills/security-audit.md", "Major minimum"),
+)
+checker.check(
+    "Skill prohibits Minor severity for security findings",
+    file_contains(
+        "executor/.claude/skills/security-audit.md",
+        "Do not classify any security finding",
+    ),
+)
+checker.check(
+    "Skill has Severity Floor Enforcement section",
+    file_contains(
+        "executor/.claude/skills/security-audit.md", "Severity Floor Enforcement"
+    ),
+)
+
+# OWASP Top 10 coverage
+checker.check(
+    "Skill covers Injection (OWASP A03)",
+    file_contains("executor/.claude/skills/security-audit.md", "Injection"),
+)
+checker.check(
+    "Skill checks SQL injection",
+    file_contains("executor/.claude/skills/security-audit.md", "SQL Injection"),
+)
+checker.check(
+    "Skill checks command injection",
+    file_contains("executor/.claude/skills/security-audit.md", "Command Injection"),
+)
+checker.check(
+    "Skill covers Broken Authentication (OWASP A07)",
+    file_contains("executor/.claude/skills/security-audit.md", "Broken Authentication"),
+)
+checker.check(
+    "Skill checks session management",
+    file_contains("executor/.claude/skills/security-audit.md", "Session Management"),
+)
+checker.check(
+    "Skill checks brute force protection",
+    file_contains("executor/.claude/skills/security-audit.md", "Brute Force"),
+)
+checker.check(
+    "Skill covers Broken Access Control (OWASP A01)",
+    file_contains("executor/.claude/skills/security-audit.md", "Broken Access Control"),
+)
+checker.check(
+    "Skill checks IDOR vulnerabilities",
+    file_contains(
+        "executor/.claude/skills/security-audit.md",
+        "Insecure Direct Object References",
+    ),
+)
+checker.check(
+    "Skill checks privilege escalation",
+    file_contains(
+        "executor/.claude/skills/security-audit.md", "Privilege Escalation"
+    ),
+)
+checker.check(
+    "Skill covers Sensitive Data Exposure (OWASP A02)",
+    file_contains(
+        "executor/.claude/skills/security-audit.md", "Sensitive Data Exposure"
+    ),
+)
+checker.check(
+    "Skill checks secrets in source code",
+    file_contains("executor/.claude/skills/security-audit.md", "Secrets in Source Code"),
+)
+checker.check(
+    "Skill checks secrets in logs",
+    file_contains("executor/.claude/skills/security-audit.md", "Secrets in Logs"),
+)
+checker.check(
+    "Skill covers Security Misconfiguration (OWASP A05)",
+    file_contains(
+        "executor/.claude/skills/security-audit.md", "Security Misconfiguration"
+    ),
+)
+checker.check(
+    "Skill checks CORS policy",
+    file_contains("executor/.claude/skills/security-audit.md", "CORS"),
+)
+checker.check(
+    "Skill checks CSRF protection",
+    file_contains("executor/.claude/skills/security-audit.md", "CSRF"),
+)
+checker.check(
+    "Skill covers XSS (OWASP A03)",
+    file_contains(
+        "executor/.claude/skills/security-audit.md", "Cross-Site Scripting"
+    ),
+)
+checker.check(
+    "Skill checks Vue XSS via v-html",
+    file_contains("executor/.claude/skills/security-audit.md", "v-html"),
+)
+checker.check(
+    "Skill checks DOM XSS",
+    file_contains("executor/.claude/skills/security-audit.md", "DOM XSS"),
+)
+checker.check(
+    "Skill covers Insecure Deserialization (OWASP A08)",
+    file_contains(
+        "executor/.claude/skills/security-audit.md", "Insecure Deserialization"
+    ),
+)
+checker.check(
+    "Skill checks PHP unserialize()",
+    file_contains("executor/.claude/skills/security-audit.md", "unserialize()"),
+)
+checker.check(
+    "Skill covers Known Vulnerabilities (OWASP A06)",
+    file_contains(
+        "executor/.claude/skills/security-audit.md", "Known Vulnerabilities"
+    ),
+)
+checker.check(
+    "Skill checks dependency CVEs",
+    file_contains("executor/.claude/skills/security-audit.md", "CVE"),
+)
+checker.check(
+    "Skill covers Insufficient Logging (OWASP A09)",
+    file_contains(
+        "executor/.claude/skills/security-audit.md", "Insufficient Logging"
+    ),
+)
+checker.check(
+    "Skill checks security event logging",
+    file_contains(
+        "executor/.claude/skills/security-audit.md", "Security Event Logging"
+    ),
+)
+checker.check(
+    "Skill covers SSRF (OWASP A10)",
+    file_contains(
+        "executor/.claude/skills/security-audit.md",
+        "Server-Side Request Forgery",
+    ),
+)
+checker.check(
+    "Skill checks internal network address access",
+    file_contains("executor/.claude/skills/security-audit.md", "169.254.169.254"),
+)
+
+# Auth/authz bypasses (spec requirement)
+checker.check(
+    "Skill checks authorization bypass patterns",
+    file_contains(
+        "executor/.claude/skills/security-audit.md", "Authorization Checks"
+    ),
+)
+checker.check(
+    "Skill checks horizontal and vertical escalation",
+    file_contains(
+        "executor/.claude/skills/security-audit.md", "Horizontal Privilege Escalation"
+    ),
+)
+
+# Input validation (spec requirement)
+checker.check(
+    "Skill covers Mass Assignment & Data Tampering",
+    file_contains(
+        "executor/.claude/skills/security-audit.md", "Mass Assignment"
+    ),
+)
+checker.check(
+    "Skill checks model guarding ($fillable vs $guarded)",
+    file_contains("executor/.claude/skills/security-audit.md", "$fillable"),
+)
+
+# Secret exposure (spec requirement)
+checker.check(
+    "Skill checks hardcoded credentials",
+    file_contains("executor/.claude/skills/security-audit.md", "hardcoded"),
+)
+checker.check(
+    "Skill checks API response data exposure",
+    file_contains("executor/.claude/skills/security-audit.md", "API Response Exposure"),
+)
+
+# Dependency vulnerabilities (spec requirement)
+checker.check(
+    "Skill checks abandoned packages",
+    file_contains("executor/.claude/skills/security-audit.md", "Abandoned Packages"),
+)
+
+# Cryptographic failures
+checker.check(
+    "Skill covers Cryptographic Failures",
+    file_contains("executor/.claude/skills/security-audit.md", "Cryptographic Failures"),
+)
+checker.check(
+    "Skill checks weak algorithms",
+    file_contains("executor/.claude/skills/security-audit.md", "Weak Algorithms"),
+)
+checker.check(
+    "Skill checks predictable randomness",
+    file_contains(
+        "executor/.claude/skills/security-audit.md", "Predictable Randomness"
+    ),
+)
+
+# Tool integration
+checker.check(
+    "Skill integrates PHPStan findings",
+    file_contains("executor/.claude/skills/security-audit.md", "PHPStan"),
+)
+checker.check(
+    "Skill integrates eslint security rules",
+    file_contains("executor/.claude/skills/security-audit.md", "eslint"),
+)
+checker.check(
+    "Skill integrates dependency audit tools",
+    file_contains("executor/.claude/skills/security-audit.md", "composer audit"),
+)
+
+# Large diff handling
+checker.check(
+    "Skill handles large diffs with depth-over-breadth strategy",
+    file_contains("executor/.claude/skills/security-audit.md", "Depth over breadth"),
+)
+checker.check(
+    "Skill traces data flows end-to-end",
+    file_contains("executor/.claude/skills/security-audit.md", "Trace data flows"),
+)
+
+# Output section
+checker.check(
+    "Skill uses security category for findings",
+    file_contains("executor/.claude/skills/security-audit.md", '"security"'),
+)
+checker.check(
+    "Skill includes ai::security-audit label",
+    file_contains("executor/.claude/skills/security-audit.md", "ai::security-audit"),
+)
+checker.check(
+    "Skill references code review JSON schema output",
+    file_contains("executor/.claude/skills/security-audit.md", "code review schema"),
+)
+checker.check(
+    "Skill specifies commit_status logic",
+    file_contains("executor/.claude/skills/security-audit.md", "commit_status"),
+)
+checker.check(
+    "Skill specifies risk_level mapping",
+    file_contains("executor/.claude/skills/security-audit.md", "risk_level"),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")

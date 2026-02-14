@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 23 / 116 (20%)
-- **Current Task:** T24 — Security-audit skill
-- **Last Verified:** T23
+- **Tasks Complete:** 24 / 116 (21%)
+- **Current Task:** T25 — UI-adjustment skill
+- **Last Verified:** T24
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (12/35)
+## M2 — Path A Functional (13/35)
 
 ### Webhook & Event Routing
 
@@ -45,8 +45,8 @@
 - [x] T21: Frontend-review skill [Depends: T20]
 - [x] T22: Backend-review skill [Depends: T20]
 - [x] T23: Mixed-review skill [Depends: T21, T22]
-- [ ] **T24:** Security-audit skill [Depends: T20]
-- [ ] T25: UI-adjustment skill (screenshots D131) [Depends: T20, T19]
+- [x] T24: Security-audit skill [Depends: T20]
+- [ ] **T25:** UI-adjustment skill (screenshots D131) [Depends: T20, T19]
 - [ ] T26: Issue-discussion skill [Depends: T20]
 - [ ] T27: Feature-dev skill [Depends: T20]
 - [ ] T28: Result posting scripts [Depends: T19]
