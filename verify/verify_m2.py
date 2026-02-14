@@ -3023,6 +3023,140 @@ checker.check(
 )
 
 # ============================================================
+#  T33: Summary comment — Layer 1
+# ============================================================
+section("T33: Summary Comment — Layer 1")
+
+# Formatter service
+checker.check(
+    "SummaryCommentFormatter service exists",
+    file_exists("app/Services/SummaryCommentFormatter.php"),
+)
+checker.check(
+    "SummaryCommentFormatter has format method",
+    file_contains("app/Services/SummaryCommentFormatter.php", "function format(array"),
+)
+checker.check(
+    "SummaryCommentFormatter has risk badge mapping",
+    file_contains("app/Services/SummaryCommentFormatter.php", "RISK_BADGES"),
+)
+checker.check(
+    "SummaryCommentFormatter has severity badge mapping",
+    file_contains("app/Services/SummaryCommentFormatter.php", "SEVERITY_BADGES"),
+)
+checker.check(
+    "SummaryCommentFormatter produces correct header",
+    file_contains("app/Services/SummaryCommentFormatter.php", "AI Code Review"),
+)
+checker.check(
+    "SummaryCommentFormatter produces collapsible walkthrough",
+    file_contains("app/Services/SummaryCommentFormatter.php", "Walkthrough"),
+)
+checker.check(
+    "SummaryCommentFormatter produces collapsible findings",
+    file_contains("app/Services/SummaryCommentFormatter.php", "Findings Summary"),
+)
+
+# PostSummaryComment job
+checker.check(
+    "PostSummaryComment job exists",
+    file_exists("app/Jobs/PostSummaryComment.php"),
+)
+checker.check(
+    "PostSummaryComment implements ShouldQueue",
+    file_contains("app/Jobs/PostSummaryComment.php", "ShouldQueue"),
+)
+checker.check(
+    "PostSummaryComment uses vunnix-server queue",
+    file_contains("app/Jobs/PostSummaryComment.php", "QueueNames::SERVER"),
+)
+checker.check(
+    "PostSummaryComment calls createMergeRequestNote",
+    file_contains("app/Jobs/PostSummaryComment.php", "createMergeRequestNote"),
+)
+checker.check(
+    "PostSummaryComment stores comment_id on task",
+    file_contains("app/Jobs/PostSummaryComment.php", "comment_id"),
+)
+checker.check(
+    "PostSummaryComment uses SummaryCommentFormatter",
+    file_contains("app/Jobs/PostSummaryComment.php", "SummaryCommentFormatter"),
+)
+
+# ProcessTaskResult dispatches PostSummaryComment
+checker.check(
+    "ProcessTaskResult dispatches PostSummaryComment",
+    file_contains("app/Jobs/ProcessTaskResult.php", "PostSummaryComment"),
+)
+checker.check(
+    "ProcessTaskResult checks task type for summary comment dispatch",
+    file_contains("app/Jobs/ProcessTaskResult.php", "CodeReview"),
+)
+
+# Tests
+checker.check(
+    "SummaryCommentFormatter unit test exists",
+    file_exists("tests/Unit/Services/SummaryCommentFormatterTest.php"),
+)
+checker.check(
+    "Test covers mixed-severity formatting",
+    file_contains(
+        "tests/Unit/Services/SummaryCommentFormatterTest.php",
+        "mixed-severity review",
+    ),
+)
+checker.check(
+    "Test covers zero-findings edge case",
+    file_contains(
+        "tests/Unit/Services/SummaryCommentFormatterTest.php",
+        "zero-findings review",
+    ),
+)
+checker.check(
+    "Test covers all-critical edge case",
+    file_contains(
+        "tests/Unit/Services/SummaryCommentFormatterTest.php",
+        "all-critical review",
+    ),
+)
+checker.check(
+    "PostSummaryComment feature test exists",
+    file_exists("tests/Feature/Jobs/PostSummaryCommentTest.php"),
+)
+checker.check(
+    "Test covers posting comment and storing note ID",
+    file_contains(
+        "tests/Feature/Jobs/PostSummaryCommentTest.php",
+        "stores the note ID",
+    ),
+)
+checker.check(
+    "ProcessTaskResult dispatch test exists",
+    file_exists("tests/Feature/Jobs/ProcessTaskResultDispatchTest.php"),
+)
+checker.check(
+    "Test covers dispatch for code review",
+    file_contains(
+        "tests/Feature/Jobs/ProcessTaskResultDispatchTest.php",
+        "code review processing",
+    ),
+)
+checker.check(
+    "Test covers no dispatch for non-review types",
+    file_contains(
+        "tests/Feature/Jobs/ProcessTaskResultDispatchTest.php",
+        "non-review task types",
+    ),
+)
+checker.check(
+    "Test covers no dispatch on validation failure",
+    file_contains(
+        "tests/Feature/Jobs/ProcessTaskResultDispatchTest.php",
+        "validation fails",
+    ),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")
