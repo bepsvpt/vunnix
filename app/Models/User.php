@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
@@ -83,6 +84,88 @@ class User extends Authenticatable
      * Only syncs projects that are registered in Vunnix's projects table.
      * On API failure, existing memberships are preserved (no destructive action).
      */
+    /**
+     * Get all roles assigned to the user (across all projects).
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'role_user')
+            ->withPivot('project_id', 'assigned_by')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get roles for a specific project.
+     */
+    public function rolesForProject(Project $project): Collection
+    {
+        return $this->roles()->wherePivot('project_id', $project->id)->get();
+    }
+
+    /**
+     * Check if the user has a given role on a specific project.
+     */
+    public function hasRole(string $roleName, Project $project): bool
+    {
+        return $this->roles()
+            ->where('name', $roleName)
+            ->wherePivot('project_id', $project->id)
+            ->exists();
+    }
+
+    /**
+     * Check if the user has a given permission on a specific project.
+     * Resolves through the user's roles on that project.
+     */
+    public function hasPermission(string $permissionName, Project $project): bool
+    {
+        return DB::table('role_user')
+            ->join('role_permission', 'role_user.role_id', '=', 'role_permission.role_id')
+            ->join('permissions', 'role_permission.permission_id', '=', 'permissions.id')
+            ->where('role_user.user_id', $this->id)
+            ->where('role_user.project_id', $project->id)
+            ->where('permissions.name', $permissionName)
+            ->exists();
+    }
+
+    /**
+     * Get all permission names the user has on a specific project.
+     */
+    public function permissionsForProject(Project $project): Collection
+    {
+        return Permission::query()
+            ->select('permissions.*')
+            ->join('role_permission', 'permissions.id', '=', 'role_permission.permission_id')
+            ->join('role_user', 'role_permission.role_id', '=', 'role_user.role_id')
+            ->where('role_user.user_id', $this->id)
+            ->where('role_user.project_id', $project->id)
+            ->distinct()
+            ->get();
+    }
+
+    /**
+     * Assign a role to the user on a specific project.
+     */
+    public function assignRole(Role $role, Project $project, ?User $assignedBy = null): void
+    {
+        $this->roles()->attach($role->id, [
+            'project_id' => $project->id,
+            'assigned_by' => $assignedBy?->id,
+        ]);
+        $this->unsetRelation('roles');
+    }
+
+    /**
+     * Remove a role from the user on a specific project.
+     */
+    public function removeRole(Role $role, Project $project): void
+    {
+        $this->roles()
+            ->wherePivot('project_id', $project->id)
+            ->detach($role->id);
+        $this->unsetRelation('roles');
+    }
+
     public function syncMemberships(): void
     {
         $service = app(GitLabService::class);

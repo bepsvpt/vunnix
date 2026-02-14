@@ -249,6 +249,7 @@ Persistent lessons discovered during development. **Add entries here when you so
 
 - **PostgreSQL-only migrations must guard against SQLite:** Migrations using `tsvector`, GIN indexes, PL/pgSQL triggers, or `ALTER TABLE` on SDK-provided tables must check `DB::connection()->getDriverName() === 'pgsql'` and `Schema::hasTable(...)` before running. The test environment uses SQLite `:memory:` (phpunit.xml), and the Laravel AI SDK's `agent_conversations` migration has a 2026 timestamp that sorts after our 2024 custom migrations.
 - **Socialite GitLab driver reads `host` not `instance_uri`:** In `config/services.php`, the GitLab provider key must be `host` (matching what `SocialiteManager::createGitlabDriver()` reads internally).
+- **Wrap all boot-time DB access in try/catch:** `AppServiceProvider::boot()` runs before the test environment swaps the DB connection. Any `Schema::hasTable()` or query call will hit the default `.env` connection (PostgreSQL), not the phpunit.xml SQLite connection. Always wrap the entire block (including `Schema::hasTable`) in a single `try/catch (\Throwable)` that silently returns.
 
 ## Key Files
 
