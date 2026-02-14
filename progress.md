@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 27 / 116 (23%)
-- **Current Task:** T28 — Result posting scripts
-- **Last Verified:** T27
+- **Tasks Complete:** 28 / 116 (24%)
+- **Current Task:** T29 — Runner result API endpoint
+- **Last Verified:** T28
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (16/35)
+## M2 — Path A Functional (17/35)
 
 ### Webhook & Event Routing
 
@@ -49,11 +49,11 @@
 - [x] T25: UI-adjustment skill (screenshots D131) [Depends: T20, T19]
 - [x] T26: Issue-discussion skill [Depends: T20]
 - [x] T27: Feature-dev skill [Depends: T20]
-- [ ] **T28:** Result posting scripts [Depends: T19]
+- [x] T28: Result posting scripts [Depends: T19]
 
 ### Runner ↔ Vunnix Interface
 
-- [ ] T29: Runner result API endpoint [Depends: T15, T18]
+- [ ] **T29:** Runner result API endpoint [Depends: T15, T18]
 - [ ] T30: Structured output schema — code review [Depends: —]
 - [ ] T31: Structured output schema — feature dev + UI adjustment [Depends: —]
 

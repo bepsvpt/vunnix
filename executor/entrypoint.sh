@@ -21,9 +21,11 @@ set -euo pipefail
 
 # ── Constants ────────────────────────────────────────────────────────
 EXECUTOR_DIR="/vunnix-executor"
+SCRIPTS_DIR="${EXECUTOR_DIR}/scripts"
 RESULT_FILE="/tmp/vunnix-result.json"
 LOG_FILE="/tmp/vunnix-executor.log"
 CLAUDE_OUTPUT_FILE="/tmp/vunnix-claude-output.json"
+FORMATTED_RESULT_FILE="/tmp/vunnix-formatted-result.json"
 
 # ── Logging ──────────────────────────────────────────────────────────
 log() {
@@ -217,103 +219,87 @@ build_prompt() {
 }
 
 # ── Post results to Vunnix API ───────────────────────────────────────
+# Delegates to format-output.sh (T28) for payload construction and
+# post-results.sh (T28) for HTTP transport with retry.
+# Target: POST /api/v1/tasks/:id/result (§20.4 Runner Result API)
 post_result() {
     local duration="$1"
-    local status="${2:-completed}"
 
-    log "Posting result to Vunnix API..."
+    log "Formatting result with format-output.sh..."
 
-    # Read Claude CLI output
-    local result_json="{}"
-    if [[ -f "$CLAUDE_OUTPUT_FILE" ]]; then
-        result_json=$(cat "$CLAUDE_OUTPUT_FILE")
+    # Step 1: Format the Claude CLI output into the §20.4 API payload
+    if "${SCRIPTS_DIR}/format-output.sh" \
+        "$VUNNIX_TASK_TYPE" \
+        "$CLAUDE_OUTPUT_FILE" \
+        --strategy "$VUNNIX_STRATEGY" \
+        --executor-version "$VUNNIX_EXECUTOR_VERSION" \
+        --duration "$duration" \
+        --output "$FORMATTED_RESULT_FILE" 2>>"$LOG_FILE"; then
+        log "Result formatted successfully"
+    else
+        local format_exit=$?
+        log_error "format-output.sh failed (exit ${format_exit}) — posting raw output as failure"
+        # If formatting fails, the output didn't match the expected schema.
+        # Post a failure so the backend can retry or log for investigation.
+        post_failure "format_error" "Output formatting failed (exit ${format_exit}) — result may not match expected schema"
+        return 1
     fi
 
-    # Build the result payload
-    local payload
-    payload=$(jq -n \
-        --arg status "$status" \
-        --arg duration "$duration" \
-        --arg strategy "$VUNNIX_STRATEGY" \
-        --arg executor_version "$VUNNIX_EXECUTOR_VERSION" \
-        --argjson result "$result_json" \
-        '{
-            status: $status,
-            result: $result,
-            duration: ($duration | tonumber),
-            strategy: $strategy,
-            executor_version: $executor_version
-        }' 2>/dev/null) || {
-        # If jq parsing fails (e.g., claude output isn't valid JSON),
-        # wrap the raw output as a string
-        payload=$(jq -n \
-            --arg status "$status" \
-            --arg duration "$duration" \
-            --arg strategy "$VUNNIX_STRATEGY" \
-            --arg executor_version "$VUNNIX_EXECUTOR_VERSION" \
-            --arg raw_output "$(cat "$CLAUDE_OUTPUT_FILE" 2>/dev/null || echo '')" \
-            '{
-                status: $status,
-                result: { raw_output: $raw_output },
-                duration: ($duration | tonumber),
-                strategy: $strategy,
-                executor_version: $executor_version
-            }')
-    }
+    # Step 2: POST the formatted payload to the Runner Result API
+    log "Posting result with post-results.sh..."
 
-    # POST to Vunnix Runner Result API (T29)
-    local api_url="${VUNNIX_API_URL}/api/v1/tasks/${VUNNIX_TASK_ID}/result"
-
-    local http_code
-    http_code=$(curl -s -o /tmp/vunnix-api-response.json -w "%{http_code}" \
-        -X POST "$api_url" \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer ${VUNNIX_TOKEN}" \
-        -d "$payload") || {
-        log_error "Failed to POST result to API"
-        return 1
-    }
-
-    if [[ "$http_code" -ge 200 && "$http_code" -lt 300 ]]; then
-        log "Result posted successfully (HTTP ${http_code})"
+    if "${SCRIPTS_DIR}/post-results.sh" \
+        "$VUNNIX_API_URL" \
+        "$VUNNIX_TASK_ID" \
+        "$VUNNIX_TOKEN" \
+        "$FORMATTED_RESULT_FILE" 2>>"$LOG_FILE"; then
+        log "Result posted successfully"
     else
-        log_error "API returned HTTP ${http_code}"
-        cat /tmp/vunnix-api-response.json >> "$LOG_FILE" 2>/dev/null || true
+        local post_exit=$?
+        log_error "post-results.sh failed (exit ${post_exit})"
         return 1
     fi
 }
 
 # ── Post failure to Vunnix API ───────────────────────────────────────
+# Builds a failure payload and delegates to post-results.sh for HTTP transport.
+# This is kept as a direct function (not via format-output.sh) because failures
+# can occur before Claude runs — there's no CLI output to format.
 post_failure() {
     local error_code="$1"
     local error_message="$2"
+    local failure_payload_file="/tmp/vunnix-failure-payload.json"
 
     log_error "Task failed: ${error_code} — ${error_message}"
 
-    # Build failure payload
-    local payload
-    payload=$(jq -n \
-        --arg status "failed" \
+    # Build failure payload matching §20.4 schema
+    jq -n \
         --arg error_code "$error_code" \
         --arg error_message "$error_message" \
         --arg executor_version "${VUNNIX_EXECUTOR_VERSION:-unknown}" \
+        --arg strategy "${VUNNIX_STRATEGY:-unknown}" \
         '{
             status: "failed",
+            result: null,
             error: $error_code,
             error_message: $error_message,
-            duration: 0,
-            executor_version: $executor_version
-        }')
+            tokens: { input: 0, output: 0, thinking: 0 },
+            duration_seconds: 0,
+            prompt_version: {
+                skill: ($strategy + ":" + $executor_version),
+                claude_md: ("executor:" + $executor_version),
+                schema: "n/a"
+            }
+        }' > "$failure_payload_file"
 
     # Only attempt to POST if we have the required variables
     if [[ -n "${VUNNIX_API_URL:-}" && -n "${VUNNIX_TASK_ID:-}" && -n "${VUNNIX_TOKEN:-}" ]]; then
-        local api_url="${VUNNIX_API_URL}/api/v1/tasks/${VUNNIX_TASK_ID}/result"
-
-        curl -s -o /dev/null \
-            -X POST "$api_url" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${VUNNIX_TOKEN}" \
-            -d "$payload" 2>/dev/null || true
+        "${SCRIPTS_DIR}/post-results.sh" \
+            "$VUNNIX_API_URL" \
+            "$VUNNIX_TASK_ID" \
+            "$VUNNIX_TOKEN" \
+            "$failure_payload_file" \
+            --max-retries 1 2>>"$LOG_FILE" || true
     fi
 }
 
@@ -325,6 +311,7 @@ save_debug_artifact() {
 
     cp "$LOG_FILE" "$artifact_dir/executor.log" 2>/dev/null || true
     cp "$CLAUDE_OUTPUT_FILE" "$artifact_dir/claude-output.json" 2>/dev/null || true
+    cp "$FORMATTED_RESULT_FILE" "$artifact_dir/formatted-result.json" 2>/dev/null || true
 
     log "Debug artifacts saved to ${artifact_dir}/"
 }
@@ -344,15 +331,13 @@ main() {
     skills=$(resolve_skill_flags "$VUNNIX_SKILLS")
 
     # Step 4: Run Claude CLI
+    # run_claude echoes the duration (seconds) to stdout on success
     local duration=0
-    if run_claude "$skills"; then
-        duration=$?
-        # Step 5: Post successful result
-        post_result "$duration" "completed"
+    if duration=$(run_claude "$skills"); then
+        # Step 5: Format output and post result via T28 scripts
+        post_result "$duration"
     else
-        local exit_code=$?
-        duration=0
-        post_failure "claude_cli_error" "Claude CLI exited with code ${exit_code}"
+        post_failure "claude_cli_error" "Claude CLI failed during execution"
     fi
 
     # Step 6: Save debug artifacts for GitLab CI collection
