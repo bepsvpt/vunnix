@@ -48,6 +48,8 @@ class AuthController extends Controller
 
         auth()->login($user, remember: true);
 
+        $user->syncMemberships();
+
         session()->regenerate();
 
         return redirect()->intended('/');
