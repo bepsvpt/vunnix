@@ -1017,6 +1017,177 @@ checker.check(
 )
 
 # ============================================================
+#  T22: Backend-review skill
+# ============================================================
+section("T22: Backend-Review Skill")
+
+# Skill file existence and version header
+checker.check(
+    "backend-review.md skill exists",
+    file_exists("executor/.claude/skills/backend-review.md"),
+)
+checker.check(
+    "backend-review.md has version header",
+    file_matches("executor/.claude/skills/backend-review.md", r'version:\s*"\d+\.\d+"'),
+)
+checker.check(
+    "backend-review.md has updated date header",
+    file_matches("executor/.claude/skills/backend-review.md", r'updated:\s*"\d{4}-\d{2}-\d{2}"'),
+)
+
+# SQL injection & query safety coverage
+checker.check(
+    "Skill covers SQL injection",
+    file_contains("executor/.claude/skills/backend-review.md", "SQL Injection"),
+)
+checker.check(
+    "Skill checks DB::raw() usage",
+    file_contains("executor/.claude/skills/backend-review.md", "DB::raw()"),
+)
+checker.check(
+    "Skill checks parameter binding",
+    file_contains("executor/.claude/skills/backend-review.md", "parameter binding"),
+)
+checker.check(
+    "Skill checks mass assignment",
+    file_contains("executor/.claude/skills/backend-review.md", "Mass Assignment"),
+)
+
+# N+1 queries & performance coverage
+checker.check(
+    "Skill covers N+1 queries",
+    file_contains("executor/.claude/skills/backend-review.md", "N+1"),
+)
+checker.check(
+    "Skill checks eager loading",
+    file_contains("executor/.claude/skills/backend-review.md", "Eager Loading"),
+)
+checker.check(
+    "Skill checks pagination convention",
+    file_contains("executor/.claude/skills/backend-review.md", "cursorPaginate"),
+)
+checker.check(
+    "Skill checks transaction usage",
+    file_contains("executor/.claude/skills/backend-review.md", "DB::transaction()"),
+)
+
+# Validation & input handling coverage
+checker.check(
+    "Skill covers validation",
+    file_contains("executor/.claude/skills/backend-review.md", "Validation"),
+)
+checker.check(
+    "Skill checks FormRequest usage",
+    file_contains("executor/.claude/skills/backend-review.md", "FormRequest"),
+)
+checker.check(
+    "Skill checks authorization in FormRequest",
+    file_contains("executor/.claude/skills/backend-review.md", "authorize()"),
+)
+
+# Error handling coverage
+checker.check(
+    "Skill covers error handling",
+    file_contains("executor/.claude/skills/backend-review.md", "Error Handling"),
+)
+checker.check(
+    "Skill checks exception types",
+    file_contains("executor/.claude/skills/backend-review.md", "Exception"),
+)
+checker.check(
+    "Skill checks null safety",
+    file_contains("executor/.claude/skills/backend-review.md", "Null Safety"),
+)
+
+# Laravel conventions coverage
+checker.check(
+    "Skill covers Laravel conventions",
+    file_contains("executor/.claude/skills/backend-review.md", "Laravel Conventions"),
+)
+checker.check(
+    "Skill checks Eloquent API Resources",
+    file_contains("executor/.claude/skills/backend-review.md", "Resource"),
+)
+checker.check(
+    "Skill checks Policies and Gates",
+    file_contains("executor/.claude/skills/backend-review.md", "Policy"),
+)
+checker.check(
+    "Skill checks service layer pattern",
+    file_contains("executor/.claude/skills/backend-review.md", "Service"),
+)
+checker.check(
+    "Skill checks route model binding",
+    file_contains("executor/.claude/skills/backend-review.md", "route model binding"),
+)
+checker.check(
+    "Skill flags env() outside config files",
+    file_contains("executor/.claude/skills/backend-review.md", "env()"),
+)
+
+# Migrations & schema coverage
+checker.check(
+    "Skill covers migrations",
+    file_contains("executor/.claude/skills/backend-review.md", "Migration"),
+)
+checker.check(
+    "Skill checks PostgreSQL-specific guards",
+    file_contains("executor/.claude/skills/backend-review.md", "getDriverName"),
+)
+checker.check(
+    "Skill checks foreign key constraints",
+    file_contains("executor/.claude/skills/backend-review.md", "foreign key"),
+)
+
+# Authentication & authorization coverage
+checker.check(
+    "Skill covers authentication",
+    file_contains("executor/.claude/skills/backend-review.md", "Authentication"),
+)
+checker.check(
+    "Skill checks secret exposure",
+    file_contains("executor/.claude/skills/backend-review.md", "Secret Exposure"),
+)
+
+# PHPStan integration
+checker.check(
+    "Skill integrates PHPStan findings",
+    file_contains("executor/.claude/skills/backend-review.md", "PHPStan"),
+)
+checker.check(
+    "Skill classifies PHPStan findings by severity",
+    file_contains("executor/.claude/skills/backend-review.md", "Level 5"),
+)
+checker.check(
+    "Skill maps PHPStan errors to Major severity",
+    file_contains("executor/.claude/skills/backend-review.md", "Major"),
+)
+
+# Large diff handling
+checker.check(
+    "Skill handles large diffs",
+    file_contains("executor/.claude/skills/backend-review.md", "Large Diff"),
+)
+checker.check(
+    "Skill summarizes patterns across similar changes",
+    file_contains("executor/.claude/skills/backend-review.md", "Summarize patterns"),
+)
+
+# Output schema reference
+checker.check(
+    "Skill references code review JSON schema output",
+    file_contains("executor/.claude/skills/backend-review.md", "code review schema"),
+)
+checker.check(
+    "Skill specifies commit_status logic",
+    file_contains("executor/.claude/skills/backend-review.md", "commit_status"),
+)
+checker.check(
+    "Skill specifies label output",
+    file_contains("executor/.claude/skills/backend-review.md", "ai::reviewed"),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")
