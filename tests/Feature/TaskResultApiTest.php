@@ -66,9 +66,23 @@ function generateToken(int $taskId): string
 // ─── Happy path: completed result ────────────────────────────────
 
 it('accepts a completed result and transitions task to completed via Result Processor', function () {
-    // Fake GitLab API — PostSummaryComment runs inline on sync queue
+    // Fake GitLab API — all 3 layers run inline on sync queue
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1, 'body' => 'mocked'], 201),
+        '*/api/v4/projects/*/merge_requests/*/discussions' => Http::response([
+            'id' => 'disc-1',
+            'notes' => [['body' => 'mocked']],
+        ], 201),
+        '*/api/v4/projects/*/statuses/*' => Http::response(['id' => 1, 'status' => 'success'], 201),
+        '*/api/v4/projects/*/merge_requests/*' => Http::response([
+            'iid' => 42,
+            'sha' => 'abc123',
+            'diff_refs' => [
+                'base_sha' => 'aaa',
+                'start_sha' => 'bbb',
+                'head_sha' => 'ccc',
+            ],
+        ], 200),
     ]);
 
     $task = Task::factory()->running()->create();
@@ -381,23 +395,25 @@ it('prevents cross-task token reuse — token for task A cannot access task B', 
     ])->assertOk();
 });
 
-// ─── Sync pipeline: inline threads posted alongside summary ──────
+// ─── Sync pipeline: all 3 layers posted in sync queue ─────────────
 
-it('posts inline threads alongside summary comment in sync queue pipeline', function () {
+it('posts all 3 layers (summary, threads, labels+status) in sync queue pipeline', function () {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1, 'body' => 'mocked'], 201),
+        '*/api/v4/projects/*/merge_requests/*/discussions' => Http::response([
+            'id' => 'disc-1',
+            'notes' => [['body' => 'mocked']],
+        ], 201),
+        '*/api/v4/projects/*/statuses/*' => Http::response(['id' => 1, 'status' => 'failed'], 201),
         '*/api/v4/projects/*/merge_requests/*' => Http::response([
             'iid' => 42,
+            'sha' => 'abc123',
             'diff_refs' => [
                 'base_sha' => 'aaa',
                 'start_sha' => 'bbb',
                 'head_sha' => 'ccc',
             ],
         ], 200),
-        '*/api/v4/projects/*/merge_requests/*/discussions' => Http::response([
-            'id' => 'disc-1',
-            'notes' => [['body' => 'mocked']],
-        ], 201),
     ]);
 
     $task = Task::factory()->running()->create(['mr_iid' => 42]);
@@ -442,7 +458,15 @@ it('posts inline threads alongside summary comment in sync queue pipeline', func
     $task->refresh();
     expect($task->status)->toBe(TaskStatus::Completed);
 
-    // Verify both summary comment and discussion thread were posted
+    // Layer 1: summary comment posted
     Http::assertSent(fn ($r) => str_contains($r->url(), '/notes'));
+    // Layer 2: inline discussion thread posted
     Http::assertSent(fn ($r) => str_contains($r->url(), '/discussions'));
+    // Layer 3: labels applied via PUT with add_labels
+    Http::assertSent(fn ($r) => $r->method() === 'PUT'
+        && str_contains($r->url(), '/merge_requests/')
+        && str_contains($r['add_labels'] ?? '', 'ai::reviewed'));
+    // Layer 3: commit status set via POST to statuses endpoint
+    Http::assertSent(fn ($r) => str_contains($r->url(), '/statuses/')
+        && ($r['state'] ?? '') === 'failed');
 });
