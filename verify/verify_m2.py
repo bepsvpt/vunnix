@@ -1772,6 +1772,182 @@ checker.check(
 )
 
 # ============================================================
+#  T26: Issue-discussion skill
+# ============================================================
+section("T26: Issue-Discussion Skill")
+
+# File existence and metadata
+checker.check(
+    "issue-discussion.md skill exists",
+    file_exists("executor/.claude/skills/issue-discussion.md"),
+)
+checker.check(
+    "Skill has version header",
+    file_contains("executor/.claude/skills/issue-discussion.md", 'version: "1.0"'),
+)
+checker.check(
+    "Skill has updated date header",
+    file_contains("executor/.claude/skills/issue-discussion.md", "updated:"),
+)
+
+# Core requirement: answer question in Issue + codebase context
+checker.check(
+    "Skill describes responding to @ai mention on Issue",
+    file_contains("executor/.claude/skills/issue-discussion.md", "@ai"),
+)
+checker.check(
+    "Skill instructs to read Issue description and thread",
+    file_contains("executor/.claude/skills/issue-discussion.md", "Issue description"),
+)
+checker.check(
+    "Skill instructs to explore the codebase",
+    file_contains("executor/.claude/skills/issue-discussion.md", "Explore the Codebase"),
+)
+checker.check(
+    "Skill instructs to read actual source files",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md", "read the actual source files"
+    ),
+)
+
+# Core requirement: reference relevant code
+checker.check(
+    "Skill requires specific file and line references",
+    file_contains("executor/.claude/skills/issue-discussion.md", "files and line numbers"),
+)
+checker.check(
+    "Skill requires code references for factual claims",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md",
+        "must include a file reference",
+    ),
+)
+
+# Core requirement: concise and actionable
+checker.check(
+    "Skill instructs to be concise",
+    file_contains("executor/.claude/skills/issue-discussion.md", "Be Concise"),
+)
+checker.check(
+    "Skill instructs to lead with the direct answer",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md", "Lead with the direct answer"
+    ),
+)
+checker.check(
+    "Skill instructs to be actionable",
+    file_contains("executor/.claude/skills/issue-discussion.md", "Be Actionable"),
+)
+checker.check(
+    "Skill instructs to suggest specific changes when relevant",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md", "suggest the specific change"
+    ),
+)
+
+# Honesty and accuracy
+checker.check(
+    "Skill instructs to be honest about limitations",
+    file_contains("executor/.claude/skills/issue-discussion.md", "Be Honest"),
+)
+checker.check(
+    "Skill prohibits fabricating code references",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md",
+        "Don't fabricate code references",
+    ),
+)
+
+# Scope restrictions (read-only task)
+checker.check(
+    "Skill prohibits modifying files",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md", "Do not modify any files"
+    ),
+)
+checker.check(
+    "Skill is a read-only analysis task",
+    file_contains("executor/.claude/skills/issue-discussion.md", "read-only"),
+)
+checker.check(
+    "Skill prohibits creating branches or commits",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md",
+        "Do not create branches or commits",
+    ),
+)
+checker.check(
+    "Skill prohibits executing code",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md",
+        "Do not execute code",
+    ),
+)
+
+# Edge case handling
+checker.check(
+    "Skill handles vague questions",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md",
+        "Question is too vague",
+    ),
+)
+checker.check(
+    "Skill handles questions about external systems",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md",
+        "not in the codebase",
+    ),
+)
+checker.check(
+    "Skill handles multiple questions in one comment",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md",
+        "Multiple questions",
+    ),
+)
+
+# Task parameters from §14.5
+checker.check(
+    "Skill references Issue IID parameter",
+    file_contains("executor/.claude/skills/issue-discussion.md", "Issue IID"),
+)
+checker.check(
+    "Skill references triggering comment ID parameter",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md", "Triggering comment ID"
+    ),
+)
+
+# Output schema — issue discussion format (not code review)
+checker.check(
+    "Skill defines JSON output with response field",
+    file_contains("executor/.claude/skills/issue-discussion.md", '"response"'),
+)
+checker.check(
+    "Skill defines references array in output",
+    file_contains("executor/.claude/skills/issue-discussion.md", '"references"'),
+)
+checker.check(
+    "Skill defines confidence field in output",
+    file_contains("executor/.claude/skills/issue-discussion.md", '"confidence"'),
+)
+checker.check(
+    "Skill specifies confidence levels (high/medium/low)",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md",
+        "high | medium | low",
+    ),
+)
+checker.check(
+    "Skill produces only JSON output (no fencing)",
+    file_contains(
+        "executor/.claude/skills/issue-discussion.md",
+        "No markdown fencing",
+    ),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")

@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 25 / 116 (22%)
-- **Current Task:** T26 — Issue-discussion skill
-- **Last Verified:** T25
+- **Tasks Complete:** 26 / 116 (22%)
+- **Current Task:** T27 — Feature-dev skill
+- **Last Verified:** T26
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (14/35)
+## M2 — Path A Functional (15/35)
 
 ### Webhook & Event Routing
 
@@ -47,8 +47,8 @@
 - [x] T23: Mixed-review skill [Depends: T21, T22]
 - [x] T24: Security-audit skill [Depends: T20]
 - [x] T25: UI-adjustment skill (screenshots D131) [Depends: T20, T19]
-- [ ] **T26:** Issue-discussion skill [Depends: T20]
-- [ ] T27: Feature-dev skill [Depends: T20]
+- [x] T26: Issue-discussion skill [Depends: T20]
+- [ ] **T27:** Feature-dev skill [Depends: T20]
 - [ ] T28: Result posting scripts [Depends: T19]
 
 ### Runner ↔ Vunnix Interface
