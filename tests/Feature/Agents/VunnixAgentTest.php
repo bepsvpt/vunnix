@@ -138,6 +138,35 @@ it('includes action dispatch section in system prompt', function () {
     expect($instructions)->toContain('explicit user confirmation');
 });
 
+it('includes action dispatch section with supported action types', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('[Action Dispatch]');
+    expect($instructions)->toContain('create_issue');
+    expect($instructions)->toContain('implement_feature');
+    expect($instructions)->toContain('ui_adjustment');
+    expect($instructions)->toContain('create_mr');
+    expect($instructions)->toContain('deep_analysis');
+});
+
+it('includes permission check guidance in action dispatch section', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('chat.dispatch_task');
+    expect($instructions)->toContain('permission');
+});
+
+it('includes deep analysis proactive suggestion guidance', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('deep analysis');
+    expect($instructions)->toContain('read-only');
+    expect($instructions)->toContain('insufficient');
+});
+
 it('includes safety section in system prompt', function () {
     $agent = new VunnixAgent;
     $instructions = $agent->instructions();

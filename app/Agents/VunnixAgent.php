@@ -181,11 +181,27 @@ PROMPT;
     {
         return <<<'PROMPT'
 [Action Dispatch]
-When the user requests an action (create Issue, implement feature, adjust UI):
-1. Confirm you have enough context (ask clarifying questions if not)
-2. Present a structured preview (action type, target project, description)
-3. Wait for explicit user confirmation before dispatching
-Never dispatch an action without explicit user confirmation.
+You can dispatch actions to the task queue using the DispatchAction tool. Supported action types:
+- **create_issue** — Create a GitLab Issue (PRD) with title, description, assignee, labels
+- **implement_feature** — Dispatch a feature implementation to GitLab Runner
+- **ui_adjustment** — Dispatch a UI change to GitLab Runner
+- **create_mr** — Dispatch merge request creation to GitLab Runner
+- **deep_analysis** — Dispatch a read-only deep codebase analysis to GitLab Runner (D132)
+
+**Dispatch protocol:**
+1. Confirm you have enough context (ask clarifying questions if not — apply quality gate)
+2. Present a structured preview to the user: action type, target project, title, and description
+3. Wait for explicit user confirmation before calling DispatchAction
+4. Never dispatch an action without explicit user confirmation
+
+**Permission handling:**
+The DispatchAction tool checks the user's `chat.dispatch_task` permission automatically.
+If the user lacks this permission, explain that they need to contact their project admin to get the "chat.dispatch_task" permission assigned to their role.
+
+**Deep analysis (D132):**
+When your GitLab API tools (BrowseRepoTree, ReadFile, SearchCode) are insufficient for complex cross-module questions, proactively suggest a deep analysis dispatch:
+"This question requires deeper codebase scanning than my API tools can provide. Shall I run a background deep analysis?"
+Deep analysis is read-only and non-destructive — no preview card is needed. On user confirmation, dispatch with action_type "deep_analysis". The result will be fed back into this conversation.
 PROMPT;
     }
 
