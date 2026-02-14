@@ -81,6 +81,29 @@ class PostLabelsAndStatus implements ShouldQueue
             throw $e;
         }
 
+        // T40/D56: Remove stale AI risk labels before adding new ones
+        // On incremental reviews, risk level can change (e.g., high → low).
+        // Remove the risk labels NOT in the new set to keep labels accurate.
+        $allRiskLabels = ['ai::risk-high', 'ai::risk-medium', 'ai::risk-low'];
+        $labelsToRemove = array_values(array_diff($allRiskLabels, $labels));
+
+        if (! empty($labelsToRemove)) {
+            try {
+                $gitLab->removeMergeRequestLabels($projectId, $task->mr_iid, $labelsToRemove);
+
+                Log::info('PostLabelsAndStatus: stale risk labels removed (D56)', [
+                    'task_id' => $this->taskId,
+                    'removed' => $labelsToRemove,
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('PostLabelsAndStatus: failed to remove old labels', [
+                    'task_id' => $this->taskId,
+                    'error' => $e->getMessage(),
+                ]);
+                // Continue — adding correct labels is more important than removing stale ones
+            }
+        }
+
         // Apply labels (additive — preserves existing non-AI labels)
         try {
             $gitLab->addMergeRequestLabels($projectId, $task->mr_iid, $labels);

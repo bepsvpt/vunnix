@@ -106,6 +106,7 @@ it('adds risk-high and security labels for critical security findings', function
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
             ->push(fakeMrForLabels(), 200)   // getMergeRequest
+            ->push(['iid' => 42], 200)       // removeMergeRequestLabels (T40/D56)
             ->push(['iid' => 42], 200),      // addMergeRequestLabels (PUT)
         '*/api/v4/projects/*/statuses/*' => Http::response(['id' => 1, 'status' => 'failed'], 201),
     ]);
@@ -137,7 +138,8 @@ it('sets commit status to failed when critical findings exist', function () {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
             ->push(fakeMrForLabels(), 200)
-            ->push(['iid' => 42], 200),
+            ->push(['iid' => 42], 200)       // removeMergeRequestLabels (T40/D56)
+            ->push(['iid' => 42], 200),      // addMergeRequestLabels
         '*/api/v4/projects/*/statuses/*' => Http::response(['id' => 1, 'status' => 'failed'], 201),
     ]);
 
@@ -162,7 +164,8 @@ it('adds risk-low label and success status for clean review', function () {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
             ->push(fakeMrForLabels(), 200)
-            ->push(['iid' => 42], 200),
+            ->push(['iid' => 42], 200)       // removeMergeRequestLabels (T40/D56)
+            ->push(['iid' => 42], 200),      // addMergeRequestLabels
         '*/api/v4/projects/*/statuses/*' => Http::response(['id' => 1, 'status' => 'success'], 201),
     ]);
 
@@ -200,7 +203,8 @@ it('uses the SHA from the MR response when setting commit status', function () {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
             ->push(fakeMrForLabels(), 200)
-            ->push(['iid' => 42], 200),
+            ->push(['iid' => 42], 200)       // removeMergeRequestLabels (T40/D56)
+            ->push(['iid' => 42], 200),      // addMergeRequestLabels
         '*/api/v4/projects/*/statuses/*' => Http::response(['id' => 1], 201),
     ]);
 
@@ -262,4 +266,97 @@ it('returns early if the task has no result', function () {
     $job->handle(app(GitLabClient::class));
 
     Http::assertNothingSent();
+});
+
+// ─── T40: Removes old AI risk labels on incremental review (D56) ──
+
+it('removes stale AI risk labels when review risk level changes', function () {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
+            ->push(fakeMrForLabels(), 200)                         // getMergeRequest
+            ->push(['iid' => 42], 200)                             // removeMergeRequestLabels (PUT)
+            ->push(['iid' => 42], 200),                            // addMergeRequestLabels (PUT)
+        '*/api/v4/projects/*/statuses/*' => Http::response(['id' => 1, 'status' => 'success'], 201),
+    ]);
+
+    // New review result: risk_level=low (downgraded from high)
+    $task = labelsTaskNoFindings();
+
+    $job = new PostLabelsAndStatus($task->id);
+    $job->handle(app(GitLabClient::class));
+
+    // Verify a remove_labels PUT was sent to clear stale risk labels
+    Http::assertSent(function ($request) {
+        if ($request->method() !== 'PUT') {
+            return false;
+        }
+        if (! str_contains($request->url(), '/merge_requests/42')) {
+            return false;
+        }
+
+        $removeLabels = $request['remove_labels'] ?? '';
+
+        // New risk is 'low', so 'high' and 'medium' should be removed
+        return str_contains($removeLabels, 'ai::risk-high')
+            && str_contains($removeLabels, 'ai::risk-medium')
+            && ! str_contains($removeLabels, 'ai::risk-low');
+    });
+});
+
+it('removes other risk labels even when current risk level is high', function () {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
+            ->push(fakeMrForLabels(), 200)                         // getMergeRequest
+            ->push(['iid' => 42], 200)                             // removeMergeRequestLabels (PUT)
+            ->push(['iid' => 42], 200),                            // addMergeRequestLabels (PUT)
+        '*/api/v4/projects/*/statuses/*' => Http::response(['id' => 1, 'status' => 'failed'], 201),
+    ]);
+
+    $task = labelsTaskWithCritical(); // risk_level=high
+
+    $job = new PostLabelsAndStatus($task->id);
+    $job->handle(app(GitLabClient::class));
+
+    // Should remove medium and low (the non-active risk labels)
+    Http::assertSent(function ($request) {
+        if ($request->method() !== 'PUT') {
+            return false;
+        }
+        if (! str_contains($request->url(), '/merge_requests/42')) {
+            return false;
+        }
+
+        $removeLabels = $request['remove_labels'] ?? '';
+
+        return str_contains($removeLabels, 'ai::risk-medium')
+            && str_contains($removeLabels, 'ai::risk-low')
+            && ! str_contains($removeLabels, 'ai::risk-high');
+    });
+});
+
+it('continues adding labels when remove old labels fails', function () {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
+            ->push(fakeMrForLabels(), 200)                         // getMergeRequest
+            ->push(null, 500)                                      // removeMergeRequestLabels fails
+            ->push(['iid' => 42], 200),                            // addMergeRequestLabels succeeds
+        '*/api/v4/projects/*/statuses/*' => Http::response(['id' => 1, 'status' => 'success'], 201),
+    ]);
+
+    $task = labelsTaskNoFindings();
+
+    $job = new PostLabelsAndStatus($task->id);
+    $job->handle(app(GitLabClient::class));
+
+    // Even though remove failed, add_labels should still be sent
+    Http::assertSent(function ($request) {
+        if ($request->method() !== 'PUT') {
+            return false;
+        }
+
+        $addLabels = $request['add_labels'] ?? '';
+
+        return str_contains($addLabels, 'ai::reviewed')
+            && str_contains($addLabels, 'ai::risk-low');
+    });
 });
