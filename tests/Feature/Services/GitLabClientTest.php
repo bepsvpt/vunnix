@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\GitLabApiException;
 use App\Services\GitLabClient;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
@@ -502,7 +503,7 @@ it('triggers a pipeline', function () {
 //  Error handling
 // ------------------------------------------------------------------
 
-it('throws RequestException on 404 response', function () {
+it('throws GitLabApiException on 404 response', function () {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/issues/999' => Http::response([
             'message' => '404 Not Found',
@@ -511,18 +512,18 @@ it('throws RequestException on 404 response', function () {
 
     $client = app(GitLabClient::class);
     $client->getIssue(1, 999);
-})->throws(RequestException::class);
+})->throws(GitLabApiException::class);
 
-it('throws RequestException on 500 response', function () {
+it('throws GitLabApiException on 500 response', function () {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/issues*' => Http::response('Internal Server Error', 500),
     ]);
 
     $client = app(GitLabClient::class);
     $client->listIssues(1);
-})->throws(RequestException::class);
+})->throws(GitLabApiException::class);
 
-it('throws RequestException on 429 rate limit response', function () {
+it('throws GitLabApiException on 429 rate limit response', function () {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/issues*' => Http::response([
             'message' => '429 Too Many Requests',
@@ -531,7 +532,7 @@ it('throws RequestException on 429 rate limit response', function () {
 
     $client = app(GitLabClient::class);
     $client->listIssues(1);
-})->throws(RequestException::class);
+})->throws(GitLabApiException::class);
 
 it('logs warning on error responses', function () {
     Http::fake([
@@ -549,7 +550,7 @@ it('logs warning on error responses', function () {
 
     try {
         $client->listIssues(1);
-    } catch (RequestException) {
+    } catch (GitLabApiException) {
         // Expected — we're testing the log call
     }
 });

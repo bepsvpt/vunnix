@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 36 / 116 (31%)
-- **Current Task:** T37 — Retry + backoff
-- **Last Verified:** T36
+- **Tasks Complete:** 37 / 116 (32%)
+- **Current Task:** T38 — Failure handling (DLQ, failure comment)
+- **Last Verified:** T37
 
 ---
 
@@ -67,8 +67,8 @@
 
 ### Retry & Failure
 
-- [ ] **T37:** Retry + backoff (30s → 2m → 8m, max 3) [Depends: T16]
-- [ ] T38: Failure handling (DLQ, failure comment) [Depends: T37, T32]
+- [x] T37: Retry + backoff (30s → 2m → 8m, max 3) [Depends: T16]
+- [ ] **T38:** Failure handling (DLQ, failure comment) [Depends: T37, T32]
 
 ### End-to-End & Variations
 

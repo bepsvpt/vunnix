@@ -254,6 +254,8 @@ Persistent lessons discovered during development. **Add entries here when you so
 - **Laravel 12 CSRF exclusion uses named parameter syntax:** Use `$middleware->validateCsrfTokens(except: ['webhook'])` — the method `validateCsrfTokenExcept()` does not exist.
 - **Use `present` not `required` for array fields that can be empty:** Laravel's `required` rule rejects empty arrays `[]`. For schema fields like `findings` where zero items is valid (e.g., clean code review), use `'present', 'array'` instead of `'required', 'array'`.
 - **Sync queue tests that dispatch jobs making HTTP calls need `Http::fake()`:** When a test uses the sync queue driver (no `Queue::fake()`), dispatched jobs run inline. If those jobs call external APIs (e.g., GitLab), the real HTTP call executes and failures (401, 500) bubble up as the test's HTTP response. Always add `Http::fake()` for external API endpoints in sync-queue integration tests.
+- **Unit tests can't use `Http::fake()` — construct HTTP objects manually:** `Http::fake()` requires the Laravel service container (facade root). In `tests/Unit/`, build `RequestException` manually via `new Psr7Response(status, [], body)` → `new Response($psr7)` → `new RequestException($response)`.
+- **Use `Log::shouldReceive` (mock) not `Log::spy()` + `shouldHaveReceived` for per-test log assertions:** `Log::spy()` in `beforeEach` accumulates calls across all tests in the file. `shouldHaveReceived('warning')->once()` then sees calls from previous tests. Use `Log::shouldReceive` (strict mock) with expectations *before* the action for tests that assert specific log calls.
 
 ## Key Files
 

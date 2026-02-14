@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Middleware\RetryWithBackoff;
 use App\Models\Task;
 use App\Services\TaskDispatcher;
 use App\Support\QueueNames;
@@ -13,9 +14,22 @@ class ProcessTask implements ShouldQueue
 {
     use Queueable;
 
+    /**
+     * 1 initial + 3 retries = 4 total attempts.
+     */
+    public int $tries = 4;
+
     public function __construct(
         public readonly int $taskId,
     ) {}
+
+    /**
+     * @return array<int, object>
+     */
+    public function middleware(): array
+    {
+        return [new RetryWithBackoff];
+    }
 
     /**
      * Resolve the correct queue name based on task type and priority.

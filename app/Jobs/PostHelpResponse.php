@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Middleware\RetryWithBackoff;
 use App\Services\GitLabClient;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -15,6 +16,16 @@ use Illuminate\Support\Facades\Log;
 class PostHelpResponse implements ShouldQueue
 {
     use Queueable;
+
+    public int $tries = 4;
+
+    /**
+     * @return array<int, object>
+     */
+    public function middleware(): array
+    {
+        return [new RetryWithBackoff];
+    }
 
     private const HELP_MESSAGE = <<<'MD'
         **Available commands:**

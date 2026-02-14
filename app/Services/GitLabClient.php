@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Exceptions\GitLabApiException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -48,9 +50,9 @@ class GitLabClient
     }
 
     /**
-     * Handle a GitLab API response — log and throw on errors.
+     * Handle a GitLab API response — log and throw classified exception on errors.
      *
-     * @throws \Illuminate\Http\Client\RequestException
+     * @throws GitLabApiException
      */
     protected function handleResponse(Response $response, string $context): Response
     {
@@ -63,7 +65,11 @@ class GitLabClient
             'body' => $response->body(),
         ]);
 
-        $response->throw();
+        try {
+            $response->throw();
+        } catch (RequestException $e) {
+            throw GitLabApiException::fromRequestException($e, $context);
+        }
 
         return $response; // unreachable, satisfies static analysis
     }

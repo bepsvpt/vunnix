@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\TaskType;
+use App\Jobs\Middleware\RetryWithBackoff;
 use App\Models\Task;
 use App\Services\ResultProcessor;
 use App\Support\QueueNames;
@@ -24,10 +25,20 @@ class ProcessTaskResult implements ShouldQueue
 {
     use Queueable;
 
+    public int $tries = 4;
+
     public function __construct(
         public readonly int $taskId,
     ) {
         $this->queue = QueueNames::SERVER;
+    }
+
+    /**
+     * @return array<int, object>
+     */
+    public function middleware(): array
+    {
+        return [new RetryWithBackoff];
     }
 
     public function handle(ResultProcessor $processor): void

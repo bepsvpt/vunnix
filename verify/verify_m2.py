@@ -3544,6 +3544,137 @@ else:
         checker.check("php artisan test passes", False, last_line)
 
 # ============================================================
+#  T37: Retry + backoff (30s → 2m → 8m, max 3)
+# ============================================================
+section("T37: Retry + Backoff")
+
+# GitLabApiException
+checker.check(
+    "GitLabApiException class exists",
+    file_exists("app/Exceptions/GitLabApiException.php"),
+)
+checker.check(
+    "GitLabApiException extends RuntimeException",
+    file_contains("app/Exceptions/GitLabApiException.php", "extends RuntimeException"),
+)
+checker.check(
+    "GitLabApiException has transient codes (429, 500, 503, 529)",
+    file_contains("app/Exceptions/GitLabApiException.php", "TRANSIENT_CODES"),
+)
+checker.check(
+    "GitLabApiException classifies transient errors",
+    file_contains("app/Exceptions/GitLabApiException.php", "isTransient"),
+)
+checker.check(
+    "GitLabApiException classifies invalid requests (400)",
+    file_contains("app/Exceptions/GitLabApiException.php", "isInvalidRequest"),
+)
+checker.check(
+    "GitLabApiException classifies authentication errors (401)",
+    file_contains("app/Exceptions/GitLabApiException.php", "isAuthenticationError"),
+)
+checker.check(
+    "GitLabApiException has shouldRetry method",
+    file_contains("app/Exceptions/GitLabApiException.php", "shouldRetry"),
+)
+checker.check(
+    "GitLabApiException creates from RequestException",
+    file_contains("app/Exceptions/GitLabApiException.php", "fromRequestException"),
+)
+
+# RetryWithBackoff middleware
+checker.check(
+    "RetryWithBackoff middleware exists",
+    file_exists("app/Jobs/Middleware/RetryWithBackoff.php"),
+)
+checker.check(
+    "RetryWithBackoff has correct backoff schedule [30, 120, 480]",
+    file_contains("app/Jobs/Middleware/RetryWithBackoff.php", "[30, 120, 480]"),
+)
+checker.check(
+    "RetryWithBackoff has max 3 retries",
+    file_contains("app/Jobs/Middleware/RetryWithBackoff.php", "MAX_RETRIES = 3"),
+)
+checker.check(
+    "RetryWithBackoff catches GitLabApiException",
+    file_contains("app/Jobs/Middleware/RetryWithBackoff.php", "GitLabApiException"),
+)
+checker.check(
+    "RetryWithBackoff releases job for retry",
+    file_contains("app/Jobs/Middleware/RetryWithBackoff.php", "$job->release("),
+)
+checker.check(
+    "RetryWithBackoff fails job on non-retryable errors",
+    file_contains("app/Jobs/Middleware/RetryWithBackoff.php", "$job->fail("),
+)
+checker.check(
+    "RetryWithBackoff logs critical on authentication failure",
+    file_contains("app/Jobs/Middleware/RetryWithBackoff.php", "Log::critical"),
+)
+
+# GitLabClient throws GitLabApiException
+checker.check(
+    "GitLabClient imports GitLabApiException",
+    file_contains("app/Services/GitLabClient.php", "use App\\Exceptions\\GitLabApiException"),
+)
+checker.check(
+    "GitLabClient::handleResponse throws GitLabApiException",
+    file_contains("app/Services/GitLabClient.php", "throw GitLabApiException::fromRequestException"),
+)
+
+# All jobs wired with middleware
+jobs = [
+    "ProcessTask",
+    "ProcessTaskResult",
+    "PostSummaryComment",
+    "PostInlineThreads",
+    "PostLabelsAndStatus",
+    "PostPlaceholderComment",
+    "PostHelpResponse",
+]
+for job in jobs:
+    checker.check(
+        f"{job} imports RetryWithBackoff",
+        file_contains(f"app/Jobs/{job}.php", "use App\\Jobs\\Middleware\\RetryWithBackoff"),
+    )
+    checker.check(
+        f"{job} has middleware() method",
+        file_contains(f"app/Jobs/{job}.php", "function middleware()"),
+    )
+    checker.check(
+        f"{job} returns RetryWithBackoff in middleware",
+        file_contains(f"app/Jobs/{job}.php", "new RetryWithBackoff"),
+    )
+    checker.check(
+        f"{job} has tries = 4",
+        file_contains(f"app/Jobs/{job}.php", "$tries = 4"),
+    )
+
+# Tests
+checker.check(
+    "GitLabApiException test exists",
+    file_exists("tests/Unit/Exceptions/GitLabApiExceptionTest.php"),
+)
+checker.check(
+    "RetryWithBackoff test exists",
+    file_exists("tests/Unit/Jobs/Middleware/RetryWithBackoffTest.php"),
+)
+checker.check(
+    "RetryWithBackoff test verifies backoff schedule",
+    file_contains(
+        "tests/Unit/Jobs/Middleware/RetryWithBackoffTest.php",
+        "[30, 120, 480]",
+    ),
+)
+checker.check(
+    "RetryWithBackoff test verifies 401 admin alert logging",
+    file_contains(
+        "tests/Unit/Jobs/Middleware/RetryWithBackoffTest.php",
+        "authentication failure",
+    ),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()

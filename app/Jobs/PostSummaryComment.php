@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Middleware\RetryWithBackoff;
 use App\Models\Task;
 use App\Services\GitLabClient;
 use App\Services\SummaryCommentFormatter;
@@ -23,10 +24,20 @@ class PostSummaryComment implements ShouldQueue
 {
     use Queueable;
 
+    public int $tries = 4;
+
     public function __construct(
         public readonly int $taskId,
     ) {
         $this->queue = QueueNames::SERVER;
+    }
+
+    /**
+     * @return array<int, object>
+     */
+    public function middleware(): array
+    {
+        return [new RetryWithBackoff];
     }
 
     public function handle(GitLabClient $gitLab): void
