@@ -529,6 +529,265 @@ checker.check(
 )
 
 # ============================================================
+#  T17: Task Dispatcher — strategy selection + execution mode
+# ============================================================
+section("T17: Task Dispatcher — Strategy + Execution Mode")
+
+# TaskDispatcher service
+checker.check(
+    "TaskDispatcher service exists",
+    file_exists("app/Services/TaskDispatcher.php"),
+)
+checker.check(
+    "TaskDispatcher has dispatch() method",
+    file_contains("app/Services/TaskDispatcher.php", "function dispatch("),
+)
+checker.check(
+    "TaskDispatcher routes server-side tasks",
+    file_contains("app/Services/TaskDispatcher.php", "dispatchServerSide"),
+)
+checker.check(
+    "TaskDispatcher routes runner tasks",
+    file_contains("app/Services/TaskDispatcher.php", "dispatchToRunner"),
+)
+
+# StrategyResolver
+checker.check(
+    "StrategyResolver service exists",
+    file_exists("app/Services/StrategyResolver.php"),
+)
+checker.check(
+    "StrategyResolver has resolve() method",
+    file_contains("app/Services/StrategyResolver.php", "function resolve("),
+)
+
+# ReviewStrategy enum
+checker.check(
+    "ReviewStrategy enum exists",
+    file_exists("app/Enums/ReviewStrategy.php"),
+)
+checker.check(
+    "ReviewStrategy has skills() method",
+    file_contains("app/Enums/ReviewStrategy.php", "function skills()"),
+)
+
+# ProcessTask integration
+checker.check(
+    "ProcessTask delegates to TaskDispatcher",
+    file_contains("app/Jobs/ProcessTask.php", "TaskDispatcher"),
+)
+
+# Tests
+checker.check(
+    "StrategyResolver unit test exists",
+    file_exists("tests/Unit/Services/StrategyResolverTest.php"),
+)
+checker.check(
+    "TaskDispatcher feature test exists",
+    file_exists("tests/Feature/Services/TaskDispatcherTest.php"),
+)
+checker.check(
+    "ProcessTask feature test exists",
+    file_exists("tests/Feature/Jobs/ProcessTaskTest.php"),
+)
+
+# ============================================================
+#  T18: Pipeline trigger integration (task-scoped token D127)
+# ============================================================
+section("T18: Pipeline Trigger Integration (D127)")
+
+# TaskTokenService
+checker.check(
+    "TaskTokenService exists",
+    file_exists("app/Services/TaskTokenService.php"),
+)
+checker.check(
+    "TaskTokenService has generate() method",
+    file_contains("app/Services/TaskTokenService.php", "function generate("),
+)
+checker.check(
+    "TaskTokenService has validate() method",
+    file_contains("app/Services/TaskTokenService.php", "function validate("),
+)
+checker.check(
+    "TaskTokenService uses HMAC-SHA256",
+    file_contains("app/Services/TaskTokenService.php", "hash_hmac"),
+)
+
+# Pipeline trigger in TaskDispatcher
+checker.check(
+    "TaskDispatcher generates task token",
+    file_contains("app/Services/TaskDispatcher.php", "taskTokenService"),
+)
+checker.check(
+    "TaskDispatcher calls triggerPipeline",
+    file_contains("app/Services/TaskDispatcher.php", "triggerPipeline"),
+)
+checker.check(
+    "TaskDispatcher passes VUNNIX_TASK_ID variable",
+    file_contains("app/Services/TaskDispatcher.php", "VUNNIX_TASK_ID"),
+)
+checker.check(
+    "TaskDispatcher passes VUNNIX_TOKEN variable",
+    file_contains("app/Services/TaskDispatcher.php", "VUNNIX_TOKEN"),
+)
+checker.check(
+    "TaskDispatcher stores pipeline_id on task",
+    file_contains("app/Services/TaskDispatcher.php", "pipeline_id"),
+)
+
+# Migration
+checker.check(
+    "Pipeline columns migration exists",
+    file_exists("database/migrations/2024_01_01_000018_add_pipeline_columns.php"),
+)
+
+# Config
+checker.check(
+    "Vunnix config file exists",
+    file_exists("config/vunnix.php"),
+)
+checker.check(
+    "Config has task_budget_minutes",
+    file_contains("config/vunnix.php", "task_budget_minutes"),
+)
+checker.check(
+    "Config has api_url",
+    file_contains("config/vunnix.php", "api_url"),
+)
+
+# Tests
+checker.check(
+    "TaskTokenService unit test exists",
+    file_exists("tests/Unit/Services/TaskTokenServiceTest.php"),
+)
+checker.check(
+    "PipelineTrigger feature test exists",
+    file_exists("tests/Feature/Services/PipelineTriggerTest.php"),
+)
+
+# ============================================================
+#  T19: Executor Dockerfile + entrypoint (D131)
+# ============================================================
+section("T19: Executor Dockerfile + Entrypoint (D131)")
+
+# Directory structure
+checker.check(
+    "executor/ directory exists",
+    dir_exists("executor"),
+)
+checker.check(
+    "executor/.claude/skills/ directory exists",
+    dir_exists("executor/.claude/skills"),
+)
+checker.check(
+    "executor/scripts/ directory exists",
+    dir_exists("executor/scripts"),
+)
+checker.check(
+    "executor/mcp/ directory exists",
+    dir_exists("executor/mcp"),
+)
+
+# Dockerfile
+checker.check(
+    "Dockerfile exists",
+    file_exists("executor/Dockerfile"),
+)
+checker.check(
+    "Dockerfile installs claude CLI",
+    file_contains("executor/Dockerfile", "claude-code"),
+)
+checker.check(
+    "Dockerfile installs Playwright",
+    file_contains("executor/Dockerfile", "playwright"),
+)
+checker.check(
+    "Dockerfile installs eslint",
+    file_contains("executor/Dockerfile", "eslint"),
+)
+checker.check(
+    "Dockerfile installs PHPStan",
+    file_contains("executor/Dockerfile", "phpstan"),
+)
+checker.check(
+    "Dockerfile installs stylelint",
+    file_contains("executor/Dockerfile", "stylelint"),
+)
+checker.check(
+    "Dockerfile sets entrypoint",
+    file_contains("executor/Dockerfile", "ENTRYPOINT"),
+)
+checker.check(
+    "Dockerfile copies .claude/ config",
+    file_contains("executor/Dockerfile", "COPY .claude/"),
+)
+
+# Entrypoint
+checker.check(
+    "entrypoint.sh exists",
+    file_exists("executor/entrypoint.sh"),
+)
+checker.check(
+    "entrypoint.sh validates VUNNIX_TASK_ID",
+    file_contains("executor/entrypoint.sh", "VUNNIX_TASK_ID"),
+)
+checker.check(
+    "entrypoint.sh validates VUNNIX_TOKEN",
+    file_contains("executor/entrypoint.sh", "VUNNIX_TOKEN"),
+)
+checker.check(
+    "entrypoint.sh validates VUNNIX_STRATEGY",
+    file_contains("executor/entrypoint.sh", "VUNNIX_STRATEGY"),
+)
+checker.check(
+    "entrypoint.sh validates VUNNIX_SKILLS",
+    file_contains("executor/entrypoint.sh", "VUNNIX_SKILLS"),
+)
+checker.check(
+    "entrypoint.sh validates VUNNIX_API_URL",
+    file_contains("executor/entrypoint.sh", "VUNNIX_API_URL"),
+)
+checker.check(
+    "entrypoint.sh validates token expiry (D127)",
+    file_contains("executor/entrypoint.sh", "scheduling_timeout"),
+)
+checker.check(
+    "entrypoint.sh runs Claude CLI",
+    file_contains("executor/entrypoint.sh", "claude"),
+)
+checker.check(
+    "entrypoint.sh POSTs results to Vunnix API",
+    file_contains("executor/entrypoint.sh", "/api/v1/tasks/"),
+)
+checker.check(
+    "entrypoint.sh saves debug artifacts",
+    file_contains("executor/entrypoint.sh", "artifact"),
+)
+
+# Playwright screenshot script (D131)
+checker.check(
+    "capture-screenshot.js exists",
+    file_exists("executor/scripts/capture-screenshot.js"),
+)
+checker.check(
+    "capture-screenshot.js uses Playwright chromium",
+    file_contains("executor/scripts/capture-screenshot.js", "chromium"),
+)
+checker.check(
+    "capture-screenshot.js captures PNG screenshots",
+    file_contains("executor/scripts/capture-screenshot.js", "screenshot"),
+)
+checker.check(
+    "capture-screenshot.js supports dev server startup",
+    file_contains("executor/scripts/capture-screenshot.js", "start-server"),
+)
+checker.check(
+    "capture-screenshot.js outputs JSON result",
+    file_contains("executor/scripts/capture-screenshot.js", "JSON.stringify"),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")
