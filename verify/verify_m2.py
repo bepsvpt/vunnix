@@ -1608,6 +1608,170 @@ checker.check(
 )
 
 # ============================================================
+#  T25: UI-adjustment skill (D131)
+# ============================================================
+section("T25: UI-Adjustment Skill")
+
+# File existence and metadata
+checker.check(
+    "ui-adjustment.md skill exists",
+    file_exists("executor/.claude/skills/ui-adjustment.md"),
+)
+checker.check(
+    "Skill has version header",
+    file_contains("executor/.claude/skills/ui-adjustment.md", 'version: "1.0"'),
+)
+checker.check(
+    "Skill has updated date header",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "updated:"),
+)
+
+# Core requirements from spec: targeted visual changes
+checker.check(
+    "Skill describes targeted visual changes",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "targeted"),
+)
+checker.check(
+    "Skill instructs to minimize scope",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "Minimize scope"),
+)
+checker.check(
+    "Skill instructs to change only what is needed",
+    file_contains(
+        "executor/.claude/skills/ui-adjustment.md", "change only what"
+    ),
+)
+
+# Preserve existing styles
+checker.check(
+    "Skill instructs to preserve existing styles",
+    file_contains(
+        "executor/.claude/skills/ui-adjustment.md", "Preserve existing styles"
+    ),
+)
+checker.check(
+    "Skill checks scoped styles",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "scoped"),
+)
+checker.check(
+    "Skill references design tokens",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "design tokens"),
+)
+
+# Responsive breakpoints
+checker.check(
+    "Skill covers responsive breakpoints",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "breakpoint"),
+)
+checker.check(
+    "Skill checks desktop viewport",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "Desktop"),
+)
+checker.check(
+    "Skill checks tablet viewport",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "Tablet"),
+)
+checker.check(
+    "Skill checks mobile viewport",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "Mobile"),
+)
+
+# Screenshot capture (D131 — key differentiator)
+checker.check(
+    "Skill has screenshot capture section",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "Capture Screenshots"),
+)
+checker.check(
+    "Skill references capture-screenshot.js",
+    file_contains(
+        "executor/.claude/skills/ui-adjustment.md", "capture-screenshot.js"
+    ),
+)
+checker.check(
+    "Skill documents --start-server option",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "--start-server"),
+)
+checker.check(
+    "Skill documents --full-page option",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "--full-page"),
+)
+checker.check(
+    "Skill documents --width option for mobile screenshots",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "--width"),
+)
+checker.check(
+    "Skill includes example capture command",
+    file_contains(
+        "executor/.claude/skills/ui-adjustment.md",
+        "/executor/scripts/capture-screenshot.js",
+    ),
+)
+checker.check(
+    "Skill documents base64 encoding for screenshot output",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "base64"),
+)
+
+# Graceful fallback (D131)
+checker.check(
+    "Skill has graceful fallback when screenshot fails",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "Graceful fallback"),
+)
+checker.check(
+    "Skill sets screenshot to null on failure",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "screenshot: null"),
+)
+checker.check(
+    "Skill does not fail task when screenshot fails",
+    file_contains(
+        "executor/.claude/skills/ui-adjustment.md", "do not fail the entire task"
+    ),
+)
+
+# What NOT to do — scope guard
+checker.check(
+    "Skill has scope restrictions (what not to do)",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "Do not refactor"),
+)
+checker.check(
+    "Skill prohibits adding features",
+    file_contains(
+        "executor/.claude/skills/ui-adjustment.md", "Do not add features"
+    ),
+)
+checker.check(
+    "Skill prohibits changing behavior",
+    file_contains(
+        "executor/.claude/skills/ui-adjustment.md", "Do not change behavior"
+    ),
+)
+
+# Output schema — feature dev / UI adjustment format (not code review)
+checker.check(
+    "Skill references feature dev output schema (branch field)",
+    file_contains("executor/.claude/skills/ui-adjustment.md", '"branch"'),
+)
+checker.check(
+    "Skill references mr_title field",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "mr_title"),
+)
+checker.check(
+    "Skill references mr_description field",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "mr_description"),
+)
+checker.check(
+    "Skill references files_changed field",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "files_changed"),
+)
+checker.check(
+    "Skill references screenshot field in output",
+    file_contains("executor/.claude/skills/ui-adjustment.md", '"screenshot"'),
+)
+checker.check(
+    "Skill references screenshot_mobile field",
+    file_contains("executor/.claude/skills/ui-adjustment.md", "screenshot_mobile"),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")
