@@ -1,0 +1,415 @@
+<?php
+
+namespace App\Services;
+
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
+/**
+ * Reusable HTTP client for GitLab REST API v4.
+ *
+ * Authenticates as the Vunnix bot account using a Personal Access Token (PAT).
+ * Separate from GitLabService (T8) which uses user OAuth tokens for membership sync.
+ */
+class GitLabClient
+{
+    protected string $baseUrl;
+
+    protected string $token;
+
+    public function __construct()
+    {
+        $this->baseUrl = rtrim(config('services.gitlab.host') ?: 'https://gitlab.com', '/');
+        $this->token = config('services.gitlab.bot_token') ?: '';
+    }
+
+    // ------------------------------------------------------------------
+    //  HTTP foundation
+    // ------------------------------------------------------------------
+
+    /**
+     * Build a pre-configured HTTP client with bot PAT authentication.
+     */
+    protected function request(): PendingRequest
+    {
+        return Http::withHeaders([
+            'PRIVATE-TOKEN' => $this->token,
+        ])->acceptJson();
+    }
+
+    /**
+     * Build the full API URL for a given path.
+     */
+    protected function url(string $path): string
+    {
+        return $this->baseUrl . '/api/v4/' . ltrim($path, '/');
+    }
+
+    /**
+     * Handle a GitLab API response — log and throw on errors.
+     *
+     * @throws \Illuminate\Http\Client\RequestException
+     */
+    protected function handleResponse(Response $response, string $context): Response
+    {
+        if ($response->successful()) {
+            return $response;
+        }
+
+        Log::warning("GitLab API error: {$context}", [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
+
+        $response->throw();
+
+        return $response; // unreachable, satisfies static analysis
+    }
+
+    // ------------------------------------------------------------------
+    //  Files
+    // ------------------------------------------------------------------
+
+    /**
+     * Read a file from a repository.
+     *
+     * @return array{file_name: string, file_path: string, content: string, encoding: string, ...}
+     */
+    public function getFile(int $projectId, string $filePath, string $ref = 'main'): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/repository/files/" . urlencode($filePath)),
+            ['ref' => $ref],
+        );
+
+        return $this->handleResponse($response, "getFile {$filePath}")->json();
+    }
+
+    /**
+     * List repository tree (files and directories).
+     *
+     * @return array<int, array{id: string, name: string, type: string, path: string, mode: string}>
+     */
+    public function listTree(int $projectId, string $path = '', string $ref = 'main', bool $recursive = false): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/repository/tree"),
+            array_filter([
+                'path' => $path,
+                'ref' => $ref,
+                'recursive' => $recursive ? 'true' : null,
+                'per_page' => 100,
+            ]),
+        );
+
+        return $this->handleResponse($response, "listTree {$path}")->json();
+    }
+
+    // ------------------------------------------------------------------
+    //  Issues
+    // ------------------------------------------------------------------
+
+    /**
+     * List issues for a project.
+     *
+     * @param  array<string, mixed>  $params  Filters: state, labels, search, per_page, etc.
+     * @return array<int, array>
+     */
+    public function listIssues(int $projectId, array $params = []): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/issues"),
+            array_merge(['per_page' => 25], $params),
+        );
+
+        return $this->handleResponse($response, 'listIssues')->json();
+    }
+
+    /**
+     * Get a single issue.
+     */
+    public function getIssue(int $projectId, int $issueIid): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/issues/{$issueIid}"),
+        );
+
+        return $this->handleResponse($response, "getIssue #{$issueIid}")->json();
+    }
+
+    /**
+     * Create an issue.
+     *
+     * @param  array<string, mixed>  $data  title, description, labels, assignee_ids, etc.
+     */
+    public function createIssue(int $projectId, array $data): array
+    {
+        $response = $this->request()->post(
+            $this->url("projects/{$projectId}/issues"),
+            $data,
+        );
+
+        return $this->handleResponse($response, 'createIssue')->json();
+    }
+
+    // ------------------------------------------------------------------
+    //  Merge Requests
+    // ------------------------------------------------------------------
+
+    /**
+     * List merge requests for a project.
+     *
+     * @param  array<string, mixed>  $params  Filters: state, labels, search, per_page, etc.
+     * @return array<int, array>
+     */
+    public function listMergeRequests(int $projectId, array $params = []): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/merge_requests"),
+            array_merge(['per_page' => 25], $params),
+        );
+
+        return $this->handleResponse($response, 'listMergeRequests')->json();
+    }
+
+    /**
+     * Get a single merge request.
+     */
+    public function getMergeRequest(int $projectId, int $mrIid): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/merge_requests/{$mrIid}"),
+        );
+
+        return $this->handleResponse($response, "getMergeRequest !{$mrIid}")->json();
+    }
+
+    /**
+     * Get merge request changes (diff).
+     */
+    public function getMergeRequestChanges(int $projectId, int $mrIid): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/merge_requests/{$mrIid}/changes"),
+        );
+
+        return $this->handleResponse($response, "getMergeRequestChanges !{$mrIid}")->json();
+    }
+
+    /**
+     * Create a merge request.
+     *
+     * @param  array<string, mixed>  $data  source_branch, target_branch, title, description, etc.
+     */
+    public function createMergeRequest(int $projectId, array $data): array
+    {
+        $response = $this->request()->post(
+            $this->url("projects/{$projectId}/merge_requests"),
+            $data,
+        );
+
+        return $this->handleResponse($response, 'createMergeRequest')->json();
+    }
+
+    // ------------------------------------------------------------------
+    //  Comments (Notes)
+    // ------------------------------------------------------------------
+
+    /**
+     * Post a comment on a merge request.
+     */
+    public function createMergeRequestNote(int $projectId, int $mrIid, string $body): array
+    {
+        $response = $this->request()->post(
+            $this->url("projects/{$projectId}/merge_requests/{$mrIid}/notes"),
+            ['body' => $body],
+        );
+
+        return $this->handleResponse($response, "createMRNote !{$mrIid}")->json();
+    }
+
+    /**
+     * Edit an existing comment on a merge request.
+     */
+    public function updateMergeRequestNote(int $projectId, int $mrIid, int $noteId, string $body): array
+    {
+        $response = $this->request()->put(
+            $this->url("projects/{$projectId}/merge_requests/{$mrIid}/notes/{$noteId}"),
+            ['body' => $body],
+        );
+
+        return $this->handleResponse($response, "updateMRNote !{$mrIid}#{$noteId}")->json();
+    }
+
+    /**
+     * Post a comment on an issue.
+     */
+    public function createIssueNote(int $projectId, int $issueIid, string $body): array
+    {
+        $response = $this->request()->post(
+            $this->url("projects/{$projectId}/issues/{$issueIid}/notes"),
+            ['body' => $body],
+        );
+
+        return $this->handleResponse($response, "createIssueNote #{$issueIid}")->json();
+    }
+
+    /**
+     * Create a merge request discussion thread (for inline code comments).
+     *
+     * @param  array<string, mixed>  $position  Position data: base_sha, start_sha, head_sha, old_path, new_path, new_line, etc.
+     */
+    public function createMergeRequestDiscussion(int $projectId, int $mrIid, string $body, array $position = []): array
+    {
+        $data = ['body' => $body];
+
+        if (! empty($position)) {
+            $data['position'] = $position;
+        }
+
+        $response = $this->request()->post(
+            $this->url("projects/{$projectId}/merge_requests/{$mrIid}/discussions"),
+            $data,
+        );
+
+        return $this->handleResponse($response, "createMRDiscussion !{$mrIid}")->json();
+    }
+
+    // ------------------------------------------------------------------
+    //  Branches
+    // ------------------------------------------------------------------
+
+    /**
+     * Create a branch.
+     */
+    public function createBranch(int $projectId, string $branchName, string $ref): array
+    {
+        $response = $this->request()->post(
+            $this->url("projects/{$projectId}/repository/branches"),
+            [
+                'branch' => $branchName,
+                'ref' => $ref,
+            ],
+        );
+
+        return $this->handleResponse($response, "createBranch {$branchName}")->json();
+    }
+
+    // ------------------------------------------------------------------
+    //  Labels
+    // ------------------------------------------------------------------
+
+    /**
+     * Apply labels to a merge request (overwrites existing labels).
+     *
+     * @param  array<int, string>  $labels
+     */
+    public function setMergeRequestLabels(int $projectId, int $mrIid, array $labels): array
+    {
+        $response = $this->request()->put(
+            $this->url("projects/{$projectId}/merge_requests/{$mrIid}"),
+            ['labels' => implode(',', $labels)],
+        );
+
+        return $this->handleResponse($response, "setMRLabels !{$mrIid}")->json();
+    }
+
+    /**
+     * Add labels to a merge request (preserves existing labels).
+     *
+     * @param  array<int, string>  $labels
+     */
+    public function addMergeRequestLabels(int $projectId, int $mrIid, array $labels): array
+    {
+        $response = $this->request()->put(
+            $this->url("projects/{$projectId}/merge_requests/{$mrIid}"),
+            ['add_labels' => implode(',', $labels)],
+        );
+
+        return $this->handleResponse($response, "addMRLabels !{$mrIid}")->json();
+    }
+
+    // ------------------------------------------------------------------
+    //  Commit Status
+    // ------------------------------------------------------------------
+
+    /**
+     * Set commit status (used for CI/CD integration).
+     *
+     * @param  string  $state  pending, running, success, failed, canceled
+     * @param  array<string, mixed>  $options  name, target_url, description, coverage, etc.
+     */
+    public function setCommitStatus(int $projectId, string $sha, string $state, array $options = []): array
+    {
+        $response = $this->request()->post(
+            $this->url("projects/{$projectId}/statuses/{$sha}"),
+            array_merge(['state' => $state], $options),
+        );
+
+        return $this->handleResponse($response, "setCommitStatus {$sha}")->json();
+    }
+
+    // ------------------------------------------------------------------
+    //  Webhooks
+    // ------------------------------------------------------------------
+
+    /**
+     * Create a project webhook.
+     *
+     * @param  array<string, mixed>  $events  merge_requests_events, note_events, issues_events, push_events, etc.
+     */
+    public function createWebhook(int $projectId, string $url, string $secretToken, array $events = []): array
+    {
+        $response = $this->request()->post(
+            $this->url("projects/{$projectId}/hooks"),
+            array_merge([
+                'url' => $url,
+                'token' => $secretToken,
+            ], $events),
+        );
+
+        return $this->handleResponse($response, 'createWebhook')->json();
+    }
+
+    /**
+     * Delete a project webhook.
+     */
+    public function deleteWebhook(int $projectId, int $hookId): void
+    {
+        $response = $this->request()->delete(
+            $this->url("projects/{$projectId}/hooks/{$hookId}"),
+        );
+
+        $this->handleResponse($response, "deleteWebhook #{$hookId}");
+    }
+
+    // ------------------------------------------------------------------
+    //  Pipelines
+    // ------------------------------------------------------------------
+
+    /**
+     * Trigger a pipeline via the pipeline triggers API.
+     *
+     * @param  array<string, string>  $variables  Key-value pairs for CI variables.
+     */
+    public function triggerPipeline(int $projectId, string $ref, string $triggerToken, array $variables = []): array
+    {
+        $data = [
+            'token' => $triggerToken,
+            'ref' => $ref,
+        ];
+
+        foreach ($variables as $key => $value) {
+            $data["variables[{$key}]"] = $value;
+        }
+
+        $response = $this->request()->post(
+            $this->url("projects/{$projectId}/trigger/pipeline"),
+            $data,
+        );
+
+        return $this->handleResponse($response, "triggerPipeline ref={$ref}")->json();
+    }
+}

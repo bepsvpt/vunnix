@@ -2,14 +2,14 @@
 
 ## Summary
 
-- **Current Milestone:** M1 — Core Infrastructure
-- **Tasks Complete:** 10 / 116 (9%)
-- **Current Task:** T11 — GitLab HTTP client service
-- **Last Verified:** T10
+- **Current Milestone:** M2 — Path A Functional
+- **Tasks Complete:** 11 / 116 (9%)
+- **Current Task:** T12 — Webhook controller + middleware
+- **Last Verified:** T11
 
 ---
 
-## M1 — Core Infrastructure (10/11)
+## M1 — Core Infrastructure (11/11) ✅
 
 - [x] T1: Scaffold Laravel project (Octane, FrankenPHP, AI SDK, Socialite, Reverb) [Depends: —]
 - [x] T2: Docker Compose (FrankenPHP + PostgreSQL + Redis + Reverb) [Depends: T1]
@@ -21,13 +21,13 @@
 - [x] T8: User model + membership sync (periodic re-validation D147) [Depends: T7]
 - [x] T9: RBAC system (roles, permissions, Gate/Policy) [Depends: T3, T8]
 - [x] T10: Global configuration model [Depends: T5]
-- [ ] **T11:** GitLab HTTP client service [Depends: T1]
+- [x] T11: GitLab HTTP client service [Depends: T1]
 
 ## M2 — Path A Functional (0/35)
 
 ### Webhook & Event Routing
 
-- [ ] T12: Webhook controller + middleware (CSRF exclusion, X-Gitlab-Token) [Depends: T1, T11]
+- [ ] **T12:** Webhook controller + middleware (CSRF exclusion, X-Gitlab-Token) [Depends: T1, T11]
 - [ ] T13: Event types + event router (bot filtering D154, command fallback D155) [Depends: T12]
 - [ ] T14: Deduplication + latest-wins superseding (D140) [Depends: T13]
 

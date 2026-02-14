@@ -19,6 +19,7 @@ return [
         'client_secret' => env('GITLAB_CLIENT_SECRET'),
         'redirect' => env('GITLAB_REDIRECT_URI', '/auth/gitlab/callback'),
         'host' => env('GITLAB_URL', 'https://gitlab.com'),
+        'bot_token' => env('GITLAB_BOT_TOKEN'),
     ],
 
     'postmark' => [
