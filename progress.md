@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 58 / 116 (50%)
-- **Current Task:** T59 — Language configuration injection
-- **Last Verified:** T58
+- **Tasks Complete:** 59 / 116 (50.9%)
+- **Current Task:** T60 — Prompt injection hardening
+- **Last Verified:** T59
 
 ---
 
@@ -81,7 +81,7 @@
 - [x] T45: CI pipeline template [Depends: T19]
 - [x] T46: Executor image CI/CD + version alignment [Depends: T19]
 
-## M3 — Path B Functional (11/27)
+## M3 — Path B Functional (12/27)
 
 ### Chat Backend
 
@@ -97,8 +97,8 @@
 - [x] T56: Server-side execution mode (create Issue bypass) [Depends: T55, T32, T11]
 - [x] T57: Structured output schema — action dispatch [Depends: T49]
 - [x] T58: Conversation pruning middleware (>20 turns) [Depends: T49]
-- [ ] **T59:** Language configuration injection [Depends: T49, T10]
-- [ ] T60: Prompt injection hardening [Depends: T49]
+- [x] T59: Language configuration injection [Depends: T49, T10]
+- [ ] **T60:** Prompt injection hardening [Depends: T49]
 
 ### Chat Frontend
 
