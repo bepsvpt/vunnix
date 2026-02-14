@@ -65,9 +65,19 @@ class ProcessTaskResult implements ShouldQueue
         if ($this->shouldPostSummaryComment($task)) {
             PostSummaryComment::dispatch($task->id);
         }
+
+        if ($this->shouldPostInlineThreads($task)) {
+            PostInlineThreads::dispatch($task->id);
+        }
     }
 
     private function shouldPostSummaryComment(Task $task): bool
+    {
+        return $task->mr_iid !== null
+            && in_array($task->type, [TaskType::CodeReview, TaskType::SecurityAudit], true);
+    }
+
+    private function shouldPostInlineThreads(Task $task): bool
     {
         return $task->mr_iid !== null
             && in_array($task->type, [TaskType::CodeReview, TaskType::SecurityAudit], true);
