@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 54 / 116 (47%)
-- **Current Task:** T55 — Action dispatch from conversation
-- **Last Verified:** T54
+- **Tasks Complete:** 55 / 116 (47%)
+- **Current Task:** T56 — Server-side execution mode
+- **Last Verified:** T55
 
 ---
 
@@ -93,8 +93,8 @@
 - [x] T52: GitLab tools — Merge Requests (ListMRs, ReadMR, ReadMRDiff) [Depends: T49, T11]
 - [x] T53: Cross-project tool-use access check [Depends: T50, T51, T52, T9]
 - [x] T54: Quality gate behavior [Depends: T49]
-- [ ] **T55:** Action dispatch from conversation (deep analysis D132) [Depends: T49, T15, T16, T9]
-- [ ] T56: Server-side execution mode (create Issue bypass) [Depends: T55, T32, T11]
+- [x] T55: Action dispatch from conversation (deep analysis D132) [Depends: T49, T15, T16, T9]
+- [ ] **T56:** Server-side execution mode (create Issue bypass) [Depends: T55, T32, T11]
 - [ ] T57: Structured output schema — action dispatch [Depends: T49]
 - [ ] T58: Conversation pruning middleware (>20 turns) [Depends: T49]
 - [ ] T59: Language configuration injection [Depends: T49, T10]
