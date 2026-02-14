@@ -23,6 +23,12 @@ Route::prefix('v1')->group(function () {
             ->name('api.conversations.show');
         Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'sendMessage'])
             ->name('api.conversations.messages.store');
+
+        // SSE streaming endpoint (T48)
+        // Sends user message and streams AI response as Server-Sent Events
+        Route::post('/conversations/{conversation}/stream', [ConversationController::class, 'stream'])
+            ->name('api.conversations.stream');
+
         Route::patch('/conversations/{conversation}/archive', [ConversationController::class, 'archive'])
             ->name('api.conversations.archive');
     });

@@ -102,6 +102,25 @@ class ConversationController extends Controller
     }
 
     /**
+     * POST /api/v1/conversations/{conversation}/stream
+     * Send a user message and stream the AI response as SSE.
+     *
+     * Returns a text/event-stream response with AI SDK stream events:
+     * stream_start, text_start, text_delta, text_end, tool_call,
+     * tool_result, stream_end, followed by [DONE].
+     */
+    public function stream(SendMessageRequest $request, Conversation $conversation)
+    {
+        $this->authorize('stream', $conversation);
+
+        return $this->conversationService->streamResponse(
+            conversation: $conversation,
+            user: $request->user(),
+            content: $request->validated('content'),
+        );
+    }
+
+    /**
      * PATCH /api/v1/conversations/{conversation}/archive
      * Toggle archive state on a conversation.
      */

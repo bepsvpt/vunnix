@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Agents\VunnixAgent;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\CursorPaginator;
+use Laravel\Ai\Responses\StreamableAgentResponse;
 
 class ConversationService
 {
@@ -82,6 +84,27 @@ class ConversationService
         $conversation->touch();
 
         return $message;
+    }
+
+    /**
+     * Stream an AI response for a user message in a conversation.
+     *
+     * Saves the user message, configures the agent with conversation context,
+     * and returns a StreamableAgentResponse that streams SSE events.
+     */
+    public function streamResponse(Conversation $conversation, User $user, string $content): StreamableAgentResponse
+    {
+        $this->addUserMessage($conversation, $user, $content);
+
+        $agent = VunnixAgent::make();
+
+        if ($conversation->messages()->where('role', 'assistant')->exists()) {
+            $agent->continue($conversation->id, $user);
+        } else {
+            $agent->forUser($user);
+        }
+
+        return $agent->stream($content);
     }
 
     /**

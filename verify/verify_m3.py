@@ -221,6 +221,97 @@ checker.check(
     file_exists("tests/Feature/Models/ConversationModelTest.php"),
 )
 
+# ============================================================
+#  T48: SSE streaming endpoint
+# ============================================================
+section("T48: SSE Streaming Endpoint")
+
+# VunnixAgent
+checker.check(
+    "VunnixAgent exists",
+    file_exists("app/Agents/VunnixAgent.php"),
+)
+checker.check(
+    "VunnixAgent implements Agent contract",
+    file_contains("app/Agents/VunnixAgent.php", "implements Agent"),
+)
+checker.check(
+    "VunnixAgent implements Conversational contract",
+    file_contains("app/Agents/VunnixAgent.php", "Conversational"),
+)
+checker.check(
+    "VunnixAgent uses Promptable trait",
+    file_contains("app/Agents/VunnixAgent.php", "use Promptable"),
+)
+checker.check(
+    "VunnixAgent uses RemembersConversations trait",
+    file_contains("app/Agents/VunnixAgent.php", "use RemembersConversations"),
+)
+checker.check(
+    "VunnixAgent specifies Anthropic provider",
+    file_contains("app/Agents/VunnixAgent.php", "'anthropic'"),
+)
+
+# Controller stream action
+checker.check(
+    "ConversationController has stream action",
+    file_contains(
+        "app/Http/Controllers/Api/ConversationController.php",
+        "public function stream",
+    ),
+)
+checker.check(
+    "Controller stream action returns StreamableAgentResponse",
+    file_contains(
+        "app/Http/Controllers/Api/ConversationController.php",
+        "streamResponse",
+    ),
+)
+
+# Service streamResponse method
+checker.check(
+    "ConversationService has streamResponse method",
+    file_contains("app/Services/ConversationService.php", "public function streamResponse"),
+)
+checker.check(
+    "ConversationService uses VunnixAgent",
+    file_contains("app/Services/ConversationService.php", "VunnixAgent"),
+)
+checker.check(
+    "ConversationService returns StreamableAgentResponse",
+    file_contains("app/Services/ConversationService.php", "StreamableAgentResponse"),
+)
+
+# Policy
+checker.check(
+    "ConversationPolicy has stream method",
+    file_contains("app/Policies/ConversationPolicy.php", "public function stream"),
+)
+
+# Route
+checker.check(
+    "SSE stream route registered",
+    file_contains("routes/api.php", "api.conversations.stream"),
+)
+checker.check(
+    "Stream route is POST",
+    file_contains("routes/api.php", "Route::post('/conversations/{conversation}/stream'"),
+)
+
+# Tests
+checker.check(
+    "SseStreamingTest exists",
+    file_exists("tests/Feature/SseStreamingTest.php"),
+)
+checker.check(
+    "SseStreamingTest verifies SSE event types",
+    file_contains("tests/Feature/SseStreamingTest.php", "text_delta"),
+)
+checker.check(
+    "SseStreamingTest uses Agent::fake()",
+    file_contains("tests/Feature/SseStreamingTest.php", "VunnixAgent::fake"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()

@@ -26,6 +26,15 @@ class ConversationPolicy
     }
 
     /**
+     * Can the user stream an AI response in this conversation?
+     * Same as sendMessage — must be a project member.
+     */
+    public function stream(User $user, Conversation $conversation): bool
+    {
+        return $this->view($user, $conversation);
+    }
+
+    /**
      * Can the user archive/unarchive this conversation?
      * Same as view — any project member can archive.
      */
