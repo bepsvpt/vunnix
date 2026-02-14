@@ -3,13 +3,13 @@
 ## Summary
 
 - **Current Milestone:** M1 — Core Infrastructure
-- **Tasks Complete:** 9 / 116 (8%)
-- **Current Task:** T10 — Global configuration model
-- **Last Verified:** T9
+- **Tasks Complete:** 10 / 116 (9%)
+- **Current Task:** T11 — GitLab HTTP client service
+- **Last Verified:** T10
 
 ---
 
-## M1 — Core Infrastructure (9/11)
+## M1 — Core Infrastructure (10/11)
 
 - [x] T1: Scaffold Laravel project (Octane, FrankenPHP, AI SDK, Socialite, Reverb) [Depends: —]
 - [x] T2: Docker Compose (FrankenPHP + PostgreSQL + Redis + Reverb) [Depends: T1]
@@ -20,8 +20,8 @@
 - [x] T7: GitLab OAuth (Socialite, read_user + read_api scopes D151) [Depends: T3]
 - [x] T8: User model + membership sync (periodic re-validation D147) [Depends: T7]
 - [x] T9: RBAC system (roles, permissions, Gate/Policy) [Depends: T3, T8]
-- [ ] **T10:** Global configuration model [Depends: T5]
-- [ ] T11: GitLab HTTP client service [Depends: T1]
+- [x] T10: Global configuration model [Depends: T5]
+- [ ] **T11:** GitLab HTTP client service [Depends: T1]
 
 ## M2 — Path A Functional (0/35)
 
