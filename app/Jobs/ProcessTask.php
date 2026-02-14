@@ -2,8 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Exceptions\GitLabApiException;
 use App\Jobs\Middleware\RetryWithBackoff;
 use App\Models\Task;
+use App\Services\FailureHandler;
 use App\Services\TaskDispatcher;
 use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -77,5 +79,47 @@ class ProcessTask implements ShouldQueue
         ]);
 
         $dispatcher->dispatch($task);
+    }
+
+    /**
+     * Handle permanent job failure.
+     *
+     * Called by Laravel when $job->fail() is invoked (by RetryWithBackoff middleware
+     * after max retries, or on non-retryable errors).
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        $task = Task::find($this->taskId);
+
+        if ($task === null) {
+            Log::warning('ProcessTask::failed: task not found', ['task_id' => $this->taskId]);
+
+            return;
+        }
+
+        $failureReason = $this->classifyFailureReason($exception);
+        $errorDetails = $exception?->getMessage() ?? 'Unknown error';
+
+        if ($exception instanceof GitLabApiException) {
+            $errorDetails = "HTTP {$exception->statusCode}: {$exception->responseBody}";
+        }
+
+        app(FailureHandler::class)->handlePermanentFailure(
+            task: $task,
+            failureReason: $failureReason,
+            errorDetails: $errorDetails,
+            attempts: [],
+        );
+    }
+
+    private function classifyFailureReason(?\Throwable $exception): string
+    {
+        if ($exception instanceof GitLabApiException) {
+            if ($exception->isInvalidRequest()) {
+                return 'invalid_request';
+            }
+        }
+
+        return 'max_retries_exceeded';
     }
 }
