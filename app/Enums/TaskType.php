@@ -10,6 +10,7 @@ enum TaskType: string
     case UiAdjustment = 'ui_adjustment';
     case PrdCreation = 'prd_creation';
     case SecurityAudit = 'security_audit';
+    case DeepAnalysis = 'deep_analysis';
 
     public function executionMode(): string
     {
