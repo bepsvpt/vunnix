@@ -69,6 +69,10 @@ class ProcessTaskResult implements ShouldQueue
         if ($this->shouldPostInlineThreads($task)) {
             PostInlineThreads::dispatch($task->id);
         }
+
+        if ($this->shouldPostLabelsAndStatus($task)) {
+            PostLabelsAndStatus::dispatch($task->id);
+        }
     }
 
     private function shouldPostSummaryComment(Task $task): bool
@@ -78,6 +82,12 @@ class ProcessTaskResult implements ShouldQueue
     }
 
     private function shouldPostInlineThreads(Task $task): bool
+    {
+        return $task->mr_iid !== null
+            && in_array($task->type, [TaskType::CodeReview, TaskType::SecurityAudit], true);
+    }
+
+    private function shouldPostLabelsAndStatus(Task $task): bool
     {
         return $task->mr_iid !== null
             && in_array($task->type, [TaskType::CodeReview, TaskType::SecurityAudit], true);
