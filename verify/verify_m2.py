@@ -153,6 +153,121 @@ checker.check(
 )
 
 # ============================================================
+#  T13: Event types + event router
+# ============================================================
+section("T13: Event Types + Event Router")
+
+# Event base class
+checker.check(
+    "WebhookEvent base class exists",
+    file_exists("app/Events/Webhook/WebhookEvent.php"),
+)
+
+# Event classes
+event_classes = [
+    "MergeRequestOpened",
+    "MergeRequestUpdated",
+    "MergeRequestMerged",
+    "NoteOnMR",
+    "NoteOnIssue",
+    "IssueLabelChanged",
+    "PushToMRBranch",
+]
+for cls in event_classes:
+    checker.check(
+        f"{cls} event class exists",
+        file_exists(f"app/Events/Webhook/{cls}.php"),
+    )
+    checker.check(
+        f"{cls} extends WebhookEvent",
+        file_contains(f"app/Events/Webhook/{cls}.php", "extends WebhookEvent"),
+    )
+    checker.check(
+        f"{cls} has type() method",
+        file_contains(f"app/Events/Webhook/{cls}.php", "function type()"),
+    )
+
+# EventRouter service
+checker.check(
+    "EventRouter service exists",
+    file_exists("app/Services/EventRouter.php"),
+)
+checker.check(
+    "EventRouter has route() method",
+    file_contains("app/Services/EventRouter.php", "function route("),
+)
+checker.check(
+    "EventRouter has parseEvent() method",
+    file_contains("app/Services/EventRouter.php", "function parseEvent("),
+)
+checker.check(
+    "EventRouter implements bot filtering (D154)",
+    file_contains("app/Services/EventRouter.php", "isBotNoteEvent"),
+)
+checker.check(
+    "EventRouter implements @ai command parsing",
+    file_contains("app/Services/EventRouter.php", "@ai"),
+)
+checker.check(
+    "EventRouter handles help response (D155)",
+    file_contains("app/Services/EventRouter.php", "help_response"),
+)
+
+# RoutingResult value object
+checker.check(
+    "RoutingResult class exists",
+    file_exists("app/Services/RoutingResult.php"),
+)
+checker.check(
+    "RoutingResult has intent property",
+    file_contains("app/Services/RoutingResult.php", "intent"),
+)
+checker.check(
+    "RoutingResult has priority property",
+    file_contains("app/Services/RoutingResult.php", "priority"),
+)
+
+# PostHelpResponse job (D155)
+checker.check(
+    "PostHelpResponse job exists",
+    file_exists("app/Jobs/PostHelpResponse.php"),
+)
+checker.check(
+    "PostHelpResponse implements ShouldQueue",
+    file_contains("app/Jobs/PostHelpResponse.php", "ShouldQueue"),
+)
+checker.check(
+    "PostHelpResponse uses vunnix-server queue",
+    file_contains("app/Jobs/PostHelpResponse.php", "vunnix-server"),
+)
+
+# Controller integration
+checker.check(
+    "WebhookController uses EventRouter",
+    file_contains("app/Http/Controllers/WebhookController.php", "EventRouter"),
+)
+
+# Bot account ID config
+checker.check(
+    "Bot account ID in config/services.php",
+    file_contains("config/services.php", "bot_account_id"),
+)
+checker.check(
+    "Bot account ID in .env.example",
+    file_contains(".env.example", "GITLAB_BOT_ACCOUNT_ID"),
+)
+
+# Tests
+checker.check(
+    "Event parser test exists",
+    file_exists("tests/Feature/Services/EventParserTest.php"),
+)
+checker.check(
+    "Event router test exists",
+    file_exists("tests/Feature/Services/EventRouterTest.php"),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")

@@ -20,6 +20,7 @@ return [
         'redirect' => env('GITLAB_REDIRECT_URI', '/auth/gitlab/callback'),
         'host' => env('GITLAB_URL', 'https://gitlab.com'),
         'bot_token' => env('GITLAB_BOT_TOKEN'),
+        'bot_account_id' => env('GITLAB_BOT_ACCOUNT_ID'),
     ],
 
     'postmark' => [

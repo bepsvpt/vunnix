@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 12 / 116 (10%)
-- **Current Task:** T13 — Event types + event router
-- **Last Verified:** T12
+- **Tasks Complete:** 13 / 116 (11%)
+- **Current Task:** T14 — Deduplication + latest-wins superseding
+- **Last Verified:** T13
 
 ---
 
@@ -23,13 +23,13 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (1/35)
+## M2 — Path A Functional (2/35)
 
 ### Webhook & Event Routing
 
 - [x] T12: Webhook controller + middleware (CSRF exclusion, X-Gitlab-Token) [Depends: T1, T11]
-- [ ] **T13:** Event types + event router (bot filtering D154, command fallback D155) [Depends: T12]
-- [ ] T14: Deduplication + latest-wins superseding (D140) [Depends: T13]
+- [x] T13: Event types + event router (bot filtering D154, command fallback D155) [Depends: T12]
+- [ ] **T14:** Deduplication + latest-wins superseding (D140) [Depends: T13]
 
 ### Task Queue & Dispatch
 

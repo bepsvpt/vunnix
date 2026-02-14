@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Services\EventRouter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -28,11 +29,10 @@ class WebhookController extends Controller
      * The VerifyWebhookToken middleware has already validated the token and
      * resolved the project — available via $request->input('webhook_project').
      *
-     * This controller parses the event type and payload, then returns a
-     * structured acknowledgment. The Event Router (T13) will handle
-     * dispatching to the appropriate handler.
+     * This controller parses the event type and payload, then passes
+     * the event context to the EventRouter for intent classification.
      */
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, EventRouter $eventRouter): JsonResponse
     {
         /** @var Project $project */
         $project = $request->input('webhook_project');
@@ -76,12 +76,13 @@ class WebhookController extends Controller
             'object_kind' => $payload['object_kind'] ?? null,
         ]);
 
-        // T13 will add: EventRouter::dispatch($eventContext);
+        $result = $eventRouter->route($eventContext);
 
         return response()->json([
             'status' => 'accepted',
             'event_type' => $eventType,
             'project_id' => $project->id,
+            'intent' => $result?->intent,
         ]);
     }
 
