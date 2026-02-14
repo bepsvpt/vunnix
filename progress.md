@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 37 / 116 (32%)
-- **Current Task:** T38 — Failure handling (DLQ, failure comment)
-- **Last Verified:** T37
+- **Tasks Complete:** 38 / 116 (33%)
+- **Current Task:** T39 — Code review — end-to-end
+- **Last Verified:** T38
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (25/35)
+## M2 — Path A Functional (26/35)
 
 ### Webhook & Event Routing
 
@@ -68,11 +68,11 @@
 ### Retry & Failure
 
 - [x] T37: Retry + backoff (30s → 2m → 8m, max 3) [Depends: T16]
-- [ ] **T38:** Failure handling (DLQ, failure comment) [Depends: T37, T32]
+- [x] T38: Failure handling (DLQ, failure comment) [Depends: T37, T32]
 
 ### End-to-End & Variations
 
-- [ ] T39: Code review — end-to-end [Depends: T14, T18, T28, T34, T35, T36, T38]
+- [ ] **T39:** Code review — end-to-end [Depends: T14, T18, T28, T34, T35, T36, T38]
 - [ ] T40: Incremental review [Depends: T39]
 - [ ] T41: On-demand review — @ai review [Depends: T39]
 - [ ] T42: @ai improve + @ai ask commands [Depends: T39]
