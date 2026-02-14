@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\TaskType;
 use App\Models\Task;
 use App\Services\ResultProcessor;
 use App\Support\QueueNames;
@@ -57,6 +58,18 @@ class ProcessTaskResult implements ShouldQueue
                 'task_id' => $this->taskId,
                 'errors' => $result['errors'],
             ]);
+
+            return;
         }
+
+        if ($this->shouldPostSummaryComment($task)) {
+            PostSummaryComment::dispatch($task->id);
+        }
+    }
+
+    private function shouldPostSummaryComment(Task $task): bool
+    {
+        return $task->mr_iid !== null
+            && in_array($task->type, [TaskType::CodeReview, TaskType::SecurityAudit], true);
     }
 }
