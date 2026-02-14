@@ -3,12 +3,15 @@
 use App\Agents\Tools\ListIssues;
 use App\Exceptions\GitLabApiException;
 use App\Services\GitLabClient;
+use App\Services\ProjectAccessChecker;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Laravel\Ai\Tools\Request;
 
 beforeEach(function () {
     $this->gitLab = Mockery::mock(GitLabClient::class);
-    $this->tool = new ListIssues($this->gitLab);
+    $this->accessChecker = Mockery::mock(ProjectAccessChecker::class);
+    $this->accessChecker->shouldReceive('check')->andReturn(null);
+    $this->tool = new ListIssues($this->gitLab, $this->accessChecker);
 });
 
 // ─── Description ────────────────────────────────────────────────
@@ -211,4 +214,23 @@ it('returns error message instead of throwing on GitLab API failure', function (
     ]));
 
     expect($result)->toContain('Error listing issues');
+});
+
+// ─── Handle — access denied ────────────────────────────────────
+
+it('returns rejection when access checker denies access', function () {
+    $checker = Mockery::mock(ProjectAccessChecker::class);
+    $checker->shouldReceive('check')
+        ->with(999)
+        ->once()
+        ->andReturn('Access denied: you do not have access to this project.');
+
+    $tool = new ListIssues($this->gitLab, $checker);
+
+    $result = $tool->handle(new Request([
+        'project_id' => 999,
+    ]));
+
+    expect($result)->toContain('Access denied');
+    $this->gitLab->shouldNotHaveReceived('listIssues');
 });

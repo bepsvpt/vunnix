@@ -4,6 +4,7 @@ namespace App\Agents\Tools;
 
 use App\Exceptions\GitLabApiException;
 use App\Services\GitLabClient;
+use App\Services\ProjectAccessChecker;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
@@ -26,6 +27,7 @@ class ReadMRDiff implements Tool
 
     public function __construct(
         protected GitLabClient $gitLab,
+        protected ProjectAccessChecker $accessChecker,
     ) {}
 
     public function description(): string
@@ -49,6 +51,12 @@ class ReadMRDiff implements Tool
 
     public function handle(Request $request): string
     {
+        $rejection = $this->accessChecker->check($request->integer('project_id'));
+
+        if ($rejection !== null) {
+            return $rejection;
+        }
+
         try {
             $data = $this->gitLab->getMergeRequestChanges(
                 projectId: $request->integer('project_id'),

@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 52 / 116 (45%)
-- **Current Task:** T53 — Cross-project tool-use access check
-- **Last Verified:** T52
+- **Tasks Complete:** 53 / 116 (46%)
+- **Current Task:** T54 — Quality gate behavior
+- **Last Verified:** T53
 
 ---
 
@@ -81,7 +81,7 @@
 - [x] T45: CI pipeline template [Depends: T19]
 - [x] T46: Executor image CI/CD + version alignment [Depends: T19]
 
-## M3 — Path B Functional (6/27)
+## M3 — Path B Functional (7/27)
 
 ### Chat Backend
 
@@ -91,8 +91,8 @@
 - [x] T50: GitLab tools — repo browsing (BrowseRepoTree, ReadFile, SearchCode) [Depends: T49, T11]
 - [x] T51: GitLab tools — Issues (ListIssues, ReadIssue) [Depends: T49, T11]
 - [x] T52: GitLab tools — Merge Requests (ListMRs, ReadMR, ReadMRDiff) [Depends: T49, T11]
-- [ ] **T53:** Cross-project tool-use access check [Depends: T50, T51, T52, T9]
-- [ ] T54: Quality gate behavior [Depends: T49]
+- [x] T53: Cross-project tool-use access check [Depends: T50, T51, T52, T9]
+- [ ] **T54:** Quality gate behavior [Depends: T49]
 - [ ] T55: Action dispatch from conversation (deep analysis D132) [Depends: T49, T15, T16, T9]
 - [ ] T56: Server-side execution mode (create Issue bypass) [Depends: T55, T32, T11]
 - [ ] T57: Structured output schema — action dispatch [Depends: T49]
