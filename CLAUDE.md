@@ -59,9 +59,12 @@ A single task may require multiple sessions — that's fine. Use `handoff.md` to
 6. Write tests per the milestone's Verification subsection in §21
 7. Run verification (see protocol below)
 8. Update `progress.md`: check the box `[x]`, update milestone count, bold the next task, update summary
-9. **Clear handoff.md** back to empty template
-10. Commit with task reference
-11. **Stop.** Do not start the next task — the runner will launch a new session.
+9. **Promote learnings** — move any reusable insights from handoff.md "Errors & Blockers" / "Approach & Decisions" into the `## Learnings` section of this file
+10. **Clear handoff.md** back to empty template
+11. Commit with task reference (commit includes both progress.md and CLAUDE.md if learnings were added)
+12. **Stop.** Do not start the next task — the runner will launch a new session.
+
+> **Learnings promotion flow:** handoff.md "Errors & Blockers" → ask yourself *"would a future session hit this same problem?"* → if yes, distill it into a one-line actionable rule and add it to `## Learnings` below.
 
 ### Verification Protocol (MANDATORY)
 
@@ -94,7 +97,8 @@ python3 verify/verify_m1.py   # (use verify_m{N}.py for current milestone)
 | **Completing a sub-step** | Mark it `[x]` in handoff.md |
 | **Encountering an error** | Log the error message, what caused it, and any attempted fix under "Errors & Blockers" |
 | **Making a design decision** | Note it under "Approach & Decisions" so the next session doesn't re-evaluate |
-| **Task fully complete** | Clear handoff.md back to its empty template |
+| **Solved a non-obvious problem** | Promote the insight to `## Learnings` in CLAUDE.md — this is how short-term memory becomes long-term |
+| **Task fully complete** | Promote any reusable insights from handoff.md to `## Learnings`, then clear handoff.md |
 
 #### Template
 
@@ -238,6 +242,12 @@ EOF
 | **D153** | Anthropic API key in `.env` only — never stored in database |
 
 For all 155 decisions, see the Discussion Log in `vunnix.md`.
+
+## Learnings
+
+Persistent lessons discovered during development. **Add entries here when you solve a non-obvious problem that future sessions might encounter again.** Write each as an actionable rule, not a story. Never remove entries.
+
+*(none yet — first entries will appear as tasks are implemented)*
 
 ## Key Files
 
