@@ -200,6 +200,7 @@ class TaskDispatcher
             TaskType::FeatureDev => ReviewStrategy::BackendReview,
             TaskType::UiAdjustment => ReviewStrategy::FrontendReview,
             TaskType::IssueDiscussion => ReviewStrategy::BackendReview,
+            TaskType::DeepAnalysis => ReviewStrategy::BackendReview,
             default => ReviewStrategy::BackendReview,
         };
     }

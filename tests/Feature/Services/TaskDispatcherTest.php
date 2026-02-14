@@ -331,6 +331,35 @@ it('uses backend-review strategy for IssueDiscussion task type', function () {
     expect($task->result['strategy'])->toBe('backend-review');
 });
 
+it('uses backend-review strategy for DeepAnalysis task type', function () {
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::DeepAnalysis,
+        'project_id' => $project->id,
+        'mr_iid' => null,
+        'issue_iid' => null,
+    ]);
+
+    $dispatcher = app(TaskDispatcher::class);
+    $dispatcher->dispatch($task);
+
+    $task->refresh();
+
+    expect($task->result['strategy'])->toBe('backend-review');
+});
+
 it('uses backend-review strategy for FeatureDev task type', function () {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
