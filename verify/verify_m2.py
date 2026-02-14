@@ -3157,6 +3157,104 @@ checker.check(
 )
 
 # ============================================================
+#  T34: Inline discussion threads — Layer 2
+# ============================================================
+section("T34: Inline Discussion Threads — Layer 2")
+
+# Formatter service
+checker.check(
+    "InlineThreadFormatter service exists",
+    file_exists("app/Services/InlineThreadFormatter.php"),
+)
+checker.check(
+    "InlineThreadFormatter has format method",
+    file_contains("app/Services/InlineThreadFormatter.php", "function format(array"),
+)
+checker.check(
+    "InlineThreadFormatter has severity tag mapping",
+    file_contains("app/Services/InlineThreadFormatter.php", "SEVERITY_TAGS"),
+)
+checker.check(
+    "InlineThreadFormatter has filterHighMedium method",
+    file_contains("app/Services/InlineThreadFormatter.php", "function filterHighMedium"),
+)
+checker.check(
+    "InlineThreadFormatter filters to critical and major only",
+    file_contains("app/Services/InlineThreadFormatter.php", "INLINE_SEVERITIES"),
+)
+checker.check(
+    "InlineThreadFormatter includes suggested fix section",
+    file_contains("app/Services/InlineThreadFormatter.php", "Suggested fix"),
+)
+
+# PostInlineThreads job
+checker.check(
+    "PostInlineThreads job exists",
+    file_exists("app/Jobs/PostInlineThreads.php"),
+)
+checker.check(
+    "PostInlineThreads implements ShouldQueue",
+    file_contains("app/Jobs/PostInlineThreads.php", "ShouldQueue"),
+)
+checker.check(
+    "PostInlineThreads uses vunnix-server queue",
+    file_contains("app/Jobs/PostInlineThreads.php", "QueueNames::SERVER"),
+)
+checker.check(
+    "PostInlineThreads calls createMergeRequestDiscussion",
+    file_contains("app/Jobs/PostInlineThreads.php", "createMergeRequestDiscussion"),
+)
+checker.check(
+    "PostInlineThreads fetches MR for diff_refs",
+    file_contains("app/Jobs/PostInlineThreads.php", "getMergeRequest"),
+)
+checker.check(
+    "PostInlineThreads sends position data with position_type",
+    file_contains("app/Jobs/PostInlineThreads.php", "position_type"),
+)
+checker.check(
+    "PostInlineThreads uses InlineThreadFormatter",
+    file_contains("app/Jobs/PostInlineThreads.php", "InlineThreadFormatter"),
+)
+
+# ProcessTaskResult dispatches PostInlineThreads
+checker.check(
+    "ProcessTaskResult dispatches PostInlineThreads",
+    file_contains("app/Jobs/ProcessTaskResult.php", "PostInlineThreads"),
+)
+
+# Tests
+checker.check(
+    "InlineThreadFormatter unit test exists",
+    file_exists("tests/Unit/Services/InlineThreadFormatterTest.php"),
+)
+checker.check(
+    "Test covers severity filtering",
+    file_contains(
+        "tests/Unit/Services/InlineThreadFormatterTest.php",
+        "filterHighMedium",
+    ),
+)
+checker.check(
+    "PostInlineThreads feature test exists",
+    file_exists("tests/Feature/Jobs/PostInlineThreadsTest.php"),
+)
+checker.check(
+    "Test covers discussion creation",
+    file_contains(
+        "tests/Feature/Jobs/PostInlineThreadsTest.php",
+        "discussions",
+    ),
+)
+checker.check(
+    "ProcessTaskResult dispatch test covers PostInlineThreads",
+    file_contains(
+        "tests/Feature/Jobs/ProcessTaskResultDispatchTest.php",
+        "PostInlineThreads",
+    ),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")
