@@ -2,6 +2,7 @@
 
 use App\Models\Project;
 use App\Models\ProjectConfig;
+use App\Models\WebhookEventLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -28,11 +29,18 @@ function postWebhook(
     string $token,
     string $gitlabEvent,
     array $payload = [],
+    ?string $eventUuid = null,
 ): \Illuminate\Testing\TestResponse {
-    return $test->postJson('/webhook', $payload, [
+    $headers = [
         'X-Gitlab-Token' => $token,
         'X-Gitlab-Event' => $gitlabEvent,
-    ]);
+    ];
+
+    if ($eventUuid !== null) {
+        $headers['X-Gitlab-Event-UUID'] = $eventUuid;
+    }
+
+    return $test->postJson('/webhook', $payload, $headers);
 }
 
 // ------------------------------------------------------------------
@@ -218,4 +226,82 @@ it('includes the project_id in accepted responses', function () {
         ->assertJson([
             'project_id' => $project->id,
         ]);
+});
+
+// ------------------------------------------------------------------
+//  T14: Deduplication via webhook endpoint
+// ------------------------------------------------------------------
+
+it('logs event UUID and returns superseded_count in response', function () {
+    [$project, $token] = webhookProject();
+
+    postWebhook($this, $token, 'Merge Request Hook', [
+        'object_kind' => 'merge_request',
+        'object_attributes' => [
+            'iid' => 42,
+            'action' => 'open',
+            'source_branch' => 'feature/login',
+            'target_branch' => 'main',
+            'author_id' => 7,
+            'last_commit' => ['id' => 'abc123def456'],
+        ],
+    ], eventUuid: 'e2d4f6a8-1234-5678-9abc-def012345678')
+        ->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'event_type' => 'merge_request',
+            'superseded_count' => 0,
+        ]);
+
+    // Verify event was logged
+    expect(WebhookEventLog::where('gitlab_event_uuid', 'e2d4f6a8-1234-5678-9abc-def012345678')->exists())->toBeTrue();
+});
+
+it('rejects duplicate webhook by X-Gitlab-Event-UUID', function () {
+    [$project, $token] = webhookProject();
+
+    $payload = [
+        'object_kind' => 'merge_request',
+        'object_attributes' => [
+            'iid' => 42,
+            'action' => 'open',
+            'source_branch' => 'feature/login',
+            'target_branch' => 'main',
+            'author_id' => 7,
+            'last_commit' => ['id' => 'abc123def456'],
+        ],
+    ];
+
+    $uuid = 'duplicate-uuid-1234';
+
+    // First request — accepted
+    postWebhook($this, $token, 'Merge Request Hook', $payload, eventUuid: $uuid)
+        ->assertOk()
+        ->assertJson(['status' => 'accepted']);
+
+    // Second request — duplicate
+    postWebhook($this, $token, 'Merge Request Hook', $payload, eventUuid: $uuid)
+        ->assertOk()
+        ->assertJson([
+            'status' => 'duplicate',
+            'reason' => 'duplicate_uuid',
+        ]);
+});
+
+it('accepts webhooks without X-Gitlab-Event-UUID header', function () {
+    [$project, $token] = webhookProject();
+
+    postWebhook($this, $token, 'Merge Request Hook', [
+        'object_kind' => 'merge_request',
+        'object_attributes' => [
+            'iid' => 42,
+            'action' => 'open',
+            'source_branch' => 'feature/x',
+            'target_branch' => 'main',
+            'author_id' => 7,
+            'last_commit' => ['id' => 'no-uuid-commit'],
+        ],
+    ])
+        ->assertOk()
+        ->assertJson(['status' => 'accepted']);
 });

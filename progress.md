@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 13 / 116 (11%)
-- **Current Task:** T14 — Deduplication + latest-wins superseding
-- **Last Verified:** T13
+- **Tasks Complete:** 14 / 116 (12%)
+- **Current Task:** T15 — Task model + lifecycle (state machine)
+- **Last Verified:** T14
 
 ---
 
@@ -23,17 +23,17 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (2/35)
+## M2 — Path A Functional (3/35)
 
 ### Webhook & Event Routing
 
 - [x] T12: Webhook controller + middleware (CSRF exclusion, X-Gitlab-Token) [Depends: T1, T11]
 - [x] T13: Event types + event router (bot filtering D154, command fallback D155) [Depends: T12]
-- [ ] **T14:** Deduplication + latest-wins superseding (D140) [Depends: T13]
+- [x] T14: Deduplication + latest-wins superseding (D140) [Depends: T13]
 
 ### Task Queue & Dispatch
 
-- [ ] T15: Task model + lifecycle (state machine) [Depends: T4]
+- [ ] **T15:** Task model + lifecycle (state machine) [Depends: T4]
 - [ ] T16: Task queue — Redis with priority + queue isolation (D134) [Depends: T15]
 - [ ] T17: Task Dispatcher — strategy selection + execution mode routing [Depends: T16, T11]
 - [ ] T18: Pipeline trigger integration (task-scoped token D127) [Depends: T17]

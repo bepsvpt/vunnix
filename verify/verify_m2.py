@@ -268,6 +268,131 @@ checker.check(
 )
 
 # ============================================================
+#  T14: Deduplication + latest-wins superseding (D140)
+# ============================================================
+section("T14: Deduplication + Latest-Wins Superseding")
+
+# Migration
+checker.check(
+    "webhook_events migration exists",
+    file_exists("database/migrations/2024_01_01_000016_create_webhook_events_table.php"),
+)
+checker.check(
+    "Migration creates webhook_events table",
+    file_contains(
+        "database/migrations/2024_01_01_000016_create_webhook_events_table.php",
+        "webhook_events",
+    ),
+)
+checker.check(
+    "Migration includes gitlab_event_uuid column",
+    file_contains(
+        "database/migrations/2024_01_01_000016_create_webhook_events_table.php",
+        "gitlab_event_uuid",
+    ),
+)
+checker.check(
+    "Migration adds superseded_by_id to tasks table",
+    file_contains(
+        "database/migrations/2024_01_01_000016_create_webhook_events_table.php",
+        "superseded_by_id",
+    ),
+)
+checker.check(
+    "Migration adds unique constraint on project+UUID",
+    file_contains(
+        "database/migrations/2024_01_01_000016_create_webhook_events_table.php",
+        "unique",
+    ),
+)
+
+# WebhookEventLog model
+checker.check(
+    "WebhookEventLog model exists",
+    file_exists("app/Models/WebhookEventLog.php"),
+)
+checker.check(
+    "WebhookEventLog uses webhook_events table",
+    file_contains("app/Models/WebhookEventLog.php", "webhook_events"),
+)
+checker.check(
+    "WebhookEventLog has gitlab_event_uuid in fillable",
+    file_contains("app/Models/WebhookEventLog.php", "gitlab_event_uuid"),
+)
+
+# EventDeduplicator service
+checker.check(
+    "EventDeduplicator service exists",
+    file_exists("app/Services/EventDeduplicator.php"),
+)
+checker.check(
+    "EventDeduplicator has process() method",
+    file_contains("app/Services/EventDeduplicator.php", "function process("),
+)
+checker.check(
+    "EventDeduplicator checks UUID uniqueness",
+    file_contains("app/Services/EventDeduplicator.php", "isDuplicateUuid"),
+)
+checker.check(
+    "EventDeduplicator checks commit SHA uniqueness",
+    file_contains("app/Services/EventDeduplicator.php", "isDuplicateCommit"),
+)
+checker.check(
+    "EventDeduplicator implements latest-wins superseding (D140)",
+    file_contains("app/Services/EventDeduplicator.php", "supersedeActiveTasks"),
+)
+checker.check(
+    "EventDeduplicator sets status to superseded",
+    file_contains("app/Services/EventDeduplicator.php", "'superseded'"),
+)
+
+# DeduplicationResult value object
+checker.check(
+    "DeduplicationResult class exists",
+    file_exists("app/Services/DeduplicationResult.php"),
+)
+checker.check(
+    "DeduplicationResult has accepted() method",
+    file_contains("app/Services/DeduplicationResult.php", "function accepted()"),
+)
+
+# Controller integration
+checker.check(
+    "WebhookController uses EventDeduplicator",
+    file_contains("app/Http/Controllers/WebhookController.php", "EventDeduplicator"),
+)
+checker.check(
+    "WebhookController reads X-Gitlab-Event-UUID header",
+    file_contains("app/Http/Controllers/WebhookController.php", "X-Gitlab-Event-UUID"),
+)
+checker.check(
+    "WebhookController returns duplicate status on rejection",
+    file_contains("app/Http/Controllers/WebhookController.php", "'duplicate'"),
+)
+
+# Tests
+checker.check(
+    "EventDeduplicator test exists",
+    file_exists("tests/Feature/Services/EventDeduplicatorTest.php"),
+)
+checker.check(
+    "EventDeduplicator test covers UUID dedup",
+    file_contains("tests/Feature/Services/EventDeduplicatorTest.php", "duplicate UUID"),
+)
+checker.check(
+    "EventDeduplicator test covers commit SHA dedup",
+    file_contains("tests/Feature/Services/EventDeduplicatorTest.php", "commit SHA"),
+)
+checker.check(
+    "EventDeduplicator test covers D140 superseding",
+    file_contains("tests/Feature/Services/EventDeduplicatorTest.php", "D140"),
+)
+checker.check(
+    "WebhookController test covers UUID dedup integration",
+    file_contains("tests/Feature/WebhookControllerTest.php", "X-Gitlab-Event-UUID"),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")

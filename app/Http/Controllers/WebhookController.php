@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Services\EventDeduplicator;
 use App\Services\EventRouter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,11 +33,15 @@ class WebhookController extends Controller
      * This controller parses the event type and payload, then passes
      * the event context to the EventRouter for intent classification.
      */
-    public function __invoke(Request $request, EventRouter $eventRouter): JsonResponse
-    {
+    public function __invoke(
+        Request $request,
+        EventRouter $eventRouter,
+        EventDeduplicator $deduplicator,
+    ): JsonResponse {
         /** @var Project $project */
         $project = $request->input('webhook_project');
         $gitlabEvent = $request->header('X-Gitlab-Event');
+        $eventUuid = $request->header('X-Gitlab-Event-UUID');
 
         if (empty($gitlabEvent)) {
             Log::warning('Webhook request missing X-Gitlab-Event header', [
@@ -73,16 +78,40 @@ class WebhookController extends Controller
         Log::info('Webhook event received', [
             'project_id' => $project->id,
             'event_type' => $eventType,
+            'event_uuid' => $eventUuid,
             'object_kind' => $payload['object_kind'] ?? null,
         ]);
 
-        $result = $eventRouter->route($eventContext);
+        $routingResult = $eventRouter->route($eventContext);
+
+        // If the event was not routable (filtered, unsupported), return early
+        if ($routingResult === null) {
+            return response()->json([
+                'status' => 'accepted',
+                'event_type' => $eventType,
+                'project_id' => $project->id,
+                'intent' => null,
+            ]);
+        }
+
+        // T14: Deduplication + latest-wins superseding (D140)
+        $dedupResult = $deduplicator->process($eventUuid, $routingResult);
+
+        if ($dedupResult->rejected()) {
+            return response()->json([
+                'status' => 'duplicate',
+                'reason' => $dedupResult->outcome,
+                'event_type' => $eventType,
+                'project_id' => $project->id,
+            ]);
+        }
 
         return response()->json([
             'status' => 'accepted',
             'event_type' => $eventType,
             'project_id' => $project->id,
-            'intent' => $result?->intent,
+            'intent' => $routingResult->intent,
+            'superseded_count' => $dedupResult->supersededCount,
         ]);
     }
 
