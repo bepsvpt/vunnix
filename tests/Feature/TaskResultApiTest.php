@@ -380,3 +380,69 @@ it('prevents cross-task token reuse — token for task A cannot access task B', 
         'Authorization' => "Bearer {$tokenB}",
     ])->assertOk();
 });
+
+// ─── Sync pipeline: inline threads posted alongside summary ──────
+
+it('posts inline threads alongside summary comment in sync queue pipeline', function () {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1, 'body' => 'mocked'], 201),
+        '*/api/v4/projects/*/merge_requests/*' => Http::response([
+            'iid' => 42,
+            'diff_refs' => [
+                'base_sha' => 'aaa',
+                'start_sha' => 'bbb',
+                'head_sha' => 'ccc',
+            ],
+        ], 200),
+        '*/api/v4/projects/*/merge_requests/*/discussions' => Http::response([
+            'id' => 'disc-1',
+            'notes' => [['body' => 'mocked']],
+        ], 201),
+    ]);
+
+    $task = Task::factory()->running()->create(['mr_iid' => 42]);
+    $token = generateToken($task->id);
+
+    $resultWithFindings = [
+        'version' => '1.0',
+        'summary' => [
+            'risk_level' => 'high',
+            'total_findings' => 1,
+            'findings_by_severity' => ['critical' => 1, 'major' => 0, 'minor' => 0],
+            'walkthrough' => [
+                ['file' => 'src/auth.py', 'change_summary' => 'Added auth'],
+            ],
+        ],
+        'findings' => [
+            [
+                'id' => 1,
+                'severity' => 'critical',
+                'category' => 'security',
+                'file' => 'src/auth.py',
+                'line' => 42,
+                'end_line' => 45,
+                'title' => 'SQL injection',
+                'description' => 'Bad SQL.',
+                'suggestion' => 'Use parameterized queries.',
+                'labels' => [],
+            ],
+        ],
+        'labels' => ['ai::reviewed', 'ai::risk-high'],
+        'commit_status' => 'failed',
+    ];
+
+    $response = $this->postJson(resultUrl($task), validResultPayload([
+        'result' => $resultWithFindings,
+    ]), [
+        'Authorization' => "Bearer {$token}",
+    ]);
+
+    $response->assertOk();
+
+    $task->refresh();
+    expect($task->status)->toBe(TaskStatus::Completed);
+
+    // Verify both summary comment and discussion thread were posted
+    Http::assertSent(fn ($r) => str_contains($r->url(), '/notes'));
+    Http::assertSent(fn ($r) => str_contains($r->url(), '/discussions'));
+});
