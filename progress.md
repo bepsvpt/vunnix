@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 44 / 116 (38%)
-- **Current Task:** T45 — CI pipeline template
-- **Last Verified:** T44
+- **Tasks Complete:** 45 / 116 (39%)
+- **Current Task:** T46 — Executor image CI/CD + version alignment
+- **Last Verified:** T45
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (32/35)
+## M2 — Path A Functional (33/35)
 
 ### Webhook & Event Routing
 
@@ -78,8 +78,8 @@
 - [x] T42: @ai improve + @ai ask commands [Depends: T39]
 - [x] T43: Issue discussion — @ai on Issue [Depends: T39, T26]
 - [x] T44: Feature development — ai::develop label [Depends: T39, T27]
-- [ ] **T45:** CI pipeline template [Depends: T19]
-- [ ] T46: Executor image CI/CD + version alignment [Depends: T19]
+- [x] T45: CI pipeline template [Depends: T19]
+- [ ] **T46:** Executor image CI/CD + version alignment [Depends: T19]
 
 ## M3 — Path B Functional (0/27)
 

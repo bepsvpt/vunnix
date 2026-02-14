@@ -4642,6 +4642,137 @@ checker.check(
 )
 
 # ============================================================
+#  T45: CI Pipeline Template
+# ============================================================
+section("T45: CI Pipeline Template")
+
+# T45.1: Template file exists with correct structure
+checker.check(
+    "CI template file exists",
+    file_exists("ci-template/vunnix.gitlab-ci.yml"),
+)
+checker.check(
+    "Template defines hidden .vunnix-executor job",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", ".vunnix-executor:"),
+)
+checker.check(
+    "Template defines concrete vunnix-review job",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "vunnix-review:"),
+)
+checker.check(
+    "Concrete job extends hidden job",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "extends: .vunnix-executor"),
+)
+
+# T45.2: Template references executor image
+checker.check(
+    "Template uses vunnix/executor image",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "vunnix/executor"),
+)
+checker.check(
+    "Template references VUNNIX_EXECUTOR_VERSION",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "VUNNIX_EXECUTOR_VERSION"),
+)
+
+# T45.3: Template declares pipeline variables
+checker.check(
+    "Template documents VUNNIX_TASK_ID variable",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "VUNNIX_TASK_ID"),
+)
+checker.check(
+    "Template documents VUNNIX_TASK_TYPE variable",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "VUNNIX_TASK_TYPE"),
+)
+checker.check(
+    "Template documents VUNNIX_STRATEGY variable",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "VUNNIX_STRATEGY"),
+)
+checker.check(
+    "Template documents VUNNIX_SKILLS variable",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "VUNNIX_SKILLS"),
+)
+checker.check(
+    "Template documents VUNNIX_TOKEN variable",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "VUNNIX_TOKEN"),
+)
+checker.check(
+    "Template documents VUNNIX_API_URL variable",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "VUNNIX_API_URL"),
+)
+
+# T45.4: Template uses rules guard (only trigger via Dispatcher)
+checker.check(
+    "Template guards job with VUNNIX_TASK_ID rule",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "$VUNNIX_TASK_ID"),
+)
+
+# T45.5: Template sets correct timeout (D34)
+checker.check(
+    "Template sets 20 minute timeout",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "20 minutes"),
+)
+
+# T45.6: Template collects artifacts
+checker.check(
+    "Template collects vunnix-artifacts",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "vunnix-artifacts/"),
+)
+
+# T45.7: Template allows failure (non-blocking)
+checker.check(
+    "Template allows failure (non-blocking MR)",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "allow_failure: true"),
+)
+
+# T45.8: Template documents registry access requirement (D150)
+checker.check(
+    "Template documents D150 registry visibility requirement",
+    file_contains("ci-template/vunnix.gitlab-ci.yml", "D150"),
+)
+
+# T45.9: Project setup documentation
+checker.check(
+    "Project setup documentation exists",
+    file_exists("docs/project-setup.md"),
+)
+checker.check(
+    "Docs cover registry access prerequisites",
+    file_contains("docs/project-setup.md", "Registry Access"),
+)
+checker.check(
+    "Docs cover bot account setup",
+    file_contains("docs/project-setup.md", "Bot Account"),
+)
+checker.check(
+    "Docs cover pipeline trigger token",
+    file_contains("docs/project-setup.md", "Pipeline Trigger Token"),
+)
+checker.check(
+    "Docs cover CI template inclusion",
+    file_contains("docs/project-setup.md", "Include the CI Template"),
+)
+checker.check(
+    "Docs provide variable reference",
+    file_contains("docs/project-setup.md", "Variable Reference"),
+)
+checker.check(
+    "Docs cover troubleshooting",
+    file_contains("docs/project-setup.md", "Troubleshooting"),
+)
+checker.check(
+    "Docs cover private registry fallback",
+    file_contains("docs/project-setup.md", "Private Registry Fallback"),
+)
+checker.check(
+    "Docs cover project reference include option",
+    file_contains("docs/project-setup.md", "include:"),
+)
+checker.check(
+    "Docs cover remote URL include option",
+    file_contains("docs/project-setup.md", "remote:"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()

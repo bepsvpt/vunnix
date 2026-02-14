@@ -1,0 +1,65 @@
+# Vunnix CI Pipeline Template
+#
+# Include this template in your project's .gitlab-ci.yml to enable
+# AI-powered code reviews and task execution via Vunnix.
+#
+# Usage (include via project reference):
+#   include:
+#     - project: 'your-group/vunnix'
+#       file: '/ci-template/vunnix.gitlab-ci.yml'
+#
+# Usage (include via remote URL):
+#   include:
+#     - remote: 'https://gitlab.example.com/your-group/vunnix/-/raw/main/ci-template/vunnix.gitlab-ci.yml'
+#
+# Prerequisites:
+#   1. Vunnix project must have 'internal' or 'public' visibility (D150)
+#      so CI job tokens from target projects can pull the executor image
+#   2. Bot account must be a member of this project (Maintainer role)
+#   3. CI pipeline trigger token must be configured in Vunnix admin
+#
+# This job only runs when triggered by the Vunnix Task Dispatcher via
+# the Pipeline Triggers API. It will NOT run on regular pushes or MR events.
+#
+# @see docs/project-setup.md for full integration guide
+
+.vunnix-executor:
+  stage: test
+  image: "${VUNNIX_REGISTRY}/vunnix/executor:${VUNNIX_EXECUTOR_VERSION}"
+  variables:
+    # Registry configuration — override these if your Vunnix instance
+    # uses a different registry path
+    VUNNIX_REGISTRY: "${CI_SERVER_HOST}:${CI_SERVER_PORT:-443}/${VUNNIX_PROJECT_PATH}"
+    VUNNIX_EXECUTOR_VERSION: "1.0.0"
+    # Pipeline variables passed by Vunnix Task Dispatcher (do not set manually):
+    #   VUNNIX_TASK_ID    — Task ID in the Vunnix database
+    #   VUNNIX_TASK_TYPE  — Task type (code_review, feature_dev, etc.)
+    #   VUNNIX_STRATEGY   — Review strategy (frontend-review, backend-review, etc.)
+    #   VUNNIX_SKILLS     — Comma-separated skill names to activate
+    #   VUNNIX_TOKEN      — Task-scoped bearer token (HMAC-SHA256, TTL-based)
+    #   VUNNIX_API_URL    — Vunnix API base URL for result posting
+    #   VUNNIX_INTENT     — Task intent (matches type or custom)
+    #   VUNNIX_QUESTION   — (optional) Question text for ask commands
+    #   VUNNIX_ISSUE_IID  — (optional) Issue IID for issue discussion tasks
+  rules:
+    # Only run when triggered by the Vunnix Task Dispatcher
+    - if: $VUNNIX_TASK_ID
+      when: always
+  timeout: 20 minutes
+  artifacts:
+    paths:
+      - vunnix-artifacts/
+    when: always
+    expire_in: 7 days
+  # Allow failure so the pipeline doesn't block MR merges
+  # Vunnix handles success/failure via its own result API
+  allow_failure: true
+
+# Concrete job that projects inherit from the hidden job above.
+# Projects can override settings by redefining this job after the include.
+#
+# Example override in project .gitlab-ci.yml:
+#   vunnix-review:
+#     timeout: 30 minutes   # extend timeout for large repos
+vunnix-review:
+  extends: .vunnix-executor
