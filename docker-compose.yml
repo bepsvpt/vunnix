@@ -1,0 +1,201 @@
+services:
+  # ==========================================================================
+  #  Application — FrankenPHP + Laravel Octane (D69)
+  #  Serves API, SSE streaming, and Vue SPA static files in one process.
+  # ==========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: vunnix-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:80"
+      - "${APP_HTTPS_PORT:-8443}:443"
+    volumes:
+      - .:/app
+      - vendor-data:/app/vendor
+    env_file: .env
+    environment:
+      OCTANE_SERVER: frankenphp
+      XDG_CONFIG_HOME: /config
+      XDG_DATA_HOME: /data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vunnix
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/up"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ==========================================================================
+  #  PostgreSQL 16 (D72)
+  #  JSONB for structured AI output, materialized views for metrics,
+  #  full-text search via tsvector + GIN indexes.
+  # ==========================================================================
+  postgres:
+    image: postgres:16-bookworm
+    container_name: vunnix-postgres
+    restart: unless-stopped
+    ports:
+      - "${DB_FORWARD_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-vunnix}
+      POSTGRES_USER: ${DB_USERNAME:-vunnix}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    networks:
+      - vunnix
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-vunnix} -d ${DB_DATABASE:-vunnix}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ==========================================================================
+  #  Redis — Cache (DB 0), Sessions (DB 1), Queues (DB 2)
+  #  Separate DB numbers keep concerns isolated within a single instance.
+  #  Queue isolation (D134): vunnix-server and vunnix-runner use separate
+  #  key prefixes on DB 2.
+  # ==========================================================================
+  redis:
+    image: redis:7-bookworm
+    container_name: vunnix-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_FORWARD_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - vunnix
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ==========================================================================
+  #  Reverb — WebSocket server for real-time broadcasting
+  #  Powers dashboard live updates, task status changes, chat streaming.
+  # ==========================================================================
+  reverb:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: vunnix-reverb
+    restart: unless-stopped
+    ports:
+      - "${REVERB_PORT:-8080}:8080"
+    volumes:
+      - .:/app
+      - vendor-data:/app/vendor
+    env_file: .env
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vunnix
+
+  # ==========================================================================
+  #  Queue Worker — vunnix-server (D134)
+  #  Handles immediate server-side tasks: Issue creation, server-side
+  #  execution. Completes within seconds. Never blocked by runner backlog.
+  # ==========================================================================
+  queue-server:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: vunnix-queue-server
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - vendor-data:/app/vendor
+    env_file: .env
+    command: php artisan queue:work redis --queue=vunnix-server --tries=3 --timeout=60 --sleep=1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vunnix
+
+  # ==========================================================================
+  #  Queue Worker — vunnix-runner (D134)
+  #  Handles CI pipeline tasks: code review, feature dev, UI adjustment.
+  #  Triggers GitLab CI pipelines. Results arrive asynchronously.
+  #  Processes high → normal → low priority sub-queues.
+  # ==========================================================================
+  queue-runner:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: vunnix-queue-runner
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - vendor-data:/app/vendor
+    env_file: .env
+    command: php artisan queue:work redis --queue=vunnix-runner-high,vunnix-runner-normal,vunnix-runner-low --tries=3 --timeout=300 --sleep=3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vunnix
+
+  # ==========================================================================
+  #  Scheduler — runs Laravel scheduled commands
+  #  metrics:aggregate (T84), pg_dump backup (T105),
+  #  security:check-pat-rotation (T116)
+  # ==========================================================================
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: vunnix-scheduler
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - vendor-data:/app/vendor
+    env_file: .env
+    command: php artisan schedule:work --verbose --no-interaction
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vunnix
+
+# ==========================================================================
+#  Volumes — persistent data survives container restarts
+# ==========================================================================
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  vendor-data:
+    driver: local
+
+# ==========================================================================
+#  Networks — internal DNS for service-to-service communication
+# ==========================================================================
+networks:
+  vunnix:
+    driver: bridge

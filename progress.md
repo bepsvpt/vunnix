@@ -3,17 +3,17 @@
 ## Summary
 
 - **Current Milestone:** M1 — Core Infrastructure
-- **Tasks Complete:** 1 / 116 (1%)
-- **Current Task:** T2 — Docker Compose
-- **Last Verified:** T1
+- **Tasks Complete:** 2 / 116 (2%)
+- **Current Task:** T3 — Migrations — auth & RBAC tables
+- **Last Verified:** T2
 
 ---
 
-## M1 — Core Infrastructure (1/11)
+## M1 — Core Infrastructure (2/11)
 
 - [x] T1: Scaffold Laravel project (Octane, FrankenPHP, AI SDK, Socialite, Reverb) [Depends: —]
-- [ ] **T2:** Docker Compose (FrankenPHP + PostgreSQL + Redis + Reverb) [Depends: T1]
-- [ ] T3: Migrations — auth & RBAC tables [Depends: T2]
+- [x] T2: Docker Compose (FrankenPHP + PostgreSQL + Redis + Reverb) [Depends: T1]
+- [ ] **T3:** Migrations — auth & RBAC tables [Depends: T2]
 - [ ] T4: Migrations — task & conversation tables (full-text search D148) [Depends: T2]
 - [ ] T5: Migrations — operational tables [Depends: T2]
 - [ ] T6: Health check endpoint [Depends: T2]
