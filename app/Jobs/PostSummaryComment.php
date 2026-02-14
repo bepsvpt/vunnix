@@ -4,6 +4,8 @@ namespace App\Jobs;
 
 use App\Jobs\Middleware\RetryWithBackoff;
 use App\Models\Task;
+use App\Enums\TaskStatus;
+use App\Enums\TaskType;
 use App\Services\GitLabClient;
 use App\Services\SummaryCommentFormatter;
 use App\Support\QueueNames;
@@ -63,7 +65,11 @@ class PostSummaryComment implements ShouldQueue
         }
 
         $formatter = new SummaryCommentFormatter();
-        $markdown = $formatter->format($task->result);
+
+        // T40: Detect incremental review — if this task's comment_id was inherited
+        // from a previous task, include an "Updated" timestamp in the summary.
+        $updatedAt = $this->isIncrementalReview($task) ? now() : null;
+        $markdown = $formatter->format($task->result, $updatedAt);
 
         try {
             if ($task->comment_id !== null) {
@@ -103,5 +109,26 @@ class PostSummaryComment implements ShouldQueue
 
             throw $e;
         }
+    }
+
+    /**
+     * Check if this task is an incremental review (reusing a previous task's comment).
+     *
+     * An incremental review is detected when a completed CodeReview task for the
+     * same MR exists with the same comment_id — meaning we inherited the comment.
+     */
+    private function isIncrementalReview(Task $task): bool
+    {
+        if ($task->comment_id === null) {
+            return false;
+        }
+
+        return Task::where('project_id', $task->project_id)
+            ->where('mr_iid', $task->mr_iid)
+            ->where('type', TaskType::CodeReview)
+            ->where('status', TaskStatus::Completed)
+            ->where('id', '!=', $task->id)
+            ->where('comment_id', $task->comment_id)
+            ->exists();
     }
 }
