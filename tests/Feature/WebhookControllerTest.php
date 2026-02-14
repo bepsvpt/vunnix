@@ -2,13 +2,25 @@
 
 use App\Models\Project;
 use App\Models\ProjectConfig;
+use App\Models\User;
 use App\Models\WebhookEventLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
+// T39: Fake the queue so ProcessTask jobs dispatched by TaskDispatchService
+// don't run inline. WebhookControllerTest tests webhook acceptance, not
+// downstream job execution — that's covered by CodeReviewEndToEndTest.
+beforeEach(function () {
+    Queue::fake();
+});
+
 /**
  * Helper: create an enabled project with a webhook secret and return [project, token].
+ *
+ * T39: Also creates Users with matching gitlab_ids so that
+ * TaskDispatchService::resolveUserId() can resolve webhook authors.
  */
 function webhookProject(string $secret = 'test-secret'): array
 {
@@ -17,6 +29,13 @@ function webhookProject(string $secret = 'test-secret'): array
         'project_id' => $project->id,
         'webhook_secret' => $secret,
     ]);
+
+    // Create users for all author_ids used in test payloads
+    foreach ([3, 5, 7, 12] as $gitlabId) {
+        if (! User::where('gitlab_id', $gitlabId)->exists()) {
+            User::factory()->create(['gitlab_id' => $gitlabId]);
+        }
+    }
 
     return [$project, $secret];
 }
@@ -216,7 +235,12 @@ it('includes the project_id in accepted responses', function () {
 
     postWebhook($this, $token, 'Merge Request Hook', [
         'object_kind' => 'merge_request',
-        'object_attributes' => ['iid' => 1, 'action' => 'open'],
+        'object_attributes' => [
+            'iid' => 1,
+            'action' => 'open',
+            'author_id' => 7,
+            'last_commit' => ['id' => 'resp-struct-commit'],
+        ],
     ])->assertOk()
         ->assertJsonStructure([
             'status',
@@ -286,6 +310,70 @@ it('rejects duplicate webhook by X-Gitlab-Event-UUID', function () {
             'status' => 'duplicate',
             'reason' => 'duplicate_uuid',
         ]);
+});
+
+// ------------------------------------------------------------------
+//  T39: Task dispatch wiring
+// ------------------------------------------------------------------
+
+it('dispatches ProcessTask job and returns task_id for MR open events', function () {
+    [$project, $token] = webhookProject();
+
+    $response = postWebhook($this, $token, 'Merge Request Hook', [
+        'object_kind' => 'merge_request',
+        'object_attributes' => [
+            'iid' => 42,
+            'action' => 'open',
+            'source_branch' => 'feature/login',
+            'target_branch' => 'main',
+            'author_id' => 7,
+            'last_commit' => ['id' => 'abc123def456'],
+        ],
+    ]);
+
+    $response->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'intent' => 'auto_review',
+        ])
+        ->assertJsonStructure(['task_id']);
+
+    // Task was created in DB
+    $taskId = $response->json('task_id');
+    expect($taskId)->not->toBeNull();
+    $this->assertDatabaseHas('tasks', [
+        'id' => $taskId,
+        'project_id' => $project->id,
+        'mr_iid' => 42,
+        'commit_sha' => 'abc123def456',
+    ]);
+
+    // ProcessTask was dispatched
+    Queue::assertPushed(\App\Jobs\ProcessTask::class, fn ($job) => $job->taskId === $taskId);
+});
+
+it('returns null task_id for non-dispatchable events', function () {
+    [$project, $token] = webhookProject();
+
+    // Push events without MR context are not routable — EventRouter returns null
+    // so no task is dispatched. Use a merge event that doesn't route.
+    postWebhook($this, $token, 'Merge Request Hook', [
+        'object_kind' => 'merge_request',
+        'object_attributes' => [
+            'iid' => 42,
+            'action' => 'merge',
+            'source_branch' => 'feature/login',
+            'target_branch' => 'main',
+            'author_id' => 7,
+            'last_commit' => ['id' => 'abc123def456'],
+        ],
+    ])->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'event_type' => 'merge_request',
+        ]);
+
+    Queue::assertNothingPushed();
 });
 
 it('accepts webhooks without X-Gitlab-Event-UUID header', function () {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Services\EventDeduplicator;
 use App\Services\EventRouter;
+use App\Services\TaskDispatchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -37,6 +38,7 @@ class WebhookController extends Controller
         Request $request,
         EventRouter $eventRouter,
         EventDeduplicator $deduplicator,
+        TaskDispatchService $taskDispatchService,
     ): JsonResponse {
         /** @var Project $project */
         $project = $request->input('webhook_project');
@@ -106,12 +108,16 @@ class WebhookController extends Controller
             ]);
         }
 
+        // T39: Dispatch task for accepted, routable events
+        $task = $taskDispatchService->dispatch($routingResult);
+
         return response()->json([
             'status' => 'accepted',
             'event_type' => $eventType,
             'project_id' => $project->id,
             'intent' => $routingResult->intent,
             'superseded_count' => $dedupResult->supersededCount,
+            'task_id' => $task?->id,
         ]);
     }
 
