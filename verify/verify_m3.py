@@ -946,6 +946,104 @@ checker.check(
     file_contains("tests/Unit/Agents/VunnixAgentTest.php", "T52 merge request tools"),
 )
 
+# ============================================================
+#  T53: Cross-project tool-use access check
+# ============================================================
+section("T53: Cross-Project Tool-Use Access Check")
+
+# ProjectAccessChecker service
+checker.check(
+    "ProjectAccessChecker service exists",
+    file_exists("app/Services/ProjectAccessChecker.php"),
+)
+checker.check(
+    "ProjectAccessChecker has check method",
+    file_contains("app/Services/ProjectAccessChecker.php", "public function check"),
+)
+
+# All tools use ProjectAccessChecker
+for tool_name in [
+    "BrowseRepoTree",
+    "ReadFile",
+    "SearchCode",
+    "ListIssues",
+    "ReadIssue",
+    "ListMergeRequests",
+    "ReadMergeRequest",
+    "ReadMRDiff",
+]:
+    checker.check(
+        f"{tool_name} uses ProjectAccessChecker",
+        file_contains(f"app/Agents/Tools/{tool_name}.php", "ProjectAccessChecker"),
+    )
+
+# Tests
+checker.check(
+    "ProjectAccessChecker tests exist",
+    file_exists("tests/Feature/Services/ProjectAccessCheckerTest.php"),
+)
+
+# ============================================================
+#  T54: Quality gate behavior
+# ============================================================
+section("T54: Quality Gate Behavior")
+
+# Enhanced quality gate section in system prompt
+checker.check(
+    "Quality gate uses challenge → justify → accept pattern",
+    file_contains("app/Agents/VunnixAgent.php", "challenge → justify → accept"),
+)
+checker.check(
+    "Quality gate has PM-specific challenge patterns",
+    file_contains("app/Agents/VunnixAgent.php", "For Product Managers"),
+)
+checker.check(
+    "Quality gate has Designer-specific challenge patterns",
+    file_contains("app/Agents/VunnixAgent.php", "For Designers"),
+)
+checker.check(
+    "Quality gate references citing code context",
+    file_contains("app/Agents/VunnixAgent.php", "cite specific files"),
+)
+checker.check(
+    "Quality gate mentions design tokens",
+    file_contains("app/Agents/VunnixAgent.php", "design tokens"),
+)
+checker.check(
+    "Quality gate collaborative tone",
+    file_contains("app/Agents/VunnixAgent.php", "collaborative, not adversarial"),
+)
+
+# Tests — quality gate prompt content
+checker.check(
+    "Feature test verifies PM challenge patterns",
+    file_contains("tests/Feature/Agents/VunnixAgentTest.php", "PM-specific challenge patterns"),
+)
+checker.check(
+    "Feature test verifies Designer challenge patterns",
+    file_contains("tests/Feature/Agents/VunnixAgentTest.php", "Designer-specific challenge patterns"),
+)
+checker.check(
+    "Feature test verifies quality gate general rules",
+    file_contains("tests/Feature/Agents/VunnixAgentTest.php", "quality gate general rules"),
+)
+
+# Integration test — conversation flow
+checker.check(
+    "Quality gate integration test exists",
+    file_contains(
+        "tests/Feature/Agents/VunnixAgentTest.php",
+        "quality gate conversation flow",
+    ),
+)
+checker.check(
+    "Integration test covers challenge → accept pattern",
+    file_contains(
+        "tests/Feature/Agents/VunnixAgentTest.php",
+        "vague request → challenge → clarify → accept",
+    ),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()

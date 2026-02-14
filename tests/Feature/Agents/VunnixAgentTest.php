@@ -98,8 +98,36 @@ it('includes quality gate section in system prompt', function () {
 
     expect($instructions)->toContain('[Quality Gate]');
     expect($instructions)->toContain('neutral quality gate');
-    expect($instructions)->toContain('Challenge PMs');
-    expect($instructions)->toContain('Challenge Designers');
+    expect($instructions)->toContain('challenge → justify → accept');
+});
+
+it('includes PM-specific challenge patterns in quality gate', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('For Product Managers');
+    expect($instructions)->toContain('vague or incomplete');
+    expect($instructions)->toContain('clarifying questions');
+    expect($instructions)->toContain('StripeService.php');
+});
+
+it('includes Designer-specific challenge patterns in quality gate', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('For Designers');
+    expect($instructions)->toContain('design system');
+    expect($instructions)->toContain('design tokens');
+    expect($instructions)->toContain('context-specific overrides');
+});
+
+it('includes quality gate general rules about citing code context', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('cite specific files');
+    expect($instructions)->toContain('Do not blindly accept');
+    expect($instructions)->toContain('collaborative, not adversarial');
 });
 
 it('includes action dispatch section in system prompt', function () {
@@ -296,6 +324,54 @@ it('links agent to existing conversation via continue()', function () {
 
     // The agent should have been prompted with the user's message
     VunnixAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'Help me review this PR'));
+});
+
+// ─── Quality Gate Integration (T54) ─────────────────────────────
+
+it('supports quality gate conversation flow: vague request → challenge → clarify → accept', function () {
+    // Simulate the challenge → justify → accept pattern from §4.2.
+    // Turn 1: AI challenges a vague PM request.
+    // Turn 2: PM clarifies → AI accepts and proceeds.
+    VunnixAgent::fake([
+        'What payment methods need to be supported? What\'s the expected transaction volume? I see the current codebase uses Stripe for subscriptions — should payments go through the same provider?',
+        'Got it — credit card only via Stripe, ~500 txn/day. Here\'s a draft specification based on our discussion.',
+    ]);
+
+    $project = Project::factory()->create();
+    $user = agentTestUser($project);
+    $conversation = Conversation::factory()->forUser($user)->forProject($project)->create();
+
+    // Turn 1: PM sends vague request → AI challenges
+    $response1 = $this->actingAs($user)
+        ->post("/api/v1/conversations/{$conversation->id}/stream", [
+            'content' => 'I want to add a payment feature',
+        ]);
+    $response1->assertOk();
+    $response1->streamedContent();
+
+    // Verify the agent received the vague request
+    VunnixAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'add a payment feature'));
+
+    // Turn 2: PM provides clarification → AI accepts
+    $response2 = $this->actingAs($user)
+        ->post("/api/v1/conversations/{$conversation->id}/stream", [
+            'content' => 'Credit card only, via Stripe, ~500 txn/day',
+        ]);
+    $response2->assertOk();
+    $response2->streamedContent();
+
+    // Verify the full conversation was persisted (2 user messages + 2 assistant messages)
+    $allMessages = $conversation->messages()->orderBy('created_at')->get();
+    $userMessages = $allMessages->where('role', 'user');
+    $assistantMessages = $allMessages->where('role', 'assistant');
+
+    expect($userMessages)->toHaveCount(2);
+    expect($assistantMessages)->toHaveCount(2);
+
+    // The first user message was the vague request
+    expect($userMessages->first()->content)->toBe('I want to add a payment feature');
+    // The second user message was the clarification
+    expect($userMessages->last()->content)->toBe('Credit card only, via Stripe, ~500 txn/day');
 });
 
 // ─── System Prompt Dynamic Behavior ─────────────────────────────
