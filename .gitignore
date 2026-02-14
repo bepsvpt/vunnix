@@ -5,6 +5,7 @@
 /public/storage
 /public/build
 /storage/*.key
+/storage/pail
 /storage/framework/cache/data/*
 /storage/framework/sessions/*
 /storage/framework/views/*
@@ -19,6 +20,10 @@
 # IDE
 .idea/
 .vscode/
+.fleet/
+.nova/
+.zed/
+.phpactor.json
 *.swp
 *.swo
 *~
@@ -50,3 +55,7 @@ __pycache__/
 
 # Runner session logs (can be large)
 verify/logs/
+
+**/caddy
+frankenphp
+frankenphp-worker.php
