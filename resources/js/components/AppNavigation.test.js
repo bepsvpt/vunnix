@@ -1,7 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
 import { createRouter, createMemoryHistory } from 'vue-router';
 import AppNavigation from './AppNavigation.vue';
+import { useAuthStore } from '@/stores/auth';
+
+let pinia;
 
 function createTestRouter() {
     return createRouter({
@@ -14,15 +18,27 @@ function createTestRouter() {
     });
 }
 
+function mountNav(router) {
+    const auth = useAuthStore();
+    auth.setUser({ id: 1, name: 'Test User', username: 'testuser', avatar_url: null, projects: [] });
+
+    return mount(AppNavigation, {
+        global: { plugins: [pinia, router] },
+    });
+}
+
+beforeEach(() => {
+    pinia = createPinia();
+    setActivePinia(pinia);
+});
+
 describe('AppNavigation', () => {
     it('renders brand name', async () => {
         const router = createTestRouter();
         router.push('/chat');
         await router.isReady();
 
-        const wrapper = mount(AppNavigation, {
-            global: { plugins: [router] },
-        });
+        const wrapper = mountNav(router);
 
         expect(wrapper.text()).toContain('Vunnix');
     });
@@ -32,9 +48,7 @@ describe('AppNavigation', () => {
         router.push('/chat');
         await router.isReady();
 
-        const wrapper = mount(AppNavigation, {
-            global: { plugins: [router] },
-        });
+        const wrapper = mountNav(router);
 
         const links = wrapper.findAll('a');
         const labels = links.map(l => l.text());
@@ -48,9 +62,7 @@ describe('AppNavigation', () => {
         router.push('/chat');
         await router.isReady();
 
-        const wrapper = mount(AppNavigation, {
-            global: { plugins: [router] },
-        });
+        const wrapper = mountNav(router);
 
         // The mobile panel uses v-if so it should not exist in DOM
         const mobilePanel = wrapper.find('[class*="md:hidden border-t"]');
@@ -62,9 +74,7 @@ describe('AppNavigation', () => {
         router.push('/chat');
         await router.isReady();
 
-        const wrapper = mount(AppNavigation, {
-            global: { plugins: [router] },
-        });
+        const wrapper = mountNav(router);
 
         const button = wrapper.find('button[aria-label="Toggle navigation menu"]');
         await button.trigger('click');
@@ -78,9 +88,7 @@ describe('AppNavigation', () => {
         router.push('/chat');
         await router.isReady();
 
-        const wrapper = mount(AppNavigation, {
-            global: { plugins: [router] },
-        });
+        const wrapper = mountNav(router);
 
         const button = wrapper.find('button[aria-label="Toggle navigation menu"]');
         expect(button.classes()).toContain('md:hidden');

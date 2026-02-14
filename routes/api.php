@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\TaskResultController;
+use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -11,6 +12,14 @@ Route::prefix('v1')->group(function () {
     Route::post('/tasks/{task}/result', TaskResultController::class)
         ->middleware('task.token')
         ->name('api.tasks.result');
+
+    // Auth state endpoint (T62)
+    // Returns authenticated user's profile, projects, roles, and permissions
+    Route::middleware('auth')->group(function () {
+        Route::get('/user', function () {
+            return new UserResource(request()->user());
+        })->name('api.user');
+    });
 
     // Chat API (T47)
     // Session-authenticated routes for conversation management

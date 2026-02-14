@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 import ChatPage from '@/pages/ChatPage.vue';
 import DashboardPage from '@/pages/DashboardPage.vue';
 import AdminPage from '@/pages/AdminPage.vue';
@@ -15,12 +16,22 @@ const router = createRouter({
     routes,
 });
 
-// Auth guard — redirects unauthenticated users to GitLab OAuth
-// The auth store's `isAuthenticated` starts as `null` (unknown) until checked.
-// T62 will implement the full auth check; for now, skip guard when auth is unknown.
-router.beforeEach((to, from, next) => {
-    // Placeholder — T62 will wire this to the auth Pinia store
-    next();
+// Auth guard — redirects unauthenticated users to GitLab OAuth.
+// On first navigation, waits for fetchUser() to resolve before deciding.
+// Subsequent navigations use the cached auth state.
+router.beforeEach(async (to) => {
+    const auth = useAuthStore();
+
+    // If auth state is unknown (null), fetch user first
+    if (auth.user === null && !auth.isLoading) {
+        await auth.fetchUser();
+    }
+
+    // If guest after check, redirect to GitLab OAuth
+    if (auth.isGuest) {
+        auth.login();
+        return false; // Abort navigation — full-page redirect happening
+    }
 });
 
 export default router;

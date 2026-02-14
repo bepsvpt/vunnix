@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class UserResource extends JsonResource
+{
+    /**
+     * Transform the user into the auth state payload for the SPA.
+     *
+     * Returns user profile + accessible projects, each annotated
+     * with the user's roles and permissions on that project.
+     */
+    public function toArray(Request $request): array
+    {
+        $projects = $this->accessibleProjects();
+
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->email,
+            'username' => $this->username,
+            'avatar_url' => $this->avatar_url,
+            'projects' => $projects->map(function ($project) {
+                $roles = $this->rolesForProject($project);
+                $permissions = $this->permissionsForProject($project);
+
+                return [
+                    'id' => $project->id,
+                    'gitlab_project_id' => $project->gitlab_project_id,
+                    'name' => $project->name,
+                    'slug' => $project->slug,
+                    'roles' => $roles->pluck('name')->values()->all(),
+                    'permissions' => $permissions->pluck('name')->values()->all(),
+                ];
+            })->values()->all(),
+        ];
+    }
+}
