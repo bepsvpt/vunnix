@@ -269,9 +269,11 @@ class EventRouter
             return null;
         }
 
-        // Check for @ai ask "..." pattern
+        // Check for @ai ask "..." pattern — extract quoted question
         if (preg_match('/@ai\s+ask\s+"([^"]+)"/', $note, $matches)) {
-            return new RoutingResult('ask_command', 'normal', $event);
+            return new RoutingResult('ask_command', 'normal', $event, [
+                'question' => $matches[1],
+            ]);
         }
 
         // Check recognized commands: @ai review, @ai improve

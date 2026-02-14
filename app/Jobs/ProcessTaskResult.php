@@ -86,6 +86,11 @@ class ProcessTaskResult implements ShouldQueue
         if ($this->shouldPostLabelsAndStatus($task)) {
             PostLabelsAndStatus::dispatch($task->id);
         }
+
+        // T42: Post answer comment for @ai ask commands
+        if ($this->shouldPostAnswerComment($task)) {
+            PostAnswerComment::dispatch($task->id);
+        }
     }
 
     private function shouldPostSummaryComment(Task $task): bool
@@ -104,6 +109,19 @@ class ProcessTaskResult implements ShouldQueue
     {
         return $task->mr_iid !== null
             && in_array($task->type, [TaskType::CodeReview, TaskType::SecurityAudit], true);
+    }
+
+    /**
+     * T42: Post an answer comment for @ai ask commands.
+     *
+     * Only fires for IssueDiscussion tasks with an MR (ask_command on MR note)
+     * and an ask_command intent in the result metadata.
+     */
+    private function shouldPostAnswerComment(Task $task): bool
+    {
+        return $task->mr_iid !== null
+            && $task->type === TaskType::IssueDiscussion
+            && ($task->result['intent'] ?? null) === 'ask_command';
     }
 
     /**

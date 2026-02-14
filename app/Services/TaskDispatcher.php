@@ -115,18 +115,26 @@ class TaskDispatcher
         $taskToken = $this->taskTokenService->generate($task->id);
 
         try {
+            $variables = [
+                'VUNNIX_TASK_ID' => (string) $task->id,
+                'VUNNIX_TASK_TYPE' => $task->type->value,
+                'VUNNIX_INTENT' => $task->result['intent'] ?? $task->type->value,
+                'VUNNIX_STRATEGY' => $strategy->value,
+                'VUNNIX_SKILLS' => implode(',', $strategy->skills()),
+                'VUNNIX_TOKEN' => $taskToken,
+                'VUNNIX_API_URL' => config('vunnix.api_url'),
+            ];
+
+            // Pass the question text for ask_command tasks
+            if (! empty($task->result['question'])) {
+                $variables['VUNNIX_QUESTION'] = $task->result['question'];
+            }
+
             $pipelineResult = $this->gitLabClient->triggerPipeline(
                 projectId: $task->project->gitlab_project_id,
                 ref: $task->commit_sha ?? 'main',
                 triggerToken: $triggerToken,
-                variables: [
-                    'VUNNIX_TASK_ID' => (string) $task->id,
-                    'VUNNIX_TASK_TYPE' => $task->type->value,
-                    'VUNNIX_STRATEGY' => $strategy->value,
-                    'VUNNIX_SKILLS' => implode(',', $strategy->skills()),
-                    'VUNNIX_TOKEN' => $taskToken,
-                    'VUNNIX_API_URL' => config('vunnix.api_url'),
-                ],
+                variables: $variables,
             );
 
             $task->pipeline_id = $pipelineResult['id'];

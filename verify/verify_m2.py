@@ -4192,6 +4192,156 @@ checker.check(
 )
 
 # ============================================================
+#  T42: @ai improve + @ai ask commands
+# ============================================================
+section("T42: @ai improve + @ai ask commands")
+
+# T42.1: RoutingResult metadata support
+checker.check(
+    "RoutingResult supports metadata parameter",
+    file_contains(
+        "app/Services/RoutingResult.php",
+        "metadata",
+    ),
+)
+
+# T42.2: EventRouter extracts question from @ai ask
+checker.check(
+    "EventRouter extracts question from @ai ask pattern",
+    file_contains(
+        "app/Services/EventRouter.php",
+        "'question'",
+    ),
+)
+
+# T42.3: TaskDispatchService stores intent metadata on task
+checker.check(
+    "TaskDispatchService stores intent in result metadata",
+    file_contains(
+        "app/Services/TaskDispatchService.php",
+        "intent",
+    ),
+)
+
+# T42.4: TaskDispatcher passes VUNNIX_INTENT variable
+checker.check(
+    "TaskDispatcher passes VUNNIX_INTENT to pipeline",
+    file_contains(
+        "app/Services/TaskDispatcher.php",
+        "VUNNIX_INTENT",
+    ),
+)
+
+# T42.5: TaskDispatcher passes VUNNIX_QUESTION for ask_command
+checker.check(
+    "TaskDispatcher passes VUNNIX_QUESTION for ask commands",
+    file_contains(
+        "app/Services/TaskDispatcher.php",
+        "VUNNIX_QUESTION",
+    ),
+)
+
+# T42.6: TaskResultController merges result with existing metadata
+checker.check(
+    "TaskResultController merges executor result with existing metadata",
+    file_contains(
+        "app/Http/Controllers/TaskResultController.php",
+        "array_merge",
+    ),
+)
+
+# T42.7: PostAnswerComment job exists
+checker.check(
+    "PostAnswerComment job exists",
+    file_exists("app/Jobs/PostAnswerComment.php"),
+)
+checker.check(
+    "PostAnswerComment formats answer with question",
+    file_contains(
+        "app/Jobs/PostAnswerComment.php",
+        "Answer",
+    ),
+)
+checker.check(
+    "PostAnswerComment posts to MR via GitLabClient",
+    file_contains(
+        "app/Jobs/PostAnswerComment.php",
+        "createMergeRequestNote",
+    ),
+)
+
+# T42.8: ProcessTaskResult dispatches PostAnswerComment
+checker.check(
+    "ProcessTaskResult dispatches PostAnswerComment for ask_command",
+    file_contains(
+        "app/Jobs/ProcessTaskResult.php",
+        "PostAnswerComment",
+    ),
+)
+checker.check(
+    "ProcessTaskResult checks ask_command intent",
+    file_contains(
+        "app/Jobs/ProcessTaskResult.php",
+        "ask_command",
+    ),
+)
+
+# T42.9: E2E integration tests
+checker.check(
+    "AI commands E2E test file exists",
+    file_exists("tests/Feature/AiCommandsEndToEndTest.php"),
+)
+checker.check(
+    "E2E test covers @ai improve flow",
+    file_contains(
+        "tests/Feature/AiCommandsEndToEndTest.php",
+        "@ai improve",
+    ),
+)
+checker.check(
+    "E2E test covers @ai ask flow",
+    file_contains(
+        "tests/Feature/AiCommandsEndToEndTest.php",
+        "@ai ask",
+    ),
+)
+checker.check(
+    "E2E test verifies normal priority for improve",
+    file_contains(
+        "tests/Feature/AiCommandsEndToEndTest.php",
+        "TaskPriority::Normal",
+    ),
+)
+checker.check(
+    "E2E test verifies IssueDiscussion type for ask",
+    file_contains(
+        "tests/Feature/AiCommandsEndToEndTest.php",
+        "TaskType::IssueDiscussion",
+    ),
+)
+checker.check(
+    "E2E test verifies question extraction",
+    file_contains(
+        "tests/Feature/AiCommandsEndToEndTest.php",
+        "why is this function here?",
+    ),
+)
+checker.check(
+    "E2E test verifies answer comment posted",
+    file_contains(
+        "tests/Feature/AiCommandsEndToEndTest.php",
+        "Answer",
+    ),
+)
+checker.check(
+    "E2E test includes permission denied scenarios",
+    file_contains(
+        "tests/Feature/AiCommandsEndToEndTest.php",
+        "permission_denied",
+    ),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()

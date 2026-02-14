@@ -18,10 +18,12 @@ class RoutingResult
      *                          issue_discussion, feature_dev, incremental_review, acceptance_tracking, help_response
      * @param  string  $priority  normal, high, or low
      * @param  WebhookEvent  $event  The parsed webhook event
+     * @param  array<string, mixed>  $metadata  Extra context for the intent (e.g., extracted question for ask_command)
      */
     public function __construct(
         public readonly string $intent,
         public readonly string $priority,
         public readonly WebhookEvent $event,
+        public readonly array $metadata = [],
     ) {}
 }

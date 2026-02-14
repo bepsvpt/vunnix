@@ -49,8 +49,10 @@ class TaskResultController extends Controller
         $tokens = $validated['tokens'];
         $isCompleted = $validated['status'] === 'completed';
 
-        // Store the raw result and token breakdown on the task
-        $task->result = $validated['result'] ?? null;
+        // Merge the executor result with pre-existing metadata (question, intent)
+        $existingMeta = $task->result ?? [];
+        $executorResult = $validated['result'] ?? [];
+        $task->result = array_merge($existingMeta, $executorResult);
         $task->tokens_used = $tokens['input'] + $tokens['output'] + $tokens['thinking'];
         $task->prompt_version = $validated['prompt_version'];
 

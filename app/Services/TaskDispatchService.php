@@ -70,6 +70,13 @@ class TaskDispatchService
 
         $userId = $this->resolveUserId($event);
 
+        // Build initial result metadata from routing context
+        $resultMeta = [];
+        if (! empty($routingResult->metadata)) {
+            $resultMeta = $routingResult->metadata;
+        }
+        $resultMeta['intent'] = $routingResult->intent;
+
         $task = Task::create([
             'type' => $taskType,
             'origin' => TaskOrigin::Webhook,
@@ -80,6 +87,7 @@ class TaskDispatchService
             'mr_iid' => $mrIid,
             'issue_iid' => $this->extractIssueIid($event),
             'commit_sha' => $this->extractCommitSha($event),
+            'result' => $resultMeta,
         ]);
 
         $task->transitionTo(TaskStatus::Queued);
