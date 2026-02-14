@@ -2668,6 +2668,200 @@ checker.check(
 )
 
 # ============================================================
+#  T31: Structured output schema — feature dev + UI adjustment
+# ============================================================
+section("T31: Structured Output Schema — Feature Dev + UI Adjustment")
+
+# FeatureDevSchema class
+checker.check(
+    "FeatureDevSchema class exists",
+    file_exists("app/Schemas/FeatureDevSchema.php"),
+)
+checker.check(
+    "FeatureDevSchema defines version constant",
+    file_contains("app/Schemas/FeatureDevSchema.php", "VERSION"),
+)
+checker.check(
+    "FeatureDevSchema defines file action constants",
+    file_contains("app/Schemas/FeatureDevSchema.php", "FILE_ACTIONS"),
+)
+
+# validate() method
+checker.check(
+    "FeatureDevSchema has validate method",
+    file_contains("app/Schemas/FeatureDevSchema.php", "function validate"),
+)
+checker.check(
+    "FeatureDevSchema validate uses Laravel Validator",
+    file_contains("app/Schemas/FeatureDevSchema.php", "Validator::make"),
+)
+
+# strip() method
+checker.check(
+    "FeatureDevSchema has strip method",
+    file_contains("app/Schemas/FeatureDevSchema.php", "function strip"),
+)
+
+# validateAndStrip() convenience method
+checker.check(
+    "FeatureDevSchema has validateAndStrip method",
+    file_contains("app/Schemas/FeatureDevSchema.php", "function validateAndStrip"),
+)
+
+# rules() method — schema field validation
+checker.check(
+    "FeatureDevSchema has rules method",
+    file_contains("app/Schemas/FeatureDevSchema.php", "function rules"),
+)
+checker.check(
+    "Rules validate branch field",
+    file_contains("app/Schemas/FeatureDevSchema.php", "'branch'"),
+)
+checker.check(
+    "Rules validate mr_title field",
+    file_contains("app/Schemas/FeatureDevSchema.php", "'mr_title'"),
+)
+checker.check(
+    "Rules validate mr_description field",
+    file_contains("app/Schemas/FeatureDevSchema.php", "'mr_description'"),
+)
+checker.check(
+    "Rules validate files_changed array",
+    file_contains("app/Schemas/FeatureDevSchema.php", "'files_changed'"),
+)
+checker.check(
+    "Rules validate files_changed entry path",
+    file_contains("app/Schemas/FeatureDevSchema.php", "files_changed.*.path"),
+)
+checker.check(
+    "Rules validate files_changed entry action",
+    file_contains("app/Schemas/FeatureDevSchema.php", "files_changed.*.action"),
+)
+checker.check(
+    "Rules validate files_changed entry summary",
+    file_contains("app/Schemas/FeatureDevSchema.php", "files_changed.*.summary"),
+)
+checker.check(
+    "Rules validate tests_added field",
+    file_contains("app/Schemas/FeatureDevSchema.php", "'tests_added'"),
+)
+checker.check(
+    "Rules validate notes field",
+    file_contains("app/Schemas/FeatureDevSchema.php", "'notes'"),
+)
+
+# UiAdjustmentSchema class
+checker.check(
+    "UiAdjustmentSchema class exists",
+    file_exists("app/Schemas/UiAdjustmentSchema.php"),
+)
+checker.check(
+    "UiAdjustmentSchema extends FeatureDevSchema",
+    file_contains("app/Schemas/UiAdjustmentSchema.php", "extends FeatureDevSchema"),
+)
+checker.check(
+    "UiAdjustmentSchema validates screenshot field",
+    file_contains("app/Schemas/UiAdjustmentSchema.php", "'screenshot'"),
+)
+checker.check(
+    "UiAdjustmentSchema validates screenshot_mobile field",
+    file_contains("app/Schemas/UiAdjustmentSchema.php", "'screenshot_mobile'"),
+)
+checker.check(
+    "UiAdjustmentSchema allows nullable screenshots",
+    file_contains("app/Schemas/UiAdjustmentSchema.php", "'nullable'"),
+)
+
+# Tests — FeatureDevSchema
+checker.check(
+    "FeatureDevSchema test file exists",
+    file_exists("tests/Unit/Schemas/FeatureDevSchemaTest.php"),
+)
+checker.check(
+    "Test covers valid complete feature dev result",
+    file_contains(
+        "tests/Unit/Schemas/FeatureDevSchemaTest.php",
+        "validates a complete valid feature dev result",
+    ),
+)
+checker.check(
+    "Test covers missing branch fails",
+    file_contains(
+        "tests/Unit/Schemas/FeatureDevSchemaTest.php",
+        "fails when branch is missing",
+    ),
+)
+checker.check(
+    "Test covers invalid file action fails",
+    file_contains(
+        "tests/Unit/Schemas/FeatureDevSchemaTest.php",
+        "fails when file action has an invalid value",
+    ),
+)
+checker.check(
+    "Test covers extra fields stripped",
+    file_contains(
+        "tests/Unit/Schemas/FeatureDevSchemaTest.php",
+        "strips unknown top-level fields",
+    ),
+)
+checker.check(
+    "Test covers validateAndStrip valid path",
+    file_contains(
+        "tests/Unit/Schemas/FeatureDevSchemaTest.php",
+        "returns stripped data when valid via validateAndStrip",
+    ),
+)
+checker.check(
+    "Test covers validateAndStrip invalid path",
+    file_contains(
+        "tests/Unit/Schemas/FeatureDevSchemaTest.php",
+        "returns null data when invalid via validateAndStrip",
+    ),
+)
+
+# Tests — UiAdjustmentSchema
+checker.check(
+    "UiAdjustmentSchema test file exists",
+    file_exists("tests/Unit/Schemas/UiAdjustmentSchemaTest.php"),
+)
+checker.check(
+    "Test covers valid complete UI adjustment result",
+    file_contains(
+        "tests/Unit/Schemas/UiAdjustmentSchemaTest.php",
+        "validates a complete valid UI adjustment result",
+    ),
+)
+checker.check(
+    "Test covers null screenshot (capture failed)",
+    file_contains(
+        "tests/Unit/Schemas/UiAdjustmentSchemaTest.php",
+        "validates when screenshot is null",
+    ),
+)
+checker.check(
+    "Test covers missing screenshot field fails",
+    file_contains(
+        "tests/Unit/Schemas/UiAdjustmentSchemaTest.php",
+        "fails when screenshot field is missing entirely",
+    ),
+)
+checker.check(
+    "Test covers extra fields stripped from UI adjustment",
+    file_contains(
+        "tests/Unit/Schemas/UiAdjustmentSchemaTest.php",
+        "strips unknown top-level fields",
+    ),
+)
+checker.check(
+    "Test covers screenshot preservation through strip",
+    file_contains(
+        "tests/Unit/Schemas/UiAdjustmentSchemaTest.php",
+        "preserves screenshot fields through strip",
+    ),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")

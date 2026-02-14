@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 30 / 116 (26%)
-- **Current Task:** T31 — Structured output schema — feature dev + UI adjustment
-- **Last Verified:** T30
+- **Tasks Complete:** 31 / 116 (27%)
+- **Current Task:** T32 — Result Processor service
+- **Last Verified:** T31
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (19/35)
+## M2 — Path A Functional (20/35)
 
 ### Webhook & Event Routing
 
@@ -55,11 +55,11 @@
 
 - [x] T29: Runner result API endpoint [Depends: T15, T18]
 - [x] T30: Structured output schema — code review [Depends: —]
-- [ ] **T31:** Structured output schema — feature dev + UI adjustment [Depends: —]
+- [x] T31: Structured output schema — feature dev + UI adjustment [Depends: —]
 
 ### Result Processor
 
-- [ ] T32: Result Processor service [Depends: T11, T29, T30, T31]
+- [ ] **T32:** Result Processor service [Depends: T11, T29, T30, T31]
 - [ ] T33: Summary comment — Layer 1 [Depends: T32]
 - [ ] T34: Inline discussion threads — Layer 2 [Depends: T32]
 - [ ] T35: Labels + commit status — Layer 3 [Depends: T32]
