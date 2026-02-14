@@ -1909,6 +1909,198 @@ checker.check(
     file_exists("resources/js/components/AppNavigation.test.js"),
 )
 
+# ============================================================
+#  T62: Auth State Management (Pinia)
+# ============================================================
+section("T62: Auth State Management (Pinia)")
+
+# Auth store exists and has required methods
+checker.check(
+    "Auth store uses defineStore composable pattern",
+    file_contains("resources/js/stores/auth.js", "defineStore('auth'"),
+)
+checker.check(
+    "Auth store has fetchUser method",
+    file_contains("resources/js/stores/auth.js", "async function fetchUser"),
+)
+checker.check(
+    "Auth store calls /api/v1/user",
+    file_contains("resources/js/stores/auth.js", "/api/v1/user"),
+)
+checker.check(
+    "Auth store has login method (redirect to OAuth)",
+    file_contains("resources/js/stores/auth.js", "function login"),
+)
+checker.check(
+    "Auth store has logout method",
+    file_contains("resources/js/stores/auth.js", "async function logout"),
+)
+checker.check(
+    "Auth store has hasPermission method",
+    file_contains("resources/js/stores/auth.js", "function hasPermission"),
+)
+checker.check(
+    "Auth store has hasProjectPermission method",
+    file_contains("resources/js/stores/auth.js", "function hasProjectPermission"),
+)
+checker.check(
+    "Auth store has projects computed",
+    file_contains("resources/js/stores/auth.js", "const projects = computed"),
+)
+
+# Router auth guard
+checker.check(
+    "Router has auth guard using beforeEach",
+    file_contains("resources/js/router/index.js", "router.beforeEach"),
+)
+checker.check(
+    "Router guard calls fetchUser on first nav",
+    file_contains("resources/js/router/index.js", "auth.fetchUser"),
+)
+
+# User API endpoint
+checker.check(
+    "User API route registered",
+    file_contains("routes/api.php", "api.user"),
+)
+
+# Tests
+checker.check(
+    "Auth store tests exist",
+    file_exists("resources/js/stores/auth.test.js"),
+)
+
+# ============================================================
+#  T63: Chat Page — Conversation List
+# ============================================================
+section("T63: Chat Page — Conversation List")
+
+# Conversations Pinia store
+checker.check(
+    "Conversations store exists",
+    file_exists("resources/js/stores/conversations.js"),
+)
+checker.check(
+    "Conversations store uses defineStore",
+    file_contains("resources/js/stores/conversations.js", "defineStore('conversations'"),
+)
+checker.check(
+    "Conversations store has fetchConversations method",
+    file_contains("resources/js/stores/conversations.js", "async function fetchConversations"),
+)
+checker.check(
+    "Conversations store calls /api/v1/conversations",
+    file_contains("resources/js/stores/conversations.js", "/api/v1/conversations"),
+)
+checker.check(
+    "Conversations store has loadMore method (cursor pagination)",
+    file_contains("resources/js/stores/conversations.js", "async function loadMore"),
+)
+checker.check(
+    "Conversations store has toggleArchive method",
+    file_contains("resources/js/stores/conversations.js", "async function toggleArchive"),
+)
+checker.check(
+    "Conversations store tracks projectFilter state",
+    file_contains("resources/js/stores/conversations.js", "const projectFilter"),
+)
+checker.check(
+    "Conversations store tracks searchQuery state",
+    file_contains("resources/js/stores/conversations.js", "const searchQuery"),
+)
+checker.check(
+    "Conversations store tracks showArchived state",
+    file_contains("resources/js/stores/conversations.js", "const showArchived"),
+)
+checker.check(
+    "Conversations store has selectConversation method",
+    file_contains("resources/js/stores/conversations.js", "function selectConversation"),
+)
+
+# ConversationListItem component
+checker.check(
+    "ConversationListItem component exists",
+    file_exists("resources/js/components/ConversationListItem.vue"),
+)
+checker.check(
+    "ConversationListItem uses script setup",
+    file_contains("resources/js/components/ConversationListItem.vue", "<script setup>"),
+)
+checker.check(
+    "ConversationListItem shows conversation title",
+    file_contains("resources/js/components/ConversationListItem.vue", "conversation.title"),
+)
+checker.check(
+    "ConversationListItem shows last message preview",
+    file_contains("resources/js/components/ConversationListItem.vue", "lastMessagePreview"),
+)
+checker.check(
+    "ConversationListItem shows relative time",
+    file_contains("resources/js/components/ConversationListItem.vue", "relativeTime"),
+)
+checker.check(
+    "ConversationListItem emits select and archive events",
+    file_contains("resources/js/components/ConversationListItem.vue", "defineEmits"),
+)
+
+# ConversationList component
+checker.check(
+    "ConversationList component exists",
+    file_exists("resources/js/components/ConversationList.vue"),
+)
+checker.check(
+    "ConversationList uses script setup",
+    file_contains("resources/js/components/ConversationList.vue", "<script setup>"),
+)
+checker.check(
+    "ConversationList has search input",
+    file_contains("resources/js/components/ConversationList.vue", "Search conversations"),
+)
+checker.check(
+    "ConversationList has project filter dropdown",
+    file_contains("resources/js/components/ConversationList.vue", "All projects"),
+)
+checker.check(
+    "ConversationList has archive toggle",
+    file_contains("resources/js/components/ConversationList.vue", "Archived"),
+)
+checker.check(
+    "ConversationList renders ConversationListItem",
+    file_contains("resources/js/components/ConversationList.vue", "ConversationListItem"),
+)
+checker.check(
+    "ConversationList has load more button",
+    file_contains("resources/js/components/ConversationList.vue", "Load more"),
+)
+checker.check(
+    "ConversationList fetches on mount",
+    file_contains("resources/js/components/ConversationList.vue", "onMounted"),
+)
+
+# ChatPage layout
+checker.check(
+    "ChatPage uses ConversationList",
+    file_contains("resources/js/pages/ChatPage.vue", "ConversationList"),
+)
+checker.check(
+    "ChatPage has sidebar layout",
+    file_contains("resources/js/pages/ChatPage.vue", "aside"),
+)
+
+# Tests
+checker.check(
+    "Conversations store tests exist",
+    file_exists("resources/js/stores/conversations.test.js"),
+)
+checker.check(
+    "ConversationListItem tests exist",
+    file_exists("resources/js/components/ConversationListItem.test.js"),
+)
+checker.check(
+    "ConversationList tests exist",
+    file_exists("resources/js/components/ConversationList.test.js"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()
