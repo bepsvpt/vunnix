@@ -258,6 +258,37 @@ it('creates a merge request', function () {
     });
 });
 
+it('finds an open merge request for a branch', function () {
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/1/merge_requests*' => Http::response([
+            ['iid' => 42, 'source_branch' => 'feature/login', 'state' => 'opened'],
+        ], 200),
+    ]);
+
+    $client = app(GitLabClient::class);
+    $mr = $client->findOpenMergeRequestForBranch(1, 'feature/login');
+
+    expect($mr)->not->toBeNull()
+        ->and($mr['iid'])->toBe(42);
+
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), 'source_branch=feature')
+            && str_contains($request->url(), 'state=opened')
+            && str_contains($request->url(), 'per_page=1');
+    });
+});
+
+it('returns null when no open merge request exists for branch', function () {
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/1/merge_requests*' => Http::response([], 200),
+    ]);
+
+    $client = app(GitLabClient::class);
+    $mr = $client->findOpenMergeRequestForBranch(1, 'feature/orphan');
+
+    expect($mr)->toBeNull();
+});
+
 // ------------------------------------------------------------------
 //  Comments (Notes)
 // ------------------------------------------------------------------
@@ -307,6 +338,28 @@ it('creates an issue note', function () {
     $result = $client->createIssueNote(1, 5, 'Issue comment');
 
     expect($result)->toHaveKey('body', 'Issue comment');
+});
+
+it('lists merge request discussions', function () {
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/1/merge_requests/5/discussions*' => Http::response([
+            ['id' => 'disc-1', 'notes' => [['body' => 'Thread 1']]],
+            ['id' => 'disc-2', 'notes' => [['body' => 'Thread 2']]],
+        ], 200),
+    ]);
+
+    $client = app(GitLabClient::class);
+    $discussions = $client->listMergeRequestDiscussions(1, 5);
+
+    expect($discussions)->toHaveCount(2)
+        ->and($discussions[0]['id'])->toBe('disc-1')
+        ->and($discussions[1]['id'])->toBe('disc-2');
+
+    Http::assertSent(function ($request) {
+        return $request->method() === 'GET'
+            && str_contains($request->url(), 'discussions')
+            && str_contains($request->url(), 'per_page=100');
+    });
 });
 
 it('creates a merge request discussion thread', function () {
@@ -396,6 +449,25 @@ it('adds merge request labels without removing existing ones', function () {
     Http::assertSent(function ($request) {
         return $request->method() === 'PUT'
             && $request['add_labels'] === 'ai::reviewed';
+    });
+});
+
+it('removes specific labels from a merge request', function () {
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/1/merge_requests/3' => Http::response([
+            'iid' => 3,
+            'labels' => ['ai::reviewed'],
+        ], 200),
+    ]);
+
+    $client = app(GitLabClient::class);
+    $result = $client->removeMergeRequestLabels(1, 3, ['ai::risk-high', 'ai::risk-medium']);
+
+    expect($result['labels'])->toBe(['ai::reviewed']);
+
+    Http::assertSent(function ($request) {
+        return $request->method() === 'PUT'
+            && $request['remove_labels'] === 'ai::risk-high,ai::risk-medium';
     });
 });
 

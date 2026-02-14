@@ -219,6 +219,23 @@ class GitLabClient
         return $this->handleResponse($response, 'createMergeRequest')->json();
     }
 
+    /**
+     * Find an open merge request for a given source branch.
+     *
+     * Used by incremental review (T40) to resolve push events to their
+     * associated MR. Returns null if no open MR exists for the branch.
+     */
+    public function findOpenMergeRequestForBranch(int $projectId, string $sourceBranch): ?array
+    {
+        $mrs = $this->listMergeRequests($projectId, [
+            'source_branch' => $sourceBranch,
+            'state' => 'opened',
+            'per_page' => 1,
+        ]);
+
+        return $mrs[0] ?? null;
+    }
+
     // ------------------------------------------------------------------
     //  Comments (Notes)
     // ------------------------------------------------------------------
@@ -260,6 +277,25 @@ class GitLabClient
         );
 
         return $this->handleResponse($response, "createIssueNote #{$issueIid}")->json();
+    }
+
+    /**
+     * List all discussion threads on a merge request.
+     *
+     * Returns all discussions (both inline diff threads and general MR-level).
+     * Used by incremental review (T40) to check for existing threads before
+     * posting duplicates (D33).
+     *
+     * @return array<int, array>
+     */
+    public function listMergeRequestDiscussions(int $projectId, int $mrIid, array $params = []): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/merge_requests/{$mrIid}/discussions"),
+            array_merge(['per_page' => 100], $params),
+        );
+
+        return $this->handleResponse($response, "listMRDiscussions !{$mrIid}")->json();
     }
 
     /**
@@ -335,6 +371,24 @@ class GitLabClient
         );
 
         return $this->handleResponse($response, "addMRLabels !{$mrIid}")->json();
+    }
+
+    /**
+     * Remove specific labels from a merge request.
+     *
+     * Used by incremental review (T40, D56) to clear stale AI risk labels
+     * before applying updated ones.
+     *
+     * @param  array<int, string>  $labels
+     */
+    public function removeMergeRequestLabels(int $projectId, int $mrIid, array $labels): array
+    {
+        $response = $this->request()->put(
+            $this->url("projects/{$projectId}/merge_requests/{$mrIid}"),
+            ['remove_labels' => implode(',', $labels)],
+        );
+
+        return $this->handleResponse($response, "removeMRLabels !{$mrIid}")->json();
     }
 
     // ------------------------------------------------------------------
