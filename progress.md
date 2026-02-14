@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 33 / 116 (28%)
-- **Current Task:** T34 — Inline discussion threads — Layer 2
-- **Last Verified:** T33
+- **Tasks Complete:** 35 / 116 (30%)
+- **Current Task:** T36 — Placeholder-then-update pattern
+- **Last Verified:** T35
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (22/35)
+## M2 — Path A Functional (24/35)
 
 ### Webhook & Event Routing
 
@@ -61,9 +61,9 @@
 
 - [x] T32: Result Processor service [Depends: T11, T29, T30, T31]
 - [x] T33: Summary comment — Layer 1 [Depends: T32]
-- [ ] **T34:** Inline discussion threads — Layer 2 [Depends: T32]
-- [ ] T35: Labels + commit status — Layer 3 [Depends: T32]
-- [ ] T36: Placeholder-then-update pattern [Depends: T33]
+- [x] T34: Inline discussion threads — Layer 2 [Depends: T32]
+- [x] T35: Labels + commit status — Layer 3 [Depends: T32]
+- [ ] **T36:** Placeholder-then-update pattern [Depends: T33]
 
 ### Retry & Failure
 
