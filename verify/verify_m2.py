@@ -2376,10 +2376,10 @@ checker.check(
     ),
 )
 checker.check(
-    "Controller transitions task to completed",
+    "Controller dispatches ProcessTaskResult for completed results",
     file_contains(
         "app/Http/Controllers/TaskResultController.php",
-        "TaskStatus::Completed",
+        "ProcessTaskResult::dispatch",
     ),
 )
 checker.check(
@@ -2858,6 +2858,167 @@ checker.check(
     file_contains(
         "tests/Unit/Schemas/UiAdjustmentSchemaTest.php",
         "preserves screenshot fields through strip",
+    ),
+)
+
+# ============================================================
+#  T32: Result Processor service
+# ============================================================
+section("T32: Result Processor Service")
+
+checker.check(
+    "ResultProcessor service exists",
+    file_exists("app/Services/ResultProcessor.php"),
+)
+checker.check(
+    "ResultProcessor has process method",
+    file_contains("app/Services/ResultProcessor.php", "function process(Task"),
+)
+checker.check(
+    "ResultProcessor has schemaFor method",
+    file_contains("app/Services/ResultProcessor.php", "function schemaFor(TaskType"),
+)
+checker.check(
+    "ResultProcessor maps code_review to CodeReviewSchema",
+    file_contains("app/Services/ResultProcessor.php", "'code_review' => CodeReviewSchema::class"),
+)
+checker.check(
+    "ResultProcessor maps security_audit to CodeReviewSchema",
+    file_contains("app/Services/ResultProcessor.php", "'security_audit' => CodeReviewSchema::class"),
+)
+checker.check(
+    "ResultProcessor maps feature_dev to FeatureDevSchema",
+    file_contains("app/Services/ResultProcessor.php", "'feature_dev' => FeatureDevSchema::class"),
+)
+checker.check(
+    "ResultProcessor maps ui_adjustment to UiAdjustmentSchema",
+    file_contains("app/Services/ResultProcessor.php", "'ui_adjustment' => UiAdjustmentSchema::class"),
+)
+checker.check(
+    "ResultProcessor transitions to Completed on success",
+    file_contains("app/Services/ResultProcessor.php", "TaskStatus::Completed"),
+)
+checker.check(
+    "ResultProcessor transitions to Failed on validation error",
+    file_contains("app/Services/ResultProcessor.php", "TaskStatus::Failed"),
+)
+checker.check(
+    "ResultProcessor stores sanitized result back on task",
+    file_contains("app/Services/ResultProcessor.php", "$task->result = $validation['data']"),
+)
+checker.check(
+    "ProcessTaskResult job exists",
+    file_exists("app/Jobs/ProcessTaskResult.php"),
+)
+checker.check(
+    "ProcessTaskResult implements ShouldQueue",
+    file_contains("app/Jobs/ProcessTaskResult.php", "ShouldQueue"),
+)
+checker.check(
+    "ProcessTaskResult uses vunnix-server queue",
+    file_contains("app/Jobs/ProcessTaskResult.php", "QueueNames::SERVER"),
+)
+checker.check(
+    "ProcessTaskResult calls ResultProcessor",
+    file_contains("app/Jobs/ProcessTaskResult.php", "ResultProcessor"),
+)
+checker.check(
+    "ProcessTaskResult checks task is still Running",
+    file_contains("app/Jobs/ProcessTaskResult.php", "TaskStatus::Running"),
+)
+checker.check(
+    "ResultProcessor test file exists",
+    file_exists("tests/Feature/Services/ResultProcessorTest.php"),
+)
+checker.check(
+    "Test covers valid code review processing",
+    file_contains(
+        "tests/Feature/Services/ResultProcessorTest.php",
+        "valid code review result",
+    ),
+)
+checker.check(
+    "Test covers invalid code review processing",
+    file_contains(
+        "tests/Feature/Services/ResultProcessorTest.php",
+        "invalid code review result",
+    ),
+)
+checker.check(
+    "Test covers security audit using CodeReviewSchema",
+    file_contains(
+        "tests/Feature/Services/ResultProcessorTest.php",
+        "security audit using CodeReviewSchema",
+    ),
+)
+checker.check(
+    "Test covers feature dev processing",
+    file_contains(
+        "tests/Feature/Services/ResultProcessorTest.php",
+        "valid feature dev result",
+    ),
+)
+checker.check(
+    "Test covers UI adjustment processing",
+    file_contains(
+        "tests/Feature/Services/ResultProcessorTest.php",
+        "valid UI adjustment result",
+    ),
+)
+checker.check(
+    "Test covers issue discussion passthrough",
+    file_contains(
+        "tests/Feature/Services/ResultProcessorTest.php",
+        "issue discussion results without schema validation",
+    ),
+)
+checker.check(
+    "Test covers PRD creation passthrough",
+    file_contains(
+        "tests/Feature/Services/ResultProcessorTest.php",
+        "PRD creation results without schema validation",
+    ),
+)
+checker.check(
+    "Test covers null result handling",
+    file_contains(
+        "tests/Feature/Services/ResultProcessorTest.php",
+        "result is null",
+    ),
+)
+checker.check(
+    "Test covers schema routing",
+    file_contains(
+        "tests/Feature/Services/ResultProcessorTest.php",
+        "maps task types to correct schemas",
+    ),
+)
+checker.check(
+    "Test covers sanitized result storage",
+    file_contains(
+        "tests/Feature/Services/ResultProcessorTest.php",
+        "sanitized result back on the task",
+    ),
+)
+checker.check(
+    "Test covers extra field stripping",
+    file_contains(
+        "tests/Feature/Services/ResultProcessorTest.php",
+        "strips extra fields",
+    ),
+)
+checker.check(
+    "Integration test covers ResultProcessor via API",
+    file_contains(
+        "tests/Feature/TaskResultApiTest.php",
+        "transitions task to completed via Result Processor",
+    ),
+)
+checker.check(
+    "Integration test covers ProcessTaskResult job dispatch",
+    file_contains(
+        "tests/Feature/TaskResultApiTest.php",
+        "ProcessTaskResult",
     ),
 )
 

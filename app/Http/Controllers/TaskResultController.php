@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\TaskStatus;
 use App\Exceptions\InvalidTaskTransitionException;
 use App\Http\Requests\StoreTaskResultRequest;
+use App\Jobs\ProcessTaskResult;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +19,15 @@ use Illuminate\Support\Facades\Log;
  * token before this controller is reached. The task is guaranteed to
  * exist and the token matches the task ID.
  *
+ * For completed results, the task stays in Running state while the
+ * Result Processor validates the schema asynchronously. The RP then
+ * transitions the task to Completed or Failed based on validation.
+ *
+ * For failed results (executor error), the task transitions to Failed
+ * immediately — no Result Processor validation needed.
+ *
  * @see §20.4 Runner Result API
+ * @see §3.5 Result Processor
  */
 class TaskResultController extends Controller
 {
@@ -37,19 +46,38 @@ class TaskResultController extends Controller
         }
 
         $validated = $request->validated();
-        $targetStatus = $validated['status'] === 'completed'
-            ? TaskStatus::Completed
-            : TaskStatus::Failed;
+        $tokens = $validated['tokens'];
+        $isCompleted = $validated['status'] === 'completed';
 
+        // Store the raw result and token breakdown on the task
+        $task->result = $validated['result'] ?? null;
+        $task->tokens_used = $tokens['input'] + $tokens['output'] + $tokens['thinking'];
+        $task->prompt_version = $validated['prompt_version'];
+
+        if ($isCompleted) {
+            // Completed results stay in Running while the Result Processor
+            // validates the schema asynchronously. The RP transitions the
+            // task to Completed or Failed based on validation outcome.
+            $task->save();
+
+            ProcessTaskResult::dispatch($task->id);
+
+            Log::info('Task result accepted, dispatched to Result Processor', [
+                'task_id' => $task->id,
+                'duration_seconds' => $validated['duration_seconds'],
+                'tokens' => $validated['tokens'],
+            ]);
+
+            return response()->json([
+                'status' => 'accepted',
+                'task_id' => $task->id,
+                'task_status' => 'processing',
+            ]);
+        }
+
+        // Failed results transition immediately — no RP validation needed
         try {
-            // Store the structured result and token breakdown
-            $tokens = $validated['tokens'];
-            $task->result = $validated['result'] ?? null;
-            $task->tokens_used = $tokens['input'] + $tokens['output'] + $tokens['thinking'];
-            $task->prompt_version = $validated['prompt_version'];
-
-            // transitionTo() handles error_reason for Failed status and calls save()
-            $task->transitionTo($targetStatus, $validated['error'] ?? null);
+            $task->transitionTo(TaskStatus::Failed, $validated['error'] ?? null);
         } catch (InvalidTaskTransitionException $e) {
             Log::error('Task result transition failed', [
                 'task_id' => $task->id,
@@ -62,17 +90,17 @@ class TaskResultController extends Controller
             ], 409);
         }
 
-        Log::info('Task result accepted', [
+        Log::info('Task result accepted (failed)', [
             'task_id' => $task->id,
-            'status' => $targetStatus->value,
             'duration_seconds' => $validated['duration_seconds'],
             'tokens' => $validated['tokens'],
+            'error' => $validated['error'] ?? null,
         ]);
 
         return response()->json([
             'status' => 'accepted',
             'task_id' => $task->id,
-            'task_status' => $targetStatus->value,
+            'task_status' => TaskStatus::Failed->value,
         ]);
     }
 }

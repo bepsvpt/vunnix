@@ -6,20 +6,38 @@ use App\Models\Task;
 use App\Services\TaskTokenService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
 // ─── Helpers ─────────────────────────────────────────────────────
 
+/**
+ * Build a schema-valid code review result (passes CodeReviewSchema validation).
+ */
+function validSchemaResult(): array
+{
+    return [
+        'version' => '1.0',
+        'summary' => [
+            'risk_level' => 'low',
+            'total_findings' => 0,
+            'findings_by_severity' => ['critical' => 0, 'major' => 0, 'minor' => 0],
+            'walkthrough' => [
+                ['file' => 'README.md', 'change_summary' => 'Updated docs'],
+            ],
+        ],
+        'findings' => [],
+        'labels' => ['ai::reviewed', 'ai::risk-low'],
+        'commit_status' => 'success',
+    ];
+}
+
 function validResultPayload(array $overrides = []): array
 {
     return array_merge([
         'status' => 'completed',
-        'result' => [
-            'summary' => 'Looks good overall.',
-            'findings' => [],
-            'commit_status' => 'success',
-        ],
+        'result' => validSchemaResult(),
         'tokens' => [
             'input' => 150000,
             'output' => 30000,
@@ -46,10 +64,11 @@ function generateToken(int $taskId): string
 
 // ─── Happy path: completed result ────────────────────────────────
 
-it('accepts a completed result and transitions task to completed', function () {
+it('accepts a completed result and transitions task to completed via Result Processor', function () {
     $task = Task::factory()->running()->create();
     $token = generateToken($task->id);
 
+    // With sync queue, ProcessTaskResult runs inline → ResultProcessor validates → Completed
     $response = $this->postJson(resultUrl($task), validResultPayload(), [
         'Authorization' => "Bearer {$token}",
     ]);
@@ -58,13 +77,14 @@ it('accepts a completed result and transitions task to completed', function () {
         ->assertJson([
             'status' => 'accepted',
             'task_id' => $task->id,
-            'task_status' => 'completed',
+            'task_status' => 'processing',
         ]);
 
+    // ResultProcessor ran synchronously and transitioned to Completed
     $task->refresh();
     expect($task->status)->toBe(TaskStatus::Completed)
         ->and($task->result)->toBeArray()
-        ->and($task->result['summary'])->toBe('Looks good overall.')
+        ->and($task->result['commit_status'])->toBe('success')
         ->and($task->tokens_used)->toBe(185000)
         ->and($task->completed_at)->not->toBeNull()
         ->and($task->prompt_version)->toBe([
@@ -74,9 +94,28 @@ it('accepts a completed result and transitions task to completed', function () {
         ]);
 });
 
+it('dispatches ProcessTaskResult job for completed results', function () {
+    Queue::fake();
+
+    $task = Task::factory()->running()->create();
+    $token = generateToken($task->id);
+
+    $this->postJson(resultUrl($task), validResultPayload(), [
+        'Authorization' => "Bearer {$token}",
+    ])->assertOk();
+
+    Queue::assertPushed(\App\Jobs\ProcessTaskResult::class, function ($job) use ($task) {
+        return $job->taskId === $task->id;
+    });
+
+    // Task stays in Running when queue is faked (RP hasn't run yet)
+    $task->refresh();
+    expect($task->status)->toBe(TaskStatus::Running);
+});
+
 // ─── Happy path: failed result ───────────────────────────────────
 
-it('accepts a failed result and transitions task to failed', function () {
+it('accepts a failed result and transitions task to failed immediately', function () {
     $task = Task::factory()->running()->create();
     $token = generateToken($task->id);
 
@@ -99,6 +138,23 @@ it('accepts a failed result and transitions task to failed', function () {
     expect($task->status)->toBe(TaskStatus::Failed)
         ->and($task->error_reason)->toBe('Claude API rate limit exceeded')
         ->and($task->tokens_used)->toBe(185000);
+});
+
+it('does not dispatch ProcessTaskResult for failed results', function () {
+    Queue::fake();
+
+    $task = Task::factory()->running()->create();
+    $token = generateToken($task->id);
+
+    $this->postJson(resultUrl($task), validResultPayload([
+        'status' => 'failed',
+        'result' => null,
+        'error' => 'timeout',
+    ]), [
+        'Authorization' => "Bearer {$token}",
+    ])->assertOk();
+
+    Queue::assertNotPushed(\App\Jobs\ProcessTaskResult::class);
 });
 
 // ─── 401: Missing bearer token ───────────────────────────────────
@@ -295,6 +351,8 @@ it('returns 422 when duration_seconds is missing', function () {
 // ─── Security: Token scoping (D127 — per M2 verification) ───────
 
 it('prevents cross-task token reuse — token for task A cannot access task B', function () {
+    Queue::fake();
+
     $taskA = Task::factory()->running()->create();
     $taskB = Task::factory()->running()->create();
 
@@ -311,9 +369,7 @@ it('prevents cross-task token reuse — token for task A cannot access task B', 
         'Authorization' => "Bearer {$tokenA}",
     ])->assertUnauthorized();
 
-    // Token B on task B — should work (task B is still running)
-    $taskB->refresh();
-    expect($taskB->status)->toBe(TaskStatus::Running);
+    // Token B on task B — should work
     $this->postJson(resultUrl($taskB), validResultPayload(), [
         'Authorization' => "Bearer {$tokenB}",
     ])->assertOk();

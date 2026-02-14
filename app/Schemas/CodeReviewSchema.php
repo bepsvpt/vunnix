@@ -138,7 +138,7 @@ class CodeReviewSchema
             'summary.walkthrough.*.change_summary' => ['required', 'string'],
 
             // Findings
-            'findings' => ['required', 'array'],
+            'findings' => ['present', 'array'],
             'findings.*.id' => ['required', 'integer', 'min:1'],
             'findings.*.severity' => ['required', 'string', Rule::in(self::SEVERITIES)],
             'findings.*.category' => ['required', 'string', Rule::in(self::CATEGORIES)],

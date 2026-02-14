@@ -252,6 +252,7 @@ Persistent lessons discovered during development. **Add entries here when you so
 - **Wrap all boot-time DB access in try/catch:** `AppServiceProvider::boot()` runs before the test environment swaps the DB connection. Any `Schema::hasTable()` or query call will hit the default `.env` connection (PostgreSQL), not the phpunit.xml SQLite connection. Always wrap the entire block (including `Schema::hasTable`) in a single `try/catch (\Throwable)` that silently returns.
 - **Use `config('key') ?: 'default'` not `config('key', 'default')` for nullable env vars:** `config('key', 'default')` only uses the default when the key is completely missing from config. If the env var is unset, `env()` returns `null`, the config key exists as `null`, and the default is ignored. Use `?: 'fallback'` to handle both `null` and empty string.
 - **Laravel 12 CSRF exclusion uses named parameter syntax:** Use `$middleware->validateCsrfTokens(except: ['webhook'])` — the method `validateCsrfTokenExcept()` does not exist.
+- **Use `present` not `required` for array fields that can be empty:** Laravel's `required` rule rejects empty arrays `[]`. For schema fields like `findings` where zero items is valid (e.g., clean code review), use `'present', 'array'` instead of `'required', 'array'`.
 
 ## Key Files
 
