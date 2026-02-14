@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Project extends Model
 {
@@ -36,6 +37,11 @@ class Project extends Model
         return $this->belongsToMany(User::class)
             ->withPivot('gitlab_access_level', 'synced_at')
             ->withTimestamps();
+    }
+
+    public function projectConfig(): HasOne
+    {
+        return $this->hasOne(ProjectConfig::class);
     }
 
     public function roles(): HasMany

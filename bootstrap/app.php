@@ -12,8 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo('/auth/redirect');
+        $middleware->validateCsrfTokens(except: [
+            'webhook',
+        ]);
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,
+            'webhook.verify' => \App\Http\Middleware\VerifyWebhookToken::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -1,0 +1,221 @@
+<?php
+
+use App\Models\Project;
+use App\Models\ProjectConfig;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
+/**
+ * Helper: create an enabled project with a webhook secret and return [project, token].
+ */
+function webhookProject(string $secret = 'test-secret'): array
+{
+    $project = Project::factory()->enabled()->create();
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'webhook_secret' => $secret,
+    ]);
+
+    return [$project, $secret];
+}
+
+/**
+ * Helper: POST a webhook request with given payload and headers.
+ */
+function postWebhook(
+    \Illuminate\Foundation\Testing\TestCase $test,
+    string $token,
+    string $gitlabEvent,
+    array $payload = [],
+): \Illuminate\Testing\TestResponse {
+    return $test->postJson('/webhook', $payload, [
+        'X-Gitlab-Token' => $token,
+        'X-Gitlab-Event' => $gitlabEvent,
+    ]);
+}
+
+// ------------------------------------------------------------------
+//  Event type detection
+// ------------------------------------------------------------------
+
+it('returns 400 when X-Gitlab-Event header is missing', function () {
+    [$project, $token] = webhookProject();
+
+    $this->postJson('/webhook', [], ['X-Gitlab-Token' => $token])
+        ->assertStatus(400)
+        ->assertJson([
+            'status' => 'ignored',
+            'reason' => 'Missing X-Gitlab-Event header.',
+        ]);
+});
+
+it('returns 200 with ignored status for unsupported event types', function () {
+    [$project, $token] = webhookProject();
+
+    postWebhook($this, $token, 'Pipeline Hook', ['object_kind' => 'pipeline'])
+        ->assertOk()
+        ->assertJson([
+            'status' => 'ignored',
+            'reason' => 'Unsupported event type: Pipeline Hook',
+        ]);
+});
+
+// ------------------------------------------------------------------
+//  Merge Request events
+// ------------------------------------------------------------------
+
+it('accepts merge request hook events', function () {
+    [$project, $token] = webhookProject();
+
+    postWebhook($this, $token, 'Merge Request Hook', [
+        'object_kind' => 'merge_request',
+        'object_attributes' => [
+            'iid' => 42,
+            'action' => 'open',
+            'source_branch' => 'feature/login',
+            'target_branch' => 'main',
+            'author_id' => 7,
+            'last_commit' => ['id' => 'abc123def456'],
+        ],
+    ])->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'event_type' => 'merge_request',
+            'project_id' => $project->id,
+        ]);
+});
+
+it('accepts merge request update events', function () {
+    [$project, $token] = webhookProject();
+
+    postWebhook($this, $token, 'Merge Request Hook', [
+        'object_kind' => 'merge_request',
+        'object_attributes' => [
+            'iid' => 42,
+            'action' => 'update',
+            'source_branch' => 'feature/login',
+            'target_branch' => 'main',
+            'author_id' => 7,
+            'last_commit' => ['id' => 'def789ghi012'],
+        ],
+    ])->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'event_type' => 'merge_request',
+        ]);
+});
+
+// ------------------------------------------------------------------
+//  Note events (MR and Issue comments)
+// ------------------------------------------------------------------
+
+it('accepts note hook events on merge requests', function () {
+    [$project, $token] = webhookProject();
+
+    postWebhook($this, $token, 'Note Hook', [
+        'object_kind' => 'note',
+        'object_attributes' => [
+            'note' => '@ai review',
+            'noteable_type' => 'MergeRequest',
+            'author_id' => 5,
+        ],
+        'merge_request' => [
+            'iid' => 42,
+        ],
+    ])->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'event_type' => 'note',
+        ]);
+});
+
+it('accepts note hook events on issues', function () {
+    [$project, $token] = webhookProject();
+
+    postWebhook($this, $token, 'Note Hook', [
+        'object_kind' => 'note',
+        'object_attributes' => [
+            'note' => '@ai help with this issue',
+            'noteable_type' => 'Issue',
+            'author_id' => 3,
+        ],
+        'issue' => [
+            'iid' => 17,
+        ],
+    ])->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'event_type' => 'note',
+        ]);
+});
+
+// ------------------------------------------------------------------
+//  Issue events
+// ------------------------------------------------------------------
+
+it('accepts issue hook events', function () {
+    [$project, $token] = webhookProject();
+
+    postWebhook($this, $token, 'Issue Hook', [
+        'object_kind' => 'issue',
+        'object_attributes' => [
+            'iid' => 99,
+            'action' => 'open',
+            'author_id' => 12,
+        ],
+        'labels' => [
+            ['title' => 'ai::develop'],
+            ['title' => 'backend'],
+        ],
+    ])->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'event_type' => 'issue',
+        ]);
+});
+
+// ------------------------------------------------------------------
+//  Push events
+// ------------------------------------------------------------------
+
+it('accepts push hook events', function () {
+    [$project, $token] = webhookProject();
+
+    postWebhook($this, $token, 'Push Hook', [
+        'object_kind' => 'push',
+        'ref' => 'refs/heads/feature/login',
+        'before' => '0000000000000000000000000000000000000000',
+        'after' => 'abc123def456789',
+        'user_id' => 7,
+        'commits' => [
+            ['id' => 'abc123', 'message' => 'Add login form'],
+        ],
+        'total_commits_count' => 1,
+    ])->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'event_type' => 'push',
+        ]);
+});
+
+// ------------------------------------------------------------------
+//  Response structure
+// ------------------------------------------------------------------
+
+it('includes the project_id in accepted responses', function () {
+    [$project, $token] = webhookProject();
+
+    postWebhook($this, $token, 'Merge Request Hook', [
+        'object_kind' => 'merge_request',
+        'object_attributes' => ['iid' => 1, 'action' => 'open'],
+    ])->assertOk()
+        ->assertJsonStructure([
+            'status',
+            'event_type',
+            'project_id',
+        ])
+        ->assertJson([
+            'project_id' => $project->id,
+        ]);
+});
