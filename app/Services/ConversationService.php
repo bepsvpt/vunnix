@@ -23,7 +23,7 @@ class ConversationService
         int $perPage = 25,
     ): CursorPaginator {
         $query = Conversation::accessibleBy($user)
-            ->with(['latestMessage']);
+            ->with(['latestMessage', 'projects']);
 
         if ($archived) {
             $query->archived();
@@ -62,7 +62,7 @@ class ConversationService
     {
         return $conversation->load(['messages' => function ($query) {
             $query->orderBy('created_at', 'asc');
-        }]);
+        }, 'projects']);
     }
 
     /**

@@ -25,6 +25,12 @@ class ConversationResource extends JsonResource
                     'created_at' => $this->latestMessage->created_at->toIso8601String(),
                 ];
             }),
+            'projects' => $this->whenLoaded('projects', function () {
+                return $this->projects->map(fn ($p) => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                ]);
+            }),
         ];
     }
 }
