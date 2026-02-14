@@ -4490,6 +4490,158 @@ checker.check(
 )
 
 # ============================================================
+#  T44: Feature Development (ai::develop label)
+# ============================================================
+section("T44: Feature Development (ai::develop label)")
+
+# T44.1: PostFeatureDevResult job exists
+checker.check(
+    "PostFeatureDevResult job exists",
+    file_exists("app/Jobs/PostFeatureDevResult.php"),
+)
+checker.check(
+    "PostFeatureDevResult implements ShouldQueue",
+    file_contains("app/Jobs/PostFeatureDevResult.php", "ShouldQueue"),
+)
+checker.check(
+    "PostFeatureDevResult uses vunnix-server queue",
+    file_contains("app/Jobs/PostFeatureDevResult.php", "QueueNames::SERVER"),
+)
+checker.check(
+    "PostFeatureDevResult uses RetryWithBackoff middleware",
+    file_contains("app/Jobs/PostFeatureDevResult.php", "RetryWithBackoff"),
+)
+checker.check(
+    "PostFeatureDevResult creates MR via GitLabClient::createMergeRequest",
+    file_contains("app/Jobs/PostFeatureDevResult.php", "createMergeRequest"),
+)
+checker.check(
+    "PostFeatureDevResult posts summary to Issue via createIssueNote",
+    file_contains("app/Jobs/PostFeatureDevResult.php", "createIssueNote"),
+)
+checker.check(
+    "PostFeatureDevResult stores mr_iid on task",
+    file_contains("app/Jobs/PostFeatureDevResult.php", "mr_iid"),
+)
+checker.check(
+    "PostFeatureDevResult stores comment_id on task",
+    file_contains("app/Jobs/PostFeatureDevResult.php", "comment_id"),
+)
+checker.check(
+    "PostFeatureDevResult formats summary with AI Feature Development header",
+    file_contains("app/Jobs/PostFeatureDevResult.php", "AI Feature Development Complete"),
+)
+checker.check(
+    "PostFeatureDevResult includes MR reference in summary",
+    file_contains("app/Jobs/PostFeatureDevResult.php", "!{$mrIid}"),
+)
+
+# T44.2: ProcessTaskResult dispatches PostFeatureDevResult
+checker.check(
+    "ProcessTaskResult dispatches PostFeatureDevResult for feature_dev",
+    file_contains("app/Jobs/ProcessTaskResult.php", "PostFeatureDevResult"),
+)
+checker.check(
+    "ProcessTaskResult checks feature_dev type for result posting",
+    file_contains("app/Jobs/ProcessTaskResult.php", "shouldPostFeatureDevResult"),
+)
+
+# T44.3: EventRouter classifies ai::develop label (already from T13)
+checker.check(
+    "EventRouter classifies ai::develop label as feature_dev",
+    file_contains("app/Services/EventRouter.php", "ai::develop"),
+)
+checker.check(
+    "EventRouter assigns low priority to feature_dev",
+    file_contains("app/Services/EventRouter.php", "'feature_dev', 'low'"),
+)
+
+# T44.4: Permission check for feature_dev (already from T41)
+checker.check(
+    "WebhookController requires review.trigger for feature_dev",
+    file_contains(
+        "app/Http/Controllers/WebhookController.php",
+        "'feature_dev'",
+    ),
+)
+
+# T44.5: E2E integration test
+checker.check(
+    "Feature dev E2E test file exists",
+    file_exists("tests/Feature/FeatureDevEndToEndTest.php"),
+)
+checker.check(
+    "E2E test covers full feature dev flow",
+    file_contains(
+        "tests/Feature/FeatureDevEndToEndTest.php",
+        "completes full feature dev flow",
+    ),
+)
+checker.check(
+    "E2E test verifies FeatureDev task type",
+    file_contains(
+        "tests/Feature/FeatureDevEndToEndTest.php",
+        "TaskType::FeatureDev",
+    ),
+)
+checker.check(
+    "E2E test verifies low priority",
+    file_contains(
+        "tests/Feature/FeatureDevEndToEndTest.php",
+        "TaskPriority::Low",
+    ),
+)
+checker.check(
+    "E2E test verifies MR creation via GitLab API",
+    file_contains(
+        "tests/Feature/FeatureDevEndToEndTest.php",
+        "merge_requests",
+    ),
+)
+checker.check(
+    "E2E test verifies summary posted on Issue",
+    file_contains(
+        "tests/Feature/FeatureDevEndToEndTest.php",
+        "issues/8/notes",
+    ),
+)
+checker.check(
+    "E2E test verifies mr_iid stored on task",
+    file_contains(
+        "tests/Feature/FeatureDevEndToEndTest.php",
+        "mr_iid",
+    ),
+)
+checker.check(
+    "E2E test verifies VUNNIX_ISSUE_IID pipeline variable",
+    file_contains(
+        "tests/Feature/FeatureDevEndToEndTest.php",
+        "VUNNIX_ISSUE_IID",
+    ),
+)
+checker.check(
+    "E2E test includes permission denied scenario",
+    file_contains(
+        "tests/Feature/FeatureDevEndToEndTest.php",
+        "permission_denied",
+    ),
+)
+checker.check(
+    "E2E test includes label filtering scenario",
+    file_contains(
+        "tests/Feature/FeatureDevEndToEndTest.php",
+        "without ai::develop label",
+    ),
+)
+checker.check(
+    "E2E test verifies task completed status",
+    file_contains(
+        "tests/Feature/FeatureDevEndToEndTest.php",
+        "TaskStatus::Completed",
+    ),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()

@@ -96,6 +96,11 @@ class ProcessTaskResult implements ShouldQueue
         if ($this->shouldPostIssueComment($task)) {
             PostIssueComment::dispatch($task->id);
         }
+
+        // T44: Create MR and post summary for feature development
+        if ($this->shouldPostFeatureDevResult($task)) {
+            PostFeatureDevResult::dispatch($task->id);
+        }
     }
 
     private function shouldPostSummaryComment(Task $task): bool
@@ -140,6 +145,18 @@ class ProcessTaskResult implements ShouldQueue
         return $task->issue_iid !== null
             && $task->type === TaskType::IssueDiscussion
             && ($task->result['intent'] ?? null) === 'issue_discussion';
+    }
+
+    /**
+     * T44: Create MR and post summary for feature development tasks.
+     *
+     * Fires for FeatureDev tasks with an Issue context (triggered by ai::develop label).
+     * The job creates the MR from the executor's branch and posts a summary on the Issue.
+     */
+    private function shouldPostFeatureDevResult(Task $task): bool
+    {
+        return $task->issue_iid !== null
+            && $task->type === TaskType::FeatureDev;
     }
 
     /**
