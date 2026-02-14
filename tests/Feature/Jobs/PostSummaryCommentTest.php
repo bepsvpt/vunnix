@@ -50,7 +50,7 @@ function completedCodeReviewTask(): Task
     return $task;
 }
 
-// ─── Posts comment and stores note ID ───────────────────────────
+// ─── Creates new comment when no placeholder exists ─────────────
 
 it('posts the summary comment to GitLab and stores the note ID', function () {
     Http::fake([
@@ -122,4 +122,55 @@ it('returns early if the task has no result', function () {
     $job->handle(app(GitLabClient::class));
 
     Http::assertNothingSent();
+});
+
+// ─── T36: Updates placeholder comment in-place ──────────────────
+
+it('updates existing placeholder comment in-place when comment_id exists', function () {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/*/notes/*' => Http::response([
+            'id' => 5555,
+            'body' => 'updated',
+        ], 200),
+    ]);
+
+    $task = completedCodeReviewTask();
+    $task->comment_id = 5555;
+    $task->save();
+
+    $job = new PostSummaryComment($task->id);
+    $job->handle(app(GitLabClient::class));
+
+    // Should use PUT (update), not POST (create)
+    Http::assertSent(function ($request) {
+        return $request->method() === 'PUT'
+            && str_contains($request->url(), '/notes/5555')
+            && str_contains($request['body'], '## 🤖 AI Code Review');
+    });
+
+    // comment_id should remain unchanged
+    $task->refresh();
+    expect($task->comment_id)->toBe(5555);
+});
+
+it('does not POST a new comment when updating placeholder in-place', function () {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/*/notes/*' => Http::response([
+            'id' => 5555,
+            'body' => 'updated',
+        ], 200),
+    ]);
+
+    $task = completedCodeReviewTask();
+    $task->comment_id = 5555;
+    $task->save();
+
+    $job = new PostSummaryComment($task->id);
+    $job->handle(app(GitLabClient::class));
+
+    // Should NOT have any POST to /notes (only PUT to /notes/5555)
+    Http::assertNotSent(function ($request) {
+        return $request->method() === 'POST'
+            && str_contains($request->url(), '/notes');
+    });
 });

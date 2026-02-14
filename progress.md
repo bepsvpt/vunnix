@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 35 / 116 (30%)
-- **Current Task:** T36 — Placeholder-then-update pattern
-- **Last Verified:** T35
+- **Tasks Complete:** 36 / 116 (31%)
+- **Current Task:** T37 — Retry + backoff
+- **Last Verified:** T36
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (24/35)
+## M2 — Path A Functional (25/35)
 
 ### Webhook & Event Routing
 
@@ -63,11 +63,11 @@
 - [x] T33: Summary comment — Layer 1 [Depends: T32]
 - [x] T34: Inline discussion threads — Layer 2 [Depends: T32]
 - [x] T35: Labels + commit status — Layer 3 [Depends: T32]
-- [ ] **T36:** Placeholder-then-update pattern [Depends: T33]
+- [x] T36: Placeholder-then-update pattern [Depends: T33]
 
 ### Retry & Failure
 
-- [ ] T37: Retry + backoff (30s → 2m → 8m, max 3) [Depends: T16]
+- [ ] **T37:** Retry + backoff (30s → 2m → 8m, max 3) [Depends: T16]
 - [ ] T38: Failure handling (DLQ, failure comment) [Depends: T37, T32]
 
 ### End-to-End & Variations

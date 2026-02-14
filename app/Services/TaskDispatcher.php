@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\ReviewStrategy;
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
+use App\Jobs\PostPlaceholderComment;
 use App\Models\Task;
 use Illuminate\Support\Facades\Log;
 
@@ -63,8 +64,8 @@ class TaskDispatcher
 
         $task->transitionTo(TaskStatus::Running);
 
-        // T32 (Result Processor) will handle the actual GitLab API calls.
-        // For now, mark the transition so the pipeline is ready for T32 to plug into.
+        $this->dispatchPlaceholder($task);
+
         Log::info('TaskDispatcher: server-side task ready for Result Processor', [
             'task_id' => $task->id,
         ]);
@@ -108,6 +109,8 @@ class TaskDispatcher
 
         $task->transitionTo(TaskStatus::Running);
 
+        $this->dispatchPlaceholder($task);
+
         // Generate a task-scoped bearer token for executor authentication
         $taskToken = $this->taskTokenService->generate($task->id);
 
@@ -141,6 +144,24 @@ class TaskDispatcher
 
             $task->transitionTo(TaskStatus::Failed, 'pipeline_trigger_failed');
         }
+    }
+
+    /**
+     * Dispatch a placeholder comment on the MR if the task qualifies.
+     *
+     * Only MR-backed review tasks (CodeReview, SecurityAudit) get a placeholder.
+     */
+    private function dispatchPlaceholder(Task $task): void
+    {
+        if ($task->mr_iid === null) {
+            return;
+        }
+
+        if (! in_array($task->type, [TaskType::CodeReview, TaskType::SecurityAudit], true)) {
+            return;
+        }
+
+        PostPlaceholderComment::dispatch($task->id);
     }
 
     /**

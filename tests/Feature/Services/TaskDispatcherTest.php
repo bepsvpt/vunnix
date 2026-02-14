@@ -4,6 +4,7 @@ use App\Enums\ReviewStrategy;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
+use App\Jobs\PostPlaceholderComment;
 use App\Models\Project;
 use App\Models\ProjectConfig;
 use App\Models\Task;
@@ -12,6 +13,7 @@ use App\Services\StrategyResolver;
 use App\Services\TaskDispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
@@ -52,6 +54,7 @@ it('routes runner task (CodeReview) and transitions to running', function () {
             'id' => 1000,
             'status' => 'pending',
         ]),
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1, 'body' => 'placeholder'], 201),
     ]);
 
     $task = Task::factory()->queued()->create([
@@ -117,6 +120,7 @@ it('selects frontend-review strategy for .vue files', function () {
             'id' => 1000,
             'status' => 'pending',
         ]),
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1, 'body' => 'placeholder'], 201),
     ]);
 
     $task = Task::factory()->queued()->create([
@@ -151,6 +155,7 @@ it('selects backend-review strategy for .php files', function () {
             'id' => 1000,
             'status' => 'pending',
         ]),
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1, 'body' => 'placeholder'], 201),
     ]);
 
     $task = Task::factory()->queued()->create([
@@ -185,6 +190,7 @@ it('selects mixed-review strategy for frontend + backend files', function () {
             'id' => 1000,
             'status' => 'pending',
         ]),
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1, 'body' => 'placeholder'], 201),
     ]);
 
     $task = Task::factory()->queued()->create([
@@ -219,6 +225,7 @@ it('selects security-audit strategy for security-sensitive files', function () {
             'id' => 1000,
             'status' => 'pending',
         ]),
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1, 'body' => 'placeholder'], 201),
     ]);
 
     $task = Task::factory()->queued()->create([
@@ -249,6 +256,7 @@ it('uses security-audit strategy for SecurityAudit task type', function () {
             'id' => 1000,
             'status' => 'pending',
         ]),
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1, 'body' => 'placeholder'], 201),
     ]);
 
     $task = Task::factory()->queued()->create([
@@ -367,6 +375,7 @@ it('falls back to mixed-review when GitLab API fails', function () {
             'id' => 1000,
             'status' => 'pending',
         ]),
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1, 'body' => 'placeholder'], 201),
     ]);
 
     $task = Task::factory()->queued()->create([
@@ -401,4 +410,116 @@ it('does not store strategy for server-side tasks', function () {
     $task->refresh();
 
     expect($task->result)->toBeNull();
+});
+
+// ─── T36: Placeholder dispatch ──────────────────────────────────
+
+it('dispatches PostPlaceholderComment for CodeReview with mr_iid', function () {
+    Queue::fake();
+
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/merge_requests/1/changes' => Http::response([
+            'changes' => [
+                ['new_path' => 'app/Models/User.php'],
+            ],
+        ]),
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::CodeReview,
+        'project_id' => $project->id,
+        'mr_iid' => 1,
+    ]);
+
+    $dispatcher = app(TaskDispatcher::class);
+    $dispatcher->dispatch($task);
+
+    Queue::assertPushed(PostPlaceholderComment::class, function ($job) use ($task) {
+        return $job->taskId === $task->id;
+    });
+});
+
+it('dispatches PostPlaceholderComment for SecurityAudit with mr_iid', function () {
+    Queue::fake();
+
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::SecurityAudit,
+        'project_id' => $project->id,
+        'mr_iid' => 1,
+    ]);
+
+    $dispatcher = app(TaskDispatcher::class);
+    $dispatcher->dispatch($task);
+
+    Queue::assertPushed(PostPlaceholderComment::class, function ($job) use ($task) {
+        return $job->taskId === $task->id;
+    });
+});
+
+it('does not dispatch PostPlaceholderComment for tasks without mr_iid', function () {
+    Queue::fake();
+
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::FeatureDev,
+        'project_id' => $project->id,
+        'mr_iid' => null,
+        'issue_iid' => 5,
+    ]);
+
+    $dispatcher = app(TaskDispatcher::class);
+    $dispatcher->dispatch($task);
+
+    Queue::assertNotPushed(PostPlaceholderComment::class);
+});
+
+it('does not dispatch PostPlaceholderComment for non-review task types', function () {
+    Http::fake();
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::PrdCreation,
+        'mr_iid' => null,
+        'issue_iid' => 10,
+    ]);
+
+    $dispatcher = app(TaskDispatcher::class);
+    $dispatcher->dispatch($task);
+
+    // PrdCreation is server-side — no placeholder needed
+    Http::assertNothingSent();
 });

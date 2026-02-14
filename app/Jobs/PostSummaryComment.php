@@ -55,19 +55,35 @@ class PostSummaryComment implements ShouldQueue
         $markdown = $formatter->format($task->result);
 
         try {
-            $note = $gitLab->createMergeRequestNote(
-                $task->project->gitlab_project_id,
-                $task->mr_iid,
-                $markdown,
-            );
+            if ($task->comment_id !== null) {
+                // T36: Update the placeholder comment in-place
+                $gitLab->updateMergeRequestNote(
+                    $task->project->gitlab_project_id,
+                    $task->mr_iid,
+                    $task->comment_id,
+                    $markdown,
+                );
 
-            $task->comment_id = $note['id'];
-            $task->save();
+                Log::info('PostSummaryComment: updated placeholder in-place', [
+                    'task_id' => $this->taskId,
+                    'note_id' => $task->comment_id,
+                ]);
+            } else {
+                // Fallback: create a new comment (no placeholder was posted)
+                $note = $gitLab->createMergeRequestNote(
+                    $task->project->gitlab_project_id,
+                    $task->mr_iid,
+                    $markdown,
+                );
 
-            Log::info('PostSummaryComment: posted', [
-                'task_id' => $this->taskId,
-                'note_id' => $note['id'],
-            ]);
+                $task->comment_id = $note['id'];
+                $task->save();
+
+                Log::info('PostSummaryComment: posted new comment', [
+                    'task_id' => $this->taskId,
+                    'note_id' => $note['id'],
+                ]);
+            }
         } catch (\Throwable $e) {
             Log::warning('PostSummaryComment: failed to post comment', [
                 'task_id' => $this->taskId,

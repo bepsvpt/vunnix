@@ -3394,6 +3394,127 @@ checker.check(
 )
 
 # ============================================================
+#  T36: Placeholder-then-update pattern
+# ============================================================
+section("T36: Placeholder-then-Update Pattern")
+
+# PostPlaceholderComment job
+checker.check(
+    "PostPlaceholderComment job exists",
+    file_exists("app/Jobs/PostPlaceholderComment.php"),
+)
+checker.check(
+    "PostPlaceholderComment implements ShouldQueue",
+    file_contains("app/Jobs/PostPlaceholderComment.php", "ShouldQueue"),
+)
+checker.check(
+    "PostPlaceholderComment uses vunnix-server queue",
+    file_contains("app/Jobs/PostPlaceholderComment.php", "QueueNames::SERVER"),
+)
+checker.check(
+    "PostPlaceholderComment posts placeholder text",
+    file_contains(
+        "app/Jobs/PostPlaceholderComment.php",
+        "AI Review in progress",
+    ),
+)
+checker.check(
+    "PostPlaceholderComment calls createMergeRequestNote",
+    file_contains("app/Jobs/PostPlaceholderComment.php", "createMergeRequestNote"),
+)
+checker.check(
+    "PostPlaceholderComment stores comment_id on task",
+    file_contains("app/Jobs/PostPlaceholderComment.php", "comment_id"),
+)
+checker.check(
+    "PostPlaceholderComment is best-effort (catches exceptions)",
+    file_contains("app/Jobs/PostPlaceholderComment.php", "catch"),
+)
+checker.check(
+    "PostPlaceholderComment skips if comment_id already set (idempotent)",
+    file_contains(
+        "app/Jobs/PostPlaceholderComment.php",
+        "comment_id !== null",
+    ),
+)
+
+# TaskDispatcher dispatches placeholder
+checker.check(
+    "TaskDispatcher imports PostPlaceholderComment",
+    file_contains("app/Services/TaskDispatcher.php", "PostPlaceholderComment"),
+)
+checker.check(
+    "TaskDispatcher has dispatchPlaceholder method",
+    file_contains("app/Services/TaskDispatcher.php", "function dispatchPlaceholder"),
+)
+checker.check(
+    "TaskDispatcher dispatches placeholder for both server and runner paths",
+    file_contains("app/Services/TaskDispatcher.php", "dispatchPlaceholder($task)"),
+)
+checker.check(
+    "TaskDispatcher limits placeholder to CodeReview and SecurityAudit",
+    file_contains("app/Services/TaskDispatcher.php", "TaskType::CodeReview"),
+)
+
+# PostSummaryComment update-in-place
+checker.check(
+    "PostSummaryComment uses updateMergeRequestNote when comment_id exists",
+    file_contains("app/Jobs/PostSummaryComment.php", "updateMergeRequestNote"),
+)
+checker.check(
+    "PostSummaryComment branches on comment_id for PUT vs POST",
+    file_contains("app/Jobs/PostSummaryComment.php", "comment_id !== null"),
+)
+
+# Tests
+checker.check(
+    "PostPlaceholderComment test exists",
+    file_exists("tests/Feature/Jobs/PostPlaceholderCommentTest.php"),
+)
+checker.check(
+    "Test covers posting placeholder and storing note ID",
+    file_contains(
+        "tests/Feature/Jobs/PostPlaceholderCommentTest.php",
+        "stores the note ID",
+    ),
+)
+checker.check(
+    "Test covers idempotent skip when comment_id exists",
+    file_contains(
+        "tests/Feature/Jobs/PostPlaceholderCommentTest.php",
+        "already has a comment_id",
+    ),
+)
+checker.check(
+    "Test covers best-effort failure handling",
+    file_contains(
+        "tests/Feature/Jobs/PostPlaceholderCommentTest.php",
+        "does not throw",
+    ),
+)
+checker.check(
+    "PostSummaryComment test covers update-in-place",
+    file_contains(
+        "tests/Feature/Jobs/PostSummaryCommentTest.php",
+        "updates existing placeholder",
+    ),
+)
+checker.check(
+    "TaskDispatcher test covers placeholder dispatch for CodeReview",
+    file_contains(
+        "tests/Feature/Services/TaskDispatcherTest.php",
+        "PostPlaceholderComment",
+    ),
+)
+checker.check(
+    "TaskDispatcher test covers no placeholder for non-review types",
+    file_contains(
+        "tests/Feature/Services/TaskDispatcherTest.php",
+        "does not dispatch PostPlaceholderComment",
+    ),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")
