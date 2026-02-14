@@ -1948,6 +1948,306 @@ checker.check(
 )
 
 # ============================================================
+#  T27: Feature-dev skill
+# ============================================================
+section("T27: Feature-Dev Skill")
+
+# File existence and metadata
+checker.check(
+    "feature-dev.md skill exists",
+    file_exists("executor/.claude/skills/feature-dev.md"),
+)
+checker.check(
+    "Skill has version header",
+    file_contains("executor/.claude/skills/feature-dev.md", 'version: "1.0"'),
+)
+checker.check(
+    "Skill has updated date header",
+    file_contains("executor/.claude/skills/feature-dev.md", "updated:"),
+)
+
+# Core requirement: implement feature per task parameters
+checker.check(
+    "Skill describes implementing a feature",
+    file_contains("executor/.claude/skills/feature-dev.md", "implementing a feature"),
+)
+checker.check(
+    "Skill references Issue IID parameter",
+    file_contains("executor/.claude/skills/feature-dev.md", "Issue IID"),
+)
+checker.check(
+    "Skill references branch prefix parameter",
+    file_contains("executor/.claude/skills/feature-dev.md", "Branch prefix"),
+)
+checker.check(
+    "Skill references target branch parameter",
+    file_contains("executor/.claude/skills/feature-dev.md", "Target branch"),
+)
+
+# Core requirement: follow project conventions (CLAUDE.md)
+checker.check(
+    "Skill instructs to read project CLAUDE.md",
+    file_contains("executor/.claude/skills/feature-dev.md", "CLAUDE.md"),
+)
+checker.check(
+    "Skill instructs to follow project conventions",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Follow Project Conventions"
+    ),
+)
+checker.check(
+    "Skill instructs to read existing files before creating new ones",
+    file_contains("executor/.claude/skills/feature-dev.md", "Read before writing"),
+)
+checker.check(
+    "Skill instructs to match naming conventions",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Match naming conventions"
+    ),
+)
+checker.check(
+    "Skill instructs to follow directory structure",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Follow directory structure"
+    ),
+)
+checker.check(
+    "Skill instructs to use existing abstractions",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Use existing abstractions"
+    ),
+)
+
+# Core requirement: create clean code
+checker.check(
+    "Skill has clean code principles",
+    file_contains("executor/.claude/skills/feature-dev.md", "Write Clean Code"),
+)
+checker.check(
+    "Skill instructs single responsibility",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Single responsibility"
+    ),
+)
+checker.check(
+    "Skill instructs clear naming",
+    file_contains("executor/.claude/skills/feature-dev.md", "Clear naming"),
+)
+checker.check(
+    "Skill instructs appropriate error handling",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Handle errors appropriately"
+    ),
+)
+checker.check(
+    "Skill prohibits dead code",
+    file_contains("executor/.claude/skills/feature-dev.md", "No dead code"),
+)
+
+# Core requirement: write tests if project has test suite
+checker.check(
+    "Skill has test writing section",
+    file_contains("executor/.claude/skills/feature-dev.md", "Write Tests"),
+)
+checker.check(
+    "Skill detects test framework",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Detect the Test Framework"
+    ),
+)
+checker.check(
+    "Skill checks for PHP test frameworks",
+    file_contains("executor/.claude/skills/feature-dev.md", "phpunit.xml"),
+)
+checker.check(
+    "Skill checks for Pest test framework",
+    file_contains("executor/.claude/skills/feature-dev.md", "Pest"),
+)
+checker.check(
+    "Skill checks for JavaScript test frameworks",
+    file_contains("executor/.claude/skills/feature-dev.md", "vitest"),
+)
+checker.check(
+    "Skill instructs to follow existing test patterns",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md",
+        "Follow existing test patterns",
+    ),
+)
+checker.check(
+    "Skill instructs to cover main success path",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Cover the main success path"
+    ),
+)
+checker.check(
+    "Skill instructs to cover error paths",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Cover key error paths"
+    ),
+)
+checker.check(
+    "Skill instructs to mock external services",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Mock external services"
+    ),
+)
+checker.check(
+    "Skill handles projects with no test suite",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "No Test Suite Exists"
+    ),
+)
+
+# Scope discipline
+checker.check(
+    "Skill has scope discipline section",
+    file_contains("executor/.claude/skills/feature-dev.md", "Scope Discipline"),
+)
+checker.check(
+    "Skill instructs to implement only what was requested",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md",
+        "Implement what was requested",
+    ),
+)
+checker.check(
+    "Skill prohibits refactoring existing code",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Do not refactor existing code"
+    ),
+)
+checker.check(
+    "Skill prohibits modifying unrelated files",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Do not modify unrelated files"
+    ),
+)
+
+# Verification step
+checker.check(
+    "Skill has verify step before finalizing",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Verify Your Work"
+    ),
+)
+checker.check(
+    "Skill instructs to run project linter",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Run the project's linter"
+    ),
+)
+checker.check(
+    "Skill instructs to run test suite",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Run the test suite"
+    ),
+)
+
+# Branch creation
+checker.check(
+    "Skill instructs to create feature branch",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Create the Feature Branch"
+    ),
+)
+checker.check(
+    "Skill shows git checkout command",
+    file_contains("executor/.claude/skills/feature-dev.md", "git checkout -b"),
+)
+
+# Commit instructions
+checker.check(
+    "Skill instructs to commit changes",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md", "Commit Your Changes"
+    ),
+)
+checker.check(
+    "Skill shows git commit command",
+    file_contains("executor/.claude/skills/feature-dev.md", "git commit"),
+)
+
+# Edge cases
+checker.check(
+    "Skill handles insufficient Issue detail",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md",
+        "Issue has insufficient detail",
+    ),
+)
+checker.check(
+    "Skill handles feature conflicts with existing code",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md",
+        "Feature conflicts with existing code",
+    ),
+)
+checker.check(
+    "Skill handles database changes",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md",
+        "Feature requires database changes",
+    ),
+)
+checker.check(
+    "Skill handles multi-language features",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md",
+        "Feature spans multiple languages",
+    ),
+)
+
+# What NOT to do — scope guard
+checker.check(
+    "Skill prohibits creating documentation files",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md",
+        "Do not create documentation files",
+    ),
+)
+checker.check(
+    "Skill prohibits modifying CI/CD configuration",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md",
+        "Do not modify CI/CD configuration",
+    ),
+)
+
+# Output schema — feature development format
+checker.check(
+    "Skill defines JSON output with branch field",
+    file_contains("executor/.claude/skills/feature-dev.md", '"branch"'),
+)
+checker.check(
+    "Skill defines mr_title field",
+    file_contains("executor/.claude/skills/feature-dev.md", "mr_title"),
+)
+checker.check(
+    "Skill defines mr_description field",
+    file_contains("executor/.claude/skills/feature-dev.md", "mr_description"),
+)
+checker.check(
+    "Skill defines files_changed field",
+    file_contains("executor/.claude/skills/feature-dev.md", "files_changed"),
+)
+checker.check(
+    "Skill defines tests_added field",
+    file_contains("executor/.claude/skills/feature-dev.md", "tests_added"),
+)
+checker.check(
+    "Skill defines notes field",
+    file_contains("executor/.claude/skills/feature-dev.md", '"notes"'),
+)
+checker.check(
+    "Skill produces only JSON output (no fencing)",
+    file_contains(
+        "executor/.claude/skills/feature-dev.md",
+        "No markdown fencing",
+    ),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")
