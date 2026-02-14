@@ -56,6 +56,9 @@ __pycache__/
 # Runner session logs (can be large)
 verify/logs/
 
+# Session handoff (ephemeral Claude-to-Claude state)
+handoff.md
+
 **/caddy
 frankenphp
 frankenphp-worker.php
