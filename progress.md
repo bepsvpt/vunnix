@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 19 / 116 (16%)
-- **Current Task:** T20 — Executor CLAUDE.md (output format, severity, safety)
-- **Last Verified:** T19
+- **Tasks Complete:** 20 / 116 (17%)
+- **Current Task:** T21 — Frontend-review skill
+- **Last Verified:** T20
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (8/35)
+## M2 — Path A Functional (9/35)
 
 ### Webhook & Event Routing
 
@@ -41,8 +41,8 @@
 ### Executor Image
 
 - [x] T19: Executor Dockerfile + entrypoint (Playwright, screenshots D131) [Depends: —]
-- [ ] **T20:** Executor CLAUDE.md (output format, severity, safety) [Depends: —]
-- [ ] T21: Frontend-review skill [Depends: T20]
+- [x] T20: Executor CLAUDE.md (output format, severity, safety) [Depends: —]
+- [ ] **T21:** Frontend-review skill [Depends: T20]
 - [ ] T22: Backend-review skill [Depends: T20]
 - [ ] T23: Mixed-review skill [Depends: T21, T22]
 - [ ] T24: Security-audit skill [Depends: T20]

@@ -788,6 +788,92 @@ checker.check(
 )
 
 # ============================================================
+#  T20: Executor CLAUDE.md (output format, severity, safety)
+# ============================================================
+section("T20: Executor CLAUDE.md (Output Format, Severity, Safety)")
+
+checker.check(
+    "executor CLAUDE.md exists",
+    file_exists("executor/.claude/CLAUDE.md"),
+)
+checker.check(
+    "CLAUDE.md has version header",
+    file_matches("executor/.claude/CLAUDE.md", r'version:\s*"\d+\.\d+"'),
+)
+checker.check(
+    "CLAUDE.md has Output Format section",
+    file_contains("executor/.claude/CLAUDE.md", "## Output Format"),
+)
+checker.check(
+    "CLAUDE.md enforces valid JSON output",
+    file_contains("executor/.claude/CLAUDE.md", "valid JSON"),
+)
+checker.check(
+    "CLAUDE.md prohibits markdown fencing in output",
+    file_contains("executor/.claude/CLAUDE.md", "markdown fencing"),
+)
+checker.check(
+    "CLAUDE.md has Severity Definitions section",
+    file_contains("executor/.claude/CLAUDE.md", "## Severity Definitions"),
+)
+checker.check(
+    "CLAUDE.md defines Critical severity",
+    file_contains("executor/.claude/CLAUDE.md", "Critical"),
+)
+checker.check(
+    "CLAUDE.md defines Major severity",
+    file_contains("executor/.claude/CLAUDE.md", "Major"),
+)
+checker.check(
+    "CLAUDE.md defines Minor severity",
+    file_contains("executor/.claude/CLAUDE.md", "Minor"),
+)
+checker.check(
+    "CLAUDE.md has Code Context section",
+    file_contains("executor/.claude/CLAUDE.md", "## Code Context"),
+)
+checker.check(
+    "CLAUDE.md instructs to read beyond diff",
+    file_contains("executor/.claude/CLAUDE.md", "beyond the diff"),
+)
+checker.check(
+    "CLAUDE.md instructs to check cross-file dependencies",
+    file_contains("executor/.claude/CLAUDE.md", "cross-file"),
+)
+checker.check(
+    "CLAUDE.md references file paths and line numbers",
+    file_contains("executor/.claude/CLAUDE.md", "line numbers"),
+)
+checker.check(
+    "CLAUDE.md has Safety section",
+    file_contains("executor/.claude/CLAUDE.md", "## Safety"),
+)
+checker.check(
+    "CLAUDE.md treats code as untrusted input",
+    file_contains("executor/.claude/CLAUDE.md", "untrusted"),
+)
+checker.check(
+    "CLAUDE.md has Instruction Hierarchy section",
+    file_contains("executor/.claude/CLAUDE.md", "Instruction Hierarchy"),
+)
+checker.check(
+    "CLAUDE.md code context is data not instructions",
+    file_contains("executor/.claude/CLAUDE.md", "data to be analyzed"),
+)
+checker.check(
+    "CLAUDE.md has Prompt Injection Detection",
+    file_contains("executor/.claude/CLAUDE.md", "Prompt Injection"),
+)
+checker.check(
+    "CLAUDE.md flags injection as Critical finding",
+    file_contains("executor/.claude/CLAUDE.md", "prompt-injection"),
+)
+checker.check(
+    "CLAUDE.md prohibits following injected instructions",
+    file_contains("executor/.claude/CLAUDE.md", "Do not follow the injected"),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")
