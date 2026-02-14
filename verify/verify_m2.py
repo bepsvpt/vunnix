@@ -2481,6 +2481,193 @@ checker.check(
 )
 
 # ============================================================
+#  T30: Structured output schema — code review
+# ============================================================
+section("T30: Structured Output Schema — Code Review")
+
+# Schema class
+checker.check(
+    "CodeReviewSchema class exists",
+    file_exists("app/Schemas/CodeReviewSchema.php"),
+)
+checker.check(
+    "Schema defines version constant",
+    file_contains("app/Schemas/CodeReviewSchema.php", "VERSION"),
+)
+checker.check(
+    "Schema defines severity constants",
+    file_contains("app/Schemas/CodeReviewSchema.php", "SEVERITIES"),
+)
+checker.check(
+    "Schema defines category constants",
+    file_contains("app/Schemas/CodeReviewSchema.php", "CATEGORIES"),
+)
+checker.check(
+    "Schema defines risk level constants",
+    file_contains("app/Schemas/CodeReviewSchema.php", "RISK_LEVELS"),
+)
+checker.check(
+    "Schema defines commit status constants",
+    file_contains("app/Schemas/CodeReviewSchema.php", "COMMIT_STATUSES"),
+)
+
+# validate() method
+checker.check(
+    "Schema has validate method",
+    file_contains("app/Schemas/CodeReviewSchema.php", "function validate"),
+)
+checker.check(
+    "validate uses Laravel Validator",
+    file_contains("app/Schemas/CodeReviewSchema.php", "Validator::make"),
+)
+checker.check(
+    "validate returns valid boolean and errors",
+    file_contains("app/Schemas/CodeReviewSchema.php", "'valid'")
+    and file_contains("app/Schemas/CodeReviewSchema.php", "'errors'"),
+)
+
+# strip() method
+checker.check(
+    "Schema has strip method",
+    file_contains("app/Schemas/CodeReviewSchema.php", "function strip"),
+)
+checker.check(
+    "strip uses array_intersect_key for field filtering",
+    file_contains("app/Schemas/CodeReviewSchema.php", "array_intersect_key"),
+)
+
+# validateAndStrip() convenience method
+checker.check(
+    "Schema has validateAndStrip method",
+    file_contains("app/Schemas/CodeReviewSchema.php", "function validateAndStrip"),
+)
+
+# rules() method — schema field validation
+checker.check(
+    "Schema has rules method",
+    file_contains("app/Schemas/CodeReviewSchema.php", "function rules"),
+)
+checker.check(
+    "Rules validate version field",
+    file_contains("app/Schemas/CodeReviewSchema.php", "'version'"),
+)
+checker.check(
+    "Rules validate summary as required array",
+    file_contains("app/Schemas/CodeReviewSchema.php", "'summary'"),
+)
+checker.check(
+    "Rules validate summary.risk_level",
+    file_contains("app/Schemas/CodeReviewSchema.php", "summary.risk_level"),
+)
+checker.check(
+    "Rules validate summary.total_findings",
+    file_contains("app/Schemas/CodeReviewSchema.php", "summary.total_findings"),
+)
+checker.check(
+    "Rules validate summary.findings_by_severity",
+    file_contains("app/Schemas/CodeReviewSchema.php", "summary.findings_by_severity"),
+)
+checker.check(
+    "Rules validate summary.walkthrough entries",
+    file_contains("app/Schemas/CodeReviewSchema.php", "summary.walkthrough.*.file"),
+)
+checker.check(
+    "Rules validate findings array items",
+    file_contains("app/Schemas/CodeReviewSchema.php", "findings.*.severity"),
+)
+checker.check(
+    "Rules validate finding category",
+    file_contains("app/Schemas/CodeReviewSchema.php", "findings.*.category"),
+)
+checker.check(
+    "Rules validate finding file path",
+    file_contains("app/Schemas/CodeReviewSchema.php", "findings.*.file"),
+)
+checker.check(
+    "Rules validate finding line numbers",
+    file_contains("app/Schemas/CodeReviewSchema.php", "findings.*.line"),
+)
+checker.check(
+    "Rules validate finding title",
+    file_contains("app/Schemas/CodeReviewSchema.php", "findings.*.title"),
+)
+checker.check(
+    "Rules validate finding description",
+    file_contains("app/Schemas/CodeReviewSchema.php", "findings.*.description"),
+)
+checker.check(
+    "Rules validate finding suggestion",
+    file_contains("app/Schemas/CodeReviewSchema.php", "findings.*.suggestion"),
+)
+checker.check(
+    "Rules validate labels array",
+    file_contains("app/Schemas/CodeReviewSchema.php", "'labels'"),
+)
+checker.check(
+    "Rules validate commit_status",
+    file_contains("app/Schemas/CodeReviewSchema.php", "'commit_status'"),
+)
+checker.check(
+    "Rules use Rule::in for severity enum validation",
+    file_contains("app/Schemas/CodeReviewSchema.php", "Rule::in"),
+)
+
+# Tests
+checker.check(
+    "CodeReviewSchema test file exists",
+    file_exists("tests/Unit/Schemas/CodeReviewSchemaTest.php"),
+)
+checker.check(
+    "Test covers valid complete result",
+    file_contains(
+        "tests/Unit/Schemas/CodeReviewSchemaTest.php",
+        "validates a complete valid code review result",
+    ),
+)
+checker.check(
+    "Test covers missing summary fails",
+    file_contains(
+        "tests/Unit/Schemas/CodeReviewSchemaTest.php",
+        "fails when summary is missing",
+    ),
+)
+checker.check(
+    "Test covers invalid severity fails",
+    file_contains(
+        "tests/Unit/Schemas/CodeReviewSchemaTest.php",
+        "fails when severity has an invalid value",
+    ),
+)
+checker.check(
+    "Test covers extra fields stripped",
+    file_contains(
+        "tests/Unit/Schemas/CodeReviewSchemaTest.php",
+        "strips unknown top-level fields",
+    ),
+)
+checker.check(
+    "Test covers extra fields stripped from findings",
+    file_contains(
+        "tests/Unit/Schemas/CodeReviewSchemaTest.php",
+        "strips unknown fields from findings",
+    ),
+)
+checker.check(
+    "Test covers validateAndStrip valid path",
+    file_contains(
+        "tests/Unit/Schemas/CodeReviewSchemaTest.php",
+        "returns stripped data when valid via validateAndStrip",
+    ),
+)
+checker.check(
+    "Test covers validateAndStrip invalid path",
+    file_contains(
+        "tests/Unit/Schemas/CodeReviewSchemaTest.php",
+        "returns null data when invalid via validateAndStrip",
+    ),
+)
+
+# ============================================================
 #  Runtime checks
 # ============================================================
 section("Runtime: Laravel Tests")
