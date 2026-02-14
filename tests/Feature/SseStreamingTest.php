@@ -102,7 +102,7 @@ it('streams an AI response as SSE for a valid message', function () {
     expect($content)->toContain('response');
 });
 
-it('saves the user message before streaming', function () {
+it('persists the user message via SDK middleware after streaming', function () {
     VunnixAgent::fake(['AI response text']);
 
     $project = Project::factory()->create();
@@ -116,14 +116,13 @@ it('saves the user message before streaming', function () {
 
     $response->assertOk();
 
-    // Consume the stream to trigger all callbacks
+    // Consume the stream to trigger SDK middleware callbacks
     $response->streamedContent();
 
-    // User message should be persisted
+    // User message should be persisted by the SDK's RememberConversation middleware
     $userMessage = $conversation->messages()->where('role', 'user')->first();
     expect($userMessage)->not->toBeNull();
     expect($userMessage->content)->toBe('Review my authentication code');
-    expect($userMessage->user_id)->toBe($user->id);
 });
 
 it('returns 403 when user is not a project member', function () {

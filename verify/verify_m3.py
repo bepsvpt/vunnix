@@ -312,6 +312,121 @@ checker.check(
     file_contains("tests/Feature/SseStreamingTest.php", "VunnixAgent::fake"),
 )
 
+# ============================================================
+#  T49: Conversation Engine — AI SDK Agent class
+# ============================================================
+section("T49: Conversation Engine — AI SDK Agent Class")
+
+# Interface implementation
+checker.check(
+    "VunnixAgent implements HasTools interface",
+    file_contains("app/Agents/VunnixAgent.php", "HasTools"),
+)
+checker.check(
+    "VunnixAgent implements HasMiddleware interface",
+    file_contains("app/Agents/VunnixAgent.php", "HasMiddleware"),
+)
+checker.check(
+    "VunnixAgent has tools() method",
+    file_contains("app/Agents/VunnixAgent.php", "public function tools"),
+)
+checker.check(
+    "VunnixAgent has middleware() method",
+    file_contains("app/Agents/VunnixAgent.php", "public function middleware"),
+)
+
+# System prompt (§14.2)
+checker.check(
+    "System prompt has Identity section",
+    file_contains("app/Agents/VunnixAgent.php", "[Identity]"),
+)
+checker.check(
+    "System prompt has Capabilities section",
+    file_contains("app/Agents/VunnixAgent.php", "[Capabilities]"),
+)
+checker.check(
+    "System prompt has Quality Gate section",
+    file_contains("app/Agents/VunnixAgent.php", "[Quality Gate]"),
+)
+checker.check(
+    "System prompt has Action Dispatch section",
+    file_contains("app/Agents/VunnixAgent.php", "[Action Dispatch]"),
+)
+checker.check(
+    "System prompt has Language section",
+    file_contains("app/Agents/VunnixAgent.php", "[Language]"),
+)
+checker.check(
+    "System prompt has Safety section",
+    file_contains("app/Agents/VunnixAgent.php", "[Safety]"),
+)
+
+# Dynamic system prompt construction
+checker.check(
+    "System prompt built from sections",
+    file_contains("app/Agents/VunnixAgent.php", "buildSystemPrompt"),
+)
+checker.check(
+    "Language injection from GlobalSetting",
+    file_contains("app/Agents/VunnixAgent.php", "GlobalSetting::get('ai_language')"),
+)
+
+# Model configuration from GlobalSetting
+checker.check(
+    "Model configured from GlobalSetting",
+    file_contains("app/Agents/VunnixAgent.php", "GlobalSetting::get('ai_model'"),
+)
+checker.check(
+    "Model map includes opus",
+    file_contains("app/Agents/VunnixAgent.php", "'opus'"),
+)
+checker.check(
+    "Model map includes sonnet",
+    file_contains("app/Agents/VunnixAgent.php", "'sonnet'"),
+)
+
+# Prompt injection defenses (§14.7)
+checker.check(
+    "Safety section includes instruction hierarchy defense",
+    file_contains("app/Agents/VunnixAgent.php", "untrusted input"),
+)
+checker.check(
+    "Safety section includes role boundary defense",
+    file_contains("app/Agents/VunnixAgent.php", "ignore previous instructions"),
+)
+
+# ConversationService uses continue() for existing conversations
+checker.check(
+    "ConversationService uses agent->continue() for conversation linking",
+    file_contains("app/Services/ConversationService.php", "->continue("),
+)
+
+# Tests
+checker.check(
+    "VunnixAgent unit tests exist",
+    file_exists("tests/Unit/Agents/VunnixAgentTest.php"),
+)
+checker.check(
+    "VunnixAgent feature tests exist",
+    file_exists("tests/Feature/Agents/VunnixAgentTest.php"),
+)
+checker.check(
+    "Feature tests verify system prompt sections",
+    file_contains("tests/Feature/Agents/VunnixAgentTest.php", "[Identity]"),
+)
+checker.check(
+    "Feature tests verify language injection",
+    file_contains("tests/Feature/Agents/VunnixAgentTest.php", "ai_language"),
+)
+checker.check(
+    "Feature tests verify model configuration",
+    file_contains("tests/Feature/Agents/VunnixAgentTest.php", "ai_model"),
+)
+checker.check(
+    "Feature tests verify conversation persistence",
+    file_contains("tests/Feature/Agents/VunnixAgentTest.php", "persists user messages"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()

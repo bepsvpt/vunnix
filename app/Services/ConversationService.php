@@ -89,20 +89,21 @@ class ConversationService
     /**
      * Stream an AI response for a user message in a conversation.
      *
-     * Saves the user message, configures the agent with conversation context,
-     * and returns a StreamableAgentResponse that streams SSE events.
+     * Configures the agent with conversation context and streams the response.
+     * The SDK's RememberConversation middleware automatically persists both the
+     * user message and the assistant response to agent_conversation_messages
+     * after the stream completes.
+     *
+     * Note: We do NOT manually save the user message here — the SDK middleware
+     * handles it. The frontend displays the user message optimistically before
+     * the API call, so there's no delay in the UI.
+     *
+     * Always uses continue() to link to the existing conversation record.
      */
     public function streamResponse(Conversation $conversation, User $user, string $content): StreamableAgentResponse
     {
-        $this->addUserMessage($conversation, $user, $content);
-
         $agent = VunnixAgent::make();
-
-        if ($conversation->messages()->where('role', 'assistant')->exists()) {
-            $agent->continue($conversation->id, $user);
-        } else {
-            $agent->forUser($user);
-        }
+        $agent->continue($conversation->id, $user);
 
         return $agent->stream($content);
     }
