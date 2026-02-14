@@ -130,6 +130,11 @@ class TaskDispatcher
                 $variables['VUNNIX_QUESTION'] = $task->result['question'];
             }
 
+            // T43: Pass Issue IID for issue_discussion tasks
+            if ($task->issue_iid !== null) {
+                $variables['VUNNIX_ISSUE_IID'] = (string) $task->issue_iid;
+            }
+
             $pipelineResult = $this->gitLabClient->triggerPipeline(
                 projectId: $task->project->gitlab_project_id,
                 ref: $task->commit_sha ?? 'main',

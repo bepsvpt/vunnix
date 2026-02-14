@@ -3631,6 +3631,8 @@ jobs = [
     "PostLabelsAndStatus",
     "PostPlaceholderComment",
     "PostHelpResponse",
+    "PostAnswerComment",
+    "PostIssueComment",
 ]
 for job in jobs:
     checker.check(
@@ -4338,6 +4340,152 @@ checker.check(
     file_contains(
         "tests/Feature/AiCommandsEndToEndTest.php",
         "permission_denied",
+    ),
+)
+
+# ============================================================
+#  T43: Issue discussion — @ai on Issue
+# ============================================================
+section("T43: Issue Discussion (@ai on Issue)")
+
+# T43.1: PostIssueComment job exists
+checker.check(
+    "PostIssueComment job exists",
+    file_exists("app/Jobs/PostIssueComment.php"),
+)
+checker.check(
+    "PostIssueComment implements ShouldQueue",
+    file_contains("app/Jobs/PostIssueComment.php", "ShouldQueue"),
+)
+checker.check(
+    "PostIssueComment uses vunnix-server queue",
+    file_contains("app/Jobs/PostIssueComment.php", "QueueNames::SERVER"),
+)
+checker.check(
+    "PostIssueComment uses RetryWithBackoff middleware",
+    file_contains("app/Jobs/PostIssueComment.php", "RetryWithBackoff"),
+)
+checker.check(
+    "PostIssueComment posts to Issue via GitLabClient::createIssueNote",
+    file_contains("app/Jobs/PostIssueComment.php", "createIssueNote"),
+)
+checker.check(
+    "PostIssueComment stores comment_id on task",
+    file_contains("app/Jobs/PostIssueComment.php", "comment_id"),
+)
+checker.check(
+    "PostIssueComment formats response with AI Response header",
+    file_contains("app/Jobs/PostIssueComment.php", "AI Response"),
+)
+checker.check(
+    "PostIssueComment checks task has issue_iid",
+    file_contains("app/Jobs/PostIssueComment.php", "issue_iid"),
+)
+
+# T43.2: ProcessTaskResult dispatches PostIssueComment
+checker.check(
+    "ProcessTaskResult dispatches PostIssueComment for issue_discussion",
+    file_contains("app/Jobs/ProcessTaskResult.php", "PostIssueComment"),
+)
+checker.check(
+    "ProcessTaskResult checks issue_discussion intent for Issue posting",
+    file_contains("app/Jobs/ProcessTaskResult.php", "shouldPostIssueComment"),
+)
+
+# T43.3: TaskDispatcher passes VUNNIX_ISSUE_IID
+checker.check(
+    "TaskDispatcher passes VUNNIX_ISSUE_IID for issue tasks",
+    file_contains("app/Services/TaskDispatcher.php", "VUNNIX_ISSUE_IID"),
+)
+
+# T43.4: EventRouter already routes Issue @ai notes (from T13)
+checker.check(
+    "EventRouter classifies Issue notes with @ai as issue_discussion",
+    file_contains("app/Services/EventRouter.php", "classifyIssueNote"),
+)
+
+# T43.5: Permission check for issue_discussion (from T41)
+checker.check(
+    "WebhookController requires review.trigger for issue_discussion",
+    file_contains(
+        "app/Http/Controllers/WebhookController.php",
+        "'issue_discussion'",
+    ),
+)
+
+# T43.6: E2E integration test
+checker.check(
+    "Issue discussion E2E test file exists",
+    file_exists("tests/Feature/IssueDiscussionEndToEndTest.php"),
+)
+checker.check(
+    "E2E test covers full @ai issue discussion flow",
+    file_contains(
+        "tests/Feature/IssueDiscussionEndToEndTest.php",
+        "completes full @ai issue discussion flow",
+    ),
+)
+checker.check(
+    "E2E test verifies IssueDiscussion task type",
+    file_contains(
+        "tests/Feature/IssueDiscussionEndToEndTest.php",
+        "TaskType::IssueDiscussion",
+    ),
+)
+checker.check(
+    "E2E test verifies issue_iid stored on task",
+    file_contains(
+        "tests/Feature/IssueDiscussionEndToEndTest.php",
+        "issue_iid",
+    ),
+)
+checker.check(
+    "E2E test verifies VUNNIX_ISSUE_IID pipeline variable",
+    file_contains(
+        "tests/Feature/IssueDiscussionEndToEndTest.php",
+        "VUNNIX_ISSUE_IID",
+    ),
+)
+checker.check(
+    "E2E test verifies response posted as Issue comment",
+    file_contains(
+        "tests/Feature/IssueDiscussionEndToEndTest.php",
+        "issues/5/notes",
+    ),
+)
+checker.check(
+    "E2E test verifies no MR notes posted",
+    file_contains(
+        "tests/Feature/IssueDiscussionEndToEndTest.php",
+        "merge_requests",
+    ),
+)
+checker.check(
+    "E2E test verifies no 3-layer output",
+    file_contains(
+        "tests/Feature/IssueDiscussionEndToEndTest.php",
+        "NO 3-layer output",
+    ),
+)
+checker.check(
+    "E2E test includes permission denied scenario",
+    file_contains(
+        "tests/Feature/IssueDiscussionEndToEndTest.php",
+        "permission_denied",
+    ),
+)
+checker.check(
+    "E2E test includes bot filtering scenario (D154)",
+    file_contains(
+        "tests/Feature/IssueDiscussionEndToEndTest.php",
+        "bot-authored",
+    ),
+)
+checker.check(
+    "E2E test verifies task completed status",
+    file_contains(
+        "tests/Feature/IssueDiscussionEndToEndTest.php",
+        "TaskStatus::Completed",
     ),
 )
 

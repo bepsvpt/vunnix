@@ -91,6 +91,11 @@ class ProcessTaskResult implements ShouldQueue
         if ($this->shouldPostAnswerComment($task)) {
             PostAnswerComment::dispatch($task->id);
         }
+
+        // T43: Post response comment for @ai on Issue
+        if ($this->shouldPostIssueComment($task)) {
+            PostIssueComment::dispatch($task->id);
+        }
     }
 
     private function shouldPostSummaryComment(Task $task): bool
@@ -122,6 +127,19 @@ class ProcessTaskResult implements ShouldQueue
         return $task->mr_iid !== null
             && $task->type === TaskType::IssueDiscussion
             && ($task->result['intent'] ?? null) === 'ask_command';
+    }
+
+    /**
+     * T43: Post an issue discussion response for @ai on Issue.
+     *
+     * Only fires for IssueDiscussion tasks with an Issue (issue_discussion intent)
+     * and no MR context (distinguishes from ask_command on MRs).
+     */
+    private function shouldPostIssueComment(Task $task): bool
+    {
+        return $task->issue_iid !== null
+            && $task->type === TaskType::IssueDiscussion
+            && ($task->result['intent'] ?? null) === 'issue_discussion';
     }
 
     /**
