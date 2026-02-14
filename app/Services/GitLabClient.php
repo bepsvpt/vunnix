@@ -113,6 +113,25 @@ class GitLabClient
         return $this->handleResponse($response, "listTree {$path}")->json();
     }
 
+    /**
+     * Search code across a repository (project-scoped blob search).
+     *
+     * @return array<int, array{basename: string, data: string, path: string, filename: string, ref: string, startline: int, project_id: int}>
+     */
+    public function searchCode(int $projectId, string $query): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/search"),
+            [
+                'scope' => 'blobs',
+                'search' => $query,
+                'per_page' => 20,
+            ],
+        );
+
+        return $this->handleResponse($response, "searchCode {$query}")->json();
+    }
+
     // ------------------------------------------------------------------
     //  Issues
     // ------------------------------------------------------------------

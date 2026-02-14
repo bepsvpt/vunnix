@@ -427,6 +427,159 @@ checker.check(
     file_contains("tests/Feature/Agents/VunnixAgentTest.php", "persists user messages"),
 )
 
+# ============================================================
+#  T50: GitLab tools — repo browsing
+# ============================================================
+section("T50: GitLab Tools — Repo Browsing")
+
+# Tool classes exist
+checker.check(
+    "BrowseRepoTree tool class exists",
+    file_exists("app/Agents/Tools/BrowseRepoTree.php"),
+)
+checker.check(
+    "ReadFile tool class exists",
+    file_exists("app/Agents/Tools/ReadFile.php"),
+)
+checker.check(
+    "SearchCode tool class exists",
+    file_exists("app/Agents/Tools/SearchCode.php"),
+)
+
+# Tool interface implementation
+checker.check(
+    "BrowseRepoTree implements Tool contract",
+    file_contains("app/Agents/Tools/BrowseRepoTree.php", "implements Tool"),
+)
+checker.check(
+    "ReadFile implements Tool contract",
+    file_contains("app/Agents/Tools/ReadFile.php", "implements Tool"),
+)
+checker.check(
+    "SearchCode implements Tool contract",
+    file_contains("app/Agents/Tools/SearchCode.php", "implements Tool"),
+)
+
+# handle() and schema() methods
+checker.check(
+    "BrowseRepoTree has handle() method",
+    file_contains("app/Agents/Tools/BrowseRepoTree.php", "public function handle"),
+)
+checker.check(
+    "BrowseRepoTree has schema() method",
+    file_contains("app/Agents/Tools/BrowseRepoTree.php", "public function schema"),
+)
+checker.check(
+    "ReadFile has handle() method",
+    file_contains("app/Agents/Tools/ReadFile.php", "public function handle"),
+)
+checker.check(
+    "ReadFile has schema() method",
+    file_contains("app/Agents/Tools/ReadFile.php", "public function schema"),
+)
+checker.check(
+    "SearchCode has handle() method",
+    file_contains("app/Agents/Tools/SearchCode.php", "public function handle"),
+)
+checker.check(
+    "SearchCode has schema() method",
+    file_contains("app/Agents/Tools/SearchCode.php", "public function schema"),
+)
+
+# GitLabClient integration
+checker.check(
+    "BrowseRepoTree uses GitLabClient::listTree",
+    file_contains("app/Agents/Tools/BrowseRepoTree.php", "listTree"),
+)
+checker.check(
+    "ReadFile uses GitLabClient::getFile",
+    file_contains("app/Agents/Tools/ReadFile.php", "getFile"),
+)
+checker.check(
+    "SearchCode uses GitLabClient::searchCode",
+    file_contains("app/Agents/Tools/SearchCode.php", "searchCode"),
+)
+checker.check(
+    "GitLabClient has searchCode method",
+    file_contains("app/Services/GitLabClient.php", "public function searchCode"),
+)
+
+# Error handling — tools return messages, not exceptions
+checker.check(
+    "BrowseRepoTree catches GitLabApiException",
+    file_contains("app/Agents/Tools/BrowseRepoTree.php", "catch (GitLabApiException"),
+)
+checker.check(
+    "ReadFile catches GitLabApiException",
+    file_contains("app/Agents/Tools/ReadFile.php", "catch (GitLabApiException"),
+)
+checker.check(
+    "SearchCode catches GitLabApiException",
+    file_contains("app/Agents/Tools/SearchCode.php", "catch (GitLabApiException"),
+)
+
+# ReadFile base64 decoding
+checker.check(
+    "ReadFile decodes base64 content",
+    file_contains("app/Agents/Tools/ReadFile.php", "base64_decode"),
+)
+
+# ReadFile large file handling
+checker.check(
+    "ReadFile truncates large files",
+    file_contains("app/Agents/Tools/ReadFile.php", "MAX_FILE_SIZE"),
+)
+
+# Tools registered in VunnixAgent
+checker.check(
+    "VunnixAgent registers BrowseRepoTree tool",
+    file_contains("app/Agents/VunnixAgent.php", "BrowseRepoTree"),
+)
+checker.check(
+    "VunnixAgent registers ReadFile tool",
+    file_contains("app/Agents/VunnixAgent.php", "ReadFile"),
+)
+checker.check(
+    "VunnixAgent registers SearchCode tool",
+    file_contains("app/Agents/VunnixAgent.php", "SearchCode"),
+)
+
+# Unit tests
+checker.check(
+    "BrowseRepoTree unit tests exist",
+    file_exists("tests/Unit/Agents/Tools/BrowseRepoTreeTest.php"),
+)
+checker.check(
+    "ReadFile unit tests exist",
+    file_exists("tests/Unit/Agents/Tools/ReadFileTest.php"),
+)
+checker.check(
+    "SearchCode unit tests exist",
+    file_exists("tests/Unit/Agents/Tools/SearchCodeTest.php"),
+)
+
+# Test coverage of key scenarios
+checker.check(
+    "BrowseRepoTree test covers error handling",
+    file_contains("tests/Unit/Agents/Tools/BrowseRepoTreeTest.php", "Error browsing repository"),
+)
+checker.check(
+    "ReadFile test covers large file truncation",
+    file_contains("tests/Unit/Agents/Tools/ReadFileTest.php", "truncates files larger than 100KB"),
+)
+checker.check(
+    "ReadFile test covers binary file handling",
+    file_contains("tests/Unit/Agents/Tools/ReadFileTest.php", "binary file"),
+)
+checker.check(
+    "SearchCode test covers snippet truncation",
+    file_contains("tests/Unit/Agents/Tools/SearchCodeTest.php", "truncates long code snippets"),
+)
+checker.check(
+    "VunnixAgent test verifies T50 tools",
+    file_contains("tests/Unit/Agents/VunnixAgentTest.php", "T50 repo browsing tools"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()

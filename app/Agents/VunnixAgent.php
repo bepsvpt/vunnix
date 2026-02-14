@@ -2,6 +2,9 @@
 
 namespace App\Agents;
 
+use App\Agents\Tools\BrowseRepoTree;
+use App\Agents\Tools\ReadFile;
+use App\Agents\Tools\SearchCode;
 use App\Models\GlobalSetting;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
@@ -60,8 +63,10 @@ class VunnixAgent implements Agent, Conversational, HasTools, HasMiddleware
     /**
      * Get the tools available to the agent.
      *
-     * Tools are registered by later tasks:
+     * Tools registered:
      * - T50: BrowseRepoTree, ReadFile, SearchCode
+     *
+     * Remaining (added by later tasks):
      * - T51: ListIssues, ReadIssue
      * - T52: ListMergeRequests, ReadMergeRequest, ReadMRDiff
      *
@@ -69,7 +74,11 @@ class VunnixAgent implements Agent, Conversational, HasTools, HasMiddleware
      */
     public function tools(): iterable
     {
-        return [];
+        return [
+            app(BrowseRepoTree::class),
+            app(ReadFile::class),
+            app(SearchCode::class),
+        ];
     }
 
     /**

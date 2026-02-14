@@ -257,6 +257,7 @@ Persistent lessons discovered during development. **Add entries here when you so
 - **Unit tests can't use `Http::fake()` — construct HTTP objects manually:** `Http::fake()` requires the Laravel service container (facade root). In `tests/Unit/`, build `RequestException` manually via `new Psr7Response(status, [], body)` → `new Response($psr7)` → `new RequestException($response)`.
 - **Use `Log::shouldReceive` (mock) not `Log::spy()` + `shouldHaveReceived` for per-test log assertions:** `Log::spy()` in `beforeEach` accumulates calls across all tests in the file. `shouldHaveReceived('warning')->once()` then sees calls from previous tests. Use `Log::shouldReceive` (strict mock) with expectations *before* the action for tests that assert specific log calls.
 - **Laravel 11+ base Controller needs `AuthorizesRequests` trait:** The default `Controller` class no longer includes `AuthorizesRequests`. If any controller uses `$this->authorize()`, add `use Illuminate\Foundation\Auth\Access\AuthorizesRequests;` and `use AuthorizesRequests;` to the base `Controller` class.
+- **AI SDK Tool schema tests: use `new JsonSchemaTypeFactory` not `app(JsonSchema::class)` in unit tests:** `app()` requires the Laravel container. For pure unit tests (no `uses(TestCase::class)`), instantiate `Illuminate\JsonSchema\JsonSchemaTypeFactory` directly. Keep tool tests as pure unit tests with Mockery — they don't need the framework.
 
 ## Key Files
 

@@ -1,10 +1,16 @@
 <?php
 
+use App\Agents\Tools\BrowseRepoTree;
+use App\Agents\Tools\ReadFile;
+use App\Agents\Tools\SearchCode;
 use App\Agents\VunnixAgent;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasMiddleware;
 use Laravel\Ai\Contracts\HasTools;
+use Laravel\Ai\Contracts\Tool;
+
+uses(Tests\TestCase::class);
 
 // ─── Interface Implementation ───────────────────────────────────
 
@@ -27,11 +33,23 @@ it('uses the anthropic provider', function () {
 
 // ─── Tools ──────────────────────────────────────────────────────
 
-it('returns an empty tools array as placeholder', function () {
+it('returns the T50 repo browsing tools', function () {
     $agent = new VunnixAgent;
+    $tools = iterator_to_array($agent->tools());
 
-    $tools = $agent->tools();
-    expect(iterator_to_array($tools))->toBe([]);
+    expect($tools)->toHaveCount(3);
+    expect($tools[0])->toBeInstanceOf(BrowseRepoTree::class);
+    expect($tools[1])->toBeInstanceOf(ReadFile::class);
+    expect($tools[2])->toBeInstanceOf(SearchCode::class);
+});
+
+it('returns tools that implement the Tool interface', function () {
+    $agent = new VunnixAgent;
+    $tools = iterator_to_array($agent->tools());
+
+    foreach ($tools as $tool) {
+        expect($tool)->toBeInstanceOf(Tool::class);
+    }
 });
 
 // ─── Middleware ──────────────────────────────────────────────────

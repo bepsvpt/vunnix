@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 49 / 116 (42%)
-- **Current Task:** T50 — GitLab tools — repo browsing (BrowseRepoTree, ReadFile, SearchCode)
-- **Last Verified:** T49
+- **Tasks Complete:** 50 / 116 (43%)
+- **Current Task:** T51 — GitLab tools — Issues (ListIssues, ReadIssue)
+- **Last Verified:** T50
 
 ---
 
@@ -81,15 +81,15 @@
 - [x] T45: CI pipeline template [Depends: T19]
 - [x] T46: Executor image CI/CD + version alignment [Depends: T19]
 
-## M3 — Path B Functional (3/27)
+## M3 — Path B Functional (4/27)
 
 ### Chat Backend
 
 - [x] T47: Chat API endpoints (search D148, archiving D141, title D142) [Depends: T4, T9]
 - [x] T48: SSE streaming endpoint [Depends: T47]
 - [x] T49: Conversation Engine — AI SDK Agent class [Depends: T47, T48, T10]
-- [ ] **T50:** GitLab tools — repo browsing (BrowseRepoTree, ReadFile, SearchCode) [Depends: T49, T11]
-- [ ] T51: GitLab tools — Issues (ListIssues, ReadIssue) [Depends: T49, T11]
+- [x] T50: GitLab tools — repo browsing (BrowseRepoTree, ReadFile, SearchCode) [Depends: T49, T11]
+- [ ] **T51:** GitLab tools — Issues (ListIssues, ReadIssue) [Depends: T49, T11]
 - [ ] T52: GitLab tools — Merge Requests (ListMRs, ReadMR, ReadMRDiff) [Depends: T49, T11]
 - [ ] T53: Cross-project tool-use access check [Depends: T50, T51, T52, T9]
 - [ ] T54: Quality gate behavior [Depends: T49]
