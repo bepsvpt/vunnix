@@ -1,5 +1,6 @@
 <?php
 
+use App\Agents\Middleware\PruneConversationHistory;
 use App\Agents\Tools\BrowseRepoTree;
 use App\Agents\Tools\DispatchAction;
 use App\Agents\Tools\ListIssues;
@@ -84,8 +85,30 @@ it('returns tools that implement the Tool interface', function () {
 
 // ─── Middleware ──────────────────────────────────────────────────
 
-it('returns an empty middleware array as placeholder', function () {
+it('returns the T58 conversation pruning middleware', function () {
+    $agent = new VunnixAgent;
+    $middleware = $agent->middleware();
+
+    expect($middleware)->toHaveCount(1);
+    expect($middleware[0])->toBeInstanceOf(PruneConversationHistory::class);
+});
+
+// ─── Pruned Messages ────────────────────────────────────────────
+
+it('returns pruned messages when set via setPrunedMessages', function () {
+    $agent = new VunnixAgent;
+    $messages = [
+        new \Laravel\Ai\Messages\UserMessage('summary'),
+        new \Laravel\Ai\Messages\Message('user', 'msg1'),
+    ];
+
+    $agent->setPrunedMessages($messages);
+
+    expect($agent->messages())->toBe($messages);
+});
+
+it('returns empty messages when no conversation and no pruned messages set', function () {
     $agent = new VunnixAgent;
 
-    expect($agent->middleware())->toBe([]);
+    expect($agent->messages())->toBe([]);
 });

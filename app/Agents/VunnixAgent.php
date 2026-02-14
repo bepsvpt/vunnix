@@ -2,6 +2,7 @@
 
 namespace App\Agents;
 
+use App\Agents\Middleware\PruneConversationHistory;
 use App\Agents\Tools\BrowseRepoTree;
 use App\Agents\Tools\DispatchAction;
 use App\Agents\Tools\ListIssues;
@@ -37,6 +38,12 @@ class VunnixAgent implements Agent, Conversational, HasTools, HasMiddleware
 {
     use Promptable;
     use RemembersConversations;
+
+    /**
+     * Pruned messages set by the PruneConversationHistory middleware.
+     * When set, these replace the full conversation history for the API call.
+     */
+    protected ?array $prunedMessages = null;
 
     /**
      * Model ID mapping from GlobalSetting ai_model values to Anthropic model IDs.
@@ -97,14 +104,49 @@ class VunnixAgent implements Agent, Conversational, HasTools, HasMiddleware
     }
 
     /**
-     * Get the agent's prompt middleware.
+     * Get the conversation messages, using pruned messages if set by middleware.
      *
-     * Custom middleware added by later tasks:
-     * - T58: Conversation pruning (>20 turns)
+     * When the PruneConversationHistory middleware detects a long conversation
+     * (>20 turns), it summarizes older messages and calls setPrunedMessages().
+     * This override ensures the SDK uses the pruned set when available.
+     */
+    public function messages(): iterable
+    {
+        if ($this->prunedMessages !== null) {
+            return $this->prunedMessages;
+        }
+
+        // Fall back to the RemembersConversations trait behavior
+        if (! $this->conversationId) {
+            return [];
+        }
+
+        return resolve(\Laravel\Ai\Contracts\ConversationStore::class)
+            ->getLatestConversationMessages(
+                $this->conversationId,
+                $this->maxConversationMessages()
+            )->all();
+    }
+
+    /**
+     * Set pruned messages to replace the full conversation history.
+     *
+     * Called by PruneConversationHistory middleware when conversations
+     * exceed the turn threshold.
+     */
+    public function setPrunedMessages(array $messages): void
+    {
+        $this->prunedMessages = $messages;
+    }
+
+    /**
+     * Get the agent's prompt middleware.
      */
     public function middleware(): array
     {
-        return [];
+        return [
+            app(PruneConversationHistory::class),
+        ];
     }
 
     /**

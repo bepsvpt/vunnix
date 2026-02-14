@@ -1433,6 +1433,184 @@ checker.check(
     ),
 )
 
+# ============================================================
+#  T58: Conversation pruning middleware (>20 turns)
+# ============================================================
+section("T58: Conversation Pruning Middleware")
+
+# Middleware class
+checker.check(
+    "PruneConversationHistory middleware exists",
+    file_exists("app/Agents/Middleware/PruneConversationHistory.php"),
+)
+checker.check(
+    "Middleware has handle method",
+    file_contains(
+        "app/Agents/Middleware/PruneConversationHistory.php",
+        "public function handle",
+    ),
+)
+checker.check(
+    "Middleware has TURN_THRESHOLD constant set to 20",
+    file_contains(
+        "app/Agents/Middleware/PruneConversationHistory.php",
+        "TURN_THRESHOLD = 20",
+    ),
+)
+checker.check(
+    "Middleware has RECENT_TURNS_TO_KEEP constant set to 10",
+    file_contains(
+        "app/Agents/Middleware/PruneConversationHistory.php",
+        "RECENT_TURNS_TO_KEEP = 10",
+    ),
+)
+
+# Turn counting
+checker.check(
+    "Middleware counts turns by user messages",
+    file_contains(
+        "app/Agents/Middleware/PruneConversationHistory.php",
+        "countTurns",
+    ),
+)
+
+# Summarization
+checker.check(
+    "Middleware summarizes older messages",
+    file_contains(
+        "app/Agents/Middleware/PruneConversationHistory.php",
+        "summarize",
+    ),
+)
+checker.check(
+    "Middleware uses cheapestTextModel for summarization",
+    file_contains(
+        "app/Agents/Middleware/PruneConversationHistory.php",
+        "cheapestTextModel",
+    ),
+)
+checker.check(
+    "Summarizer retains user intent and decisions",
+    file_contains(
+        "app/Agents/Middleware/PruneConversationHistory.php",
+        "intent",
+    ),
+)
+
+# Pruned message injection
+checker.check(
+    "Middleware calls setPrunedMessages on VunnixAgent",
+    file_contains(
+        "app/Agents/Middleware/PruneConversationHistory.php",
+        "setPrunedMessages",
+    ),
+)
+checker.check(
+    "Summary injected as UserMessage with conversation summary header",
+    file_contains(
+        "app/Agents/Middleware/PruneConversationHistory.php",
+        "Conversation Summary",
+    ),
+)
+
+# Graceful degradation
+checker.check(
+    "Middleware catches Throwable for graceful failure",
+    file_contains(
+        "app/Agents/Middleware/PruneConversationHistory.php",
+        "catch (Throwable)",
+    ),
+)
+
+# Non-VunnixAgent passthrough
+checker.check(
+    "Middleware checks agent instanceof VunnixAgent",
+    file_contains(
+        "app/Agents/Middleware/PruneConversationHistory.php",
+        "instanceof VunnixAgent",
+    ),
+)
+
+# VunnixAgent integration
+checker.check(
+    "VunnixAgent has setPrunedMessages method",
+    file_contains("app/Agents/VunnixAgent.php", "public function setPrunedMessages"),
+)
+checker.check(
+    "VunnixAgent has prunedMessages property",
+    file_contains("app/Agents/VunnixAgent.php", "prunedMessages"),
+)
+checker.check(
+    "VunnixAgent messages() returns pruned messages when set",
+    file_contains("app/Agents/VunnixAgent.php", "prunedMessages !== null"),
+)
+checker.check(
+    "VunnixAgent registers PruneConversationHistory middleware",
+    file_contains("app/Agents/VunnixAgent.php", "PruneConversationHistory"),
+)
+
+# Unit tests
+checker.check(
+    "PruneConversationHistory test file exists",
+    file_exists("tests/Unit/Agents/Middleware/PruneConversationHistoryTest.php"),
+)
+checker.check(
+    "Test covers no pruning for ≤20 turns",
+    file_contains(
+        "tests/Unit/Agents/Middleware/PruneConversationHistoryTest.php",
+        "does not prune conversations with 20 or fewer turns",
+    ),
+)
+checker.check(
+    "Test covers pruning for >20 turns",
+    file_contains(
+        "tests/Unit/Agents/Middleware/PruneConversationHistoryTest.php",
+        "prunes conversations with more than 20 turns",
+    ),
+)
+checker.check(
+    "Test covers keeping exactly last 10 turns",
+    file_contains(
+        "tests/Unit/Agents/Middleware/PruneConversationHistoryTest.php",
+        "keeps exactly the last 10 turns when pruning",
+    ),
+)
+checker.check(
+    "Test covers graceful failure when summarization fails",
+    file_contains(
+        "tests/Unit/Agents/Middleware/PruneConversationHistoryTest.php",
+        "keeps all messages when summarization fails",
+    ),
+)
+checker.check(
+    "Test covers non-VunnixAgent passthrough",
+    file_contains(
+        "tests/Unit/Agents/Middleware/PruneConversationHistoryTest.php",
+        "passes through without pruning for non-VunnixAgent",
+    ),
+)
+checker.check(
+    "Test covers exact boundary at 21 turns",
+    file_contains(
+        "tests/Unit/Agents/Middleware/PruneConversationHistoryTest.php",
+        "triggers pruning at exactly 21 turns",
+    ),
+)
+checker.check(
+    "VunnixAgent test verifies T58 middleware registration",
+    file_contains(
+        "tests/Unit/Agents/VunnixAgentTest.php",
+        "T58 conversation pruning middleware",
+    ),
+)
+checker.check(
+    "VunnixAgent test verifies setPrunedMessages integration",
+    file_contains(
+        "tests/Unit/Agents/VunnixAgentTest.php",
+        "returns pruned messages when set via setPrunedMessages",
+    ),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()
