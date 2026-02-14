@@ -38,6 +38,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/conversations/{conversation}/stream', [ConversationController::class, 'stream'])
             ->name('api.conversations.stream');
 
+        // Cross-project support (T64, D28)
+        Route::post('/conversations/{conversation}/projects', [ConversationController::class, 'addProject'])
+            ->name('api.conversations.projects.store');
+
         Route::patch('/conversations/{conversation}/archive', [ConversationController::class, 'archive'])
             ->name('api.conversations.archive');
     });

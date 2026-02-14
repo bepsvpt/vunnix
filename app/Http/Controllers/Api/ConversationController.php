@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AddProjectToConversationRequest;
 use App\Http\Requests\CreateConversationRequest;
 use App\Http\Requests\SendMessageRequest;
 use App\Http\Resources\ConversationDetailResource;
@@ -118,6 +119,24 @@ class ConversationController extends Controller
             user: $request->user(),
             content: $request->validated('content'),
         );
+    }
+
+    /**
+     * POST /api/v1/conversations/{conversation}/projects
+     * Add a project to an existing conversation (D28).
+     * Frontend must show D128 visibility warning before calling.
+     */
+    public function addProject(AddProjectToConversationRequest $request, Conversation $conversation): ConversationResource
+    {
+        $this->authorize('addProject', $conversation);
+
+        $this->conversationService->addProject(
+            conversation: $conversation,
+            user: $request->user(),
+            projectId: $request->validated('project_id'),
+        );
+
+        return new ConversationResource($conversation);
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Agents\VunnixAgent;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Laravel\Ai\Responses\StreamableAgentResponse;
@@ -106,6 +107,33 @@ class ConversationService
         $agent->continue($conversation->id, $user);
 
         return $agent->stream($content);
+    }
+
+    /**
+     * Add a project to an existing conversation (cross-project support D28).
+     * Validates user has access to the project being added.
+     */
+    public function addProject(Conversation $conversation, User $user, int $projectId): Conversation
+    {
+        $project = Project::findOrFail($projectId);
+
+        // Verify user has access to the project being added
+        if (! $user->projects()->where('projects.id', $project->id)->exists()) {
+            abort(403, 'You do not have access to this project.');
+        }
+
+        // Don't add duplicates (primary project or already in pivot)
+        if ($conversation->project_id === $project->id) {
+            return $conversation;
+        }
+
+        if ($conversation->projects()->where('projects.id', $project->id)->exists()) {
+            return $conversation;
+        }
+
+        $conversation->projects()->attach($project->id);
+
+        return $conversation->load('projects');
     }
 
     /**
