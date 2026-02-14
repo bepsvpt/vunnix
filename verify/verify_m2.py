@@ -1187,6 +1187,156 @@ checker.check(
     file_contains("executor/.claude/skills/backend-review.md", "ai::reviewed"),
 )
 
+#  T23: Mixed-review skill
+
+section("T23: Mixed-Review Skill")
+
+# Skill file existence and version header
+checker.check(
+    "mixed-review.md skill exists",
+    file_exists("executor/.claude/skills/mixed-review.md"),
+)
+checker.check(
+    "Skill has version header",
+    file_matches("executor/.claude/skills/mixed-review.md", r'version:\s*"\d+\.\d+"'),
+)
+checker.check(
+    "Skill has updated date header",
+    file_matches("executor/.claude/skills/mixed-review.md", r'updated:\s*"\d{4}-\d{2}-\d{2}"'),
+)
+
+# Frontend review references
+checker.check(
+    "Skill references frontend-review checklist",
+    file_contains("executor/.claude/skills/mixed-review.md", "frontend-review"),
+)
+checker.check(
+    "Skill covers Component Structure",
+    file_contains("executor/.claude/skills/mixed-review.md", "Component Structure"),
+)
+checker.check(
+    "Skill covers Composition API",
+    file_contains("executor/.claude/skills/mixed-review.md", "Composition API"),
+)
+checker.check(
+    "Skill covers Reactivity Patterns",
+    file_contains("executor/.claude/skills/mixed-review.md", "Reactivity"),
+)
+checker.check(
+    "Skill covers Accessibility",
+    file_contains("executor/.claude/skills/mixed-review.md", "Accessibility"),
+)
+checker.check(
+    "Skill covers CSS Specificity",
+    file_contains("executor/.claude/skills/mixed-review.md", "Specificity"),
+)
+checker.check(
+    "Skill covers i18n",
+    file_contains("executor/.claude/skills/mixed-review.md", "i18n"),
+)
+
+# Backend review references
+checker.check(
+    "Skill references backend-review checklist",
+    file_contains("executor/.claude/skills/mixed-review.md", "backend-review"),
+)
+checker.check(
+    "Skill covers SQL Injection",
+    file_contains("executor/.claude/skills/mixed-review.md", "SQL Injection"),
+)
+checker.check(
+    "Skill covers N+1 Queries",
+    file_contains("executor/.claude/skills/mixed-review.md", "N+1"),
+)
+checker.check(
+    "Skill covers FormRequest",
+    file_contains("executor/.claude/skills/mixed-review.md", "FormRequest"),
+)
+checker.check(
+    "Skill covers Laravel Conventions",
+    file_contains("executor/.claude/skills/mixed-review.md", "Laravel Conventions"),
+)
+checker.check(
+    "Skill covers Migrations",
+    file_contains("executor/.claude/skills/mixed-review.md", "Migration"),
+)
+checker.check(
+    "Skill covers Authentication",
+    file_contains("executor/.claude/skills/mixed-review.md", "Authentication"),
+)
+
+# API Contract Consistency (unique to mixed-review)
+checker.check(
+    "Skill has API Contract Consistency section",
+    file_contains("executor/.claude/skills/mixed-review.md", "API Contract Consistency"),
+)
+checker.check(
+    "Skill checks route matching",
+    file_contains("executor/.claude/skills/mixed-review.md", "Route Matching"),
+)
+checker.check(
+    "Skill checks HTTP method matching",
+    file_contains("executor/.claude/skills/mixed-review.md", "HTTP method"),
+)
+checker.check(
+    "Skill checks request payload consistency",
+    file_contains("executor/.claude/skills/mixed-review.md", "Request Payload Consistency"),
+)
+checker.check(
+    "Skill checks response shape consistency",
+    file_contains("executor/.claude/skills/mixed-review.md", "Response Shape Consistency"),
+)
+checker.check(
+    "Skill checks pagination format alignment",
+    file_contains("executor/.claude/skills/mixed-review.md", "cursorPaginate"),
+)
+checker.check(
+    "Skill checks auth/middleware alignment",
+    file_contains("executor/.claude/skills/mixed-review.md", "Middleware Alignment"),
+)
+checker.check(
+    "Skill uses api-contract category for cross-domain findings",
+    file_contains("executor/.claude/skills/mixed-review.md", "api-contract"),
+)
+
+# Tool integration
+checker.check(
+    "Skill integrates eslint findings",
+    file_contains("executor/.claude/skills/mixed-review.md", "eslint"),
+)
+checker.check(
+    "Skill integrates stylelint findings",
+    file_contains("executor/.claude/skills/mixed-review.md", "stylelint"),
+)
+checker.check(
+    "Skill integrates PHPStan findings",
+    file_contains("executor/.claude/skills/mixed-review.md", "PHPStan"),
+)
+
+# Large diff handling
+checker.check(
+    "Skill handles large diffs",
+    file_contains("executor/.claude/skills/mixed-review.md", "Large Diff"),
+)
+checker.check(
+    "Skill summarizes patterns across similar changes",
+    file_contains("executor/.claude/skills/mixed-review.md", "Summarize patterns"),
+)
+
+# Output section
+checker.check(
+    "Skill references code review JSON schema output",
+    file_contains("executor/.claude/skills/mixed-review.md", "code review schema"),
+)
+checker.check(
+    "Skill specifies commit_status logic",
+    file_contains("executor/.claude/skills/mixed-review.md", "commit_status"),
+)
+checker.check(
+    "Skill specifies label output",
+    file_contains("executor/.claude/skills/mixed-review.md", "ai::reviewed"),
+)
+
 # ============================================================
 #  Runtime checks
 # ============================================================
