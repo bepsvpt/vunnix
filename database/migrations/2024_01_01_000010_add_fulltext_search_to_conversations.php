@@ -9,6 +9,13 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // This migration requires PostgreSQL (tsvector, GIN indexes, PL/pgSQL triggers)
+        // and depends on agent_conversations table from laravel/ai SDK migration.
+        // Skip gracefully when running on SQLite (test environment) or if tables don't exist yet.
+        if (DB::connection()->getDriverName() !== 'pgsql' || ! Schema::hasTable('agent_conversations')) {
+            return;
+        }
+
         // Add project_id to agent_conversations (spec requires project-scoped conversations)
         Schema::table('agent_conversations', function (Blueprint $table) {
             $table->foreignId('project_id')->nullable()->after('user_id')->constrained()->nullOnDelete();
@@ -61,6 +68,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::connection()->getDriverName() !== 'pgsql' || ! Schema::hasTable('agent_conversations')) {
+            return;
+        }
+
         // Drop triggers and functions for messages
         DB::statement('DROP TRIGGER IF EXISTS agent_conversation_messages_content_search_trigger ON agent_conversation_messages');
         DB::statement('DROP FUNCTION IF EXISTS agent_conversation_messages_content_search_update()');

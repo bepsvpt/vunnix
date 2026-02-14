@@ -27,8 +27,15 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => null,
             'remember_token' => Str::random(10),
+            'gitlab_id' => fake()->unique()->numberBetween(1, 999999),
+            'username' => fake()->unique()->userName(),
+            'avatar_url' => fake()->imageUrl(),
+            'oauth_provider' => 'gitlab',
+            'oauth_token' => Str::random(40),
+            'oauth_refresh_token' => Str::random(40),
+            'oauth_token_expires_at' => now()->addHours(2),
         ];
     }
 

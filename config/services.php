@@ -18,7 +18,7 @@ return [
         'client_id' => env('GITLAB_CLIENT_ID'),
         'client_secret' => env('GITLAB_CLIENT_SECRET'),
         'redirect' => env('GITLAB_REDIRECT_URI', '/auth/gitlab/callback'),
-        'instance_uri' => env('GITLAB_URL', 'https://gitlab.com'),
+        'host' => env('GITLAB_URL', 'https://gitlab.com'),
     ],
 
     'postmark' => [

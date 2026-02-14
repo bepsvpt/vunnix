@@ -247,7 +247,8 @@ For all 155 decisions, see the Discussion Log in `vunnix.md`.
 
 Persistent lessons discovered during development. **Add entries here when you solve a non-obvious problem that future sessions might encounter again.** Write each as an actionable rule, not a story. Never remove entries.
 
-*(none yet — first entries will appear as tasks are implemented)*
+- **PostgreSQL-only migrations must guard against SQLite:** Migrations using `tsvector`, GIN indexes, PL/pgSQL triggers, or `ALTER TABLE` on SDK-provided tables must check `DB::connection()->getDriverName() === 'pgsql'` and `Schema::hasTable(...)` before running. The test environment uses SQLite `:memory:` (phpunit.xml), and the Laravel AI SDK's `agent_conversations` migration has a 2026 timestamp that sorts after our 2024 custom migrations.
+- **Socialite GitLab driver reads `host` not `instance_uri`:** In `config/services.php`, the GitLab provider key must be `host` (matching what `SocialiteManager::createGitlabDriver()` reads internally).
 
 ## Key Files
 

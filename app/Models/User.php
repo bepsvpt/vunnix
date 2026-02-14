@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -21,6 +20,13 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'gitlab_id',
+        'username',
+        'avatar_url',
+        'oauth_provider',
+        'oauth_token',
+        'oauth_refresh_token',
+        'oauth_token_expires_at',
     ];
 
     /**
@@ -31,6 +37,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'oauth_token',
+        'oauth_refresh_token',
     ];
 
     /**
@@ -43,6 +51,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'gitlab_id' => 'integer',
+            'oauth_token_expires_at' => 'datetime',
         ];
     }
 }

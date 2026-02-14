@@ -1,0 +1,68 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Laravel\Socialite\Facades\Socialite;
+
+class AuthController extends Controller
+{
+    /**
+     * Redirect the user to GitLab for OAuth authentication.
+     */
+    public function redirect(): RedirectResponse
+    {
+        return Socialite::driver('gitlab')
+            ->scopes(['read_user', 'read_api'])
+            ->redirect();
+    }
+
+    /**
+     * Handle the GitLab OAuth callback.
+     *
+     * Creates or updates the user with GitLab profile data,
+     * stores OAuth tokens for later API use (T8 membership sync),
+     * and establishes a Laravel session.
+     */
+    public function callback(): RedirectResponse
+    {
+        $gitlabUser = Socialite::driver('gitlab')->user();
+
+        $user = User::updateOrCreate(
+            ['gitlab_id' => $gitlabUser->getId()],
+            [
+                'name' => $gitlabUser->getName(),
+                'email' => $gitlabUser->getEmail(),
+                'username' => $gitlabUser->getNickname(),
+                'avatar_url' => $gitlabUser->getAvatar(),
+                'oauth_provider' => 'gitlab',
+                'oauth_token' => $gitlabUser->token,
+                'oauth_refresh_token' => $gitlabUser->refreshToken,
+                'oauth_token_expires_at' => $gitlabUser->expiresIn
+                    ? now()->addSeconds($gitlabUser->expiresIn)
+                    : null,
+            ],
+        );
+
+        auth()->login($user, remember: true);
+
+        session()->regenerate();
+
+        return redirect()->intended('/');
+    }
+
+    /**
+     * Log the user out and invalidate their session.
+     */
+    public function logout(Request $request): RedirectResponse
+    {
+        auth()->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/');
+    }
+}
