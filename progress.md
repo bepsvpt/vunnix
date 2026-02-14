@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 60 / 116 (51.7%)
-- **Current Task:** T61 — Vue SPA scaffold
-- **Last Verified:** T60
+- **Tasks Complete:** 61 / 116 (52.6%)
+- **Current Task:** T62 — Auth state management (Pinia)
+- **Last Verified:** T61
 
 ---
 
@@ -81,7 +81,7 @@
 - [x] T45: CI pipeline template [Depends: T19]
 - [x] T46: Executor image CI/CD + version alignment [Depends: T19]
 
-## M3 — Path B Functional (13/27)
+## M3 — Path B Functional (14/27)
 
 ### Chat Backend
 
@@ -102,8 +102,8 @@
 
 ### Chat Frontend
 
-- [ ] **T61:** Vue SPA scaffold (responsive D135, history mode) [Depends: T1]
-- [ ] T62: Auth state management (Pinia) [Depends: T61, T7]
+- [x] T61: Vue SPA scaffold (responsive D135, history mode) [Depends: T1]
+- [ ] **T62:** Auth state management (Pinia) [Depends: T61, T7]
 - [ ] T63: Chat page — conversation list [Depends: T62, T47]
 - [ ] T64: Chat page — new conversation flow (cross-project warning D128) [Depends: T63]
 - [ ] T65: Chat page — message thread + markdown rendering (Shiki D138) [Depends: T63]
