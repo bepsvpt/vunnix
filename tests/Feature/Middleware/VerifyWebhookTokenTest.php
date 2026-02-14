@@ -3,8 +3,15 @@
 use App\Models\Project;
 use App\Models\ProjectConfig;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
+
+// T39: Fake the queue so ProcessTask jobs dispatched by TaskDispatchService
+// don't run inline. This test file tests middleware behavior, not task dispatch.
+beforeEach(function () {
+    Queue::fake();
+});
 
 it('returns 401 when X-Gitlab-Token header is missing', function () {
     $this->postJson('/webhook')

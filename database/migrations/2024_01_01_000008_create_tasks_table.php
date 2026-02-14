@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('origin'); // webhook, conversation
 
             // Ownership
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('project_id')->constrained()->cascadeOnDelete();
 
             // Priority & status
