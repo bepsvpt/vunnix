@@ -4047,6 +4047,151 @@ checker.check(
 )
 
 # ============================================================
+#  T41: On-demand review — @ai review
+# ============================================================
+section("T41: On-demand Review (@ai review)")
+
+# T41.1: Permission check in WebhookController
+checker.check(
+    "WebhookController has PERMISSION_REQUIRED_INTENTS constant",
+    file_contains(
+        "app/Http/Controllers/WebhookController.php",
+        "PERMISSION_REQUIRED_INTENTS",
+    ),
+)
+checker.check(
+    "Permission check includes on_demand_review intent",
+    file_contains(
+        "app/Http/Controllers/WebhookController.php",
+        "'on_demand_review'",
+    ),
+)
+checker.check(
+    "Permission check uses hasRequiredPermission method",
+    file_contains(
+        "app/Http/Controllers/WebhookController.php",
+        "hasRequiredPermission",
+    ),
+)
+checker.check(
+    "Permission check resolves GitLab user to Vunnix user",
+    file_contains(
+        "app/Http/Controllers/WebhookController.php",
+        "User::where('gitlab_id'",
+    ),
+)
+checker.check(
+    "Permission check verifies review.trigger permission",
+    file_contains(
+        "app/Http/Controllers/WebhookController.php",
+        "review.trigger",
+    ),
+)
+checker.check(
+    "Permission denied response includes permission_denied flag",
+    file_contains(
+        "app/Http/Controllers/WebhookController.php",
+        "permission_denied",
+    ),
+)
+
+# T41.2: EventRouter already routes @ai review to on_demand_review (high priority)
+checker.check(
+    "EventRouter maps review command to on_demand_review",
+    file_contains(
+        "app/Services/EventRouter.php",
+        "'review' => 'on_demand_review'",
+    ),
+)
+checker.check(
+    "EventRouter assigns high priority to on_demand_review",
+    file_contains(
+        "app/Services/EventRouter.php",
+        "on_demand_review' ? 'high'",
+    ),
+)
+
+# T41.3: TaskDispatchService maps on_demand_review to CodeReview
+checker.check(
+    "TaskDispatchService maps on_demand_review intent",
+    file_contains(
+        "app/Services/TaskDispatchService.php",
+        "'on_demand_review' => TaskType::CodeReview",
+    ),
+)
+
+# T41.4: Permission tests in WebhookControllerTest
+checker.check(
+    "Test: drops @ai review without review.trigger permission",
+    file_contains(
+        "tests/Feature/WebhookControllerTest.php",
+        "drops @ai review from user without review.trigger permission",
+    ),
+)
+checker.check(
+    "Test: drops @ai review from unknown GitLab user",
+    file_contains(
+        "tests/Feature/WebhookControllerTest.php",
+        "drops @ai review from unknown GitLab user",
+    ),
+)
+checker.check(
+    "Test: allows auto_review without review.trigger",
+    file_contains(
+        "tests/Feature/WebhookControllerTest.php",
+        "allows auto_review without review.trigger",
+    ),
+)
+checker.check(
+    "Test: dispatches task for @ai review with review.trigger",
+    file_contains(
+        "tests/Feature/WebhookControllerTest.php",
+        "dispatches task for @ai review when user has review.trigger",
+    ),
+)
+
+# T41.5: E2E integration test
+checker.check(
+    "On-demand review E2E test file exists",
+    file_exists("tests/Feature/OnDemandReviewEndToEndTest.php"),
+)
+checker.check(
+    "E2E test verifies high priority assignment",
+    file_contains(
+        "tests/Feature/OnDemandReviewEndToEndTest.php",
+        "TaskPriority::High",
+    ),
+)
+checker.check(
+    "E2E test verifies full flow from Note Hook",
+    file_contains(
+        "tests/Feature/OnDemandReviewEndToEndTest.php",
+        "Note Hook",
+    ),
+)
+checker.check(
+    "E2E test includes permission denied scenario",
+    file_contains(
+        "tests/Feature/OnDemandReviewEndToEndTest.php",
+        "permission_denied",
+    ),
+)
+checker.check(
+    "E2E test grants review.trigger permission",
+    file_contains(
+        "tests/Feature/OnDemandReviewEndToEndTest.php",
+        "grantReviewTrigger",
+    ),
+)
+checker.check(
+    "E2E test verifies 3-layer GitLab comments",
+    file_contains(
+        "tests/Feature/OnDemandReviewEndToEndTest.php",
+        "discussions",
+    ),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()

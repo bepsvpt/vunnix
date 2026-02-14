@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\Permission;
 use App\Models\Project;
 use App\Models\ProjectConfig;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\WebhookEventLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -30,10 +32,23 @@ function webhookProject(string $secret = 'test-secret'): array
         'webhook_secret' => $secret,
     ]);
 
+    // T41: Create review.trigger permission and a developer role so that
+    // @ai commands pass the permission check in WebhookController.
+    $permission = Permission::firstOrCreate(
+        ['name' => 'review.trigger'],
+        ['description' => 'Can trigger on-demand review', 'group' => 'review'],
+    );
+    $role = Role::firstOrCreate(
+        ['project_id' => $project->id, 'name' => 'developer'],
+        ['description' => 'Test developer role', 'is_default' => true],
+    );
+    $role->permissions()->syncWithoutDetaching([$permission->id]);
+
     // Create users for all author_ids used in test payloads
     foreach ([3, 5, 7, 12] as $gitlabId) {
         if (! User::where('gitlab_id', $gitlabId)->exists()) {
-            User::factory()->create(['gitlab_id' => $gitlabId]);
+            $user = User::factory()->create(['gitlab_id' => $gitlabId]);
+            $user->assignRole($role, $project);
         }
     }
 
@@ -392,4 +407,149 @@ it('accepts webhooks without X-Gitlab-Event-UUID header', function () {
     ])
         ->assertOk()
         ->assertJson(['status' => 'accepted']);
+});
+
+// ------------------------------------------------------------------
+//  T41: Permission check for @ai commands
+// ------------------------------------------------------------------
+
+it('drops @ai review from user without review.trigger permission', function () {
+    // Create project without granting review.trigger to the user
+    $project = Project::factory()->enabled()->create();
+    $token = 'perm-test-secret';
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'webhook_secret' => $token,
+    ]);
+
+    // Create user with gitlab_id 50 but NO review.trigger permission
+    User::factory()->create(['gitlab_id' => 50]);
+
+    postWebhook($this, $token, 'Note Hook', [
+        'object_kind' => 'note',
+        'object_attributes' => [
+            'note' => '@ai review',
+            'noteable_type' => 'MergeRequest',
+            'author_id' => 50,
+        ],
+        'merge_request' => ['iid' => 42],
+    ])->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'intent' => 'on_demand_review',
+            'permission_denied' => true,
+        ]);
+
+    Queue::assertNothingPushed();
+});
+
+it('drops @ai review from unknown GitLab user (no Vunnix account)', function () {
+    $project = Project::factory()->enabled()->create();
+    $token = 'unknown-user-secret';
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'webhook_secret' => $token,
+    ]);
+
+    // gitlab_id 999 does not exist in users table
+    postWebhook($this, $token, 'Note Hook', [
+        'object_kind' => 'note',
+        'object_attributes' => [
+            'note' => '@ai review',
+            'noteable_type' => 'MergeRequest',
+            'author_id' => 999,
+        ],
+        'merge_request' => ['iid' => 42],
+    ])->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'intent' => 'on_demand_review',
+            'permission_denied' => true,
+        ]);
+
+    Queue::assertNothingPushed();
+});
+
+it('allows auto_review without review.trigger permission', function () {
+    // Create project without granting review.trigger
+    $project = Project::factory()->enabled()->create();
+    $token = 'auto-review-perm-secret';
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'webhook_secret' => $token,
+    ]);
+
+    User::factory()->create(['gitlab_id' => 50]);
+
+    // auto_review (MR open) does NOT require review.trigger
+    postWebhook($this, $token, 'Merge Request Hook', [
+        'object_kind' => 'merge_request',
+        'object_attributes' => [
+            'iid' => 42,
+            'action' => 'open',
+            'source_branch' => 'feature/test',
+            'target_branch' => 'main',
+            'author_id' => 50,
+            'last_commit' => ['id' => 'auto-review-sha'],
+        ],
+    ])->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'intent' => 'auto_review',
+        ])
+        ->assertJsonMissing(['permission_denied' => true]);
+
+    Queue::assertPushed(\App\Jobs\ProcessTask::class);
+});
+
+it('dispatches task for @ai review when user has review.trigger permission', function () {
+    [$project, $token] = webhookProject();
+
+    postWebhook($this, $token, 'Note Hook', [
+        'object_kind' => 'note',
+        'object_attributes' => [
+            'note' => '@ai review',
+            'noteable_type' => 'MergeRequest',
+            'author_id' => 5,
+        ],
+        'merge_request' => ['iid' => 42],
+    ])->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'intent' => 'on_demand_review',
+        ])
+        ->assertJsonMissing(['permission_denied' => true])
+        ->assertJsonStructure(['task_id']);
+
+    Queue::assertPushed(\App\Jobs\ProcessTask::class);
+});
+
+it('drops ai::develop label trigger from user without review.trigger', function () {
+    $project = Project::factory()->enabled()->create();
+    $token = 'label-perm-secret';
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'webhook_secret' => $token,
+    ]);
+
+    User::factory()->create(['gitlab_id' => 60]);
+
+    postWebhook($this, $token, 'Issue Hook', [
+        'object_kind' => 'issue',
+        'object_attributes' => [
+            'iid' => 99,
+            'action' => 'update',
+            'author_id' => 60,
+        ],
+        'labels' => [
+            ['title' => 'ai::develop'],
+        ],
+    ])->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'intent' => 'feature_dev',
+            'permission_denied' => true,
+        ]);
+
+    Queue::assertNothingPushed();
 });

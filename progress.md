@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M2 — Path A Functional
-- **Tasks Complete:** 40 / 116 (34%)
-- **Current Task:** T41 — On-demand review — @ai review
-- **Last Verified:** T40
+- **Tasks Complete:** 41 / 116 (35%)
+- **Current Task:** T42 — @ai improve + @ai ask commands
+- **Last Verified:** T41
 
 ---
 
@@ -23,7 +23,7 @@
 - [x] T10: Global configuration model [Depends: T5]
 - [x] T11: GitLab HTTP client service [Depends: T1]
 
-## M2 — Path A Functional (28/35)
+## M2 — Path A Functional (29/35)
 
 ### Webhook & Event Routing
 
@@ -74,8 +74,8 @@
 
 - [x] T39: Code review — end-to-end [Depends: T14, T18, T28, T34, T35, T36, T38]
 - [x] T40: Incremental review [Depends: T39]
-- [ ] **T41:** On-demand review — @ai review [Depends: T39]
-- [ ] T42: @ai improve + @ai ask commands [Depends: T39]
+- [x] T41: On-demand review — @ai review [Depends: T39]
+- [ ] **T42:** @ai improve + @ai ask commands [Depends: T39]
 - [ ] T43: Issue discussion — @ai on Issue [Depends: T39, T26]
 - [ ] T44: Feature development — ai::develop label [Depends: T39, T27]
 - [ ] T45: CI pipeline template [Depends: T19]

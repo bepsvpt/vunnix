@@ -2,9 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\Webhook\IssueLabelChanged;
+use App\Events\Webhook\NoteOnIssue;
+use App\Events\Webhook\NoteOnMR;
+use App\Events\Webhook\WebhookEvent;
 use App\Models\Project;
+use App\Models\User;
 use App\Services\EventDeduplicator;
 use App\Services\EventRouter;
+use App\Services\RoutingResult;
 use App\Services\TaskDispatchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,6 +29,22 @@ class WebhookController extends Controller
         'Note Hook' => 'note',
         'Issue Hook' => 'issue',
         'Push Hook' => 'push',
+    ];
+
+    /**
+     * Intents that require the `review.trigger` permission (§3.1).
+     *
+     * Auto-review (MR open/update), incremental review (push), and
+     * acceptance tracking fire for all enabled projects — no permission
+     * check needed. @ai commands and ai::develop label triggers require
+     * the user to have `review.trigger` on the project.
+     */
+    private const PERMISSION_REQUIRED_INTENTS = [
+        'on_demand_review',
+        'improve',
+        'ask_command',
+        'issue_discussion',
+        'feature_dev',
     ];
 
     /**
@@ -93,6 +115,17 @@ class WebhookController extends Controller
                 'event_type' => $eventType,
                 'project_id' => $project->id,
                 'intent' => null,
+            ]);
+        }
+
+        // T41: Permission check for @ai commands and label triggers (§3.1)
+        if (! $this->hasRequiredPermission($routingResult, $project)) {
+            return response()->json([
+                'status' => 'accepted',
+                'event_type' => $eventType,
+                'project_id' => $project->id,
+                'intent' => $routingResult->intent,
+                'permission_denied' => true,
             ]);
         }
 
@@ -205,5 +238,84 @@ class WebhookController extends Controller
         $context['total_commits_count'] = $payload['total_commits_count'] ?? 0;
 
         return $context;
+    }
+
+    // ------------------------------------------------------------------
+    //  Permission check (T41, §3.1)
+    // ------------------------------------------------------------------
+
+    /**
+     * Check if the routed intent requires the `review.trigger` permission,
+     * and if so, verify the webhook author has it on the project.
+     *
+     * Per §3.1: "@ai commands on MRs require review.trigger. @ai on Issues
+     * requires review.trigger. The ai::develop label trigger requires
+     * review.trigger. If the GitLab user has no Vunnix account or lacks
+     * the permission, the event is logged and silently dropped."
+     *
+     * Returns true if no permission is needed or the user has the permission.
+     * Returns false (and logs) if the permission check fails.
+     */
+    private function hasRequiredPermission(RoutingResult $routingResult, Project $project): bool
+    {
+        if (! in_array($routingResult->intent, self::PERMISSION_REQUIRED_INTENTS, true)) {
+            return true;
+        }
+
+        $gitlabId = $this->extractAuthorId($routingResult->event);
+
+        if ($gitlabId === null) {
+            Log::info('Webhook permission check: no author ID on event, dropping', [
+                'intent' => $routingResult->intent,
+                'project_id' => $project->id,
+            ]);
+
+            return false;
+        }
+
+        $user = User::where('gitlab_id', $gitlabId)->first();
+
+        if ($user === null) {
+            Log::info('Webhook permission check: GitLab user has no Vunnix account, dropping', [
+                'intent' => $routingResult->intent,
+                'gitlab_id' => $gitlabId,
+                'project_id' => $project->id,
+            ]);
+
+            return false;
+        }
+
+        if (! $user->hasPermission('review.trigger', $project)) {
+            Log::info('Webhook permission check: user lacks review.trigger, dropping', [
+                'intent' => $routingResult->intent,
+                'user_id' => $user->id,
+                'gitlab_id' => $gitlabId,
+                'project_id' => $project->id,
+            ]);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Extract the GitLab author/user ID from a webhook event.
+     */
+    private function extractAuthorId(WebhookEvent $event): ?int
+    {
+        if ($event instanceof NoteOnMR) {
+            return $event->authorId;
+        }
+
+        if ($event instanceof NoteOnIssue) {
+            return $event->authorId;
+        }
+
+        if ($event instanceof IssueLabelChanged) {
+            return $event->authorId;
+        }
+
+        return null;
     }
 }
