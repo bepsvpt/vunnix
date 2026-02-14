@@ -3675,6 +3675,115 @@ checker.check(
 )
 
 # ============================================================
+#  T38: Failure handling (DLQ, failure comment)
+# ============================================================
+section("T38: Failure Handling (DLQ, Failure Comment)")
+
+# DeadLetterEntry model
+checker.check(
+    "DeadLetterEntry model exists",
+    file_exists("app/Models/DeadLetterEntry.php"),
+)
+checker.check(
+    "DeadLetterEntry uses dead_letter_queue table",
+    file_contains("app/Models/DeadLetterEntry.php", "dead_letter_queue"),
+)
+checker.check(
+    "DeadLetterEntry casts task_record to array",
+    file_contains("app/Models/DeadLetterEntry.php", "'task_record' => 'array'"),
+)
+checker.check(
+    "DeadLetterEntry casts attempts to array",
+    file_contains("app/Models/DeadLetterEntry.php", "'attempts' => 'array'"),
+)
+
+# FailureHandler service
+checker.check(
+    "FailureHandler service exists",
+    file_exists("app/Services/FailureHandler.php"),
+)
+checker.check(
+    "FailureHandler creates DLQ entry",
+    file_contains("app/Services/FailureHandler.php", "DeadLetterEntry::create"),
+)
+checker.check(
+    "FailureHandler dispatches PostFailureComment",
+    file_contains("app/Services/FailureHandler.php", "PostFailureComment::dispatch"),
+)
+checker.check(
+    "FailureHandler transitions task to Failed",
+    file_contains("app/Services/FailureHandler.php", "TaskStatus::Failed"),
+)
+
+# PostFailureComment job
+checker.check(
+    "PostFailureComment job exists",
+    file_exists("app/Jobs/PostFailureComment.php"),
+)
+checker.check(
+    "PostFailureComment posts failure emoji message",
+    file_contains("app/Jobs/PostFailureComment.php", "AI review failed"),
+)
+checker.check(
+    "PostFailureComment handles MR comments",
+    file_contains("app/Jobs/PostFailureComment.php", "createMergeRequestNote"),
+)
+checker.check(
+    "PostFailureComment handles Issue comments",
+    file_contains("app/Jobs/PostFailureComment.php", "createIssueNote"),
+)
+checker.check(
+    "PostFailureComment supports placeholder update",
+    file_contains("app/Jobs/PostFailureComment.php", "updateMergeRequestNote"),
+)
+checker.check(
+    "PostFailureComment is best-effort (catches exceptions)",
+    file_contains("app/Jobs/PostFailureComment.php", "catch (\\Throwable"),
+)
+
+# Job wiring — ProcessTask
+checker.check(
+    "ProcessTask has failed() method",
+    file_contains("app/Jobs/ProcessTask.php", "public function failed"),
+)
+checker.check(
+    "ProcessTask::failed uses FailureHandler",
+    file_contains("app/Jobs/ProcessTask.php", "FailureHandler"),
+)
+
+# Job wiring — ProcessTaskResult
+checker.check(
+    "ProcessTaskResult has failed() method",
+    file_contains("app/Jobs/ProcessTaskResult.php", "public function failed"),
+)
+checker.check(
+    "ProcessTaskResult::failed uses FailureHandler",
+    file_contains("app/Jobs/ProcessTaskResult.php", "FailureHandler"),
+)
+
+# Tests
+checker.check(
+    "DeadLetterEntry model test exists",
+    file_exists("tests/Unit/Models/DeadLetterEntryTest.php"),
+)
+checker.check(
+    "FailureHandler test exists",
+    file_exists("tests/Feature/Services/FailureHandlerTest.php"),
+)
+checker.check(
+    "PostFailureComment test exists",
+    file_exists("tests/Feature/Jobs/PostFailureCommentTest.php"),
+)
+checker.check(
+    "ProcessTask failure test exists",
+    file_exists("tests/Feature/Jobs/ProcessTaskFailureTest.php"),
+)
+checker.check(
+    "ProcessTaskResult failure test exists",
+    file_exists("tests/Feature/Jobs/ProcessTaskResultFailureTest.php"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
