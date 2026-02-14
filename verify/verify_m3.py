@@ -1044,6 +1044,136 @@ checker.check(
     ),
 )
 
+# ============================================================
+#  T55: Action dispatch from conversation
+# ============================================================
+section("T55: Action Dispatch from Conversation")
+
+# DispatchAction tool class
+checker.check(
+    "DispatchAction tool class exists",
+    file_exists("app/Agents/Tools/DispatchAction.php"),
+)
+checker.check(
+    "DispatchAction implements Tool contract",
+    file_contains("app/Agents/Tools/DispatchAction.php", "implements Tool"),
+)
+checker.check(
+    "DispatchAction has handle method",
+    file_contains("app/Agents/Tools/DispatchAction.php", "public function handle"),
+)
+checker.check(
+    "DispatchAction has schema method",
+    file_contains("app/Agents/Tools/DispatchAction.php", "public function schema"),
+)
+
+# Permission check
+checker.check(
+    "DispatchAction checks chat.dispatch_task permission",
+    file_contains("app/Agents/Tools/DispatchAction.php", "chat.dispatch_task"),
+)
+
+# Task creation with conversation origin
+checker.check(
+    "DispatchAction uses TaskOrigin::Conversation",
+    file_contains("app/Agents/Tools/DispatchAction.php", "TaskOrigin::Conversation"),
+)
+checker.check(
+    "DispatchAction sets conversation_id on task",
+    file_contains("app/Agents/Tools/DispatchAction.php", "conversation_id"),
+)
+
+# Action type mapping
+checker.check(
+    "DispatchAction supports create_issue",
+    file_contains("app/Agents/Tools/DispatchAction.php", "create_issue"),
+)
+checker.check(
+    "DispatchAction supports implement_feature",
+    file_contains("app/Agents/Tools/DispatchAction.php", "implement_feature"),
+)
+checker.check(
+    "DispatchAction supports ui_adjustment",
+    file_contains("app/Agents/Tools/DispatchAction.php", "ui_adjustment"),
+)
+checker.check(
+    "DispatchAction supports create_mr",
+    file_contains("app/Agents/Tools/DispatchAction.php", "create_mr"),
+)
+checker.check(
+    "DispatchAction supports deep_analysis",
+    file_contains("app/Agents/Tools/DispatchAction.php", "deep_analysis"),
+)
+
+# Deep analysis D132
+checker.check(
+    "DeepAnalysis task type exists",
+    file_contains("app/Enums/TaskType.php", "DeepAnalysis"),
+)
+
+# VunnixAgent registers DispatchAction
+checker.check(
+    "VunnixAgent registers DispatchAction tool",
+    file_contains("app/Agents/VunnixAgent.php", "DispatchAction"),
+)
+
+# System prompt updates
+checker.check(
+    "System prompt lists supported action types",
+    file_contains("app/Agents/VunnixAgent.php", "create_issue"),
+)
+checker.check(
+    "System prompt mentions permission handling",
+    file_contains("app/Agents/VunnixAgent.php", "chat.dispatch_task"),
+)
+checker.check(
+    "System prompt describes deep analysis D132",
+    file_contains("app/Agents/VunnixAgent.php", "deep analysis"),
+)
+
+# Uses TaskDispatcher
+checker.check(
+    "DispatchAction uses TaskDispatcher",
+    file_contains("app/Agents/Tools/DispatchAction.php", "TaskDispatcher"),
+)
+checker.check(
+    "DispatchAction uses ProjectAccessChecker",
+    file_contains("app/Agents/Tools/DispatchAction.php", "ProjectAccessChecker"),
+)
+
+# Unit tests
+checker.check(
+    "DispatchAction unit tests exist",
+    file_exists("tests/Unit/Agents/Tools/DispatchActionTest.php"),
+)
+
+# Feature tests
+checker.check(
+    "DispatchAction feature tests exist",
+    file_exists("tests/Feature/Agents/Tools/DispatchActionFeatureTest.php"),
+)
+checker.check(
+    "Feature test covers permission denial",
+    file_contains(
+        "tests/Feature/Agents/Tools/DispatchActionFeatureTest.php",
+        "lacks chat.dispatch_task",
+    ),
+)
+checker.check(
+    "Feature test covers task creation with conversation origin",
+    file_contains(
+        "tests/Feature/Agents/Tools/DispatchActionFeatureTest.php",
+        "conversation origin",
+    ),
+)
+checker.check(
+    "Feature test covers deep_analysis action type",
+    file_contains(
+        "tests/Feature/Agents/Tools/DispatchActionFeatureTest.php",
+        "deep_analysis",
+    ),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()
