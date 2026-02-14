@@ -45,6 +45,10 @@ return new class extends Migration
             // Cost
             $table->decimal('cost', 10, 6)->nullable();
 
+            // Retry & error tracking
+            $table->unsignedSmallInteger('retry_count')->default(0);
+            $table->string('error_reason')->nullable(); // max_retries_exceeded, expired, invalid_request, context_exceeded, scheduling_timeout
+
             // Timestamps
             $table->timestamp('started_at')->nullable();
             $table->timestamp('completed_at')->nullable();
