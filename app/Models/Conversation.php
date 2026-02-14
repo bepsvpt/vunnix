@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
@@ -62,6 +63,25 @@ class Conversation extends Model
         return $this->hasOne(Message::class, 'conversation_id')->latestOfMany();
     }
 
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'conversation_projects');
+    }
+
+    /**
+     * Get all project IDs associated with this conversation
+     * (primary project_id + any additional pivot projects).
+     */
+    public function allProjectIds(): array
+    {
+        $ids = $this->projects()->pluck('projects.id')->toArray();
+        if ($this->project_id && ! in_array($this->project_id, $ids)) {
+            $ids[] = $this->project_id;
+        }
+
+        return $ids;
+    }
+
     public function scopeNotArchived(Builder $query): Builder
     {
         return $query->whereNull('archived_at');
@@ -79,13 +99,19 @@ class Conversation extends Model
 
     /**
      * Scope to conversations accessible by a user.
-     * A user can access conversations belonging to projects they are a member of.
+     * A user can access conversations belonging to projects they are a member of,
+     * either via the primary project_id or additional projects in the pivot table.
      */
     public function scopeAccessibleBy(Builder $query, User $user): Builder
     {
         $projectIds = $user->projects()->pluck('projects.id');
 
-        return $query->whereIn('project_id', $projectIds);
+        return $query->where(function (Builder $q) use ($projectIds) {
+            $q->whereIn('project_id', $projectIds)
+                ->orWhereHas('projects', function (Builder $sub) use ($projectIds) {
+                    $sub->whereIn('projects.id', $projectIds);
+                });
+        });
     }
 
     public function isArchived(): bool
