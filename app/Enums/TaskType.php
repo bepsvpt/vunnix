@@ -10,4 +10,12 @@ enum TaskType: string
     case UiAdjustment = 'ui_adjustment';
     case PrdCreation = 'prd_creation';
     case SecurityAudit = 'security_audit';
+
+    public function executionMode(): string
+    {
+        return match ($this) {
+            self::PrdCreation => 'server',
+            default => 'runner',
+        };
+    }
 }

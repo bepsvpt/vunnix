@@ -238,7 +238,7 @@ checker.check(
 )
 checker.check(
     "PostHelpResponse uses vunnix-server queue",
-    file_contains("app/Jobs/PostHelpResponse.php", "vunnix-server"),
+    file_contains("app/Jobs/PostHelpResponse.php", "QueueNames::SERVER"),
 )
 
 # Controller integration
@@ -390,6 +390,142 @@ checker.check(
 checker.check(
     "WebhookController test covers UUID dedup integration",
     file_contains("tests/Feature/WebhookControllerTest.php", "X-Gitlab-Event-UUID"),
+)
+
+# ============================================================
+#  T15: Task model + lifecycle (state machine)
+# ============================================================
+section("T15: Task Model + State Machine Lifecycle")
+
+checker.check(
+    "Task model exists",
+    file_exists("app/Models/Task.php"),
+)
+checker.check(
+    "Task model has transitionTo() method",
+    file_contains("app/Models/Task.php", "function transitionTo("),
+)
+checker.check(
+    "Task model has isTerminal() method",
+    file_contains("app/Models/Task.php", "function isTerminal()"),
+)
+checker.check(
+    "TaskStatus enum exists",
+    file_exists("app/Enums/TaskStatus.php"),
+)
+checker.check(
+    "TaskStatus has canTransitionTo() method",
+    file_contains("app/Enums/TaskStatus.php", "function canTransitionTo("),
+)
+checker.check(
+    "Task transition logging exists (observer or inline)",
+    file_exists("app/Observers/TaskObserver.php")
+    and file_contains("app/Observers/TaskObserver.php", "task_transition_logs"),
+)
+
+# ============================================================
+#  T16: Task queue — Redis with priority + queue isolation
+# ============================================================
+section("T16: Task Queue — Redis Priority + Queue Isolation")
+
+# ProcessTask job
+checker.check(
+    "ProcessTask job exists",
+    file_exists("app/Jobs/ProcessTask.php"),
+)
+checker.check(
+    "ProcessTask implements ShouldQueue",
+    file_contains("app/Jobs/ProcessTask.php", "ShouldQueue"),
+)
+checker.check(
+    "ProcessTask has resolveQueue() method",
+    file_contains("app/Jobs/ProcessTask.php", "function resolveQueue("),
+)
+checker.check(
+    "ProcessTask routes to vunnix-server for server tasks",
+    file_contains("app/Jobs/ProcessTask.php", "QueueNames::SERVER"),
+)
+checker.check(
+    "ProcessTask routes to runner queues for runner tasks",
+    file_contains("app/Jobs/ProcessTask.php", "runnerQueueName"),
+)
+
+# TaskDispatchService
+checker.check(
+    "TaskDispatchService exists",
+    file_exists("app/Services/TaskDispatchService.php"),
+)
+checker.check(
+    "TaskDispatchService has dispatch() method",
+    file_contains("app/Services/TaskDispatchService.php", "function dispatch("),
+)
+checker.check(
+    "TaskDispatchService maps intents to TaskType",
+    file_contains("app/Services/TaskDispatchService.php", "INTENT_TO_TYPE"),
+)
+checker.check(
+    "TaskDispatchService creates Task in received status",
+    file_contains("app/Services/TaskDispatchService.php", "TaskStatus::Received"),
+)
+checker.check(
+    "TaskDispatchService transitions to queued",
+    file_contains("app/Services/TaskDispatchService.php", "TaskStatus::Queued"),
+)
+checker.check(
+    "TaskDispatchService dispatches ProcessTask",
+    file_contains("app/Services/TaskDispatchService.php", "ProcessTask"),
+)
+
+# TaskType execution mode
+checker.check(
+    "TaskType has executionMode() method",
+    file_contains("app/Enums/TaskType.php", "function executionMode()"),
+)
+checker.check(
+    "TaskType maps PrdCreation to server mode",
+    file_contains("app/Enums/TaskType.php", "'server'"),
+)
+
+# TaskPriority queue naming
+checker.check(
+    "TaskPriority has runnerQueueName() method",
+    file_contains("app/Enums/TaskPriority.php", "function runnerQueueName()"),
+)
+checker.check(
+    "TaskPriority generates vunnix-runner prefix",
+    file_contains("app/Enums/TaskPriority.php", "vunnix-runner-"),
+)
+
+# QueueNames constants
+checker.check(
+    "QueueNames constants class exists",
+    file_exists("app/Support/QueueNames.php"),
+)
+checker.check(
+    "QueueNames defines SERVER constant",
+    file_contains("app/Support/QueueNames.php", "SERVER"),
+)
+checker.check(
+    "QueueNames defines RUNNER_ constants",
+    file_contains("app/Support/QueueNames.php", "RUNNER_HIGH"),
+)
+
+# Tests
+checker.check(
+    "TaskType unit test exists",
+    file_exists("tests/Unit/Enums/TaskTypeTest.php"),
+)
+checker.check(
+    "TaskPriority unit test exists",
+    file_exists("tests/Unit/Enums/TaskPriorityTest.php"),
+)
+checker.check(
+    "ProcessTask unit test exists",
+    file_exists("tests/Unit/Jobs/ProcessTaskTest.php"),
+)
+checker.check(
+    "TaskDispatchService feature test exists",
+    file_exists("tests/Feature/Services/TaskDispatchServiceTest.php"),
 )
 
 # ============================================================

@@ -33,7 +33,7 @@ class PostHelpResponse implements ShouldQueue
         public readonly int $mergeRequestIid,
         public readonly string $unrecognizedCommand,
     ) {
-        $this->onQueue('vunnix-server');
+        $this->onQueue(\App\Support\QueueNames::SERVER);
     }
 
     public function handle(GitLabClient $gitLab): void
