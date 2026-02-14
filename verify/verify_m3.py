@@ -723,6 +723,229 @@ checker.check(
     file_contains("tests/Unit/Agents/VunnixAgentTest.php", "T51 issue tools"),
 )
 
+# ============================================================
+#  T52: GitLab tools — Merge Requests
+# ============================================================
+section("T52: GitLab Tools — Merge Requests")
+
+# Tool classes exist
+checker.check(
+    "ListMergeRequests tool class exists",
+    file_exists("app/Agents/Tools/ListMergeRequests.php"),
+)
+checker.check(
+    "ReadMergeRequest tool class exists",
+    file_exists("app/Agents/Tools/ReadMergeRequest.php"),
+)
+checker.check(
+    "ReadMRDiff tool class exists",
+    file_exists("app/Agents/Tools/ReadMRDiff.php"),
+)
+
+# Tool interface implementation
+checker.check(
+    "ListMergeRequests implements Tool contract",
+    file_contains("app/Agents/Tools/ListMergeRequests.php", "implements Tool"),
+)
+checker.check(
+    "ReadMergeRequest implements Tool contract",
+    file_contains("app/Agents/Tools/ReadMergeRequest.php", "implements Tool"),
+)
+checker.check(
+    "ReadMRDiff implements Tool contract",
+    file_contains("app/Agents/Tools/ReadMRDiff.php", "implements Tool"),
+)
+
+# handle() and schema() methods
+checker.check(
+    "ListMergeRequests has handle() method",
+    file_contains("app/Agents/Tools/ListMergeRequests.php", "public function handle"),
+)
+checker.check(
+    "ListMergeRequests has schema() method",
+    file_contains("app/Agents/Tools/ListMergeRequests.php", "public function schema"),
+)
+checker.check(
+    "ReadMergeRequest has handle() method",
+    file_contains("app/Agents/Tools/ReadMergeRequest.php", "public function handle"),
+)
+checker.check(
+    "ReadMergeRequest has schema() method",
+    file_contains("app/Agents/Tools/ReadMergeRequest.php", "public function schema"),
+)
+checker.check(
+    "ReadMRDiff has handle() method",
+    file_contains("app/Agents/Tools/ReadMRDiff.php", "public function handle"),
+)
+checker.check(
+    "ReadMRDiff has schema() method",
+    file_contains("app/Agents/Tools/ReadMRDiff.php", "public function schema"),
+)
+
+# GitLabClient integration
+checker.check(
+    "ListMergeRequests uses GitLabClient::listMergeRequests",
+    file_contains("app/Agents/Tools/ListMergeRequests.php", "listMergeRequests"),
+)
+checker.check(
+    "ReadMergeRequest uses GitLabClient::getMergeRequest",
+    file_contains("app/Agents/Tools/ReadMergeRequest.php", "getMergeRequest"),
+)
+checker.check(
+    "ReadMRDiff uses GitLabClient::getMergeRequestChanges",
+    file_contains("app/Agents/Tools/ReadMRDiff.php", "getMergeRequestChanges"),
+)
+
+# Filter parameters in ListMergeRequests schema
+checker.check(
+    "ListMergeRequests schema has state filter",
+    file_contains("app/Agents/Tools/ListMergeRequests.php", "'state'"),
+)
+checker.check(
+    "ListMergeRequests schema has labels filter",
+    file_contains("app/Agents/Tools/ListMergeRequests.php", "'labels'"),
+)
+checker.check(
+    "ListMergeRequests schema has search filter",
+    file_contains("app/Agents/Tools/ListMergeRequests.php", "'search'"),
+)
+checker.check(
+    "ListMergeRequests schema has per_page parameter",
+    file_contains("app/Agents/Tools/ListMergeRequests.php", "'per_page'"),
+)
+
+# ReadMergeRequest parameters
+checker.check(
+    "ReadMergeRequest schema has mr_iid parameter",
+    file_contains("app/Agents/Tools/ReadMergeRequest.php", "'mr_iid'"),
+)
+
+# ReadMRDiff parameters
+checker.check(
+    "ReadMRDiff schema has mr_iid parameter",
+    file_contains("app/Agents/Tools/ReadMRDiff.php", "'mr_iid'"),
+)
+
+# Error handling — tools return messages, not exceptions
+checker.check(
+    "ListMergeRequests catches GitLabApiException",
+    file_contains("app/Agents/Tools/ListMergeRequests.php", "catch (GitLabApiException"),
+)
+checker.check(
+    "ReadMergeRequest catches GitLabApiException",
+    file_contains("app/Agents/Tools/ReadMergeRequest.php", "catch (GitLabApiException"),
+)
+checker.check(
+    "ReadMRDiff catches GitLabApiException",
+    file_contains("app/Agents/Tools/ReadMRDiff.php", "catch (GitLabApiException"),
+)
+
+# ReadMergeRequest parses MR-specific fields
+checker.check(
+    "ReadMergeRequest includes source_branch",
+    file_contains("app/Agents/Tools/ReadMergeRequest.php", "source_branch"),
+)
+checker.check(
+    "ReadMergeRequest includes target_branch",
+    file_contains("app/Agents/Tools/ReadMergeRequest.php", "target_branch"),
+)
+checker.check(
+    "ReadMergeRequest includes merge_status",
+    file_contains("app/Agents/Tools/ReadMergeRequest.php", "merge_status"),
+)
+checker.check(
+    "ReadMergeRequest includes description",
+    file_contains("app/Agents/Tools/ReadMergeRequest.php", "description"),
+)
+checker.check(
+    "ReadMergeRequest includes assignees",
+    file_contains("app/Agents/Tools/ReadMergeRequest.php", "assignees"),
+)
+
+# ReadMRDiff parses diff hunks
+checker.check(
+    "ReadMRDiff parses changes array",
+    file_contains("app/Agents/Tools/ReadMRDiff.php", "changes"),
+)
+checker.check(
+    "ReadMRDiff handles new files",
+    file_contains("app/Agents/Tools/ReadMRDiff.php", "new_file"),
+)
+checker.check(
+    "ReadMRDiff handles deleted files",
+    file_contains("app/Agents/Tools/ReadMRDiff.php", "deleted_file"),
+)
+checker.check(
+    "ReadMRDiff handles renamed files",
+    file_contains("app/Agents/Tools/ReadMRDiff.php", "renamed_file"),
+)
+checker.check(
+    "ReadMRDiff truncates large diffs",
+    file_contains("app/Agents/Tools/ReadMRDiff.php", "MAX_OUTPUT_SIZE"),
+)
+
+# Tools registered in VunnixAgent
+checker.check(
+    "VunnixAgent registers ListMergeRequests tool",
+    file_contains("app/Agents/VunnixAgent.php", "ListMergeRequests"),
+)
+checker.check(
+    "VunnixAgent registers ReadMergeRequest tool",
+    file_contains("app/Agents/VunnixAgent.php", "ReadMergeRequest"),
+)
+checker.check(
+    "VunnixAgent registers ReadMRDiff tool",
+    file_contains("app/Agents/VunnixAgent.php", "ReadMRDiff"),
+)
+
+# Unit tests
+checker.check(
+    "ListMergeRequests unit tests exist",
+    file_exists("tests/Unit/Agents/Tools/ListMergeRequestsTest.php"),
+)
+checker.check(
+    "ReadMergeRequest unit tests exist",
+    file_exists("tests/Unit/Agents/Tools/ReadMergeRequestTest.php"),
+)
+checker.check(
+    "ReadMRDiff unit tests exist",
+    file_exists("tests/Unit/Agents/Tools/ReadMRDiffTest.php"),
+)
+
+# Test coverage of key scenarios
+checker.check(
+    "ListMergeRequests test covers filter parameters",
+    file_contains("tests/Unit/Agents/Tools/ListMergeRequestsTest.php", "passes state filter"),
+)
+checker.check(
+    "ListMergeRequests test covers error handling",
+    file_contains("tests/Unit/Agents/Tools/ListMergeRequestsTest.php", "Error listing merge requests"),
+)
+checker.check(
+    "ReadMergeRequest test covers full details parsing",
+    file_contains("tests/Unit/Agents/Tools/ReadMergeRequestTest.php", "formatted merge request details"),
+)
+checker.check(
+    "ReadMergeRequest test covers error handling",
+    file_contains("tests/Unit/Agents/Tools/ReadMergeRequestTest.php", "Error reading merge request"),
+)
+checker.check(
+    "ReadMRDiff test covers diff parsing",
+    file_contains("tests/Unit/Agents/Tools/ReadMRDiffTest.php", "formatted diff with file headers"),
+)
+checker.check(
+    "ReadMRDiff test covers large diff truncation",
+    file_contains("tests/Unit/Agents/Tools/ReadMRDiffTest.php", "truncates large diffs"),
+)
+checker.check(
+    "ReadMRDiff test covers error handling",
+    file_contains("tests/Unit/Agents/Tools/ReadMRDiffTest.php", "Error reading merge request diff"),
+)
+checker.check(
+    "VunnixAgent test verifies T52 tools",
+    file_contains("tests/Unit/Agents/VunnixAgentTest.php", "T52 merge request tools"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()

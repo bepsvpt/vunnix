@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 51 / 116 (44%)
-- **Current Task:** T52 — GitLab tools — Merge Requests (ListMRs, ReadMR, ReadMRDiff)
-- **Last Verified:** T51
+- **Tasks Complete:** 52 / 116 (45%)
+- **Current Task:** T53 — Cross-project tool-use access check
+- **Last Verified:** T52
 
 ---
 
@@ -81,7 +81,7 @@
 - [x] T45: CI pipeline template [Depends: T19]
 - [x] T46: Executor image CI/CD + version alignment [Depends: T19]
 
-## M3 — Path B Functional (5/27)
+## M3 — Path B Functional (6/27)
 
 ### Chat Backend
 
@@ -90,8 +90,8 @@
 - [x] T49: Conversation Engine — AI SDK Agent class [Depends: T47, T48, T10]
 - [x] T50: GitLab tools — repo browsing (BrowseRepoTree, ReadFile, SearchCode) [Depends: T49, T11]
 - [x] T51: GitLab tools — Issues (ListIssues, ReadIssue) [Depends: T49, T11]
-- [ ] **T52:** GitLab tools — Merge Requests (ListMRs, ReadMR, ReadMRDiff) [Depends: T49, T11]
-- [ ] T53: Cross-project tool-use access check [Depends: T50, T51, T52, T9]
+- [x] T52: GitLab tools — Merge Requests (ListMRs, ReadMR, ReadMRDiff) [Depends: T49, T11]
+- [ ] **T53:** Cross-project tool-use access check [Depends: T50, T51, T52, T9]
 - [ ] T54: Quality gate behavior [Depends: T49]
 - [ ] T55: Action dispatch from conversation (deep analysis D132) [Depends: T49, T15, T16, T9]
 - [ ] T56: Server-side execution mode (create Issue bypass) [Depends: T55, T32, T11]

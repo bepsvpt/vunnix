@@ -2,8 +2,11 @@
 
 use App\Agents\Tools\BrowseRepoTree;
 use App\Agents\Tools\ListIssues;
+use App\Agents\Tools\ListMergeRequests;
 use App\Agents\Tools\ReadFile;
 use App\Agents\Tools\ReadIssue;
+use App\Agents\Tools\ReadMergeRequest;
+use App\Agents\Tools\ReadMRDiff;
 use App\Agents\Tools\SearchCode;
 use App\Agents\VunnixAgent;
 use Laravel\Ai\Contracts\Agent;
@@ -48,9 +51,18 @@ it('returns the T51 issue tools', function () {
     $agent = new VunnixAgent;
     $tools = iterator_to_array($agent->tools());
 
-    expect($tools)->toHaveCount(5);
     expect($tools[3])->toBeInstanceOf(ListIssues::class);
     expect($tools[4])->toBeInstanceOf(ReadIssue::class);
+});
+
+it('returns the T52 merge request tools', function () {
+    $agent = new VunnixAgent;
+    $tools = iterator_to_array($agent->tools());
+
+    expect($tools)->toHaveCount(8);
+    expect($tools[5])->toBeInstanceOf(ListMergeRequests::class);
+    expect($tools[6])->toBeInstanceOf(ReadMergeRequest::class);
+    expect($tools[7])->toBeInstanceOf(ReadMRDiff::class);
 });
 
 it('returns tools that implement the Tool interface', function () {

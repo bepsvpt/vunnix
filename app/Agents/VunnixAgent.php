@@ -4,8 +4,11 @@ namespace App\Agents;
 
 use App\Agents\Tools\BrowseRepoTree;
 use App\Agents\Tools\ListIssues;
+use App\Agents\Tools\ListMergeRequests;
 use App\Agents\Tools\ReadFile;
 use App\Agents\Tools\ReadIssue;
+use App\Agents\Tools\ReadMergeRequest;
+use App\Agents\Tools\ReadMRDiff;
 use App\Agents\Tools\SearchCode;
 use App\Models\GlobalSetting;
 use Laravel\Ai\Concerns\RemembersConversations;
@@ -68,8 +71,6 @@ class VunnixAgent implements Agent, Conversational, HasTools, HasMiddleware
      * Tools registered:
      * - T50: BrowseRepoTree, ReadFile, SearchCode
      * - T51: ListIssues, ReadIssue
-     *
-     * Remaining (added by later tasks):
      * - T52: ListMergeRequests, ReadMergeRequest, ReadMRDiff
      *
      * @return array<\Laravel\Ai\Contracts\Tool>
@@ -84,6 +85,10 @@ class VunnixAgent implements Agent, Conversational, HasTools, HasMiddleware
             // T51: Issues
             app(ListIssues::class),
             app(ReadIssue::class),
+            // T52: Merge requests
+            app(ListMergeRequests::class),
+            app(ReadMergeRequest::class),
+            app(ReadMRDiff::class),
         ];
     }
 
