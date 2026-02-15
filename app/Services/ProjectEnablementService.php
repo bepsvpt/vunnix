@@ -30,7 +30,8 @@ class ProjectEnablementService
      * 1. Verify bot has Maintainer role (D129)
      * 2. Check Vunnix project visibility (D150)
      * 3. Create webhook with secret token
-     * 4. Pre-create ai::* labels
+     * 4. Create pipeline trigger token for CI execution
+     * 5. Pre-create ai::* labels
      *
      * @return array{success: bool, error?: string, warnings: array<string>}
      */
@@ -96,7 +97,23 @@ class ProjectEnablementService
             ];
         }
 
-        // 4. Pre-create ai::* labels (idempotent — 409 = already exists)
+        // 4. Create pipeline trigger token for CI-based task execution
+        $triggerToken = null;
+        try {
+            $trigger = $this->gitLab->createPipelineTrigger(
+                $project->gitlab_project_id,
+                'Vunnix task executor',
+            );
+            $triggerToken = $trigger['token'];
+        } catch (\Throwable $e) {
+            $warnings[] = 'Failed to create CI pipeline trigger token: '.$e->getMessage().'. You can create one manually in GitLab Settings > CI/CD > Pipeline trigger tokens.';
+            Log::warning('Failed to create pipeline trigger', [
+                'project_id' => $project->gitlab_project_id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // 5. Pre-create ai::* labels (idempotent — 409 = already exists)
         foreach (self::AI_LABELS as $label) {
             try {
                 $this->gitLab->createProjectLabel(
@@ -113,19 +130,24 @@ class ProjectEnablementService
             }
         }
 
-        // 5. Update project state
+        // 6. Update project state
         $project->update([
             'enabled' => true,
             'webhook_configured' => true,
             'webhook_id' => $webhook['id'],
         ]);
 
-        // Store webhook secret in config
+        // Store webhook secret and trigger token in config
+        $configData = ['webhook_secret' => $secret];
+        if ($triggerToken) {
+            $configData['ci_trigger_token'] = $triggerToken;
+        }
+
         $config = $project->projectConfig;
         if ($config) {
-            $config->update(['webhook_secret' => $secret]);
+            $config->update($configData);
         } else {
-            $project->projectConfig()->create(['webhook_secret' => $secret]);
+            $project->projectConfig()->create($configData);
         }
 
         Log::info('Project enabled', ['project_id' => $project->id, 'gitlab_project_id' => $project->gitlab_project_id]);

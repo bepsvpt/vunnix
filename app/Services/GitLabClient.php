@@ -629,6 +629,21 @@ class GitLabClient
     // ------------------------------------------------------------------
 
     /**
+     * Create a pipeline trigger token for a project.
+     *
+     * @return array{id: int, token: string, description: string}
+     */
+    public function createPipelineTrigger(int $projectId, string $description): array
+    {
+        $response = $this->request()->post(
+            $this->url("projects/{$projectId}/triggers"),
+            ['description' => $description],
+        );
+
+        return $this->handleResponse($response, 'createPipelineTrigger')->json();
+    }
+
+    /**
      * Trigger a pipeline via the pipeline triggers API.
      *
      * @param  array<string, string>  $variables  Key-value pairs for CI variables.

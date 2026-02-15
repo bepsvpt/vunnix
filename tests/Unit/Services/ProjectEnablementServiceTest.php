@@ -39,6 +39,12 @@ function fakeGitLabForEnable(): void
             'id' => 555,
             'url' => 'https://vunnix.example.com/api/webhook',
         ], 201),
+        // Pipeline trigger token creation
+        'gitlab.example.com/api/v4/projects/42/triggers' => Http::response([
+            'id' => 10,
+            'token' => 'trigger-token-abc123',
+            'description' => 'Vunnix task executor',
+        ], 201),
         // Label creation (6 labels)
         'gitlab.example.com/api/v4/projects/42/labels' => Http::response([
             'id' => 1,
@@ -68,6 +74,7 @@ it('enables a project successfully', function () {
     expect($project->webhook_configured)->toBeTrue();
     expect($project->webhook_id)->toBe(555);
     expect($project->projectConfig->webhook_secret)->not->toBeNull();
+    expect($project->projectConfig->ci_trigger_token)->toBe('trigger-token-abc123');
 });
 
 it('fails to enable when bot is not a project member', function () {
@@ -140,6 +147,10 @@ it('warns when Vunnix project is private (D150)', function () {
         'gitlab.example.com/api/v4/projects/42/hooks' => Http::response([
             'id' => 555,
         ], 201),
+        'gitlab.example.com/api/v4/projects/42/triggers' => Http::response([
+            'id' => 10,
+            'token' => 'trigger-token-abc123',
+        ], 201),
         'gitlab.example.com/api/v4/projects/42/labels' => Http::response([
             'id' => 1,
         ], 201),
@@ -194,6 +205,10 @@ it('skips existing labels without error (idempotent)', function () {
         ]),
         'gitlab.example.com/api/v4/projects/42/hooks' => Http::response([
             'id' => 555,
+        ], 201),
+        'gitlab.example.com/api/v4/projects/42/triggers' => Http::response([
+            'id' => 10,
+            'token' => 'trigger-token-abc123',
         ], 201),
         // All labels already exist
         'gitlab.example.com/api/v4/projects/42/labels' => Http::response(
