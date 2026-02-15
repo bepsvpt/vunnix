@@ -61,6 +61,15 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Return empty string instead of null for OAuth users (no password).
+     * Prevents hash_hmac() deprecation warning in SessionGuard::hashPasswordForCookie().
+     */
+    public function getAuthPassword(): string
+    {
+        return $this->password ?? '';
+    }
+
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class)
