@@ -1,30 +1,29 @@
 <script setup>
-import { computed } from 'vue';
-import MarkdownIt from 'markdown-it';
+import { ref, computed, onMounted } from 'vue';
+import { getMarkdownRenderer, isHighlightReady, onHighlightLoaded } from '@/lib/markdown';
 
 const props = defineProps({
     content: { type: String, default: '' },
 });
 
-const md = new MarkdownIt({
-    html: false,
-    linkify: true,
-    typographer: true,
+const highlightVersion = ref(0);
+
+function handleHighlightReady() {
+    highlightVersion.value++;
+}
+
+onMounted(() => {
+    if (!isHighlightReady()) {
+        onHighlightLoaded(handleHighlightReady);
+    }
 });
 
-// Open links in new tab with security attributes
-const defaultRender = md.renderer.rules.link_open ||
-    function (tokens, idx, options, env, self) {
-        return self.renderToken(tokens, idx, options);
-    };
-
-md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
-    tokens[idx].attrSet('target', '_blank');
-    tokens[idx].attrSet('rel', 'noopener noreferrer');
-    return defaultRender(tokens, idx, options, env, self);
-};
-
-const rendered = computed(() => md.render(props.content || ''));
+const rendered = computed(() => {
+    // Access highlightVersion to trigger re-compute when Shiki loads
+    void highlightVersion.value;
+    const md = getMarkdownRenderer();
+    return md.render(props.content || '');
+});
 </script>
 
 <template>
