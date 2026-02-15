@@ -3,15 +3,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\TaskStatus;
-use App\Enums\TaskType;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
+use App\Services\MetricsQueryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardCostController extends Controller
 {
+    public function __construct(
+        private readonly MetricsQueryService $metricsQuery,
+    ) {}
+
     public function __invoke(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -30,7 +34,85 @@ class DashboardCostController extends Controller
             ->where('enabled', true)
             ->pluck('projects.id');
 
-        // Token usage by task type — sum tokens_used grouped by type
+        // Try materialized views first, fall back to live Task queries
+        $byType = $this->metricsQuery->byType($projectIds);
+
+        if ($byType->isNotEmpty()) {
+            return $this->fromMaterializedViews($projectIds, $byType);
+        }
+
+        return $this->fromLiveQueries($projectIds);
+    }
+
+    /**
+     * Build response from materialized view / task_metrics data.
+     */
+    private function fromMaterializedViews($projectIds, $byType): JsonResponse
+    {
+        $tokensByType = $byType
+            ->mapWithKeys(fn ($row) => [$row->task_type => (int) $row->total_tokens])
+            ->all();
+
+        $costPerType = $byType
+            ->mapWithKeys(fn ($row) => [
+                $row->task_type => [
+                    'avg_cost' => (float) round($row->avg_cost, 6),
+                    'total_cost' => (float) round($row->total_cost, 6),
+                    'task_count' => (int) $row->task_count,
+                ],
+            ])
+            ->all();
+
+        $byProject = $this->metricsQuery->byProject($projectIds);
+
+        $costPerProject = $byProject
+            ->map(function ($row) {
+                $project = DB::table('projects')->where('id', $row->project_id)->first(['name']);
+
+                return [
+                    'project_id' => (int) $row->project_id,
+                    'project_name' => $project?->name ?? 'Unknown',
+                    'total_cost' => (float) round($row->total_cost, 6),
+                    'task_count' => (int) $row->task_count,
+                ];
+            })
+            ->values()
+            ->all();
+
+        $byPeriod = $this->metricsQuery->byPeriod($projectIds, 12);
+
+        $monthlyTrend = $byPeriod
+            ->groupBy('period_month')
+            ->map(fn ($rows, $month) => [
+                'month' => $month,
+                'total_cost' => (float) round($rows->sum('total_cost'), 6),
+                'total_tokens' => (int) $rows->sum('total_tokens'),
+                'task_count' => (int) $rows->sum('task_count'),
+            ])
+            ->sortKeys()
+            ->values()
+            ->all();
+
+        $totalCost = $byProject->sum('total_cost');
+        $totalTokens = $byProject->sum('total_tokens');
+
+        return response()->json([
+            'data' => [
+                'total_cost' => (float) round($totalCost, 6),
+                'total_tokens' => (int) $totalTokens,
+                'token_usage_by_type' => $tokensByType,
+                'cost_per_type' => $costPerType,
+                'cost_per_project' => $costPerProject,
+                'monthly_trend' => $monthlyTrend,
+            ],
+        ]);
+    }
+
+    /**
+     * Build response from live Task table queries (fallback when no task_metrics data).
+     */
+    private function fromLiveQueries($projectIds): JsonResponse
+    {
         $tokensByType = Task::whereIn('project_id', $projectIds)
             ->whereIn('status', [TaskStatus::Completed, TaskStatus::Failed])
             ->whereNotNull('tokens_used')
@@ -40,7 +122,6 @@ class DashboardCostController extends Controller
             ->mapWithKeys(fn ($tokens, $type) => [$type => (int) $tokens])
             ->all();
 
-        // Cost per task type — avg cost grouped by type
         $costPerType = Task::whereIn('project_id', $projectIds)
             ->where('status', TaskStatus::Completed)
             ->whereNotNull('cost')
@@ -56,7 +137,6 @@ class DashboardCostController extends Controller
             ])
             ->all();
 
-        // Cost per project — total cost grouped by project
         $costPerProject = Task::whereIn('project_id', $projectIds)
             ->where('status', TaskStatus::Completed)
             ->whereNotNull('cost')
@@ -73,7 +153,6 @@ class DashboardCostController extends Controller
             ->values()
             ->all();
 
-        // Monthly trend — total cost and token usage per month (last 12 months)
         $driver = DB::connection()->getDriverName();
         $monthExpr = $driver === 'sqlite'
             ? "strftime('%Y-%m', created_at)"
@@ -100,7 +179,6 @@ class DashboardCostController extends Controller
             ->values()
             ->all();
 
-        // Total cost summary
         $totalCost = Task::whereIn('project_id', $projectIds)
             ->where('status', TaskStatus::Completed)
             ->sum('cost');
