@@ -4,6 +4,7 @@ import { useAdminStore } from '@/stores/admin';
 import AdminProjectList from '@/components/AdminProjectList.vue';
 import AdminRoleList from '@/components/AdminRoleList.vue';
 import AdminRoleAssignments from '@/components/AdminRoleAssignments.vue';
+import AdminGlobalSettings from '@/components/AdminGlobalSettings.vue';
 
 const admin = useAdminStore();
 
@@ -13,6 +14,7 @@ const tabs = [
     { key: 'projects', label: 'Projects' },
     { key: 'roles', label: 'Roles' },
     { key: 'assignments', label: 'Assignments' },
+    { key: 'settings', label: 'Settings' },
 ];
 
 onMounted(() => {
@@ -44,5 +46,6 @@ onMounted(() => {
     <AdminProjectList v-if="activeTab === 'projects'" />
     <AdminRoleList v-else-if="activeTab === 'roles'" />
     <AdminRoleAssignments v-else-if="activeTab === 'assignments'" />
+    <AdminGlobalSettings v-else-if="activeTab === 'settings'" />
   </div>
 </template>

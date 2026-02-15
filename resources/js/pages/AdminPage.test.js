@@ -120,4 +120,20 @@ describe('AdminPage', () => {
         expect(wrapper.text()).toContain('Role Assignments');
         expect(wrapper.find('[data-testid="assign-role-btn"]').exists()).toBe(true);
     });
+
+    it('shows Settings tab', () => {
+        const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
+        expect(wrapper.find('[data-testid="admin-tab-settings"]').exists()).toBe(true);
+    });
+
+    it('switches to Settings tab content on click', async () => {
+        const admin = useAdminStore();
+        vi.spyOn(admin, 'fetchSettings').mockResolvedValue();
+
+        const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
+        await wrapper.find('[data-testid="admin-tab-settings"]').trigger('click');
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.text()).toContain('Global Settings');
+    });
 });
