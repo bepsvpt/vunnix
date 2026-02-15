@@ -18,16 +18,23 @@ class DashboardQualityController extends Controller
 
     public function __invoke(Request $request): JsonResponse
     {
+        $request->validate([
+            'prompt_version' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $promptVersion = $request->input('prompt_version');
+
         $projectIds = $request->user()
             ->projects()
             ->where('enabled', true)
             ->pluck('projects.id');
 
         // Try materialized view first for pre-aggregated severity data
+        // Skip materialized view when prompt_version filter is active (can't filter pre-aggregated data)
         $byType = $this->metricsQuery->byType($projectIds);
         $reviewMetrics = $byType->where('task_type', 'code_review')->first();
 
-        if ($reviewMetrics && (int) $reviewMetrics->task_count > 0) {
+        if (! $promptVersion && $reviewMetrics && (int) $reviewMetrics->task_count > 0) {
             $severityTotals = [
                 'critical' => (int) $reviewMetrics->total_severity_critical,
                 'major' => (int) $reviewMetrics->total_severity_high,
@@ -37,11 +44,16 @@ class DashboardQualityController extends Controller
             $totalReviews = (int) $reviewMetrics->task_count;
         } else {
             // Fallback: aggregate directly from tasks when no task_metrics data exists
-            $reviewTasks = Task::whereIn('project_id', $projectIds)
+            $reviewQuery = Task::whereIn('project_id', $projectIds)
                 ->where('type', TaskType::CodeReview)
                 ->where('status', TaskStatus::Completed)
-                ->whereNotNull('result')
-                ->get();
+                ->whereNotNull('result');
+
+            if ($promptVersion) {
+                $reviewQuery->whereJsonContains('prompt_version->skill', $promptVersion);
+            }
+
+            $reviewTasks = $reviewQuery->get();
 
             $severityTotals = ['critical' => 0, 'major' => 0, 'minor' => 0];
             $totalFindings = 0;
