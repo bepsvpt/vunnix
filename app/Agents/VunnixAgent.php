@@ -69,6 +69,14 @@ class VunnixAgent implements Agent, Conversational, HasTools, HasMiddleware
 
     private const DEFAULT_MODEL = 'claude-opus-4-20250514';
 
+    /**
+     * Conversation Engine prompt version.
+     *
+     * Tracks the system prompt version for retrospective analysis (§14.8, D103).
+     * Bump this when the CE system prompt changes meaningfully.
+     */
+    public const PROMPT_VERSION = '1.0';
+
     public function instructions(): string
     {
         return $this->buildSystemPrompt();
