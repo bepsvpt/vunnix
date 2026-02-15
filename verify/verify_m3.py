@@ -3108,6 +3108,171 @@ checker.check(
 )
 
 # ============================================================
+#  T69: Chat Page — Pinned Task Bar
+# ============================================================
+section("T69: Chat Page — Pinned Task Bar")
+
+# PinnedTaskBar component
+checker.check(
+    "PinnedTaskBar component exists",
+    file_exists("resources/js/components/PinnedTaskBar.vue"),
+)
+checker.check(
+    "PinnedTaskBar uses script setup",
+    file_contains("resources/js/components/PinnedTaskBar.vue", "<script setup>"),
+)
+checker.check(
+    "PinnedTaskBar accepts tasks prop",
+    file_contains("resources/js/components/PinnedTaskBar.vue", "tasks:"),
+)
+checker.check(
+    "PinnedTaskBar has data-testid for bar",
+    file_contains("resources/js/components/PinnedTaskBar.vue", 'data-testid="pinned-task-bar"'),
+)
+checker.check(
+    "PinnedTaskBar has data-testid for task items",
+    file_contains("resources/js/components/PinnedTaskBar.vue", 'data-testid="pinned-task-item"'),
+)
+checker.check(
+    "PinnedTaskBar shows elapsed time",
+    file_contains("resources/js/components/PinnedTaskBar.vue", "formatElapsed"),
+)
+checker.check(
+    "PinnedTaskBar has pipeline link",
+    file_contains("resources/js/components/PinnedTaskBar.vue", "View pipeline"),
+)
+checker.check(
+    "PinnedTaskBar has elapsed time data-testid",
+    file_contains("resources/js/components/PinnedTaskBar.vue", 'data-testid="elapsed-time"'),
+)
+checker.check(
+    "PinnedTaskBar has pipeline link data-testid",
+    file_contains("resources/js/components/PinnedTaskBar.vue", 'data-testid="pipeline-link"'),
+)
+
+# Runner load awareness (D133)
+checker.check(
+    "PinnedTaskBar detects pipeline_status pending",
+    file_contains("resources/js/components/PinnedTaskBar.vue", "isPipelinePending"),
+)
+checker.check(
+    "PinnedTaskBar shows 'Waiting for available runner' text",
+    file_contains("resources/js/components/PinnedTaskBar.vue", "Waiting for available runner"),
+)
+checker.check(
+    "PinnedTaskBar shows 'System busy, expect delays' text (D133)",
+    file_contains("resources/js/components/PinnedTaskBar.vue", "System busy, expect delays"),
+)
+
+# Echo composable (Reverb WebSocket client)
+checker.check(
+    "Echo composable exists",
+    file_exists("resources/js/composables/useEcho.js"),
+)
+checker.check(
+    "Echo composable imports laravel-echo",
+    file_contains("resources/js/composables/useEcho.js", "import Echo from 'laravel-echo'"),
+)
+checker.check(
+    "Echo composable imports pusher-js",
+    file_contains("resources/js/composables/useEcho.js", "import Pusher from 'pusher-js'"),
+)
+checker.check(
+    "Echo composable exports getEcho function",
+    file_contains("resources/js/composables/useEcho.js", "export function getEcho"),
+)
+checker.check(
+    "Echo composable uses reverb broadcaster",
+    file_contains("resources/js/composables/useEcho.js", "broadcaster: 'reverb'"),
+)
+checker.check(
+    "Echo composable reads __REVERB_CONFIG__ from Blade",
+    file_contains("resources/js/composables/useEcho.js", "__REVERB_CONFIG__"),
+)
+
+# Conversations store — active task tracking
+checker.check(
+    "Conversations store has activeTasks state",
+    file_contains("resources/js/stores/conversations.js", "activeTasks"),
+)
+checker.check(
+    "Conversations store has trackTask function",
+    file_contains("resources/js/stores/conversations.js", "function trackTask"),
+)
+checker.check(
+    "Conversations store has removeTask function",
+    file_contains("resources/js/stores/conversations.js", "function removeTask"),
+)
+checker.check(
+    "Conversations store has activeTasksForConversation computed",
+    file_contains("resources/js/stores/conversations.js", "activeTasksForConversation"),
+)
+checker.check(
+    "Conversations store exports activeTasks",
+    file_contains("resources/js/stores/conversations.js", "activeTasks,"),
+)
+checker.check(
+    "Conversations store exports trackTask",
+    file_contains("resources/js/stores/conversations.js", "trackTask,"),
+)
+
+# MessageThread integration
+checker.check(
+    "MessageThread imports PinnedTaskBar",
+    file_contains("resources/js/components/MessageThread.vue", "PinnedTaskBar"),
+)
+checker.check(
+    "MessageThread renders PinnedTaskBar",
+    file_contains("resources/js/components/MessageThread.vue", "<PinnedTaskBar"),
+)
+
+# Reverb config injection via Blade
+checker.check(
+    "Blade layout injects Reverb config",
+    file_contains("resources/views/app.blade.php", "__REVERB_CONFIG__"),
+)
+
+# NPM dependencies
+checker.check(
+    "laravel-echo is installed",
+    file_contains("package.json", "laravel-echo"),
+)
+checker.check(
+    "pusher-js is installed",
+    file_contains("package.json", "pusher-js"),
+)
+
+# Tests
+checker.check(
+    "PinnedTaskBar test file exists",
+    file_exists("resources/js/components/PinnedTaskBar.test.js"),
+)
+checker.check(
+    "Echo composable test file exists",
+    file_exists("resources/js/composables/useEcho.test.js"),
+)
+checker.check(
+    "MessageThread tests cover PinnedTaskBar integration",
+    file_contains("resources/js/components/MessageThread.test.js", "PinnedTaskBar"),
+)
+checker.check(
+    "Conversations store tests cover task tracking",
+    file_contains("resources/js/stores/conversations.test.js", "trackTask"),
+)
+checker.check(
+    "PinnedTaskBar tests cover elapsed time display",
+    file_contains("resources/js/components/PinnedTaskBar.test.js", "elapsed"),
+)
+checker.check(
+    "PinnedTaskBar tests cover pipeline pending (D133 runner load awareness)",
+    file_contains("resources/js/components/PinnedTaskBar.test.js", "pending"),
+)
+checker.check(
+    "PinnedTaskBar tests cover pipeline link rendering",
+    file_contains("resources/js/components/PinnedTaskBar.test.js", "pipeline"),
+)
+
+# ============================================================
 #  T73: Reverb Channel Configuration (cross-milestone dep)
 # ============================================================
 section("T73: Reverb Channel Configuration")
