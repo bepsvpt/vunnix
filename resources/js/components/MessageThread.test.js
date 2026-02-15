@@ -6,6 +6,7 @@ import MessageThread from './MessageThread.vue';
 import MessageBubble from './MessageBubble.vue';
 import MessageComposer from './MessageComposer.vue';
 import ActionPreviewCard from './ActionPreviewCard.vue';
+import PinnedTaskBar from './PinnedTaskBar.vue';
 import { useConversationsStore } from '@/stores/conversations';
 
 vi.mock('axios');
@@ -209,6 +210,65 @@ describe('MessageThread', () => {
 
             const wrapper = mountThread();
             expect(wrapper.find('[data-testid="tool-use-indicators"]').exists()).toBe(false);
+        });
+    });
+
+    describe('pinned task bar integration (T69)', () => {
+        it('renders PinnedTaskBar when activeTasksForConversation has tasks', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            store.trackTask({
+                task_id: 42,
+                status: 'running',
+                type: 'feature_dev',
+                title: 'Payment feature',
+                pipeline_id: 100,
+                pipeline_status: 'running',
+                started_at: '2026-02-15T12:00:00Z',
+                project_id: 1,
+                conversation_id: 'conv-1',
+            });
+
+            const wrapper = mountThread();
+            expect(wrapper.findComponent(PinnedTaskBar).exists()).toBe(true);
+        });
+
+        it('hides PinnedTaskBar when no active tasks', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+
+            const wrapper = mountThread();
+            expect(wrapper.findComponent(PinnedTaskBar).exists()).toBe(false);
+        });
+
+        it('passes active tasks as prop to PinnedTaskBar', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            store.trackTask({
+                task_id: 42,
+                status: 'running',
+                type: 'feature_dev',
+                title: 'Test Task',
+                pipeline_id: 100,
+                pipeline_status: 'running',
+                started_at: '2026-02-15T12:00:00Z',
+                project_id: 1,
+                conversation_id: 'conv-1',
+            });
+
+            const wrapper = mountThread();
+            const bar = wrapper.findComponent(PinnedTaskBar);
+            expect(bar.props('tasks')).toHaveLength(1);
+            expect(bar.props('tasks')[0].task_id).toBe(42);
         });
     });
 

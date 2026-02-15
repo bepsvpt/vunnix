@@ -6,6 +6,7 @@ import MessageComposer from './MessageComposer.vue';
 import TypingIndicator from './TypingIndicator.vue';
 import ToolUseIndicators from './ToolUseIndicators.vue';
 import ActionPreviewCard from './ActionPreviewCard.vue';
+import PinnedTaskBar from './PinnedTaskBar.vue';
 import MarkdownContent from './MarkdownContent.vue';
 
 const store = useConversationsStore();
@@ -105,6 +106,12 @@ async function handleSend(content) {
         <TypingIndicator v-if="store.streaming" />
       </div>
     </div>
+
+    <!-- Pinned task bar: active tasks with elapsed time (T69) -->
+    <PinnedTaskBar
+      v-if="store.activeTasksForConversation.length > 0"
+      :tasks="store.activeTasksForConversation"
+    />
 
     <!-- Composer -->
     <MessageComposer :disabled="store.sending || store.streaming || !!store.pendingAction" @send="handleSend" />
