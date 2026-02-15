@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\AdminSettingsController;
 use App\Http\Controllers\Api\ApiKeyController;
 use App\Http\Controllers\Api\CostAlertController;
 use App\Http\Controllers\Api\DeadLetterController;
+use App\Http\Controllers\Api\InfrastructureAlertController;
 use App\Http\Controllers\Api\ExternalActivityController;
 use App\Http\Controllers\Api\ExternalMetricsController;
 use App\Http\Controllers\Api\ExternalProjectController;
@@ -166,6 +167,12 @@ Route::prefix('v1')->group(function () {
             ->name('api.dashboard.overreliance-alerts.index');
         Route::patch('/dashboard/overreliance-alerts/{overrelianceAlert}/acknowledge', [OverrelianceAlertController::class, 'acknowledge'])
             ->name('api.dashboard.overreliance-alerts.acknowledge');
+
+        // Infrastructure alert management (T104) — admin-only via RBAC
+        Route::get('/dashboard/infrastructure-alerts', [InfrastructureAlertController::class, 'index'])
+            ->name('api.dashboard.infrastructure-alerts.index');
+        Route::patch('/dashboard/infrastructure-alerts/{alertEvent}/acknowledge', [InfrastructureAlertController::class, 'acknowledge'])
+            ->name('api.dashboard.infrastructure-alerts.acknowledge');
 
         // Dead letter queue management (T97) — admin-only via RBAC
         Route::get('/admin/dead-letter', [DeadLetterController::class, 'index'])
