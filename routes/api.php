@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AdminProjectController;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminProjectConfigController;
 use App\Http\Controllers\Api\AdminSettingsController;
+use App\Http\Controllers\Api\CostAlertController;
 use App\Http\Controllers\Api\PrdTemplateController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DashboardOverviewController;
@@ -137,6 +138,12 @@ Route::prefix('v1')->group(function () {
             ->name('api.admin.projects.config.show');
         Route::put('/admin/projects/{project}/config', [AdminProjectConfigController::class, 'update'])
             ->name('api.admin.projects.config.update');
+
+        // Cost alert management (T94) — admin-only via RBAC
+        Route::get('/dashboard/cost-alerts', [CostAlertController::class, 'index'])
+            ->name('api.dashboard.cost-alerts.index');
+        Route::patch('/dashboard/cost-alerts/{costAlert}/acknowledge', [CostAlertController::class, 'acknowledge'])
+            ->name('api.dashboard.cost-alerts.acknowledge');
 
         // PRD template management (T93)
         Route::get('/admin/projects/{project}/prd-template', [PrdTemplateController::class, 'showProject'])
