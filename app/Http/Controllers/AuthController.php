@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
@@ -48,6 +49,17 @@ class AuthController extends Controller
 
         auth()->login($user, remember: true);
 
+        try {
+            app(AuditLogService::class)->logAuthEvent(
+                userId: $user->id,
+                action: 'login',
+                ipAddress: request()->ip(),
+                userAgent: request()->userAgent(),
+            );
+        } catch (\Throwable) {
+            // Audit logging should never break auth flow
+        }
+
         $user->syncMemberships();
 
         session()->regenerate();
@@ -60,6 +72,20 @@ class AuthController extends Controller
      */
     public function logout(Request $request): RedirectResponse
     {
+        $userId = auth()->id();
+        if ($userId) {
+            try {
+                app(AuditLogService::class)->logAuthEvent(
+                    userId: $userId,
+                    action: 'logout',
+                    ipAddress: $request->ip(),
+                    userAgent: $request->userAgent(),
+                );
+            } catch (\Throwable) {
+                // Audit logging should never break auth flow
+            }
+        }
+
         auth()->logout();
 
         $request->session()->invalidate();
