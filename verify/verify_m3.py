@@ -3494,6 +3494,64 @@ checker.check(
     file_contains("tests/Feature/Agents/VunnixAgentTest.php", "PRD Output Template"),
 )
 
+# ============================================================
+#  T72: Designer iteration flow
+# ============================================================
+section("T72: Designer Iteration Flow")
+
+checker.check(
+    "DispatchAction schema includes existing_mr_iid",
+    file_contains("app/Agents/Tools/DispatchAction.php", "existing_mr_iid"),
+)
+checker.check(
+    "TaskDispatcher passes VUNNIX_EXISTING_MR_IID to runner",
+    file_contains("app/Services/TaskDispatcher.php", "VUNNIX_EXISTING_MR_IID"),
+)
+checker.check(
+    "GitLabClient has updateMergeRequest method",
+    file_contains("app/Services/GitLabClient.php", "function updateMergeRequest"),
+)
+checker.check(
+    "PostFeatureDevResult handles existing MR (designer iteration)",
+    file_contains("app/Jobs/PostFeatureDevResult.php", "existing_mr_iid"),
+)
+checker.check(
+    "PostFeatureDevResult has updateExistingMergeRequest method",
+    file_contains("app/Jobs/PostFeatureDevResult.php", "updateExistingMergeRequest"),
+)
+checker.check(
+    "DeliverTaskResultToConversation includes MR link",
+    file_contains("app/Listeners/DeliverTaskResultToConversation.php", "mr_iid"),
+)
+checker.check(
+    "DeliverTaskResultToConversation includes branch info",
+    file_contains("app/Listeners/DeliverTaskResultToConversation.php", "branch"),
+)
+checker.check(
+    "ProcessTaskResult supports UiAdjustment in shouldPostFeatureDevResult",
+    file_contains("app/Jobs/ProcessTaskResult.php", "TaskType::UiAdjustment"),
+)
+checker.check(
+    "ProcessTaskResult supports conversation_id dispatch",
+    file_contains("app/Jobs/ProcessTaskResult.php", "conversation_id"),
+)
+checker.check(
+    "CE system prompt includes designer iteration instructions",
+    file_contains("app/Agents/VunnixAgent.php", "Designer iteration"),
+)
+checker.check(
+    "Feature test for correction dispatch with existing_mr_iid",
+    file_contains("tests/Feature/Agents/Tools/DispatchActionFeatureTest.php", "existing_mr_iid"),
+)
+checker.check(
+    "Feature test for PostFeatureDevResult with existing MR",
+    file_exists("tests/Feature/Jobs/PostFeatureDevResultTest.php"),
+)
+checker.check(
+    "Feature test for conversation result delivery with MR details",
+    file_contains("tests/Feature/Listeners/DeliverTaskResultToConversationTest.php", "!456"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()
