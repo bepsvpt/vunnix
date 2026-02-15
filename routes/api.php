@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AdminApiKeyController;
+use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AdminProjectController;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminProjectConfigController;
@@ -185,6 +186,12 @@ Route::prefix('v1')->group(function () {
             ->name('api.admin.prd-template.show');
         Route::put('/admin/prd-template', [PrdTemplateController::class, 'updateGlobal'])
             ->name('api.admin.prd-template.update');
+
+        // Audit logs (T103) — admin-only via RBAC
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])
+            ->name('api.audit-logs.index');
+        Route::get('/audit-logs/{auditLog}', [AuditLogController::class, 'show'])
+            ->name('api.audit-logs.show');
 
         // API key management (T100) — users manage their own keys
         Route::get('/api-keys', [ApiKeyController::class, 'index'])
