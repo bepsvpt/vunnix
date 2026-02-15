@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'webhook.verify' => \App\Http\Middleware\VerifyWebhookToken::class,
             'task.token' => \App\Http\Middleware\AuthenticateTaskToken::class,
+            'api.key' => \App\Http\Middleware\AuthenticateApiKey::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
