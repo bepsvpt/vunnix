@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M5 — Admin & Configuration
-- **Tasks Complete:** 99 / 116 (85.3%)
-- **Current Task:** T99 — Team chat notifications — event routing
-- **Last Verified:** T98
+- **Tasks Complete:** 100 / 116 (86.2%)
+- **Current Task:** T100 — API versioning + external access
+- **Last Verified:** T99
 
 ---
 
@@ -137,7 +137,7 @@
 - [x] T86: Acceptance tracking (webhook-driven D149) [Depends: T34, T11, T13]
 - [x] T87: Engineer feedback — emoji reactions on MR merge [Depends: T34, T11, T86]
 
-## M5 — Admin & Configuration (11/18)
+## M5 — Admin & Configuration (12/18)
 
 - [x] T88: Admin page — project management (registry D150, label pre-creation) [Depends: T62, T11, T9]
 - [x] T89: Admin page — role management [Depends: T62, T9]
@@ -150,8 +150,8 @@
 - [x] T96: Dead letter queue — backend [Depends: T37, T5]
 - [x] T97: Dead letter queue — admin UI [Depends: T96, T62]
 - [x] T98: Team chat notifications — webhook integration [Depends: T90]
-- [ ] **T99:** Team chat notifications — event routing [Depends: T98, T94, T15]
-- [ ] T100: API versioning + external access (SHA-256 hash D152) [Depends: T9, T5]
+- [x] T99: Team chat notifications — event routing [Depends: T98, T94, T15]
+- [ ] **T100:** API versioning + external access (SHA-256 hash D152) [Depends: T9, T5]
 - [ ] T101: Documented external endpoints [Depends: T100]
 - [ ] T102: Prompt versioning [Depends: T15, T20, T49]
 - [ ] T103: Audit logging (full-content, admin API) [Depends: T5, T9]

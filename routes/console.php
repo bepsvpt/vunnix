@@ -22,3 +22,7 @@ Schedule::command('overreliance:evaluate')
     ->mondays()
     ->at('09:00')
     ->withoutOverlapping();
+
+Schedule::command('system-alerts:evaluate')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();

@@ -7,6 +7,7 @@ use App\Enums\TaskType;
 use App\Events\TaskStatusChanged;
 use App\Models\Task;
 use App\Models\TaskMetric;
+use App\Services\AlertEventService;
 use App\Services\CostAlertService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -79,11 +80,16 @@ class TaskObserver
             // Evaluate single-task cost outlier alert (T94)
             if (($task->cost ?? 0) > 0) {
                 try {
-                    app(CostAlertService::class)->evaluateSingleTaskOutlier(
+                    $costAlert = app(CostAlertService::class)->evaluateSingleTaskOutlier(
                         $task->id,
                         $task->type->value,
                         (float) $task->cost,
                     );
+
+                    // Route single-task cost alert to team chat (T99)
+                    if ($costAlert) {
+                        app(AlertEventService::class)->notifyCostAlert($costAlert);
+                    }
                 } catch (\Throwable $e) {
                     Log::warning('TaskObserver: cost alert evaluation failed', [
                         'task_id' => $task->id,

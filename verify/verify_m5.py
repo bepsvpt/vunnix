@@ -880,6 +880,181 @@ checker.check(
 )
 
 # ============================================================
+#  T99: Team chat notifications — event routing
+# ============================================================
+section("T99: Team Chat Notifications — Event Routing")
+
+# AlertEvent model & migration
+checker.check(
+    "alert_events migration exists",
+    file_exists("database/migrations/2026_02_15_090000_create_alert_events_table.php"),
+)
+checker.check(
+    "Migration creates alert_events table",
+    file_contains("database/migrations/2026_02_15_090000_create_alert_events_table.php", "alert_events"),
+)
+checker.check(
+    "AlertEvent model exists",
+    file_exists("app/Models/AlertEvent.php"),
+)
+checker.check(
+    "AlertEvent has alert_type field",
+    file_contains("app/Models/AlertEvent.php", "'alert_type'"),
+)
+checker.check(
+    "AlertEvent has status field",
+    file_contains("app/Models/AlertEvent.php", "'status'"),
+)
+checker.check(
+    "AlertEvent has scopeActive",
+    file_contains("app/Models/AlertEvent.php", "scopeActive"),
+)
+checker.check(
+    "AlertEvent has scopeOfType",
+    file_contains("app/Models/AlertEvent.php", "scopeOfType"),
+)
+checker.check(
+    "AlertEvent factory exists",
+    file_exists("database/factories/AlertEventFactory.php"),
+)
+
+# AlertEventService
+checker.check(
+    "AlertEventService exists",
+    file_exists("app/Services/AlertEventService.php"),
+)
+checker.check(
+    "AlertEventService has evaluateAll method",
+    file_contains("app/Services/AlertEventService.php", "evaluateAll"),
+)
+checker.check(
+    "AlertEventService has evaluateApiOutage",
+    file_contains("app/Services/AlertEventService.php", "evaluateApiOutage"),
+)
+checker.check(
+    "AlertEventService has evaluateHighFailureRate",
+    file_contains("app/Services/AlertEventService.php", "evaluateHighFailureRate"),
+)
+checker.check(
+    "AlertEventService has evaluateQueueDepth",
+    file_contains("app/Services/AlertEventService.php", "evaluateQueueDepth"),
+)
+checker.check(
+    "AlertEventService has evaluateAuthFailure",
+    file_contains("app/Services/AlertEventService.php", "evaluateAuthFailure"),
+)
+checker.check(
+    "AlertEventService has evaluateDiskUsage",
+    file_contains("app/Services/AlertEventService.php", "evaluateDiskUsage"),
+)
+checker.check(
+    "AlertEventService has notifyAlert (detection notification)",
+    file_contains("app/Services/AlertEventService.php", "function notifyAlert"),
+)
+checker.check(
+    "AlertEventService has notifyRecovery (recovery notification)",
+    file_contains("app/Services/AlertEventService.php", "function notifyRecovery"),
+)
+checker.check(
+    "AlertEventService has notifyCostAlert",
+    file_contains("app/Services/AlertEventService.php", "function notifyCostAlert"),
+)
+checker.check(
+    "AlertEventService has notifyTaskCompletion",
+    file_contains("app/Services/AlertEventService.php", "function notifyTaskCompletion"),
+)
+checker.check(
+    "AlertEventService uses TeamChatNotificationService",
+    file_contains("app/Services/AlertEventService.php", "TeamChatNotificationService"),
+)
+
+# Alert deduplication: active alert check prevents re-trigger
+checker.check(
+    "Alert dedup: checks for active alert before creating new",
+    file_contains("app/Services/AlertEventService.php", "! $activeAlert"),
+)
+
+# EvaluateSystemAlerts command
+checker.check(
+    "EvaluateSystemAlerts command exists",
+    file_exists("app/Console/Commands/EvaluateSystemAlerts.php"),
+)
+checker.check(
+    "EvaluateSystemAlerts has correct signature",
+    file_contains("app/Console/Commands/EvaluateSystemAlerts.php", "system-alerts:evaluate"),
+)
+checker.check(
+    "Schedule entry for system-alerts:evaluate",
+    file_contains("routes/console.php", "system-alerts:evaluate"),
+)
+
+# Task completion listener
+checker.check(
+    "SendTaskCompletionNotification listener exists",
+    file_exists("app/Listeners/SendTaskCompletionNotification.php"),
+)
+checker.check(
+    "Listener handles TaskStatusChanged event",
+    file_contains("app/Listeners/SendTaskCompletionNotification.php", "TaskStatusChanged"),
+)
+checker.check(
+    "Listener uses cache for idempotency",
+    file_contains("app/Listeners/SendTaskCompletionNotification.php", "Cache"),
+)
+
+# Cost alert → team chat wiring
+checker.check(
+    "EvaluateCostAlerts wires AlertEventService",
+    file_contains("app/Console/Commands/EvaluateCostAlerts.php", "AlertEventService"),
+)
+checker.check(
+    "EvaluateCostAlerts calls notifyCostAlert",
+    file_contains("app/Console/Commands/EvaluateCostAlerts.php", "notifyCostAlert"),
+)
+checker.check(
+    "TaskObserver wires AlertEventService for single-task cost alerts",
+    file_contains("app/Observers/TaskObserver.php", "AlertEventService"),
+)
+
+# Tests
+checker.check(
+    "AlertEventService test exists",
+    file_exists("tests/Feature/Services/AlertEventServiceTest.php"),
+)
+checker.check(
+    "Test covers API outage detection",
+    file_contains("tests/Feature/Services/AlertEventServiceTest.php", "api_outage"),
+)
+checker.check(
+    "Test covers high failure rate",
+    file_contains("tests/Feature/Services/AlertEventServiceTest.php", "high_failure_rate"),
+)
+checker.check(
+    "Test covers queue depth",
+    file_contains("tests/Feature/Services/AlertEventServiceTest.php", "queue_depth"),
+)
+checker.check(
+    "Test covers auth failure",
+    file_contains("tests/Feature/Services/AlertEventServiceTest.php", "auth_failure"),
+)
+checker.check(
+    "Test covers alert deduplication",
+    file_contains("tests/Feature/Services/AlertEventServiceTest.php", "deduplicat"),
+)
+checker.check(
+    "Test covers recovery notification",
+    file_contains("tests/Feature/Services/AlertEventServiceTest.php", "recovery"),
+)
+checker.check(
+    "Test covers task completion notification",
+    file_contains("tests/Feature/Services/AlertEventServiceTest.php", "notifyTaskCompletion"),
+)
+checker.check(
+    "Test covers cost alert notification",
+    file_contains("tests/Feature/Services/AlertEventServiceTest.php", "notifyCostAlert"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
