@@ -476,6 +476,121 @@ checker.check(
 )
 
 # ============================================================
+#  T86: Acceptance tracking (webhook-driven D149)
+# ============================================================
+section("T86: Acceptance Tracking")
+
+# Model & migration
+checker.check(
+    "FindingAcceptance model exists",
+    file_exists("app/Models/FindingAcceptance.php"),
+)
+checker.check(
+    "FindingAcceptance migration exists",
+    file_exists("database/migrations/2026_02_15_040000_create_finding_acceptances_table.php"),
+)
+checker.check(
+    "FindingAcceptance has status field",
+    file_contains("app/Models/FindingAcceptance.php", "'status'"),
+)
+checker.check(
+    "FindingAcceptance has code_change_correlated field",
+    file_contains("app/Models/FindingAcceptance.php", "code_change_correlated"),
+)
+checker.check(
+    "FindingAcceptance has bulk_resolved field",
+    file_contains("app/Models/FindingAcceptance.php", "bulk_resolved"),
+)
+
+# AcceptanceTrackingService
+checker.check(
+    "AcceptanceTrackingService exists",
+    file_exists("app/Services/AcceptanceTrackingService.php"),
+)
+checker.check(
+    "AcceptanceTrackingService classifies thread state",
+    file_contains("app/Services/AcceptanceTrackingService.php", "classifyThreadState"),
+)
+checker.check(
+    "AcceptanceTrackingService detects bulk resolution",
+    file_contains("app/Services/AcceptanceTrackingService.php", "detectBulkResolution"),
+)
+checker.check(
+    "AcceptanceTrackingService correlates code changes",
+    file_contains("app/Services/AcceptanceTrackingService.php", "correlateCodeChange"),
+)
+checker.check(
+    "AcceptanceTrackingService identifies AI discussions",
+    file_contains("app/Services/AcceptanceTrackingService.php", "isAiCreatedDiscussion"),
+)
+
+# GitLabClient extension
+checker.check(
+    "GitLabClient has compareBranches method",
+    file_contains("app/Services/GitLabClient.php", "compareBranches"),
+)
+
+# Jobs
+checker.check(
+    "ProcessAcceptanceTracking job exists",
+    file_exists("app/Jobs/ProcessAcceptanceTracking.php"),
+)
+checker.check(
+    "ProcessAcceptanceTracking handles MR merge",
+    file_contains("app/Jobs/ProcessAcceptanceTracking.php", "listMergeRequestDiscussions"),
+)
+checker.check(
+    "ProcessThreadResolution job exists",
+    file_exists("app/Jobs/ProcessThreadResolution.php"),
+)
+checker.check(
+    "ProcessCodeChangeCorrelation job exists",
+    file_exists("app/Jobs/ProcessCodeChangeCorrelation.php"),
+)
+checker.check(
+    "ProcessCodeChangeCorrelation uses compareBranches",
+    file_contains("app/Jobs/ProcessCodeChangeCorrelation.php", "compareBranches"),
+)
+
+# WebhookController wiring
+checker.check(
+    "WebhookController dispatches acceptance tracking",
+    file_contains("app/Http/Controllers/WebhookController.php", "ProcessAcceptanceTracking"),
+)
+checker.check(
+    "WebhookController dispatches code change correlation",
+    file_contains("app/Http/Controllers/WebhookController.php", "ProcessCodeChangeCorrelation"),
+)
+
+# Task model relationship
+checker.check(
+    "Task has findingAcceptances relationship",
+    file_contains("app/Models/Task.php", "findingAcceptances"),
+)
+
+# Tests
+checker.check(
+    "AcceptanceTrackingService unit test exists",
+    file_exists("tests/Unit/Services/AcceptanceTrackingServiceTest.php"),
+)
+checker.check(
+    "ProcessAcceptanceTracking test exists",
+    file_exists("tests/Feature/Jobs/ProcessAcceptanceTrackingTest.php"),
+)
+checker.check(
+    "ProcessThreadResolution test exists",
+    file_exists("tests/Feature/Jobs/ProcessThreadResolutionTest.php"),
+)
+checker.check(
+    "ProcessCodeChangeCorrelation test exists",
+    file_exists("tests/Feature/Jobs/ProcessCodeChangeCorrelationTest.php"),
+)
+checker.check(
+    "Webhook acceptance tracking integration test exists",
+    file_exists("tests/Feature/WebhookAcceptanceTrackingTest.php"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()

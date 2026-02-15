@@ -437,6 +437,28 @@ it('creates a branch', function () {
     });
 });
 
+it('compares two commits and returns diffs', function () {
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/1/repository/compare*' => Http::response([
+            'diffs' => [
+                ['new_path' => 'src/auth.py', 'diff' => '@@ -40,3 +40,5 @@...'],
+            ],
+        ], 200),
+    ]);
+
+    $client = app(GitLabClient::class);
+    $result = $client->compareBranches(1, 'abc123', 'def456');
+
+    expect($result)->toHaveKey('diffs');
+    expect($result['diffs'])->toHaveCount(1);
+
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), '/repository/compare')
+            && str_contains($request->url(), 'from=abc123')
+            && str_contains($request->url(), 'to=def456');
+    });
+});
+
 // ------------------------------------------------------------------
 //  Labels
 // ------------------------------------------------------------------

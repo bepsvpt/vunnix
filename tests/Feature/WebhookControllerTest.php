@@ -370,13 +370,13 @@ it('dispatches ProcessTask job and returns task_id for MR open events', function
 it('returns null task_id for non-dispatchable events', function () {
     [$project, $token] = webhookProject();
 
-    // Push events without MR context are not routable — EventRouter returns null
-    // so no task is dispatched. Use a merge event that doesn't route.
+    // MR close action is not routable — EventRouter returns null,
+    // so no task is dispatched. (MR merge now dispatches acceptance tracking via T86.)
     postWebhook($this, $token, 'Merge Request Hook', [
         'object_kind' => 'merge_request',
         'object_attributes' => [
             'iid' => 42,
-            'action' => 'merge',
+            'action' => 'close',
             'source_branch' => 'feature/login',
             'target_branch' => 'main',
             'author_id' => 7,

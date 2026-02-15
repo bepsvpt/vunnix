@@ -3,13 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Events\Webhook\IssueLabelChanged;
+use App\Events\Webhook\MergeRequestMerged;
 use App\Events\Webhook\NoteOnIssue;
 use App\Events\Webhook\NoteOnMR;
+use App\Events\Webhook\PushToMRBranch;
 use App\Events\Webhook\WebhookEvent;
+use App\Jobs\ProcessAcceptanceTracking;
+use App\Jobs\ProcessCodeChangeCorrelation;
 use App\Models\Project;
 use App\Models\User;
 use App\Services\EventDeduplicator;
 use App\Services\EventRouter;
+use App\Services\GitLabClient;
 use App\Services\RoutingResult;
 use App\Services\TaskDispatchService;
 use Illuminate\Http\JsonResponse;
@@ -141,8 +146,26 @@ class WebhookController extends Controller
             ]);
         }
 
+        // T86: Dispatch acceptance tracking for MR merge events
+        if ($routingResult->intent === 'acceptance_tracking') {
+            $this->dispatchAcceptanceTracking($routingResult, $project);
+
+            return response()->json([
+                'status' => 'accepted',
+                'event_type' => $eventType,
+                'project_id' => $project->id,
+                'intent' => $routingResult->intent,
+                'superseded_count' => $dedupResult->supersededCount,
+            ]);
+        }
+
         // T39: Dispatch task for accepted, routable events
         $task = $taskDispatchService->dispatch($routingResult);
+
+        // T86: Additionally dispatch code change correlation for push events
+        if ($routingResult->intent === 'incremental_review' && $routingResult->event instanceof PushToMRBranch) {
+            $this->dispatchCodeChangeCorrelation($routingResult, $project);
+        }
 
         return response()->json([
             'status' => 'accepted',
@@ -317,5 +340,73 @@ class WebhookController extends Controller
         }
 
         return null;
+    }
+
+    // ------------------------------------------------------------------
+    //  Acceptance tracking (T86, D149)
+    // ------------------------------------------------------------------
+
+    /**
+     * Dispatch acceptance tracking job for MR merge events.
+     */
+    private function dispatchAcceptanceTracking(RoutingResult $routingResult, Project $project): void
+    {
+        $event = $routingResult->event;
+
+        if (! $event instanceof MergeRequestMerged) {
+            return;
+        }
+
+        ProcessAcceptanceTracking::dispatch(
+            $project->id,
+            $project->gitlab_project_id,
+            $event->mergeRequestIid,
+        );
+
+        Log::info('WebhookController: dispatched acceptance tracking', [
+            'project_id' => $project->id,
+            'mr_iid' => $event->mergeRequestIid,
+        ]);
+    }
+
+    /**
+     * Dispatch code change correlation for push events (§16.2).
+     *
+     * Runs alongside the normal incremental review dispatch — correlates
+     * push diffs with existing AI findings for acceptance signals.
+     */
+    private function dispatchCodeChangeCorrelation(RoutingResult $routingResult, Project $project): void
+    {
+        $event = $routingResult->event;
+
+        if (! $event instanceof PushToMRBranch) {
+            return;
+        }
+
+        // Resolve MR IID for the pushed branch
+        try {
+            $gitLab = app(GitLabClient::class);
+            $mr = $gitLab->findOpenMergeRequestForBranch(
+                $project->gitlab_project_id,
+                $event->branchName(),
+            );
+
+            if ($mr === null) {
+                return;
+            }
+
+            ProcessCodeChangeCorrelation::dispatch(
+                $project->id,
+                $project->gitlab_project_id,
+                (int) $mr['iid'],
+                $event->beforeSha,
+                $event->afterSha,
+            );
+        } catch (\Throwable $e) {
+            Log::warning('WebhookController: failed to dispatch code change correlation', [
+                'project_id' => $project->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

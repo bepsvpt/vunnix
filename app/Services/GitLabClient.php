@@ -376,6 +376,24 @@ class GitLabClient
         return $this->handleResponse($response, "createBranch {$branchName}")->json();
     }
 
+    /**
+     * Compare two commits/branches to get diffs.
+     *
+     * Used by acceptance tracking (T86) to correlate push event changes
+     * with AI finding locations for code change correlation (§16.2).
+     *
+     * @return array{diffs: array<int, array{new_path: string, diff: string, ...}>, ...}
+     */
+    public function compareBranches(int $projectId, string $from, string $to): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/repository/compare"),
+            ['from' => $from, 'to' => $to],
+        );
+
+        return $this->handleResponse($response, "compareBranches {$from}..{$to}")->json();
+    }
+
     // ------------------------------------------------------------------
     //  Labels
     // ------------------------------------------------------------------
