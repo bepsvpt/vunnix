@@ -88,6 +88,10 @@ class VunnixTomlService
             return [];
         }
 
+        if (! is_array($parsed)) {
+            return [];
+        }
+
         $allowedKeys = array_keys(ProjectConfigService::settingKeys());
         $result = [];
 
