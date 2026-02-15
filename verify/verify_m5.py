@@ -400,6 +400,167 @@ checker.check(
 )
 
 # ============================================================
+#  T95: Over-reliance detection
+# ============================================================
+section("T95: Over-Reliance Detection")
+
+# Migration
+checker.check(
+    "overreliance_alerts migration exists",
+    file_exists("database/migrations/2026_02_15_070000_create_overreliance_alerts_table.php"),
+)
+checker.check(
+    "Migration creates overreliance_alerts table",
+    file_contains("database/migrations/2026_02_15_070000_create_overreliance_alerts_table.php", "overreliance_alerts"),
+)
+
+# Model
+checker.check(
+    "OverrelianceAlert model exists",
+    file_exists("app/Models/OverrelianceAlert.php"),
+)
+checker.check(
+    "OverrelianceAlert has rule field",
+    file_contains("app/Models/OverrelianceAlert.php", "'rule'"),
+)
+checker.check(
+    "OverrelianceAlert has severity field",
+    file_contains("app/Models/OverrelianceAlert.php", "'severity'"),
+)
+checker.check(
+    "OverrelianceAlert has active scope",
+    file_contains("app/Models/OverrelianceAlert.php", "scopeActive"),
+)
+checker.check(
+    "OverrelianceAlert casts context as array",
+    file_contains("app/Models/OverrelianceAlert.php", "'context' => 'array'"),
+)
+
+# Service — 4 detection rules
+checker.check(
+    "OverrelianceDetectionService exists",
+    file_exists("app/Services/OverrelianceDetectionService.php"),
+)
+checker.check(
+    "Service has evaluateAll method",
+    file_contains("app/Services/OverrelianceDetectionService.php", "evaluateAll"),
+)
+checker.check(
+    "Service has evaluateHighAcceptanceRate",
+    file_contains("app/Services/OverrelianceDetectionService.php", "evaluateHighAcceptanceRate"),
+)
+checker.check(
+    "Service has evaluateCriticalAcceptanceRate",
+    file_contains("app/Services/OverrelianceDetectionService.php", "evaluateCriticalAcceptanceRate"),
+)
+checker.check(
+    "Service has evaluateBulkResolution",
+    file_contains("app/Services/OverrelianceDetectionService.php", "evaluateBulkResolution"),
+)
+checker.check(
+    "Service has evaluateZeroReactions",
+    file_contains("app/Services/OverrelianceDetectionService.php", "evaluateZeroReactions"),
+)
+
+# Controller
+checker.check(
+    "OverrelianceAlertController exists",
+    file_exists("app/Http/Controllers/Api/OverrelianceAlertController.php"),
+)
+checker.check(
+    "OverrelianceAlertController has index method",
+    file_contains("app/Http/Controllers/Api/OverrelianceAlertController.php", "function index"),
+)
+checker.check(
+    "OverrelianceAlertController has acknowledge method",
+    file_contains("app/Http/Controllers/Api/OverrelianceAlertController.php", "function acknowledge"),
+)
+checker.check(
+    "Overreliance alert routes registered",
+    file_contains("routes/api.php", "overreliance-alerts"),
+)
+
+# Scheduled command
+checker.check(
+    "EvaluateOverrelianceAlerts command exists",
+    file_exists("app/Console/Commands/EvaluateOverrelianceAlerts.php"),
+)
+checker.check(
+    "EvaluateOverrelianceAlerts has correct signature",
+    file_contains("app/Console/Commands/EvaluateOverrelianceAlerts.php", "overreliance:evaluate"),
+)
+checker.check(
+    "Schedule entry for overreliance:evaluate",
+    file_contains("routes/console.php", "overreliance:evaluate"),
+)
+
+# Frontend — DashboardQuality component
+checker.check(
+    "DashboardQuality has overreliance-alerts section",
+    file_contains("resources/js/components/DashboardQuality.vue", 'data-testid="overreliance-alerts"'),
+)
+checker.check(
+    "DashboardQuality has acknowledge handler",
+    file_contains("resources/js/components/DashboardQuality.vue", "handleOverrelianceAcknowledge"),
+)
+checker.check(
+    "DashboardQuality imports admin store",
+    file_contains("resources/js/components/DashboardQuality.vue", "useAdminStore"),
+)
+checker.check(
+    "DashboardQuality has severity color mapping",
+    file_contains("resources/js/components/DashboardQuality.vue", "overrelianceSeverityColors"),
+)
+checker.check(
+    "DashboardQuality has rule label mapping",
+    file_contains("resources/js/components/DashboardQuality.vue", "overrelianceRuleLabels"),
+)
+
+# Frontend — Pinia stores
+checker.check(
+    "Dashboard store has overrelianceAlerts ref",
+    file_contains("resources/js/stores/dashboard.js", "overrelianceAlerts"),
+)
+checker.check(
+    "Dashboard store has fetchOverrelianceAlerts action",
+    file_contains("resources/js/stores/dashboard.js", "fetchOverrelianceAlerts"),
+)
+checker.check(
+    "Admin store has overrelianceAlerts ref",
+    file_contains("resources/js/stores/admin.js", "overrelianceAlerts"),
+)
+checker.check(
+    "Admin store has fetchOverrelianceAlerts action",
+    file_contains("resources/js/stores/admin.js", "fetchOverrelianceAlerts"),
+)
+checker.check(
+    "Admin store has acknowledgeOverrelianceAlert action",
+    file_contains("resources/js/stores/admin.js", "acknowledgeOverrelianceAlert"),
+)
+
+# Tests
+checker.check(
+    "OverrelianceDetectionService test exists",
+    file_exists("tests/Feature/Services/OverrelianceDetectionServiceTest.php"),
+)
+checker.check(
+    "OverrelianceAlertController API test exists",
+    file_exists("tests/Feature/Http/Controllers/Api/OverrelianceAlertControllerTest.php"),
+)
+checker.check(
+    "EvaluateOverrelianceAlerts command test exists",
+    file_exists("tests/Feature/Console/EvaluateOverrelianceAlertsTest.php"),
+)
+checker.check(
+    "DashboardQuality component test exists",
+    file_exists("resources/js/components/DashboardQuality.test.js"),
+)
+checker.check(
+    "DashboardQuality test covers overreliance alerts",
+    file_contains("resources/js/components/DashboardQuality.test.js", "overreliance"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
