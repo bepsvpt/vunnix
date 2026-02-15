@@ -144,12 +144,9 @@ The runner was manually stopped and restarted 7 times:
 
 Based on this data, the following improvements would meaningfully reduce build time:
 
-### 1. Increase `MAX_TURNS` to 200
+### 1. Increase `MAX_TURNS` to 100
 
-50 turns caused 50.4% of sessions to restart without completing a task. Each restart wastes context and adds startup overhead. With 200 turns:
-- Estimated multi-session tasks drops from 69 to ~20-30
-- Total sessions drops from 240 to ~130-150
-- Session overhead drops by ~40%
+50 turns caused 50.4% of sessions to restart without completing a task. Each restart wastes context and adds startup overhead. However, 12.5% of sessions (30/241) already hit context window limits at 50 turns — with auto-compact disabled, context is a hard ceiling. 100 turns is a moderate increase that captures more completed-in-one-session tasks while staying below the context ceiling for most sessions. Going to 200+ would require enabling auto-compact.
 
 ### 2. Exponential Backoff for Rate Limits
 

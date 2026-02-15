@@ -25,8 +25,10 @@ set -uo pipefail
 
 # --- Configuration (tunable) ---
 # Retrospective data: 50 turns caused 50.4% of sessions to restart without
-# completing a task. 200 turns reduces multi-session tasks from 66% to ~25%.
-MAX_TURNS=200              # Agentic turns per session
+# completing a task. 100 is a moderate increase that avoids hitting the context
+# window ceiling (12.5% of sessions already hit context limits at 50 turns;
+# auto-compact is off, so context is a hard ceiling).
+MAX_TURNS=100              # Agentic turns per session
 RETRY_DELAY=300            # Initial rate limit wait (5 min) — escalates exponentially
 RETRY_MAX=2400             # Maximum rate limit wait (40 min)
 ERROR_DELAY=60             # Wait on other errors (1 min)
@@ -62,7 +64,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --dry-run          Show command without executing"
-            echo "  --max-turns N      Agentic turns per session (default: 200)"
+            echo "  --max-turns N      Agentic turns per session (default: 100)"
             echo "  --model MODEL      Model to use: opus, sonnet (default: opus)"
             echo "  --budget USD       Per-session spend limit"
             echo "  --retry-delay SEC  Initial rate limit wait (default: 300, escalates)"
