@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { streamSSE } from '@/lib/sse';
+import { getEcho } from '@/composables/useEcho';
 
 export const useConversationsStore = defineStore('conversations', () => {
     const conversations = ref([]);
@@ -84,6 +85,49 @@ export const useConversationsStore = defineStore('conversations', () => {
             title: match[2],
             taskId: parseInt(match[3], 10),
         };
+    }
+
+    // Track active channel subscriptions (taskId → true)
+    const taskSubscriptions = ref(new Set());
+
+    /**
+     * Subscribe to a task's Reverb channel for real-time status updates.
+     * Listens on private channel `task.{id}` for `.task.status.changed` events.
+     */
+    function subscribeToTask(taskId) {
+        if (taskSubscriptions.value.has(taskId)) return;
+
+        const echo = getEcho();
+        echo.private(`task.${taskId}`).listen('.task.status.changed', (event) => {
+            updateTaskStatus(event.task_id, {
+                status: event.status,
+                pipeline_id: event.pipeline_id,
+                pipeline_status: event.pipeline_status,
+                started_at: event.started_at,
+                result_summary: event.result_summary,
+            });
+
+            // If terminal, schedule removal after brief delay
+            if (['completed', 'failed', 'superseded'].includes(event.status)) {
+                setTimeout(() => {
+                    removeTask(event.task_id);
+                    unsubscribeFromTask(event.task_id);
+                }, 3000);
+            }
+        });
+
+        taskSubscriptions.value = new Set([...taskSubscriptions.value, taskId]);
+    }
+
+    /**
+     * Unsubscribe from a task's Reverb channel.
+     */
+    function unsubscribeFromTask(taskId) {
+        const echo = getEcho();
+        echo.leave(`task.${taskId}`);
+        const updated = new Set(taskSubscriptions.value);
+        updated.delete(taskId);
+        taskSubscriptions.value = updated;
     }
 
     /**
@@ -401,6 +445,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         activeToolCalls.value = [];
         pendingAction.value = null;
         activeTasks.value = new Map();
+        taskSubscriptions.value = new Set();
     }
 
     return {
@@ -428,6 +473,8 @@ export const useConversationsStore = defineStore('conversations', () => {
         updateTaskStatus,
         removeTask,
         parseTaskDispatchMessage,
+        subscribeToTask,
+        unsubscribeFromTask,
         fetchConversations,
         loadMore,
         toggleArchive,

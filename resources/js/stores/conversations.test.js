@@ -6,9 +6,30 @@ import { useConversationsStore } from './conversations';
 
 vi.mock('axios');
 
+// Mock useEcho for Reverb channel subscription tests (T69)
+// vi.hoisted() ensures these are available inside the hoisted vi.mock() factory
+const { mockListenFn, mockStopListeningFn, mockChannel, mockEchoInstance } = vi.hoisted(() => {
+    const mockListenFn = vi.fn().mockReturnThis();
+    const mockStopListeningFn = vi.fn().mockReturnThis();
+    const mockChannel = { listen: mockListenFn, stopListening: mockStopListeningFn };
+    const mockEchoInstance = {
+        private: vi.fn().mockReturnValue(mockChannel),
+        leave: vi.fn(),
+    };
+    return { mockListenFn, mockStopListeningFn, mockChannel, mockEchoInstance };
+});
+vi.mock('@/composables/useEcho', () => ({
+    getEcho: vi.fn().mockReturnValue(mockEchoInstance),
+}));
+
 beforeEach(() => {
     setActivePinia(createPinia());
     vi.restoreAllMocks();
+    // Re-initialize echo mocks after restoreAllMocks clears implementations
+    mockListenFn.mockClear().mockReturnThis();
+    mockStopListeningFn.mockClear().mockReturnThis();
+    mockEchoInstance.private.mockClear().mockReturnValue(mockChannel);
+    mockEchoInstance.leave.mockClear();
 });
 
 function makeConversation(overrides = {}) {
@@ -1201,6 +1222,113 @@ describe('useConversationsStore', () => {
             const store = useConversationsStore();
             expect(store.parseTaskDispatchMessage('Hello world')).toBeNull();
             expect(store.parseTaskDispatchMessage('[System: something else]')).toBeNull();
+        });
+    });
+
+    describe('Reverb channel subscription (T69)', () => {
+        it('subscribeToTask subscribes to task.{id} channel', () => {
+            const store = useConversationsStore();
+            store.subscribeToTask(42);
+            expect(mockEchoInstance.private).toHaveBeenCalledWith('task.42');
+        });
+
+        it('subscribeToTask listens for task.status.changed events', () => {
+            const store = useConversationsStore();
+            store.subscribeToTask(42);
+            expect(mockListenFn).toHaveBeenCalledWith(
+                '.task.status.changed',
+                expect.any(Function)
+            );
+        });
+
+        it('does not double-subscribe to the same task', () => {
+            const store = useConversationsStore();
+            store.subscribeToTask(42);
+            store.subscribeToTask(42);
+            expect(mockEchoInstance.private).toHaveBeenCalledTimes(1);
+        });
+
+        it('unsubscribeFromTask leaves the channel', () => {
+            const store = useConversationsStore();
+            store.unsubscribeFromTask(42);
+            expect(mockEchoInstance.leave).toHaveBeenCalledWith('task.42');
+        });
+
+        it('receiving task.status.changed event updates tracked task', () => {
+            const store = useConversationsStore();
+            store.trackTask({
+                task_id: 42,
+                status: 'queued',
+                type: 'feature_dev',
+                title: 'Test',
+                project_id: 1,
+                pipeline_id: null,
+                pipeline_status: null,
+                started_at: null,
+                conversation_id: 'conv-1',
+            });
+
+            store.subscribeToTask(42);
+
+            // Simulate event by calling the listen callback
+            const callback = mockListenFn.mock.calls[0][1];
+            callback({
+                task_id: 42,
+                status: 'running',
+                pipeline_id: 999,
+                pipeline_status: 'running',
+                started_at: '2026-02-15T12:00:00Z',
+            });
+
+            const task = store.activeTasks.get(42);
+            expect(task.status).toBe('running');
+            expect(task.pipeline_id).toBe(999);
+        });
+
+        it('schedules removal on terminal status event', () => {
+            vi.useFakeTimers();
+            const store = useConversationsStore();
+            store.trackTask({
+                task_id: 42,
+                status: 'running',
+                type: 'feature_dev',
+                title: 'Test',
+                project_id: 1,
+                pipeline_id: 100,
+                pipeline_status: 'running',
+                started_at: '2026-02-15T12:00:00Z',
+                conversation_id: 'conv-1',
+            });
+
+            store.subscribeToTask(42);
+
+            const callback = mockListenFn.mock.calls[0][1];
+            callback({
+                task_id: 42,
+                status: 'completed',
+                pipeline_id: 100,
+                pipeline_status: 'success',
+                started_at: '2026-02-15T12:00:00Z',
+            });
+
+            // Task should still exist immediately after terminal event
+            expect(store.activeTasks.has(42)).toBe(true);
+
+            // After 3s delay, task should be removed
+            vi.advanceTimersByTime(3000);
+            expect(store.activeTasks.has(42)).toBe(false);
+            expect(mockEchoInstance.leave).toHaveBeenCalledWith('task.42');
+
+            vi.useRealTimers();
+        });
+
+        it('$reset clears task subscriptions', () => {
+            const store = useConversationsStore();
+            store.subscribeToTask(42);
+            store.$reset();
+            // After reset, subscribing again should work (not be deduped)
+            store.subscribeToTask(42);
+            expect(mockEchoInstance.private).toHaveBeenCalledTimes(2);
         });
     });
 
