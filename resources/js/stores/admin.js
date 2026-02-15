@@ -228,6 +228,72 @@ export const useAdminStore = defineStore('admin', () => {
         }
     }
 
+    // ─── PRD template management (T93) ──────────────────────────
+    const prdTemplate = ref(null);
+    const prdTemplateLoading = ref(false);
+    const prdTemplateError = ref(null);
+    const globalPrdTemplate = ref(null);
+    const globalPrdTemplateLoading = ref(false);
+
+    async function fetchPrdTemplate(projectId) {
+        prdTemplateLoading.value = true;
+        prdTemplateError.value = null;
+        try {
+            const { data } = await axios.get(`/api/v1/admin/projects/${projectId}/prd-template`);
+            prdTemplate.value = data.data;
+        } catch (e) {
+            prdTemplateError.value = 'Failed to load PRD template.';
+        } finally {
+            prdTemplateLoading.value = false;
+        }
+    }
+
+    async function updatePrdTemplate(projectId, template) {
+        try {
+            const { data } = await axios.put(`/api/v1/admin/projects/${projectId}/prd-template`, {
+                template,
+            });
+            if (data.success && data.data) {
+                prdTemplate.value = data.data;
+            }
+            return { success: true };
+        } catch (e) {
+            return {
+                success: false,
+                error: e.response?.data?.error || 'Failed to update PRD template.',
+            };
+        }
+    }
+
+    async function fetchGlobalPrdTemplate() {
+        globalPrdTemplateLoading.value = true;
+        try {
+            const { data } = await axios.get('/api/v1/admin/prd-template');
+            globalPrdTemplate.value = data.data;
+        } catch (e) {
+            // Supplementary — don't block
+        } finally {
+            globalPrdTemplateLoading.value = false;
+        }
+    }
+
+    async function updateGlobalPrdTemplate(template) {
+        try {
+            const { data } = await axios.put('/api/v1/admin/prd-template', {
+                template,
+            });
+            if (data.success && data.data) {
+                globalPrdTemplate.value = data.data;
+            }
+            return { success: true };
+        } catch (e) {
+            return {
+                success: false,
+                error: e.response?.data?.error || 'Failed to update global PRD template.',
+            };
+        }
+    }
+
     return {
         projects,
         loading,
@@ -265,5 +331,15 @@ export const useAdminStore = defineStore('admin', () => {
         projectConfigError,
         fetchProjectConfig,
         updateProjectConfig,
+        // PRD template (T93)
+        prdTemplate,
+        prdTemplateLoading,
+        prdTemplateError,
+        globalPrdTemplate,
+        globalPrdTemplateLoading,
+        fetchPrdTemplate,
+        updatePrdTemplate,
+        fetchGlobalPrdTemplate,
+        updateGlobalPrdTemplate,
     };
 });
