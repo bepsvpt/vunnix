@@ -22,8 +22,10 @@
     },
     "dependencies": {
         "@shikijs/markdown-it": "^3.22.0",
+        "laravel-echo": "^2.3.0",
         "markdown-it": "^14.1.1",
         "pinia": "^2.3.1",
+        "pusher-js": "^8.4.0",
         "shiki": "^3.22.0",
         "vue": "^3.5.28",
         "vue-router": "^4.6.4"
