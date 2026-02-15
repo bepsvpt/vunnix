@@ -1277,6 +1277,131 @@ checker.check(
 )
 
 # ============================================================
+#  T102: Prompt versioning
+# ============================================================
+section("T102: Prompt Versioning")
+
+# VunnixAgent PROMPT_VERSION constant
+checker.check(
+    "VunnixAgent has PROMPT_VERSION constant",
+    file_contains("app/Agents/VunnixAgent.php", "PROMPT_VERSION"),
+)
+checker.check(
+    "VunnixAgent PROMPT_VERSION is string value",
+    file_contains("app/Agents/VunnixAgent.php", "PROMPT_VERSION = '1.0'"),
+)
+
+# Executor skill files have version headers
+checker.check(
+    "frontend-review skill has version header",
+    file_contains("executor/.claude/skills/frontend-review.md", "version:"),
+)
+checker.check(
+    "backend-review skill has version header",
+    file_contains("executor/.claude/skills/backend-review.md", "version:"),
+)
+checker.check(
+    "security-audit skill has version header",
+    file_contains("executor/.claude/skills/security-audit.md", "version:"),
+)
+checker.check(
+    "executor CLAUDE.md has version header",
+    file_contains("executor/.claude/CLAUDE.md", "version:"),
+)
+
+# Schema VERSION constants
+checker.check(
+    "CodeReviewSchema has VERSION constant",
+    file_contains("app/Schemas/CodeReviewSchema.php", "VERSION = '1.0'"),
+)
+checker.check(
+    "FeatureDevSchema has VERSION constant",
+    file_contains("app/Schemas/FeatureDevSchema.php", "VERSION = '1.0'"),
+)
+checker.check(
+    "ActionDispatchSchema has VERSION constant",
+    file_contains("app/Schemas/ActionDispatchSchema.php", "VERSION = '1.0'"),
+)
+
+# Task model stores prompt_version
+checker.check(
+    "Task model has prompt_version in fillable",
+    file_contains("app/Models/Task.php", "'prompt_version'"),
+)
+checker.check(
+    "Task model casts prompt_version to array",
+    file_contains("app/Models/Task.php", "'prompt_version' => 'array'"),
+)
+checker.check(
+    "Tasks migration has prompt_version column",
+    file_contains("database/migrations/2024_01_01_000008_create_tasks_table.php", "prompt_version"),
+)
+
+# ExternalTaskResource exposes prompt_version
+checker.check(
+    "ExternalTaskResource includes prompt_version",
+    file_contains("app/Http/Resources/ExternalTaskResource.php", "prompt_version"),
+)
+
+# Prompt versions API endpoint
+checker.check(
+    "PromptVersionController exists",
+    file_exists("app/Http/Controllers/Api/PromptVersionController.php"),
+)
+checker.check(
+    "Prompt versions route registered",
+    file_contains("routes/api.php", "prompt-versions"),
+)
+
+# Quality dashboard filtering
+checker.check(
+    "DashboardQualityController accepts prompt_version param",
+    file_contains("app/Http/Controllers/Api/DashboardQualityController.php", "prompt_version"),
+)
+checker.check(
+    "ExternalTaskController accepts prompt_version param",
+    file_contains("app/Http/Controllers/Api/ExternalTaskController.php", "prompt_version"),
+)
+
+# Dashboard store
+checker.check(
+    "Dashboard store has promptVersionFilter",
+    file_contains("resources/js/stores/dashboard.js", "promptVersionFilter"),
+)
+checker.check(
+    "Dashboard store has promptVersions",
+    file_contains("resources/js/stores/dashboard.js", "promptVersions"),
+)
+checker.check(
+    "Dashboard store has fetchPromptVersions",
+    file_contains("resources/js/stores/dashboard.js", "fetchPromptVersions"),
+)
+
+# Dashboard Quality UI
+checker.check(
+    "DashboardQuality has prompt version filter UI",
+    file_contains("resources/js/components/DashboardQuality.vue", "prompt-version-filter"),
+)
+
+# Tests
+checker.check(
+    "VunnixAgent prompt version test exists",
+    file_exists("tests/Unit/Agents/VunnixAgentPromptVersionTest.php"),
+)
+checker.check(
+    "PromptVersionController test exists",
+    file_exists("tests/Feature/Http/Controllers/Api/PromptVersionControllerTest.php"),
+)
+checker.check(
+    "Dashboard quality prompt version test exists",
+    file_exists("tests/Feature/Http/Controllers/Api/DashboardQualityPromptVersionTest.php"),
+)
+checker.check(
+    "Dashboard store prompt version test exists",
+    file_exists("resources/js/stores/dashboard.prompt-version.test.js"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
