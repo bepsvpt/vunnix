@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\ExternalProjectController;
 use App\Http\Controllers\Api\ExternalTaskController;
 use App\Http\Controllers\Api\OverrelianceAlertController;
 use App\Http\Controllers\Api\PrdTemplateController;
+use App\Http\Controllers\Api\PromptVersionController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DashboardOverviewController;
 use App\Http\Controllers\Api\DashboardDesignerActivityController;
@@ -84,6 +85,10 @@ Route::prefix('v1')->group(function () {
         // Dashboard quality metrics (T77)
         Route::get('/dashboard/quality', DashboardQualityController::class)
             ->name('api.dashboard.quality');
+
+        // Prompt versions for filter dropdown (T102)
+        Route::get('/prompt-versions', PromptVersionController::class)
+            ->name('api.prompt-versions');
 
         // Dashboard PM activity metrics (T78)
         Route::get('/dashboard/pm-activity', DashboardPMActivityController::class)
