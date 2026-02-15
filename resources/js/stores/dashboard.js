@@ -5,6 +5,8 @@ import axios from 'axios';
 export const useDashboardStore = defineStore('dashboard', () => {
     const activityFeed = ref([]);
     const metricsUpdates = ref([]);
+    const overview = ref(null);
+    const overviewLoading = ref(false);
     const isLoading = ref(false);
     const nextCursor = ref(null);
     const hasMore = computed(() => nextCursor.value !== null);
@@ -91,9 +93,21 @@ export const useDashboardStore = defineStore('dashboard', () => {
         }
     }
 
+    async function fetchOverview() {
+        overviewLoading.value = true;
+        try {
+            const response = await axios.get('/api/v1/dashboard/overview');
+            overview.value = response.data.data;
+        } finally {
+            overviewLoading.value = false;
+        }
+    }
+
     function $reset() {
         activityFeed.value = [];
         metricsUpdates.value = [];
+        overview.value = null;
+        overviewLoading.value = false;
         activeFilter.value = null;
         projectFilter.value = null;
         isLoading.value = false;
@@ -103,6 +117,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     return {
         activityFeed,
         metricsUpdates,
+        overview,
+        overviewLoading,
         activeFilter,
         projectFilter,
         isLoading,
@@ -112,6 +128,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         addActivityItem,
         addMetricsUpdate,
         fetchActivity,
+        fetchOverview,
         loadMore,
         $reset,
     };

@@ -31,9 +31,16 @@ beforeEach(() => {
     pinia = createPinia();
     setActivePinia(pinia);
     vi.clearAllMocks();
-    // DashboardPage calls fetchActivity() on mount, which needs axios mocked
-    axios.get.mockResolvedValue({
-        data: { data: [], meta: { next_cursor: null, per_page: 25 } },
+    // DashboardPage calls fetchActivity() + fetchOverview() on mount, which needs axios mocked
+    axios.get.mockImplementation((url) => {
+        if (url === '/api/v1/dashboard/overview') {
+            return Promise.resolve({
+                data: { data: { tasks_by_type: { code_review: 0, feature_dev: 0, ui_adjustment: 0, prd_creation: 0 }, active_tasks: 0, success_rate: null, total_completed: 0, total_failed: 0, recent_activity: null } },
+            });
+        }
+        return Promise.resolve({
+            data: { data: [], meta: { next_cursor: null, per_page: 25 } },
+        });
     });
 });
 

@@ -241,6 +241,87 @@ checker.check(
 )
 
 # ============================================================
+#  T76: Dashboard — Overview
+# ============================================================
+section("T76: Dashboard — Overview")
+
+# Backend
+checker.check(
+    "DashboardOverviewController exists",
+    file_exists("app/Http/Controllers/Api/DashboardOverviewController.php"),
+)
+checker.check(
+    "Overview controller queries tasks by type",
+    file_contains("app/Http/Controllers/Api/DashboardOverviewController.php", "tasks_by_type"),
+)
+checker.check(
+    "Overview controller calculates active tasks",
+    file_contains("app/Http/Controllers/Api/DashboardOverviewController.php", "active_tasks"),
+)
+checker.check(
+    "Overview controller calculates success rate",
+    file_contains("app/Http/Controllers/Api/DashboardOverviewController.php", "success_rate"),
+)
+checker.check(
+    "Overview controller scoped to user projects",
+    file_contains("app/Http/Controllers/Api/DashboardOverviewController.php", "projectIds"),
+)
+checker.check(
+    "Dashboard overview route registered",
+    file_contains("routes/api.php", "/dashboard/overview"),
+)
+checker.check(
+    "Dashboard overview API test exists",
+    file_exists("tests/Feature/DashboardOverviewApiTest.php"),
+)
+
+# Frontend
+checker.check(
+    "DashboardOverview component exists",
+    file_exists("resources/js/components/DashboardOverview.vue"),
+)
+checker.check(
+    "DashboardOverview has summary cards",
+    file_contains("resources/js/components/DashboardOverview.vue", "active-tasks-card"),
+)
+checker.check(
+    "DashboardOverview has success rate card",
+    file_contains("resources/js/components/DashboardOverview.vue", "success-rate-card"),
+)
+checker.check(
+    "DashboardOverview has recent activity card",
+    file_contains("resources/js/components/DashboardOverview.vue", "recent-activity-card"),
+)
+checker.check(
+    "DashboardOverview has type cards",
+    file_contains("resources/js/components/DashboardOverview.vue", "type-card-"),
+)
+checker.check(
+    "Dashboard store has fetchOverview action",
+    file_contains("resources/js/stores/dashboard.js", "fetchOverview"),
+)
+checker.check(
+    "Dashboard store has overview state",
+    file_contains("resources/js/stores/dashboard.js", "overview"),
+)
+checker.check(
+    "DashboardPage imports DashboardOverview",
+    file_contains("resources/js/pages/DashboardPage.vue", "DashboardOverview"),
+)
+checker.check(
+    "DashboardPage has view tabs",
+    file_contains("resources/js/pages/DashboardPage.vue", "dashboard-view-tabs"),
+)
+checker.check(
+    "DashboardPage calls fetchOverview on mount",
+    file_contains("resources/js/pages/DashboardPage.vue", "fetchOverview"),
+)
+checker.check(
+    "DashboardOverview test exists",
+    file_exists("resources/js/components/DashboardOverview.test.js"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
