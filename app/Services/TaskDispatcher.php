@@ -141,6 +141,14 @@ class TaskDispatcher
                 $variables['VUNNIX_ISSUE_IID'] = (string) $task->issue_iid;
             }
 
+            // T72: Pass existing MR IID for designer iteration (push to same branch)
+            if ($task->mr_iid !== null && in_array($task->type, [TaskType::FeatureDev, TaskType::UiAdjustment], true)) {
+                $variables['VUNNIX_EXISTING_MR_IID'] = (string) $task->mr_iid;
+                if (! empty($task->result['branch_name'])) {
+                    $variables['VUNNIX_EXISTING_BRANCH'] = $task->result['branch_name'];
+                }
+            }
+
             $pipelineResult = $this->gitLabClient->triggerPipeline(
                 projectId: $task->project->gitlab_project_id,
                 ref: $task->commit_sha ?? 'main',

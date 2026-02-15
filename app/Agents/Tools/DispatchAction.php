@@ -152,6 +152,12 @@ class DispatchAction implements Tool
             $taskData['commit_sha'] = $targetBranch !== '' ? $targetBranch : 'main';
         }
 
+        // T72: Set existing MR reference for designer iteration flow
+        $existingMrIid = $request->integer('existing_mr_iid');
+        if ($existingMrIid > 0) {
+            $taskData['mr_iid'] = $existingMrIid;
+        }
+
         $task = Task::create($taskData);
 
         Log::info('DispatchAction: task created from conversation', [
@@ -197,6 +203,11 @@ class DispatchAction implements Tool
         $targetBranch = (string) $request->string('target_branch');
         if ($targetBranch !== '') {
             $meta['target_branch'] = $targetBranch;
+        }
+
+        $existingMrIid = $request->integer('existing_mr_iid');
+        if ($existingMrIid > 0) {
+            $meta['existing_mr_iid'] = $existingMrIid;
         }
 
         $assigneeId = $request->integer('assignee_id');
