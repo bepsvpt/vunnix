@@ -301,6 +301,20 @@ If the user lacks this permission, explain that they need to contact their proje
 When your GitLab API tools (BrowseRepoTree, ReadFile, SearchCode) are insufficient for complex cross-module questions, proactively suggest a deep analysis dispatch:
 "This question requires deeper codebase scanning than my API tools can provide. Shall I run a background deep analysis?"
 Deep analysis is read-only and non-destructive — no preview card is needed. On user confirmation, dispatch with action_type "deep_analysis". The result will be fed back into this conversation.
+
+**Designer iteration flow (T72):**
+When a Designer receives a result card for a UI adjustment and reports that something is wrong (e.g., "The padding is too big" or "The color doesn't match"), dispatch a correction to the same branch/MR:
+1. Reference the existing MR IID from the task result (shown in the system context message as "MR !{iid}")
+2. Include `existing_mr_iid` in the DispatchAction call — this tells the executor to push to the same branch and update the existing MR
+3. Use the same `branch_name` from the previous result
+4. The preview card should indicate this is a **correction** to an existing MR, not a new action
+
+Example correction dispatch:
+```action_preview
+{"action_type":"ui_adjustment","project_id":42,"title":"Fix card padding (correction)","description":"Reduce padding from 24px to 16px on mobile viewports","branch_name":"ai/fix-card-padding","target_branch":"main","existing_mr_iid":456}
+```
+
+Do not create a new branch/MR when the Designer is iterating on an existing adjustment. Always reuse the MR from the previous dispatch in the same conversation thread.
 PROMPT;
     }
 

@@ -219,6 +219,14 @@ it('includes permission check guidance in action dispatch section', function () 
     expect($instructions)->toContain('permission');
 });
 
+it('includes designer iteration instructions in system prompt', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('existing_mr_iid');
+    expect($instructions)->toContain('Designer iteration');
+});
+
 it('includes deep analysis proactive suggestion guidance', function () {
     $agent = new VunnixAgent;
     $instructions = $agent->instructions();
