@@ -1051,6 +1051,159 @@ describe('useConversationsStore', () => {
         });
     });
 
+    describe('active task tracking (T69)', () => {
+        it('trackTask adds a task to activeTasks', () => {
+            const store = useConversationsStore();
+            store.trackTask({
+                task_id: 42,
+                status: 'queued',
+                type: 'feature_dev',
+                title: 'Implement payment',
+                project_id: 1,
+                pipeline_id: null,
+                pipeline_status: null,
+                started_at: null,
+                conversation_id: 'conv-1',
+            });
+
+            expect(store.activeTasks.size).toBe(1);
+            expect(store.activeTasks.get(42).title).toBe('Implement payment');
+        });
+
+        it('updateTaskStatus updates an existing tracked task', () => {
+            const store = useConversationsStore();
+            store.trackTask({
+                task_id: 42,
+                status: 'queued',
+                type: 'feature_dev',
+                title: 'Implement payment',
+                project_id: 1,
+                pipeline_id: null,
+                pipeline_status: null,
+                started_at: null,
+                conversation_id: 'conv-1',
+            });
+
+            store.updateTaskStatus(42, {
+                status: 'running',
+                pipeline_id: 999,
+                pipeline_status: 'running',
+                started_at: '2026-02-15T12:00:00Z',
+            });
+
+            const task = store.activeTasks.get(42);
+            expect(task.status).toBe('running');
+            expect(task.pipeline_id).toBe(999);
+            expect(task.started_at).toBe('2026-02-15T12:00:00Z');
+        });
+
+        it('updateTaskStatus is a no-op for untracked tasks', () => {
+            const store = useConversationsStore();
+            store.updateTaskStatus(99, { status: 'running' });
+            expect(store.activeTasks.size).toBe(0);
+        });
+
+        it('removeTask removes a task from activeTasks', () => {
+            const store = useConversationsStore();
+            store.trackTask({
+                task_id: 42,
+                status: 'queued',
+                type: 'feature_dev',
+                title: 'Test',
+                project_id: 1,
+                pipeline_id: null,
+                pipeline_status: null,
+                started_at: null,
+                conversation_id: 'conv-1',
+            });
+
+            store.removeTask(42);
+            expect(store.activeTasks.size).toBe(0);
+        });
+
+        it('activeTasksForConversation returns tasks for the selected conversation', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.trackTask({
+                task_id: 42,
+                status: 'running',
+                type: 'feature_dev',
+                title: 'Task A',
+                project_id: 1,
+                pipeline_id: null,
+                pipeline_status: null,
+                started_at: null,
+                conversation_id: 'conv-1',
+            });
+            store.trackTask({
+                task_id: 43,
+                status: 'running',
+                type: 'code_review',
+                title: 'Task B',
+                project_id: 1,
+                pipeline_id: null,
+                pipeline_status: null,
+                started_at: null,
+                conversation_id: 'conv-2',
+            });
+
+            expect(store.activeTasksForConversation.length).toBe(1);
+            expect(store.activeTasksForConversation[0].task_id).toBe(42);
+        });
+
+        it('activeTasksForConversation filters out terminal statuses', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.trackTask({
+                task_id: 42,
+                status: 'completed',
+                type: 'feature_dev',
+                title: 'Done Task',
+                project_id: 1,
+                pipeline_id: null,
+                pipeline_status: null,
+                started_at: null,
+                conversation_id: 'conv-1',
+            });
+
+            expect(store.activeTasksForConversation.length).toBe(0);
+        });
+
+        it('$reset clears activeTasks', () => {
+            const store = useConversationsStore();
+            store.trackTask({
+                task_id: 42,
+                status: 'running',
+                type: 'feature_dev',
+                title: 'Test',
+                project_id: 1,
+                pipeline_id: null,
+                pipeline_status: null,
+                started_at: null,
+                conversation_id: 'conv-1',
+            });
+
+            store.$reset();
+            expect(store.activeTasks.size).toBe(0);
+        });
+
+        it('detects task dispatch from streamed system message', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+
+            const systemMsg = '[System: Task dispatched] Feature implementation "Add Stripe" has been dispatched as Task #42. You can track its progress in the pinned task bar.';
+
+            const parsed = store.parseTaskDispatchMessage(systemMsg);
+            expect(parsed).toEqual({ taskId: 42, title: 'Add Stripe', typeLabel: 'Feature implementation' });
+        });
+
+        it('parseTaskDispatchMessage returns null for non-dispatch messages', () => {
+            const store = useConversationsStore();
+            expect(store.parseTaskDispatchMessage('Hello world')).toBeNull();
+            expect(store.parseTaskDispatchMessage('[System: something else]')).toBeNull();
+        });
+    });
+
     describe('action preview state (T68)', () => {
         it('initializes pendingAction as null', () => {
             const store = useConversationsStore();

@@ -32,9 +32,59 @@ export const useConversationsStore = defineStore('conversations', () => {
     // Action preview state (T68)
     const pendingAction = ref(null);
 
+    // Active task tracking (T69 — pinned task bar)
+    const activeTasks = ref(new Map());
+
     const selected = computed(() =>
         conversations.value.find((c) => c.id === selectedId.value) || null
     );
+
+    // T69: Active tasks for the currently selected conversation (excludes terminal statuses)
+    const activeTasksForConversation = computed(() => {
+        if (!selectedId.value) return [];
+        return [...activeTasks.value.values()].filter(
+            (t) => t.conversation_id === selectedId.value && !isTerminalStatus(t.status)
+        );
+    });
+
+    function isTerminalStatus(status) {
+        return ['completed', 'failed', 'superseded'].includes(status);
+    }
+
+    function trackTask(taskData) {
+        const updated = new Map(activeTasks.value);
+        updated.set(taskData.task_id, { ...taskData });
+        activeTasks.value = updated;
+    }
+
+    function updateTaskStatus(taskId, statusData) {
+        if (!activeTasks.value.has(taskId)) return;
+        const updated = new Map(activeTasks.value);
+        updated.set(taskId, { ...updated.get(taskId), ...statusData });
+        activeTasks.value = updated;
+    }
+
+    function removeTask(taskId) {
+        const updated = new Map(activeTasks.value);
+        updated.delete(taskId);
+        activeTasks.value = updated;
+    }
+
+    /**
+     * Parse a [System: Task dispatched] message to extract task tracking info.
+     * Returns { taskId, title, typeLabel } or null if not a dispatch message.
+     */
+    function parseTaskDispatchMessage(text) {
+        const match = text.match(
+            /\[System: Task dispatched\] (.+?) "(.+?)" has been dispatched as Task #(\d+)/
+        );
+        if (!match) return null;
+        return {
+            typeLabel: match[1],
+            title: match[2],
+            taskId: parseInt(match[3], 10),
+        };
+    }
 
     /**
      * Fetch conversations from the API. Resets the list (page 1).
@@ -350,6 +400,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         streamingContent.value = '';
         activeToolCalls.value = [];
         pendingAction.value = null;
+        activeTasks.value = new Map();
     }
 
     return {
@@ -371,6 +422,12 @@ export const useConversationsStore = defineStore('conversations', () => {
         streamingContent,
         activeToolCalls,
         pendingAction,
+        activeTasks,
+        activeTasksForConversation,
+        trackTask,
+        updateTaskStatus,
+        removeTask,
+        parseTaskDispatchMessage,
         fetchConversations,
         loadMore,
         toggleArchive,
