@@ -3552,6 +3552,94 @@ checker.check(
     file_contains("tests/Feature/Listeners/DeliverTaskResultToConversationTest.php", "!456"),
 )
 
+# ─── T115: Conversation Archiving ─────────────────────────────
+section("T115: Conversation Archiving")
+
+checker.check(
+    "Conversation model has archived_at in fillable",
+    file_contains("app/Models/Conversation.php", "archived_at"),
+)
+checker.check(
+    "Conversation model has notArchived scope",
+    file_contains("app/Models/Conversation.php", "scopeNotArchived"),
+)
+checker.check(
+    "Conversation model has archived scope",
+    file_contains("app/Models/Conversation.php", "scopeArchived"),
+)
+checker.check(
+    "Conversation model has isArchived helper",
+    file_contains("app/Models/Conversation.php", "isArchived"),
+)
+checker.check(
+    "archived_at migration exists",
+    file_exists("database/migrations/2024_01_01_000019_add_archived_at_to_agent_conversations.php"),
+)
+checker.check(
+    "ConversationService has toggleArchive method",
+    file_contains("app/Services/ConversationService.php", "toggleArchive"),
+)
+checker.check(
+    "ConversationService listForUser supports archived filter",
+    file_contains("app/Services/ConversationService.php", "->archived()"),
+)
+checker.check(
+    "ConversationController has archive action",
+    file_contains("app/Http/Controllers/Api/ConversationController.php", "public function archive"),
+)
+checker.check(
+    "ConversationPolicy has archive method",
+    file_contains("app/Policies/ConversationPolicy.php", "public function archive"),
+)
+checker.check(
+    "Archive route registered",
+    file_contains("routes/api.php", "api.conversations.archive"),
+)
+checker.check(
+    "ConversationResource includes archived_at",
+    file_contains("app/Http/Resources/ConversationResource.php", "archived_at"),
+)
+checker.check(
+    "ConversationFactory has archived modifier",
+    file_contains("database/factories/ConversationFactory.php", "archived"),
+)
+checker.check(
+    "ConversationList has archive toggle button",
+    file_contains("resources/js/components/ConversationList.vue", "onArchiveToggle"),
+)
+checker.check(
+    "ConversationListItem has archive button",
+    file_contains("resources/js/components/ConversationListItem.vue", "archive"),
+)
+checker.check(
+    "Conversations store has toggleArchive method",
+    file_contains("resources/js/stores/conversations.js", "toggleArchive"),
+)
+checker.check(
+    "Conversations store has showArchived state",
+    file_contains("resources/js/stores/conversations.js", "showArchived"),
+)
+checker.check(
+    "API test covers archiving",
+    file_contains("tests/Feature/ConversationApiTest.php", "archives an active conversation"),
+)
+checker.check(
+    "API test covers unarchiving",
+    file_contains("tests/Feature/ConversationApiTest.php", "unarchives an archived conversation"),
+)
+checker.check(
+    "API test covers archive authorization",
+    file_contains("tests/Feature/ConversationApiTest.php", "returns 403 when user cannot archive"),
+)
+checker.check(
+    "API test covers filtering by archived status",
+    file_contains("tests/Feature/ConversationApiTest.php", "filters conversations by archived status"),
+)
+checker.check(
+    "Model test covers archived scopes",
+    file_contains("tests/Feature/Models/ConversationModelTest.php", "notArchived scope"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()

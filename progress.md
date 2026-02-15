@@ -2,10 +2,10 @@
 
 ## Summary
 
-- **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 73 / 116 (62.9%)
-- **Current Task:** T115 — Conversation archiving
-- **Last Verified:** T72
+- **Current Milestone:** M4 — Dashboard & Metrics
+- **Tasks Complete:** 74 / 116 (63.8%)
+- **Current Task:** T74 — Laravel Echo client
+- **Last Verified:** T115
 
 ---
 
@@ -81,7 +81,7 @@
 - [x] T45: CI pipeline template [Depends: T19]
 - [x] T46: Executor image CI/CD + version alignment [Depends: T19]
 
-## M3 — Path B Functional (25/27)
+## M3 — Path B Functional (27/27) ✅
 
 ### Chat Backend
 
@@ -117,12 +117,12 @@
 
 ### Conversation Management
 
-- [ ] **T115:** Conversation archiving (D141) [Depends: T47]
+- [x] T115: Conversation archiving (D141) [Depends: T47]
 
 ## M4 — Dashboard & Metrics (1/15)
 
 - [x] T73: Reverb channel configuration (channel authorization) [Depends: T2, T15]
-- [ ] T74: Laravel Echo client [Depends: T61, T73]
+- [ ] **T74:** Laravel Echo client [Depends: T61, T73]
 - [ ] T75: Dashboard — activity feed (filter tabs, cursor pagination) [Depends: T62, T74, T15]
 - [ ] T76: Dashboard — Overview [Depends: T75]
 - [ ] T77: Dashboard — Quality [Depends: T75]
