@@ -30,6 +30,39 @@ class GlobalSetting extends Model
     }
 
     /**
+     * Default PRD template used when no project or global override exists.
+     * Matches the template structure from vunnix.md §4.4.
+     */
+    public static function defaultPrdTemplate(): string
+    {
+        return <<<'TEMPLATE'
+# [Feature Title]
+
+## Problem
+What problem does this solve? Who is affected?
+
+## Proposed Solution
+High-level description of the feature.
+
+## User Stories
+- As a [role], I want [action] so that [benefit]
+
+## Acceptance Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+
+## Out of Scope
+What this feature does NOT include.
+
+## Technical Notes
+Architecture considerations, dependencies, related existing code.
+
+## Open Questions
+Unresolved items from the conversation.
+TEMPLATE;
+    }
+
+    /**
      * Default settings applied when no DB record exists for a key.
      *
      * @return array<string, mixed>
