@@ -24,13 +24,12 @@ class DeliverTaskResultToConversation
             return;
         }
 
-        $statusText = $task->status->value;
-        $title = $task->result['title'] ?? $task->result['mr_title'] ?? 'Task';
+        $content = $this->buildResultContent($task);
 
         Message::create([
             'conversation_id' => $task->conversation_id,
             'role' => 'system',
-            'content' => "[System: Task result delivered] Task #{$task->id} \"{$title}\" {$statusText}.",
+            'content' => $content,
             'user_id' => 0,
             'agent' => '',
             'attachments' => '[]',
@@ -44,5 +43,35 @@ class DeliverTaskResultToConversation
             'task_id' => $task->id,
             'conversation_id' => $task->conversation_id,
         ]);
+    }
+
+    private function buildResultContent(\App\Models\Task $task): string
+    {
+        $statusText = $task->status->value;
+        $title = $task->result['title'] ?? $task->result['mr_title'] ?? 'Task';
+        $result = $task->result ?? [];
+
+        $parts = ["[System: Task result delivered] Task #{$task->id} \"{$title}\" {$statusText}."];
+
+        // MR reference
+        if ($task->mr_iid !== null) {
+            $parts[] = "MR !{$task->mr_iid}";
+        }
+
+        // Branch info
+        $branch = $result['branch'] ?? null;
+        if ($branch) {
+            $targetBranch = $result['target_branch'] ?? 'main';
+            $parts[] = "Branch: {$branch} → {$targetBranch}";
+        }
+
+        // Files changed count
+        $filesChanged = $result['files_changed'] ?? [];
+        if (count($filesChanged) > 0) {
+            $count = count($filesChanged);
+            $parts[] = "{$count} ".($count === 1 ? 'file' : 'files').' changed';
+        }
+
+        return implode(' | ', $parts);
     }
 }

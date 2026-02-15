@@ -107,6 +107,65 @@ test('does not insert message for tasks without a conversation', function () {
     expect($count)->toBe(0);
 });
 
+test('includes MR link and branch info in system message for feature_dev tasks', function () {
+    $conversation = Conversation::factory()->create();
+    $task = Task::factory()->create([
+        'conversation_id' => $conversation->id,
+        'type' => 'ui_adjustment',
+        'status' => 'completed',
+        'mr_iid' => 456,
+        'result' => [
+            'mr_title' => 'Fix card padding',
+            'branch' => 'ai/fix-card-padding',
+            'target_branch' => 'main',
+            'files_changed' => [
+                ['path' => 'styles/card.css', 'action' => 'modified', 'summary' => 'Padding fix'],
+            ],
+        ],
+    ]);
+
+    $listener = new DeliverTaskResultToConversation();
+    $listener->handle(new TaskStatusChanged($task));
+
+    $systemMsg = Message::where('conversation_id', $conversation->id)
+        ->where('role', 'system')
+        ->latest('created_at')
+        ->first();
+
+    expect($systemMsg->content)->toContain('!456');
+    expect($systemMsg->content)->toContain('ai/fix-card-padding');
+    expect($systemMsg->content)->toContain('[System: Task result delivered]');
+});
+
+test('includes result summary and files count in system message', function () {
+    $conversation = Conversation::factory()->create();
+    $task = Task::factory()->create([
+        'conversation_id' => $conversation->id,
+        'type' => 'feature_dev',
+        'status' => 'completed',
+        'mr_iid' => 123,
+        'result' => [
+            'mr_title' => 'Add payment flow',
+            'branch' => 'ai/payment-feature',
+            'files_changed' => [
+                ['path' => 'app/Payment.php', 'action' => 'created', 'summary' => 'Payment controller'],
+                ['path' => 'app/Stripe.php', 'action' => 'created', 'summary' => 'Stripe service'],
+            ],
+            'notes' => 'Implemented Stripe checkout with webhooks',
+        ],
+    ]);
+
+    $listener = new DeliverTaskResultToConversation();
+    $listener->handle(new TaskStatusChanged($task));
+
+    $systemMsg = Message::where('conversation_id', $conversation->id)
+        ->where('role', 'system')
+        ->first();
+
+    expect($systemMsg->content)->toContain('!123');
+    expect($systemMsg->content)->toContain('2 files changed');
+});
+
 test('includes task title in system message for failed tasks', function () {
     $conversation = Conversation::factory()->create();
     $task = Task::factory()->create([
