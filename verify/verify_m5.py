@@ -561,6 +561,103 @@ checker.check(
 )
 
 # ============================================================
+#  T96: Dead letter queue — backend
+# ============================================================
+section("T96: Dead Letter Queue — Backend")
+
+# Migration
+checker.check(
+    "DLQ retry columns migration exists",
+    file_exists("database/migrations/2026_02_15_080000_add_retry_columns_to_dead_letter_queue_table.php"),
+)
+
+# Model
+checker.check(
+    "DeadLetterEntry model exists",
+    file_exists("app/Models/DeadLetterEntry.php"),
+)
+checker.check(
+    "DeadLetterEntry has task_id fillable",
+    file_contains("app/Models/DeadLetterEntry.php", "'task_id'"),
+)
+checker.check(
+    "DeadLetterEntry has retried fillable",
+    file_contains("app/Models/DeadLetterEntry.php", "'retried'"),
+)
+checker.check(
+    "DeadLetterEntry has retried_task_id fillable",
+    file_contains("app/Models/DeadLetterEntry.php", "'retried_task_id'"),
+)
+checker.check(
+    "DeadLetterEntry has scopeActive",
+    file_contains("app/Models/DeadLetterEntry.php", "scopeActive"),
+)
+checker.check(
+    "DeadLetterEntry has task relationship",
+    file_contains("app/Models/DeadLetterEntry.php", "function task()"),
+)
+checker.check(
+    "DeadLetterEntry has retriedTask relationship",
+    file_contains("app/Models/DeadLetterEntry.php", "function retriedTask()"),
+)
+checker.check(
+    "DeadLetterEntry factory exists",
+    file_exists("database/factories/DeadLetterEntryFactory.php"),
+)
+
+# Service
+checker.check(
+    "DeadLetterService exists",
+    file_exists("app/Services/DeadLetterService.php"),
+)
+checker.check(
+    "DeadLetterService has retry method",
+    file_contains("app/Services/DeadLetterService.php", "function retry"),
+)
+checker.check(
+    "DeadLetterService has dismiss method",
+    file_contains("app/Services/DeadLetterService.php", "function dismiss"),
+)
+checker.check(
+    "DeadLetterService dispatches ProcessTask on retry",
+    file_contains("app/Services/DeadLetterService.php", "ProcessTask"),
+)
+
+# FailureHandler passes task_id
+checker.check(
+    "FailureHandler passes task_id to DLQ",
+    file_contains("app/Services/FailureHandler.php", "'task_id'"),
+)
+
+# Attempt history wiring
+checker.check(
+    "ProcessTask has attemptHistory property",
+    file_contains("app/Jobs/ProcessTask.php", "attemptHistory"),
+)
+checker.check(
+    "ProcessTaskResult has attemptHistory property",
+    file_contains("app/Jobs/ProcessTaskResult.php", "attemptHistory"),
+)
+checker.check(
+    "RetryWithBackoff records attempt history",
+    file_contains("app/Jobs/Middleware/RetryWithBackoff.php", "attemptHistory"),
+)
+
+# Tests
+checker.check(
+    "DeadLetterService test exists",
+    file_exists("tests/Feature/Services/DeadLetterServiceTest.php"),
+)
+checker.check(
+    "DeadLetterService test covers retry",
+    file_contains("tests/Feature/Services/DeadLetterServiceTest.php", "retry"),
+)
+checker.check(
+    "DeadLetterService test covers dismiss",
+    file_contains("tests/Feature/Services/DeadLetterServiceTest.php", "dismiss"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
