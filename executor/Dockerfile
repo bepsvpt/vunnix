@@ -80,6 +80,6 @@ RUN chmod +x /vunnix-executor/entrypoint.sh \
 # ── Runtime configuration ───────────────────────────────────────────
 # GitLab CI job timeout is the hard limit (20 min, D34).
 # The entrypoint validates the task-scoped token TTL (D127) before starting.
-ENV VUNNIX_EXECUTOR_VERSION="1.0.0"
+ENV VUNNIX_EXECUTOR_VERSION="1.0.1"
 
 ENTRYPOINT ["/vunnix-executor/entrypoint.sh"]
