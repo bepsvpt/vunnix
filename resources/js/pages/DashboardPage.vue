@@ -6,6 +6,7 @@ import { useDashboardRealtime } from '@/composables/useDashboardRealtime';
 import ActivityFeed from '@/components/ActivityFeed.vue';
 import DashboardOverview from '@/components/DashboardOverview.vue';
 import DashboardQuality from '@/components/DashboardQuality.vue';
+import DashboardPMActivity from '@/components/DashboardPMActivity.vue';
 
 const auth = useAuthStore();
 const dashboard = useDashboardStore();
@@ -16,6 +17,7 @@ const activeView = ref('overview');
 const views = [
     { key: 'overview', label: 'Overview' },
     { key: 'quality', label: 'Quality' },
+    { key: 'pm-activity', label: 'PM Activity' },
     { key: 'activity', label: 'Activity' },
 ];
 
@@ -58,6 +60,7 @@ watch(() => dashboard.metricsUpdates.length, () => {
     <!-- View content -->
     <DashboardOverview v-if="activeView === 'overview'" />
     <DashboardQuality v-else-if="activeView === 'quality'" />
+    <DashboardPMActivity v-else-if="activeView === 'pm-activity'" />
     <ActivityFeed v-else-if="activeView === 'activity'" />
   </div>
 </template>

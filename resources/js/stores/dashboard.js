@@ -9,6 +9,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const overviewLoading = ref(false);
     const quality = ref(null);
     const qualityLoading = ref(false);
+    const pmActivity = ref(null);
+    const pmActivityLoading = ref(false);
     const isLoading = ref(false);
     const nextCursor = ref(null);
     const hasMore = computed(() => nextCursor.value !== null);
@@ -115,6 +117,16 @@ export const useDashboardStore = defineStore('dashboard', () => {
         }
     }
 
+    async function fetchPMActivity() {
+        pmActivityLoading.value = true;
+        try {
+            const response = await axios.get('/api/v1/dashboard/pm-activity');
+            pmActivity.value = response.data.data;
+        } finally {
+            pmActivityLoading.value = false;
+        }
+    }
+
     function $reset() {
         activityFeed.value = [];
         metricsUpdates.value = [];
@@ -122,6 +134,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         overviewLoading.value = false;
         quality.value = null;
         qualityLoading.value = false;
+        pmActivity.value = null;
+        pmActivityLoading.value = false;
         activeFilter.value = null;
         projectFilter.value = null;
         isLoading.value = false;
@@ -135,6 +149,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         overviewLoading,
         quality,
         qualityLoading,
+        pmActivity,
+        pmActivityLoading,
         activeFilter,
         projectFilter,
         isLoading,
@@ -146,6 +162,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         fetchActivity,
         fetchOverview,
         fetchQuality,
+        fetchPMActivity,
         loadMore,
         $reset,
     };

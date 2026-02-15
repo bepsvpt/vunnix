@@ -395,6 +395,87 @@ checker.check(
 )
 
 # ============================================================
+#  T78: Dashboard — PM Activity
+# ============================================================
+section("T78: Dashboard — PM Activity")
+
+# Backend
+checker.check(
+    "DashboardPMActivityController exists",
+    file_exists("app/Http/Controllers/Api/DashboardPMActivityController.php"),
+)
+checker.check(
+    "PM Activity controller queries PrdCreation tasks",
+    file_contains("app/Http/Controllers/Api/DashboardPMActivityController.php", "PrdCreation"),
+)
+checker.check(
+    "PM Activity controller counts conversations",
+    file_contains("app/Http/Controllers/Api/DashboardPMActivityController.php", "conversations_held"),
+)
+checker.check(
+    "PM Activity controller counts issues from chat",
+    file_contains("app/Http/Controllers/Api/DashboardPMActivityController.php", "issues_from_chat"),
+)
+checker.check(
+    "PM Activity controller computes avg turns per PRD",
+    file_contains("app/Http/Controllers/Api/DashboardPMActivityController.php", "avg_turns_per_prd"),
+)
+checker.check(
+    "PM Activity controller scoped to user projects",
+    file_contains("app/Http/Controllers/Api/DashboardPMActivityController.php", "projectIds"),
+)
+checker.check(
+    "Dashboard PM activity route registered",
+    file_contains("routes/api.php", "/dashboard/pm-activity"),
+)
+checker.check(
+    "Dashboard PM activity API test exists",
+    file_exists("tests/Feature/DashboardPMActivityApiTest.php"),
+)
+
+# Frontend
+checker.check(
+    "DashboardPMActivity component exists",
+    file_exists("resources/js/components/DashboardPMActivity.vue"),
+)
+checker.check(
+    "DashboardPMActivity has PRDs created card",
+    file_contains("resources/js/components/DashboardPMActivity.vue", "prds-created-card"),
+)
+checker.check(
+    "DashboardPMActivity has conversations held card",
+    file_contains("resources/js/components/DashboardPMActivity.vue", "conversations-held-card"),
+)
+checker.check(
+    "DashboardPMActivity has issues from chat card",
+    file_contains("resources/js/components/DashboardPMActivity.vue", "issues-from-chat-card"),
+)
+checker.check(
+    "DashboardPMActivity has avg turns card",
+    file_contains("resources/js/components/DashboardPMActivity.vue", "avg-turns-card"),
+)
+checker.check(
+    "Dashboard store has fetchPMActivity action",
+    file_contains("resources/js/stores/dashboard.js", "fetchPMActivity"),
+)
+checker.check(
+    "Dashboard store has pmActivity state",
+    file_contains("resources/js/stores/dashboard.js", "pmActivity"),
+)
+checker.check(
+    "DashboardPage imports DashboardPMActivity",
+    file_contains("resources/js/pages/DashboardPage.vue", "DashboardPMActivity"),
+)
+checker.check(
+    "DashboardPage has pm-activity view tab",
+    file_contains("resources/js/pages/DashboardPage.vue", "'pm-activity'"),
+)
+checker.check(
+    "DashboardPMActivity test exists",
+    file_exists("resources/js/components/DashboardPMActivity.test.js"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()

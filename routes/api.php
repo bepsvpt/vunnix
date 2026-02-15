@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DashboardOverviewController;
+use App\Http\Controllers\Api\DashboardPMActivityController;
 use App\Http\Controllers\Api\DashboardQualityController;
 use App\Http\Controllers\Api\TaskResultViewController;
 use App\Http\Controllers\TaskResultController;
@@ -65,6 +66,10 @@ Route::prefix('v1')->group(function () {
         // Dashboard quality metrics (T77)
         Route::get('/dashboard/quality', DashboardQualityController::class)
             ->name('api.dashboard.quality');
+
+        // Dashboard PM activity metrics (T78)
+        Route::get('/dashboard/pm-activity', DashboardPMActivityController::class)
+            ->name('api.dashboard.pm-activity');
     });
 
 });

@@ -190,6 +190,60 @@ describe('dashboard store', () => {
         });
     });
 
+    describe('fetchPMActivity', () => {
+        it('fetches PM activity from API', async () => {
+            axios.get.mockResolvedValueOnce({
+                data: {
+                    data: {
+                        prds_created: 3,
+                        conversations_held: 15,
+                        issues_from_chat: 7,
+                        avg_turns_per_prd: 6.5,
+                    },
+                },
+            });
+
+            const store = useDashboardStore();
+            await store.fetchPMActivity();
+
+            expect(axios.get).toHaveBeenCalledWith('/api/v1/dashboard/pm-activity');
+            expect(store.pmActivity).toEqual({
+                prds_created: 3,
+                conversations_held: 15,
+                issues_from_chat: 7,
+                avg_turns_per_prd: 6.5,
+            });
+        });
+
+        it('sets pmActivityLoading during fetch', async () => {
+            let resolvePromise;
+            axios.get.mockReturnValueOnce(new Promise((resolve) => { resolvePromise = resolve; }));
+
+            const store = useDashboardStore();
+            const promise = store.fetchPMActivity();
+
+            expect(store.pmActivityLoading).toBe(true);
+
+            resolvePromise({ data: { data: { prds_created: 0, conversations_held: 0, issues_from_chat: 0, avg_turns_per_prd: null } } });
+            await promise;
+
+            expect(store.pmActivityLoading).toBe(false);
+        });
+
+        it('clears loading on error', async () => {
+            axios.get.mockRejectedValueOnce(new Error('Network error'));
+
+            const store = useDashboardStore();
+            try {
+                await store.fetchPMActivity();
+            } catch {
+                // expected
+            }
+
+            expect(store.pmActivityLoading).toBe(false);
+        });
+    });
+
     describe('$reset', () => {
         it('clears all state', () => {
             const store = useDashboardStore();
@@ -197,6 +251,8 @@ describe('dashboard store', () => {
             store.addMetricsUpdate({ project_id: 10, data: {}, timestamp: 't1' });
             store.activeFilter = 'code_review';
             store.projectFilter = 10;
+            store.pmActivity = { prds_created: 5 };
+            store.pmActivityLoading = true;
             store.$reset();
             expect(store.activityFeed).toEqual([]);
             expect(store.metricsUpdates).toEqual([]);
@@ -204,6 +260,8 @@ describe('dashboard store', () => {
             expect(store.projectFilter).toBeNull();
             expect(store.isLoading).toBe(false);
             expect(store.nextCursor).toBeNull();
+            expect(store.pmActivity).toBeNull();
+            expect(store.pmActivityLoading).toBe(false);
         });
     });
 });
