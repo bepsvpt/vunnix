@@ -39,6 +39,12 @@ function fakeGitLabForSetup(): void
             'id' => 555,
             'url' => 'https://vunnix.example.com/api/webhook',
         ], 201),
+        // Pipeline trigger token creation
+        'gitlab.example.com/api/v4/projects/42/triggers' => Http::response([
+            'id' => 10,
+            'token' => 'trigger-token-abc123',
+            'description' => 'Vunnix task executor',
+        ], 201),
         // Label creation
         'gitlab.example.com/api/v4/projects/42/labels' => Http::response([
             'id' => 1,

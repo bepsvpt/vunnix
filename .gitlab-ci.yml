@@ -51,19 +51,23 @@ version-alignment:
     # Never run on Vunnix-triggered pipelines
     - if: $VUNNIX_TASK_ID
       when: never
-    # Run on changes to executor/ or CE Agent class (when it exists)
+    # Run on changes to executor/ or CE Agent class (compare against main
+    # to avoid false positives on first push to new branches)
     - if: $CI_COMMIT_BRANCH
       changes:
-        - executor/**/*
-        - executor/*
-        - app/AI/**/*
+        compare_to: refs/heads/main
+        paths:
+          - executor/**/*
+          - executor/*
+          - app/AI/**/*
       when: always
-    # Also run on MR pipelines touching these paths
     - if: $CI_MERGE_REQUEST_IID
       changes:
-        - executor/**/*
-        - executor/*
-        - app/AI/**/*
+        compare_to: refs/heads/main
+        paths:
+          - executor/**/*
+          - executor/*
+          - app/AI/**/*
       when: always
   allow_failure: false
 
@@ -118,17 +122,21 @@ build-executor:
     # Never run on Vunnix-triggered pipelines
     - if: $VUNNIX_TASK_ID
       when: never
-    # Build on changes to executor/ on any branch
+    # Build on changes to executor/ (compare against main to avoid
+    # false positives on first push to new branches)
     - if: $CI_COMMIT_BRANCH
       changes:
-        - executor/**/*
-        - executor/*
+        compare_to: refs/heads/main
+        paths:
+          - executor/**/*
+          - executor/*
       when: always
-    # Build on MR pipelines touching executor/
     - if: $CI_MERGE_REQUEST_IID
       changes:
-        - executor/**/*
-        - executor/*
+        compare_to: refs/heads/main
+        paths:
+          - executor/**/*
+          - executor/*
       when: always
   needs:
     - job: version-alignment

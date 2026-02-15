@@ -139,6 +139,29 @@ it('returns null for createProjectLabel when label already exists (409)', functi
     expect($result)->toBeNull();
 });
 
+it('creates a pipeline trigger via createPipelineTrigger', function () {
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/42/triggers' => Http::response([
+            'id' => 10,
+            'token' => '6d056f63e50fe6f8c5f8f4aa10571c00',
+            'description' => 'Vunnix task executor',
+        ], 201),
+    ]);
+
+    $client = new GitLabClient();
+    $result = $client->createPipelineTrigger(42, 'Vunnix task executor');
+
+    expect($result)
+        ->toHaveKey('id', 10)
+        ->toHaveKey('token', '6d056f63e50fe6f8c5f8f4aa10571c00');
+
+    Http::assertSent(fn ($req) =>
+        str_contains($req->url(), '/api/v4/projects/42/triggers') &&
+        $req->method() === 'POST' &&
+        $req->data()['description'] === 'Vunnix task executor'
+    );
+});
+
 it('lists project labels via listProjectLabels', function () {
     Http::fake([
         'gitlab.example.com/api/v4/projects/42/labels*' => Http::response([
