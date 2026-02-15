@@ -656,6 +656,118 @@ it('gracefully handles missing .vunnix.toml (404)', function () {
         ->and($task->result)->not->toHaveKey('file_config');
 });
 
+// ─── Pipeline ref resolution ────────────────────────────────────
+
+it('triggers pipeline with MR source branch name, not commit SHA', function () {
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/merge_requests/1/changes' => Http::response([
+            'changes' => [['new_path' => 'app/Models/User.php']],
+        ]),
+        '*/api/v4/projects/100/merge_requests/1' => Http::response([
+            'iid' => 1,
+            'source_branch' => 'feat/my-feature',
+            'target_branch' => 'main',
+        ]),
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1], 201),
+    ]);
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::CodeReview,
+        'project_id' => $project->id,
+        'mr_iid' => 1,
+        'commit_sha' => 'abc123def456',
+    ]);
+
+    $dispatcher = app(TaskDispatcher::class);
+    $dispatcher->dispatch($task);
+
+    // Verify pipeline was triggered with branch name, not commit SHA
+    Http::assertSent(fn ($req) =>
+        str_contains($req->url(), '/trigger/pipeline') &&
+        ($req->data()['ref'] ?? null) === 'feat/my-feature'
+    );
+});
+
+it('triggers pipeline with main when task has no MR', function () {
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::FeatureDev,
+        'project_id' => $project->id,
+        'mr_iid' => null,
+        'issue_iid' => 5,
+        'commit_sha' => 'abc123def456',
+    ]);
+
+    $dispatcher = app(TaskDispatcher::class);
+    $dispatcher->dispatch($task);
+
+    // Verify pipeline was triggered with 'main', not commit SHA
+    Http::assertSent(fn ($req) =>
+        str_contains($req->url(), '/trigger/pipeline') &&
+        ($req->data()['ref'] ?? null) === 'main'
+    );
+});
+
+it('falls back to main when MR source branch lookup fails', function () {
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/merge_requests/1/changes' => Http::response([
+            'changes' => [['new_path' => 'app/Models/User.php']],
+        ]),
+        '*/api/v4/projects/100/merge_requests/1' => Http::response([], 500),
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1], 201),
+    ]);
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::CodeReview,
+        'project_id' => $project->id,
+        'mr_iid' => 1,
+    ]);
+
+    $dispatcher = app(TaskDispatcher::class);
+    $dispatcher->dispatch($task);
+
+    // Should fall back to 'main' and still succeed
+    Http::assertSent(fn ($req) =>
+        str_contains($req->url(), '/trigger/pipeline') &&
+        ($req->data()['ref'] ?? null) === 'main'
+    );
+
+    $task->refresh();
+    expect($task->status)->toBe(TaskStatus::Running);
+});
+
 it('does not read .vunnix.toml for server-side tasks', function () {
     Queue::fake([\App\Jobs\ProcessTaskResult::class]);
     Http::fake();
