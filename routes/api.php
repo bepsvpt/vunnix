@@ -114,6 +114,14 @@ Route::prefix('v1')->group(function () {
             ->name('api.admin.roles.update');
         Route::delete('/admin/roles/{role}', [AdminRoleController::class, 'destroy'])
             ->name('api.admin.roles.destroy');
+        Route::get('/admin/role-assignments', [AdminRoleController::class, 'assignments'])
+            ->name('api.admin.role-assignments.index');
+        Route::post('/admin/role-assignments', [AdminRoleController::class, 'assign'])
+            ->name('api.admin.role-assignments.store');
+        Route::delete('/admin/role-assignments', [AdminRoleController::class, 'revoke'])
+            ->name('api.admin.role-assignments.destroy');
+        Route::get('/admin/users', [AdminRoleController::class, 'users'])
+            ->name('api.admin.users.index');
     });
 
 });
