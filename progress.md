@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M5 — Admin & Configuration
-- **Tasks Complete:** 92 / 116 (79.3%)
-- **Current Task:** T92 — Optional .vunnix.toml support
-- **Last Verified:** T91
+- **Tasks Complete:** 93 / 116 (80.2%)
+- **Current Task:** T93 — PRD template management
+- **Last Verified:** T92
 
 ---
 
@@ -137,14 +137,14 @@
 - [x] T86: Acceptance tracking (webhook-driven D149) [Depends: T34, T11, T13]
 - [x] T87: Engineer feedback — emoji reactions on MR merge [Depends: T34, T11, T86]
 
-## M5 — Admin & Configuration (4/18)
+## M5 — Admin & Configuration (5/18)
 
 - [x] T88: Admin page — project management (registry D150, label pre-creation) [Depends: T62, T11, T9]
 - [x] T89: Admin page — role management [Depends: T62, T9]
 - [x] T90: Admin page — global settings (API key status D153) [Depends: T62, T10, T9]
 - [x] T91: Per-project configuration (DB overrides) [Depends: T5, T88]
-- [ ] **T92:** Optional .vunnix.toml support [Depends: T91, T11]
-- [ ] T93: PRD template management [Depends: T91, T9]
+- [x] T92: Optional .vunnix.toml support [Depends: T91, T11]
+- [ ] **T93:** PRD template management [Depends: T91, T9]
 - [ ] T94: Cost monitoring — 4 alert rules [Depends: T85, T90]
 - [ ] T95: Over-reliance detection (>95% acceptance 2+ weeks) [Depends: T86]
 - [ ] T96: Dead letter queue — backend [Depends: T37, T5]
