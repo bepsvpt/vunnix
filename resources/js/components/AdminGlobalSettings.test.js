@@ -120,4 +120,35 @@ describe('AdminGlobalSettings', () => {
         await wrapper.vm.$nextTick();
         expect(wrapper.find('[data-testid="setting-bot_pat_created_at"]').exists()).toBe(true);
     });
+
+    it('renders team chat enabled toggle', async () => {
+        admin.settingsDefaults = { ai_model: 'opus' };
+        const wrapper = mount(AdminGlobalSettings, { global: { plugins: [pinia] } });
+        await wrapper.vm.$nextTick();
+        expect(wrapper.find('[data-testid="setting-team_chat_enabled"]').exists()).toBe(true);
+    });
+
+    it('renders test webhook button', async () => {
+        admin.settingsDefaults = { ai_model: 'opus' };
+        const wrapper = mount(AdminGlobalSettings, { global: { plugins: [pinia] } });
+        await wrapper.vm.$nextTick();
+        expect(wrapper.find('[data-testid="test-webhook-btn"]').exists()).toBe(true);
+    });
+
+    it('renders notification category checkboxes', async () => {
+        admin.settingsDefaults = { ai_model: 'opus' };
+        const wrapper = mount(AdminGlobalSettings, { global: { plugins: [pinia] } });
+        await wrapper.vm.$nextTick();
+        const categoriesSection = wrapper.find('[data-testid="setting-team_chat_categories"]');
+        expect(categoriesSection.exists()).toBe(true);
+        expect(categoriesSection.findAll('input[type="checkbox"]')).toHaveLength(3);
+    });
+
+    it('disables test webhook button when URL is empty', async () => {
+        admin.settingsDefaults = { ai_model: 'opus' };
+        const wrapper = mount(AdminGlobalSettings, { global: { plugins: [pinia] } });
+        await wrapper.vm.$nextTick();
+        const btn = wrapper.find('[data-testid="test-webhook-btn"]');
+        expect(btn.attributes('disabled')).toBeDefined();
+    });
 });

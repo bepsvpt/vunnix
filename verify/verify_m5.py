@@ -739,6 +739,147 @@ checker.check(
 )
 
 # ============================================================
+#  T98: Team chat notifications — webhook integration
+# ============================================================
+section("T98: Team Chat Notifications — Webhook Integration")
+
+# Service files
+checker.check(
+    "TeamChatNotificationService exists",
+    file_exists("app/Services/TeamChat/TeamChatNotificationService.php"),
+)
+checker.check(
+    "ChatFormatterInterface exists",
+    file_exists("app/Services/TeamChat/ChatFormatterInterface.php"),
+)
+checker.check(
+    "SlackFormatter exists",
+    file_exists("app/Services/TeamChat/SlackFormatter.php"),
+)
+checker.check(
+    "MattermostFormatter exists",
+    file_exists("app/Services/TeamChat/MattermostFormatter.php"),
+)
+checker.check(
+    "GoogleChatFormatter exists",
+    file_exists("app/Services/TeamChat/GoogleChatFormatter.php"),
+)
+checker.check(
+    "GenericFormatter exists",
+    file_exists("app/Services/TeamChat/GenericFormatter.php"),
+)
+
+# Service methods
+checker.check(
+    "Service has send method",
+    file_contains("app/Services/TeamChat/TeamChatNotificationService.php", "function send"),
+)
+checker.check(
+    "Service has sendTest method",
+    file_contains("app/Services/TeamChat/TeamChatNotificationService.php", "function sendTest"),
+)
+checker.check(
+    "Service has isEnabled method",
+    file_contains("app/Services/TeamChat/TeamChatNotificationService.php", "function isEnabled"),
+)
+checker.check(
+    "Service has isCategoryEnabled method",
+    file_contains("app/Services/TeamChat/TeamChatNotificationService.php", "function isCategoryEnabled"),
+)
+checker.check(
+    "Service checks GlobalSetting for webhook URL",
+    file_contains("app/Services/TeamChat/TeamChatNotificationService.php", "team_chat_webhook_url"),
+)
+checker.check(
+    "Service checks GlobalSetting for platform",
+    file_contains("app/Services/TeamChat/TeamChatNotificationService.php", "team_chat_platform"),
+)
+
+# Formatters have correct structure
+checker.check(
+    "SlackFormatter uses Block Kit attachments",
+    file_contains("app/Services/TeamChat/SlackFormatter.php", "attachments"),
+)
+checker.check(
+    "MattermostFormatter uses attachments",
+    file_contains("app/Services/TeamChat/MattermostFormatter.php", "attachments"),
+)
+checker.check(
+    "GoogleChatFormatter uses cardsV2",
+    file_contains("app/Services/TeamChat/GoogleChatFormatter.php", "cardsV2"),
+)
+checker.check(
+    "GenericFormatter uses plain text",
+    file_contains("app/Services/TeamChat/GenericFormatter.php", "'text'"),
+)
+
+# Settings defaults
+checker.check(
+    "GlobalSetting defaults include team_chat_enabled",
+    file_contains("app/Models/GlobalSetting.php", "team_chat_enabled"),
+)
+checker.check(
+    "GlobalSetting defaults include team_chat_categories",
+    file_contains("app/Models/GlobalSetting.php", "team_chat_categories"),
+)
+
+# Controller endpoint
+checker.check(
+    "AdminSettingsController has testWebhook method",
+    file_contains("app/Http/Controllers/Api/AdminSettingsController.php", "testWebhook"),
+)
+checker.check(
+    "Test-webhook route registered",
+    file_contains("routes/api.php", "test-webhook"),
+)
+
+# Vue component
+checker.check(
+    "AdminGlobalSettings has enabled toggle",
+    file_contains("resources/js/components/AdminGlobalSettings.vue", "team_chat_enabled"),
+)
+checker.check(
+    "AdminGlobalSettings has test webhook button",
+    file_contains("resources/js/components/AdminGlobalSettings.vue", "test-webhook-btn"),
+)
+checker.check(
+    "AdminGlobalSettings has notification categories",
+    file_contains("resources/js/components/AdminGlobalSettings.vue", "team_chat_categories"),
+)
+
+# Admin store
+checker.check(
+    "Admin store has testWebhook action",
+    file_contains("resources/js/stores/admin.js", "testWebhook"),
+)
+
+# Tests
+checker.check(
+    "SlackFormatter unit test exists",
+    file_exists("tests/Unit/Services/TeamChat/SlackFormatterTest.php"),
+)
+checker.check(
+    "MattermostFormatter unit test exists",
+    file_exists("tests/Unit/Services/TeamChat/MattermostFormatterTest.php"),
+)
+checker.check(
+    "GoogleChatFormatter unit test exists",
+    file_exists("tests/Unit/Services/TeamChat/GoogleChatFormatterTest.php"),
+)
+checker.check(
+    "GenericFormatter unit test exists",
+    file_exists("tests/Unit/Services/TeamChat/GenericFormatterTest.php"),
+)
+checker.check(
+    "TeamChatNotificationService feature test exists",
+    file_exists("tests/Feature/Services/TeamChatNotificationServiceTest.php"),
+)
+checker.check(
+    "Webhook API test exists",
+    file_exists("tests/Feature/Http/Controllers/Api/AdminSettingsControllerWebhookTest.php"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
