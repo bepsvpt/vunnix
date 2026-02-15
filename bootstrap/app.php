@@ -17,9 +17,16 @@ return Application::configure(basePath: dirname(__DIR__))
         ['middleware' => ['web', 'auth']],
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
         $middleware->redirectGuestsTo('/auth/redirect');
         $middleware->validateCsrfTokens(except: [
             'webhook',
+            'api/*',
+        ]);
+        $middleware->api(prepend: [
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
         ]);
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,
