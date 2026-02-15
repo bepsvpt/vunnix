@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AdminProjectController;
+use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DashboardOverviewController;
 use App\Http\Controllers\Api\DashboardDesignerActivityController;
@@ -101,6 +102,14 @@ Route::prefix('v1')->group(function () {
             ->name('api.admin.projects.enable');
         Route::post('/admin/projects/{project}/disable', [AdminProjectController::class, 'disable'])
             ->name('api.admin.projects.disable');
+
+        // Admin role management (T89)
+        Route::get('/admin/roles', [AdminRoleController::class, 'index'])
+            ->name('api.admin.roles.index');
+        Route::get('/admin/permissions', [AdminRoleController::class, 'permissions'])
+            ->name('api.admin.permissions.index');
+        Route::post('/admin/roles', [AdminRoleController::class, 'store'])
+            ->name('api.admin.roles.store');
     });
 
 });
