@@ -41,6 +41,7 @@ class GlobalSetting extends Model
             'ai_language' => 'en',
             'timeout_minutes' => 10,
             'max_tokens' => 8192,
+            'ai_prices' => ['input' => 5.0, 'output' => 25.0],
         ];
     }
 

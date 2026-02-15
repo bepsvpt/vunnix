@@ -6,7 +6,9 @@ use App\Enums\TaskStatus;
 use App\Exceptions\InvalidTaskTransitionException;
 use App\Http\Requests\StoreTaskResultRequest;
 use App\Jobs\ProcessTaskResult;
+use App\Models\GlobalSetting;
 use App\Models\Task;
+use App\Services\CostCalculationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
@@ -58,6 +60,14 @@ class TaskResultController extends Controller
         $task->output_tokens = $tokens['output'];
         $task->duration_seconds = $validated['duration_seconds'];
         $task->prompt_version = $validated['prompt_version'];
+
+        // Calculate cost from token counts and configured prices
+        $prices = GlobalSetting::get('ai_prices');
+        $costService = new CostCalculationService(
+            inputPricePerMTok: (float) ($prices['input'] ?? 5.0),
+            outputPricePerMTok: (float) ($prices['output'] ?? 25.0),
+        );
+        $task->cost = $costService->calculate($tokens['input'], $tokens['output']);
 
         if ($isCompleted) {
             // Completed results stay in Running while the Result Processor

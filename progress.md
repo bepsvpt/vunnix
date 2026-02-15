@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M4 — Dashboard & Metrics
-- **Tasks Complete:** 85 / 116 (73.3%)
-- **Current Task:** T85 — Cost tracking (token × price formula)
-- **Last Verified:** T84
+- **Tasks Complete:** 86 / 116 (74.1%)
+- **Current Task:** T86 — Acceptance tracking (webhook-driven D149)
+- **Last Verified:** T85
 
 ---
 
@@ -119,7 +119,7 @@
 
 - [x] T115: Conversation archiving (D141) [Depends: T47]
 
-## M4 — Dashboard & Metrics (12/15)
+## M4 — Dashboard & Metrics (13/15)
 
 - [x] T73: Reverb channel configuration (channel authorization) [Depends: T2, T15]
 - [x] T74: Laravel Echo client [Depends: T61, T73]
