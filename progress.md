@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 68 / 116 (58.6%)
+- **Tasks Complete:** 69 / 116 (59.5%)
 - **Current Task:** T69 — Chat page — pinned task bar (runner load awareness D133)
-- **Last Verified:** T68
+- **Last Verified:** T73
 
 ---
 
@@ -119,9 +119,9 @@
 
 - [ ] T115: Conversation archiving (D141) [Depends: T47]
 
-## M4 — Dashboard & Metrics (0/15)
+## M4 — Dashboard & Metrics (1/15)
 
-- [ ] T73: Reverb channel configuration (channel authorization) [Depends: T2, T15]
+- [x] T73: Reverb channel configuration (channel authorization) [Depends: T2, T15]
 - [ ] T74: Laravel Echo client [Depends: T61, T73]
 - [ ] T75: Dashboard — activity feed (filter tabs, cursor pagination) [Depends: T62, T74, T15]
 - [ ] T76: Dashboard — Overview [Depends: T75]

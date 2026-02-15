@@ -3107,6 +3107,52 @@ checker.check(
     and file_contains("app/Agents/VunnixAgent.php", "ui_adjustment"),
 )
 
+# ============================================================
+#  T73: Reverb Channel Configuration (cross-milestone dep)
+# ============================================================
+section("T73: Reverb Channel Configuration")
+
+checker.check(
+    "Broadcasting config exists",
+    file_exists("config/broadcasting.php"),
+)
+checker.check(
+    "Channel routes exist",
+    file_exists("routes/channels.php"),
+)
+checker.check(
+    "TaskStatusChanged event exists",
+    file_exists("app/Events/TaskStatusChanged.php"),
+)
+checker.check(
+    "TaskStatusChanged implements ShouldBroadcast",
+    file_contains("app/Events/TaskStatusChanged.php", "ShouldBroadcast"),
+)
+checker.check(
+    "TaskStatusChanged broadcasts on task channel",
+    file_contains("app/Events/TaskStatusChanged.php", "task.{$this->task->id}"),
+)
+checker.check(
+    "TaskStatusChanged broadcasts on project activity channel",
+    file_contains("app/Events/TaskStatusChanged.php", "project.{$this->task->project_id}.activity"),
+)
+checker.check(
+    "Channel auth for task channel",
+    file_contains("routes/channels.php", "task.{taskId}"),
+)
+checker.check(
+    "Channel auth for project activity channel",
+    file_contains("routes/channels.php", "project.{projectId}.activity"),
+)
+checker.check(
+    "Channel auth for metrics channel",
+    file_contains("routes/channels.php", "metrics.{projectId}"),
+)
+checker.check(
+    "TaskObserver dispatches TaskStatusChanged",
+    file_contains("app/Observers/TaskObserver.php", "TaskStatusChanged::dispatch"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()
