@@ -24,8 +24,11 @@
 set -uo pipefail
 
 # --- Configuration (tunable) ---
-MAX_TURNS=50              # Agentic turns per session (~3-5 tasks)
-RETRY_DELAY=300            # Wait on rate limit (5 min)
+# Retrospective data: 50 turns caused 50.4% of sessions to restart without
+# completing a task. 200 turns reduces multi-session tasks from 66% to ~25%.
+MAX_TURNS=200              # Agentic turns per session
+RETRY_DELAY=300            # Initial rate limit wait (5 min) — escalates exponentially
+RETRY_MAX=2400             # Maximum rate limit wait (40 min)
 ERROR_DELAY=60             # Wait on other errors (1 min)
 BETWEEN_SESSIONS=10        # Pause between normal sessions (10 sec)
 MODEL="opus"               # Model: opus, sonnet, or full name
@@ -49,6 +52,7 @@ while [[ $# -gt 0 ]]; do
         --model)        MODEL="$2"; shift 2 ;;
         --budget)       BUDGET="$2"; shift 2 ;;
         --retry-delay)  RETRY_DELAY="$2"; shift 2 ;;
+        --retry-max)    RETRY_MAX="$2"; shift 2 ;;
         --error-delay)  ERROR_DELAY="$2"; shift 2 ;;
         --prompt)       PROMPT="$2"; shift 2 ;;
         -h|--help)
@@ -58,10 +62,11 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --dry-run          Show command without executing"
-            echo "  --max-turns N      Agentic turns per session (default: 50)"
+            echo "  --max-turns N      Agentic turns per session (default: 200)"
             echo "  --model MODEL      Model to use: opus, sonnet (default: opus)"
             echo "  --budget USD       Per-session spend limit"
-            echo "  --retry-delay SEC  Wait on rate limit (default: 300)"
+            echo "  --retry-delay SEC  Initial rate limit wait (default: 300, escalates)"
+            echo "  --retry-max SEC    Maximum rate limit wait (default: 2400)"
             echo "  --error-delay SEC  Wait on errors (default: 60)"
             echo "  --prompt TEXT      Override prompt (default: continue)"
             echo "  -h, --help         Show this help"
@@ -155,6 +160,30 @@ is_max_turns_reached() {
 RUNNING=true
 CLAUDE_PID=""
 
+# Session statistics (accumulated across the run)
+STATS_TOTAL_SESSIONS=0
+STATS_COMPLETED=0
+STATS_MAX_TURNS=0
+STATS_RATE_LIMITS=0
+STATS_ERRORS=0
+STATS_TASKS_DONE=0
+STATS_START_TIME=$(date +%s)
+
+show_stats() {
+    local now
+    now=$(date +%s)
+    local elapsed=$(( (now - STATS_START_TIME) / 60 ))
+    log ""
+    log "── Run Statistics ──"
+    log "  Sessions:     $STATS_TOTAL_SESSIONS (completed: $STATS_COMPLETED, max-turns: $STATS_MAX_TURNS, rate-limited: $STATS_RATE_LIMITS, errors: $STATS_ERRORS)"
+    log "  Tasks done:   $STATS_TASKS_DONE"
+    log "  Elapsed:      ${elapsed} min"
+    if [ "$elapsed" -gt 0 ]; then
+        local tph=$(( STATS_TASKS_DONE * 60 / elapsed ))
+        log "  Throughput:   ~$tph tasks/hour"
+    fi
+}
+
 cleanup() {
     log ""
     log "Received shutdown signal — stopping after current session"
@@ -163,7 +192,7 @@ cleanup() {
         log "Waiting for Claude session (PID $CLAUDE_PID) to finish..."
         wait "$CLAUDE_PID" 2>/dev/null
     fi
-    log ""
+    show_stats
     show_progress
     log "Runner stopped gracefully"
     exit 0
@@ -222,6 +251,8 @@ fi
 
 session_num=0
 consecutive_errors=0
+consecutive_rate_limits=0
+current_retry_delay=$RETRY_DELAY
 
 while $RUNNING; do
     # Check if all tasks are done
@@ -229,9 +260,9 @@ while $RUNNING; do
     if [ "$remaining" -eq 0 ]; then
         log ""
         log "╔══════════════════════════════════════════════════════════╗"
-        log "║              ALL 116 TASKS COMPLETE!                    ║"
+        log "║              ALL TASKS COMPLETE!                        ║"
         log "╚══════════════════════════════════════════════════════════╝"
-        log ""
+        show_stats
         show_progress
         exit 0
     fi
@@ -241,6 +272,7 @@ while $RUNNING; do
     session_log="$LOG_DIR/session_${session_num}_${session_ts}.jsonl"
     task_id=$(current_task)
 
+    session_start=$(date +%s)
     log ""
     log "━━━ Session $session_num starting ━━━ Current: $task_id ━━━"
 
@@ -263,20 +295,29 @@ while $RUNNING; do
     exit_code=$?
     CLAUDE_PID=""
 
-    log "Session $session_num ended (exit code: $exit_code)"
+    session_end=$(date +%s)
+    session_duration=$(( (session_end - session_start) / 60 ))
+    STATS_TOTAL_SESSIONS=$((STATS_TOTAL_SESSIONS + 1))
+
+    log "Session $session_num ended (exit code: $exit_code, ${session_duration} min)"
 
     # --- Analyze session outcome ---
 
     if [ $exit_code -eq 0 ]; then
         # Success — check if progress was made
         consecutive_errors=0
+        consecutive_rate_limits=0
+        current_retry_delay=$RETRY_DELAY
         new_remaining=$(tasks_remaining)
 
         if [ "$new_remaining" -lt "$remaining" ]; then
             tasks_done=$((remaining - new_remaining))
             log "Completed $tasks_done task(s) this session"
+            STATS_COMPLETED=$((STATS_COMPLETED + 1))
+            STATS_TASKS_DONE=$((STATS_TASKS_DONE + tasks_done))
         elif is_max_turns_reached "$session_log"; then
             log "Max turns reached (may be mid-task — will continue next session)"
+            STATS_MAX_TURNS=$((STATS_MAX_TURNS + 1))
         else
             log "No new tasks completed (may be working on a complex task)"
         fi
@@ -285,17 +326,36 @@ while $RUNNING; do
 
     elif is_rate_limited "$session_log"; then
         consecutive_errors=$((consecutive_errors + 1))
-        log "Rate limited. Waiting ${RETRY_DELAY}s before retry..."
-        sleep "$RETRY_DELAY"
+        consecutive_rate_limits=$((consecutive_rate_limits + 1))
+        STATS_RATE_LIMITS=$((STATS_RATE_LIMITS + 1))
+
+        # Exponential backoff: double wait on each consecutive rate limit (cap at RETRY_MAX)
+        if [ "$consecutive_rate_limits" -gt 1 ]; then
+            current_retry_delay=$((current_retry_delay * 2))
+            if [ "$current_retry_delay" -gt "$RETRY_MAX" ]; then
+                current_retry_delay=$RETRY_MAX
+            fi
+        fi
+
+        log "Rate limited (#$consecutive_rate_limits). Waiting ${current_retry_delay}s before retry..."
+        if [ "$consecutive_rate_limits" -ge 3 ]; then
+            log "WARNING: $consecutive_rate_limits consecutive rate limits — consider increasing retry delay"
+        fi
+        sleep "$current_retry_delay"
 
     elif is_context_full "$session_log"; then
         # Context full is expected behavior, not an error
         consecutive_errors=0
+        consecutive_rate_limits=0
+        current_retry_delay=$RETRY_DELAY
         log "Context full — starting fresh session"
         sleep "$BETWEEN_SESSIONS"
 
     else
         consecutive_errors=$((consecutive_errors + 1))
+        consecutive_rate_limits=0
+        current_retry_delay=$RETRY_DELAY
+        STATS_ERRORS=$((STATS_ERRORS + 1))
         log "Session error (exit $exit_code). Waiting ${ERROR_DELAY}s..."
 
         # Log last few lines for debugging
@@ -314,7 +374,7 @@ while $RUNNING; do
         log ""
         log "ERROR: $MAX_CONSECUTIVE_ERRORS consecutive errors — stopping"
         log "Check session logs at: $LOG_DIR"
-        log ""
+        show_stats
         show_progress
         exit 1
     fi
