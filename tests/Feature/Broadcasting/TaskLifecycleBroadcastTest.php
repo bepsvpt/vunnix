@@ -45,6 +45,64 @@ test('task failing dispatches broadcast with failed status', function () {
     });
 });
 
+test('includes pipeline_status in broadcast payload', function () {
+    Event::fake([TaskStatusChanged::class]);
+
+    $task = Task::factory()->create([
+        'status' => TaskStatus::Queued,
+        'pipeline_id' => 12345,
+        'pipeline_status' => 'pending',
+    ]);
+
+    $task->transitionTo(TaskStatus::Running);
+
+    Event::assertDispatched(TaskStatusChanged::class, function ($event) {
+        $payload = $event->broadcastWith();
+        return array_key_exists('pipeline_status', $payload)
+            && $payload['pipeline_status'] === 'pending';
+    });
+});
+
+test('includes null pipeline_status when not set', function () {
+    Event::fake([TaskStatusChanged::class]);
+
+    $task = Task::factory()->create([
+        'status' => TaskStatus::Queued,
+        'pipeline_id' => null,
+        'pipeline_status' => null,
+    ]);
+
+    $task->transitionTo(TaskStatus::Running);
+
+    Event::assertDispatched(TaskStatusChanged::class, function ($event) {
+        $payload = $event->broadcastWith();
+        return array_key_exists('pipeline_status', $payload)
+            && $payload['pipeline_status'] === null;
+    });
+});
+
+test('includes title, started_at, and conversation_id in broadcast payload', function () {
+    Event::fake([TaskStatusChanged::class]);
+
+    $task = Task::factory()->create([
+        'status' => TaskStatus::Queued,
+        'conversation_id' => 'conv-abc-123',
+        'result' => ['title' => 'Implement payment flow'],
+    ]);
+
+    $task->transitionTo(TaskStatus::Running);
+
+    Event::assertDispatched(TaskStatusChanged::class, function ($event) {
+        $payload = $event->broadcastWith();
+        return array_key_exists('title', $payload)
+            && $payload['title'] === 'Implement payment flow'
+            && array_key_exists('started_at', $payload)
+            && $payload['started_at'] !== null
+            && array_key_exists('conversation_id', $payload)
+            && $payload['conversation_id'] === 'conv-abc-123';
+    });
+});
+
 test('activity feed channel receives task status events', function () {
     Event::fake([TaskStatusChanged::class]);
 

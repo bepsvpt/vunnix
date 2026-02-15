@@ -29,6 +29,7 @@ class TaskFactory extends Factory
             'status' => TaskStatus::Received,
             'mr_iid' => fake()->numberBetween(1, 500),
             'commit_sha' => fake()->sha1(),
+            'pipeline_status' => null,
         ];
     }
 

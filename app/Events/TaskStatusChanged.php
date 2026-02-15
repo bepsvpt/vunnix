@@ -39,8 +39,12 @@ class TaskStatusChanged implements ShouldBroadcast
             'type' => $this->task->type->value,
             'project_id' => $this->task->project_id,
             'pipeline_id' => $this->task->pipeline_id,
+            'pipeline_status' => $this->task->pipeline_status,
             'mr_iid' => $this->task->mr_iid,
             'issue_iid' => $this->task->issue_iid,
+            'title' => $this->task->result['title'] ?? null,
+            'started_at' => $this->task->started_at?->toIso8601String(),
+            'conversation_id' => $this->task->conversation_id,
             'result_summary' => $this->task->isTerminal() ? ($this->task->result['summary'] ?? null) : null,
             'timestamp' => now()->toIso8601String(),
         ];
