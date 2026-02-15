@@ -3,6 +3,8 @@ import { ref, watch, nextTick } from 'vue';
 import { useConversationsStore } from '@/stores/conversations';
 import MessageBubble from './MessageBubble.vue';
 import MessageComposer from './MessageComposer.vue';
+import TypingIndicator from './TypingIndicator.vue';
+import MarkdownContent from './MarkdownContent.vue';
 
 const store = useConversationsStore();
 const scrollContainer = ref(null);
@@ -14,11 +16,12 @@ async function scrollToBottom() {
     }
 }
 
-// Auto-scroll when messages change
+// Auto-scroll when messages change or streaming content updates
 watch(() => store.messages.length, scrollToBottom);
+watch(() => store.streamingContent, scrollToBottom);
 
 async function handleSend(content) {
-    await store.sendMessage(content);
+    await store.streamMessage(content);
     scrollToBottom();
 }
 </script>
@@ -47,9 +50,9 @@ async function handleSend(content) {
         <p class="text-sm text-red-500">{{ store.messagesError }}</p>
       </div>
 
-      <!-- Empty state -->
+      <!-- Empty state (suppressed when streaming) -->
       <div
-        v-else-if="store.messages.length === 0"
+        v-else-if="store.messages.length === 0 && !store.streaming"
         data-testid="empty-thread"
         class="flex items-center justify-center h-full"
       >
@@ -68,10 +71,23 @@ async function handleSend(content) {
           :key="message.id"
           :message="message"
         />
+
+        <!-- Streaming bubble: shows partial assistant response during SSE streaming -->
+        <div v-if="store.streaming && store.streamingContent" class="flex w-full justify-start">
+          <div
+            data-testid="streaming-bubble"
+            class="max-w-[80%] rounded-2xl px-4 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-bl-md"
+          >
+            <MarkdownContent :content="store.streamingContent" />
+          </div>
+        </div>
+
+        <!-- Typing indicator: pulsing dots while streaming -->
+        <TypingIndicator v-if="store.streaming" />
       </div>
     </div>
 
     <!-- Composer -->
-    <MessageComposer :disabled="store.sending" @send="handleSend" />
+    <MessageComposer :disabled="store.sending || store.streaming" @send="handleSend" />
   </div>
 </template>

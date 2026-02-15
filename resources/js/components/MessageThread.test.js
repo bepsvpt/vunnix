@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import axios from 'axios';
@@ -77,21 +77,18 @@ describe('MessageThread', () => {
         expect(wrapper.find('[data-testid="empty-thread"]').exists()).toBe(true);
     });
 
-    it('calls sendMessage on composer send event', async () => {
+    it('calls streamMessage on composer send event', async () => {
         const store = useConversationsStore();
-        store.selectedId = 1;
-        axios.post.mockResolvedValueOnce({
-            data: { data: { id: 'msg-new', role: 'user', content: 'Test', created_at: '2026-02-15T12:05:00+00:00' } },
-        });
+        store.selectedId = 'conv-1';
+        // Spy on streamMessage to verify it's called instead of sendMessage
+        const streamSpy = vi.spyOn(store, 'streamMessage').mockResolvedValue();
 
         const wrapper = mountThread();
         const composer = wrapper.findComponent(MessageComposer);
-        await composer.vm.$emit('send', 'Test');
+        await composer.vm.$emit('send', 'Hello AI');
         await flushPromises();
 
-        expect(axios.post).toHaveBeenCalledWith('/api/v1/conversations/1/messages', {
-            content: 'Test',
-        });
+        expect(streamSpy).toHaveBeenCalledWith('Hello AI');
     });
 
     it('disables composer while sending', () => {
@@ -101,5 +98,89 @@ describe('MessageThread', () => {
         const wrapper = mountThread();
         const composer = wrapper.findComponent(MessageComposer);
         expect(composer.props('disabled')).toBe(true);
+    });
+
+    it('disables composer while streaming', () => {
+        const store = useConversationsStore();
+        store.streaming = true;
+
+        const wrapper = mountThread();
+        const composer = wrapper.findComponent(MessageComposer);
+        expect(composer.props('disabled')).toBe(true);
+    });
+
+    describe('streaming display', () => {
+        it('shows typing indicator when streaming starts and no content yet', () => {
+            const store = useConversationsStore();
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            store.streaming = true;
+            store.streamingContent = '';
+
+            const wrapper = mountThread();
+            expect(wrapper.find('[data-testid="typing-indicator"]').exists()).toBe(true);
+        });
+
+        it('shows streaming bubble with partial content during streaming', () => {
+            const store = useConversationsStore();
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            store.streaming = true;
+            store.streamingContent = 'Partial response';
+
+            const wrapper = mountThread();
+            expect(wrapper.find('[data-testid="streaming-bubble"]').exists()).toBe(true);
+            expect(wrapper.find('[data-testid="streaming-bubble"]').text()).toContain('Partial response');
+        });
+
+        it('does not show streaming bubble when not streaming', () => {
+            const store = useConversationsStore();
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            store.streaming = false;
+            store.streamingContent = '';
+
+            const wrapper = mountThread();
+            expect(wrapper.find('[data-testid="streaming-bubble"]').exists()).toBe(false);
+            expect(wrapper.find('[data-testid="typing-indicator"]').exists()).toBe(false);
+        });
+
+        it('shows typing indicator even when streamingContent has content', () => {
+            const store = useConversationsStore();
+            store.messages = [];
+            store.streaming = true;
+            store.streamingContent = 'Hello';
+
+            const wrapper = mountThread();
+            // Typing indicator visible alongside streaming bubble to show "still generating"
+            expect(wrapper.find('[data-testid="typing-indicator"]').exists()).toBe(true);
+        });
+
+        it('streaming bubble is styled as assistant message (left-aligned)', () => {
+            const store = useConversationsStore();
+            store.messages = [];
+            store.streaming = true;
+            store.streamingContent = 'Some text';
+
+            const wrapper = mountThread();
+            const bubble = wrapper.find('[data-testid="streaming-bubble"]');
+            expect(bubble.exists()).toBe(true);
+            // Should be left-aligned like assistant messages
+            expect(bubble.element.closest('.justify-start')).toBeTruthy();
+        });
+
+        it('does not show empty state when streaming with no persisted messages', () => {
+            const store = useConversationsStore();
+            store.messages = [];
+            store.streaming = true;
+            store.streamingContent = '';
+
+            const wrapper = mountThread();
+            // Should NOT show the empty thread state when we're actively streaming
+            expect(wrapper.find('[data-testid="empty-thread"]').exists()).toBe(false);
+        });
     });
 });

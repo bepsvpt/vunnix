@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import axios from 'axios';
 import { useConversationsStore } from './conversations';
@@ -629,6 +629,271 @@ describe('useConversationsStore', () => {
             await store.sendMessage('Test');
 
             expect(store.messagesError).toBe('Validation error');
+        });
+    });
+
+    describe('streamMessage', () => {
+        function mockSSEFetch(events) {
+            const lines = events.map((e) =>
+                typeof e === 'string' ? `data: ${e}\n\n` : `data: ${JSON.stringify(e)}\n\n`
+            ).join('');
+            const encoder = new TextEncoder();
+            const stream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(encoder.encode(lines));
+                    controller.close();
+                },
+            });
+            return Promise.resolve(new Response(stream, {
+                status: 200,
+                headers: { 'Content-Type': 'text/event-stream' },
+            }));
+        }
+
+        function standardEvents(deltas = ['Hello', ' world']) {
+            return [
+                { type: 'stream_start' },
+                { type: 'text_start' },
+                ...deltas.map((d) => ({ type: 'text_delta', delta: d })),
+                { type: 'text_end' },
+                { type: 'stream_end' },
+                '[DONE]',
+            ];
+        }
+
+        beforeEach(() => {
+            // Set up CSRF meta tag for fetch using safe DOM methods
+            const meta = document.createElement('meta');
+            meta.setAttribute('name', 'csrf-token');
+            meta.setAttribute('content', 'test-csrf-token');
+            document.head.appendChild(meta);
+        });
+
+        afterEach(() => {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta) meta.remove();
+            vi.unstubAllGlobals();
+        });
+
+        it('adds optimistic user message before streaming starts', async () => {
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(standardEvents())));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Hello AI');
+
+            // First message should be the user's
+            expect(store.messages[0].role).toBe('user');
+            expect(store.messages[0].content).toBe('Hello AI');
+        });
+
+        it('accumulates text_delta events into assistant message', async () => {
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(standardEvents(['Hello', ' world', '!']))));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Tell me something');
+
+            // Last message should be the accumulated assistant response
+            const assistantMsg = store.messages.find((m) => m.role === 'assistant');
+            expect(assistantMsg).toBeDefined();
+            expect(assistantMsg.content).toBe('Hello world!');
+        });
+
+        it('sets streaming flag during SSE connection', async () => {
+            let resolveStream;
+            vi.stubGlobal('fetch', vi.fn(() => new Promise((resolve) => { resolveStream = resolve; })));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            const promise = store.streamMessage('Test');
+
+            expect(store.streaming).toBe(true);
+
+            // Resolve with a completed stream
+            const lines = 'data: {"type":"stream_start"}\n\ndata: {"type":"stream_end"}\n\ndata: [DONE]\n\n';
+            const encoder = new TextEncoder();
+            const stream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(encoder.encode(lines));
+                    controller.close();
+                },
+            });
+            resolveStream(new Response(stream, {
+                status: 200,
+                headers: { 'Content-Type': 'text/event-stream' },
+            }));
+
+            await promise;
+
+            expect(store.streaming).toBe(false);
+        });
+
+        it('sets streamingContent reactively as deltas arrive', async () => {
+            // Use chunked delivery to observe intermediate state
+            let controller;
+            const stream = new ReadableStream({
+                start(c) { controller = c; },
+            });
+            const encoder = new TextEncoder();
+
+            vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(
+                new Response(stream, {
+                    status: 200,
+                    headers: { 'Content-Type': 'text/event-stream' },
+                })
+            )));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            const promise = store.streamMessage('Test');
+
+            // Wait for fetch to resolve and start reading
+            await vi.waitFor(() => expect(store.streaming).toBe(true));
+
+            controller.enqueue(encoder.encode('data: {"type":"stream_start"}\n\ndata: {"type":"text_start"}\n\n'));
+            controller.enqueue(encoder.encode('data: {"type":"text_delta","delta":"Hi"}\n\n'));
+
+            // Wait for the delta to be processed
+            await vi.waitFor(() => expect(store.streamingContent).toBe('Hi'));
+
+            controller.enqueue(encoder.encode('data: {"type":"text_delta","delta":" there"}\n\n'));
+
+            await vi.waitFor(() => expect(store.streamingContent).toBe('Hi there'));
+
+            controller.enqueue(encoder.encode('data: {"type":"text_end"}\n\ndata: {"type":"stream_end"}\n\ndata: [DONE]\n\n'));
+            controller.close();
+
+            await promise;
+
+            expect(store.streaming).toBe(false);
+            expect(store.streamingContent).toBe('');
+        });
+
+        it('posts to the stream endpoint with CSRF token and credentials', async () => {
+            const fetchMock = vi.fn(() => mockSSEFetch(standardEvents()));
+            vi.stubGlobal('fetch', fetchMock);
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Test message');
+
+            expect(fetchMock).toHaveBeenCalledWith(
+                '/api/v1/conversations/conv-1/stream',
+                expect.objectContaining({
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: expect.objectContaining({
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': 'test-csrf-token',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }),
+                    body: JSON.stringify({ content: 'Test message' }),
+                })
+            );
+        });
+
+        it('does nothing when no conversation is selected', async () => {
+            const fetchMock = vi.fn();
+            vi.stubGlobal('fetch', fetchMock);
+
+            const store = useConversationsStore();
+            store.selectedId = null;
+
+            await store.streamMessage('Test');
+
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+
+        it('sets messagesError on fetch failure', async () => {
+            vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('Network error'))));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Test');
+
+            expect(store.messagesError).toBeTruthy();
+            expect(store.streaming).toBe(false);
+        });
+
+        it('sets messagesError on non-ok response', async () => {
+            vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(
+                new Response('Forbidden', { status: 403 })
+            )));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Test');
+
+            expect(store.messagesError).toBeTruthy();
+            expect(store.streaming).toBe(false);
+        });
+
+        it('finalizes assistant message with id and timestamp after stream completes', async () => {
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(standardEvents(['Response text']))));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Test');
+
+            const assistantMsg = store.messages.find((m) => m.role === 'assistant');
+            expect(assistantMsg.content).toBe('Response text');
+            // Should have an id (even if temporary) and created_at
+            expect(assistantMsg.id).toBeDefined();
+            expect(assistantMsg.created_at).toBeDefined();
+        });
+
+        it('re-fetches messages on stream error for connection resilience', async () => {
+            // First call: fetch fails mid-stream
+            const failStream = new ReadableStream({
+                start(controller) {
+                    const encoder = new TextEncoder();
+                    controller.enqueue(encoder.encode('data: {"type":"stream_start"}\n\n'));
+                    controller.error(new Error('Connection lost'));
+                },
+            });
+            vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(
+                new Response(failStream, {
+                    status: 200,
+                    headers: { 'Content-Type': 'text/event-stream' },
+                })
+            )));
+
+            // Mock axios.get for the recovery re-fetch
+            const recoveredMessages = [
+                { id: 'msg-1', role: 'user', content: 'Test', created_at: '2026-02-15T12:00:00+00:00' },
+                { id: 'msg-2', role: 'assistant', content: 'Full recovered response', created_at: '2026-02-15T12:00:01+00:00' },
+            ];
+            axios.get.mockResolvedValueOnce({
+                data: { data: { id: 'conv-1', messages: recoveredMessages } },
+            });
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Test');
+
+            // Should have re-fetched messages from the API
+            expect(axios.get).toHaveBeenCalledWith('/api/v1/conversations/conv-1');
+            expect(store.messages).toEqual(recoveredMessages);
+            expect(store.streaming).toBe(false);
         });
     });
 });

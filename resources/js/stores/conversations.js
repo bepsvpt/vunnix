@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import axios from 'axios';
+import { streamSSE } from '@/lib/sse';
 
 export const useConversationsStore = defineStore('conversations', () => {
     const conversations = ref([]);
@@ -22,6 +23,10 @@ export const useConversationsStore = defineStore('conversations', () => {
     const messagesLoading = ref(false);
     const messagesError = ref(null);
     const sending = ref(false);
+
+    // Streaming state
+    const streaming = ref(false);
+    const streamingContent = ref('');
 
     const selected = computed(() =>
         conversations.value.find((c) => c.id === selectedId.value) || null
@@ -141,6 +146,87 @@ export const useConversationsStore = defineStore('conversations', () => {
         }
     }
 
+    /**
+     * Send a user message and stream the AI response via SSE.
+     * Adds the user message optimistically, then streams the assistant response
+     * token-by-token. On stream error, re-fetches messages from the API for
+     * connection resilience (the SDK persists the complete response server-side).
+     */
+    async function streamMessage(content) {
+        if (!selectedId.value) return;
+        streaming.value = true;
+        streamingContent.value = '';
+        messagesError.value = null;
+
+        // Optimistic user message
+        const userMsg = {
+            id: `temp-user-${Date.now()}`,
+            role: 'user',
+            content,
+            created_at: new Date().toISOString(),
+        };
+        messages.value.push(userMsg);
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        try {
+            const response = await fetch(
+                `/api/v1/conversations/${selectedId.value}/stream`,
+                {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'text/event-stream',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+                    },
+                    body: JSON.stringify({ content }),
+                }
+            );
+
+            // Check response status before streaming
+            if (!response.ok) {
+                messagesError.value = `Request failed with status ${response.status}`;
+                streaming.value = false;
+                return;
+            }
+
+            let accumulated = '';
+
+            await streamSSE(response, {
+                onEvent(event) {
+                    if (event.type === 'text_delta' && event.delta) {
+                        accumulated += event.delta;
+                        streamingContent.value = accumulated;
+                    }
+                },
+                onDone() {
+                    // Finalize the assistant message
+                    const assistantMsg = {
+                        id: `msg-${Date.now()}`,
+                        role: 'assistant',
+                        content: accumulated,
+                        created_at: new Date().toISOString(),
+                    };
+                    messages.value.push(assistantMsg);
+                    streamingContent.value = '';
+                },
+                async onError(err) {
+                    messagesError.value = err.message || 'Stream interrupted';
+                    // Connection resilience: re-fetch messages from REST API
+                    // The SDK's RemembersConversations stores the complete response
+                    await fetchMessages(selectedId.value);
+                },
+            });
+
+            streaming.value = false;
+        } catch (err) {
+            messagesError.value = err.message || 'Failed to stream response';
+            streaming.value = false;
+        }
+    }
+
     async function selectConversation(id) {
         selectedId.value = id;
         if (id) {
@@ -206,6 +292,8 @@ export const useConversationsStore = defineStore('conversations', () => {
         messagesLoading.value = false;
         messagesError.value = null;
         sending.value = false;
+        streaming.value = false;
+        streamingContent.value = '';
     }
 
     return {
@@ -223,6 +311,8 @@ export const useConversationsStore = defineStore('conversations', () => {
         messagesLoading,
         messagesError,
         sending,
+        streaming,
+        streamingContent,
         fetchConversations,
         loadMore,
         toggleArchive,
@@ -232,6 +322,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         selectConversation,
         fetchMessages,
         sendMessage,
+        streamMessage,
         createConversation,
         addProjectToConversation,
         $reset,

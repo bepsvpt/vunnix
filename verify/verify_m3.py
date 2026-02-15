@@ -2426,6 +2426,183 @@ checker.check(
     file_contains("package.json", '"shiki"'),
 )
 
+# ============================================================
+#  T66: Chat Page — SSE Streaming (Connection Resilience)
+# ============================================================
+section("T66: Chat Page — SSE Streaming (Connection Resilience)")
+
+# SSE library
+checker.check(
+    "SSE library module exists",
+    file_exists("resources/js/lib/sse.js"),
+)
+checker.check(
+    "SSE library exports streamSSE function",
+    file_contains("resources/js/lib/sse.js", "export async function streamSSE"),
+)
+checker.check(
+    "SSE library uses ReadableStream reader",
+    file_contains("resources/js/lib/sse.js", "getReader()"),
+)
+checker.check(
+    "SSE library handles [DONE] marker",
+    file_contains("resources/js/lib/sse.js", "[DONE]"),
+)
+checker.check(
+    "SSE library has onEvent callback",
+    file_contains("resources/js/lib/sse.js", "onEvent"),
+)
+checker.check(
+    "SSE library has onDone callback",
+    file_contains("resources/js/lib/sse.js", "onDone"),
+)
+checker.check(
+    "SSE library has onError callback",
+    file_contains("resources/js/lib/sse.js", "onError"),
+)
+checker.check(
+    "SSE library handles chunked delivery (buffer splitting)",
+    file_contains("resources/js/lib/sse.js", "buffer"),
+)
+checker.check(
+    "SSE library test file exists",
+    file_exists("resources/js/lib/sse.test.js"),
+)
+
+# Store: streamMessage action
+checker.check(
+    "Conversations store has streamMessage action",
+    file_contains("resources/js/stores/conversations.js", "async function streamMessage"),
+)
+checker.check(
+    "streamMessage uses fetch with POST method",
+    file_contains("resources/js/stores/conversations.js", "method: 'POST'"),
+)
+checker.check(
+    "streamMessage sends to /stream endpoint",
+    file_contains("resources/js/stores/conversations.js", "/stream"),
+)
+checker.check(
+    "streamMessage uses streamSSE for parsing",
+    file_contains("resources/js/stores/conversations.js", "streamSSE"),
+)
+checker.check(
+    "streamMessage accumulates text_delta events",
+    file_contains("resources/js/stores/conversations.js", "text_delta"),
+)
+checker.check(
+    "streamMessage adds optimistic user message",
+    file_contains("resources/js/stores/conversations.js", "role: 'user'"),
+)
+checker.check(
+    "streamMessage includes CSRF token in headers",
+    file_contains("resources/js/stores/conversations.js", "X-CSRF-TOKEN"),
+)
+
+# Store: streaming state
+checker.check(
+    "Conversations store has streaming ref",
+    file_contains("resources/js/stores/conversations.js", "const streaming = ref("),
+)
+checker.check(
+    "Conversations store has streamingContent ref",
+    file_contains("resources/js/stores/conversations.js", "const streamingContent = ref("),
+)
+checker.check(
+    "Conversations store exports streaming state",
+    file_contains("resources/js/stores/conversations.js", "streaming,"),
+)
+checker.check(
+    "Conversations store exports streamingContent state",
+    file_contains("resources/js/stores/conversations.js", "streamingContent,"),
+)
+
+# Connection resilience: re-fetch on error
+checker.check(
+    "streamMessage re-fetches messages on stream error",
+    file_contains("resources/js/stores/conversations.js", "fetchMessages(selectedId.value)"),
+)
+
+# Store tests for streaming
+checker.check(
+    "Store tests cover streamMessage describe block",
+    file_contains("resources/js/stores/conversations.test.js", "describe('streamMessage'"),
+)
+checker.check(
+    "Store tests cover optimistic user message",
+    file_contains("resources/js/stores/conversations.test.js", "adds optimistic user message"),
+)
+checker.check(
+    "Store tests cover text_delta accumulation",
+    file_contains("resources/js/stores/conversations.test.js", "accumulates text_delta"),
+)
+checker.check(
+    "Store tests cover streaming flag",
+    file_contains("resources/js/stores/conversations.test.js", "sets streaming flag"),
+)
+checker.check(
+    "Store tests cover connection resilience",
+    file_contains("resources/js/stores/conversations.test.js", "re-fetches messages on stream error"),
+)
+checker.check(
+    "Store tests cover CSRF token and credentials",
+    file_contains("resources/js/stores/conversations.test.js", "CSRF token and credentials"),
+)
+
+# MessageThread streaming display
+checker.check(
+    "MessageThread uses streamMessage instead of sendMessage",
+    file_contains("resources/js/components/MessageThread.vue", "store.streamMessage"),
+)
+checker.check(
+    "MessageThread shows streaming bubble",
+    file_contains("resources/js/components/MessageThread.vue", "streaming-bubble"),
+)
+checker.check(
+    "MessageThread disables composer during streaming",
+    file_contains("resources/js/components/MessageThread.vue", "store.streaming"),
+)
+checker.check(
+    "MessageThread auto-scrolls on streaming content",
+    file_contains("resources/js/components/MessageThread.vue", "store.streamingContent"),
+)
+
+# TypingIndicator component
+checker.check(
+    "TypingIndicator component exists",
+    file_exists("resources/js/components/TypingIndicator.vue"),
+)
+checker.check(
+    "TypingIndicator has data-testid for testing",
+    file_contains("resources/js/components/TypingIndicator.vue", 'data-testid="typing-indicator"'),
+)
+checker.check(
+    "TypingIndicator has animated dots",
+    file_contains("resources/js/components/TypingIndicator.vue", "animate-bounce"),
+)
+checker.check(
+    "TypingIndicator test file exists",
+    file_exists("resources/js/components/TypingIndicator.test.js"),
+)
+
+# MessageThread streaming tests
+checker.check(
+    "MessageThread tests cover typing indicator",
+    file_contains("resources/js/components/MessageThread.test.js", "typing indicator"),
+)
+checker.check(
+    "MessageThread tests cover streaming bubble",
+    file_contains("resources/js/components/MessageThread.test.js", "streaming bubble"),
+)
+checker.check(
+    "MessageThread tests cover streamMessage call",
+    file_contains("resources/js/components/MessageThread.test.js", "streamMessage"),
+)
+checker.check(
+    "MessageThread tests cover composer disabled during streaming",
+    file_contains("resources/js/components/MessageThread.test.js", "disables composer while streaming"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()
