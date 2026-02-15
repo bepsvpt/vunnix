@@ -69,9 +69,15 @@ validate_env() {
 validate_token() {
     log "Validating task-scoped token..."
 
-    # Base64url decode: replace -_ with +/, add padding, decode
-    local decoded
-    decoded=$(echo -n "$VUNNIX_TOKEN" | tr '-_' '+/' | base64 -d 2>/dev/null) || {
+    # Base64url decode: replace -_ with +/, restore padding, decode
+    local padded decoded
+    padded=$(echo -n "$VUNNIX_TOKEN" | tr -- '-_' '+/')
+    # Restore base64 padding stripped by PHP's base64UrlEncode
+    case $(( ${#padded} % 4 )) in
+        2) padded="${padded}==" ;;
+        3) padded="${padded}=" ;;
+    esac
+    decoded=$(echo -n "$padded" | base64 -d 2>/dev/null) || {
         log_error "Token base64 decode failed"
         post_failure "invalid_token" "Task token could not be decoded"
         exit 1
