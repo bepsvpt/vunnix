@@ -4,6 +4,7 @@ import { useConversationsStore } from '@/stores/conversations';
 import MessageBubble from './MessageBubble.vue';
 import MessageComposer from './MessageComposer.vue';
 import TypingIndicator from './TypingIndicator.vue';
+import ToolUseIndicators from './ToolUseIndicators.vue';
 import MarkdownContent from './MarkdownContent.vue';
 
 const store = useConversationsStore();
@@ -16,9 +17,10 @@ async function scrollToBottom() {
     }
 }
 
-// Auto-scroll when messages change or streaming content updates
+// Auto-scroll when messages change, streaming content updates, or tool calls change
 watch(() => store.messages.length, scrollToBottom);
 watch(() => store.streamingContent, scrollToBottom);
+watch(() => store.activeToolCalls.length, scrollToBottom);
 
 async function handleSend(content) {
     await store.streamMessage(content);
@@ -70,6 +72,12 @@ async function handleSend(content) {
           v-for="message in store.messages"
           :key="message.id"
           :message="message"
+        />
+
+        <!-- Tool-use activity indicators: shows what tools the AI is calling -->
+        <ToolUseIndicators
+          v-if="store.streaming"
+          :tool-calls="store.activeToolCalls"
         />
 
         <!-- Streaming bubble: shows partial assistant response during SSE streaming -->

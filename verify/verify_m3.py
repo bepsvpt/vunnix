@@ -2603,6 +2603,231 @@ checker.check(
     file_contains("resources/js/components/MessageThread.test.js", "disables composer while streaming"),
 )
 
+# ============================================================
+#  T67: Chat Page — Tool-Use Activity Indicators
+# ============================================================
+section("T67: Chat Page — Tool-Use Activity Indicators")
+
+# ToolUseIndicators component
+checker.check(
+    "ToolUseIndicators component exists",
+    file_exists("resources/js/components/ToolUseIndicators.vue"),
+)
+checker.check(
+    "ToolUseIndicators uses script setup",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "<script setup>"),
+)
+checker.check(
+    "ToolUseIndicators accepts toolCalls prop",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "toolCalls"),
+)
+checker.check(
+    "ToolUseIndicators has data-testid for testing",
+    file_contains(
+        "resources/js/components/ToolUseIndicators.vue",
+        'data-testid="tool-use-indicators"',
+    ),
+)
+
+# Tool name → emoji/verb mapping
+checker.check(
+    "ToolUseIndicators maps BrowseRepoTree with 🔍 emoji",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "BrowseRepoTree"),
+)
+checker.check(
+    "ToolUseIndicators maps ReadFile with 📄 emoji",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "ReadFile"),
+)
+checker.check(
+    "ToolUseIndicators maps SearchCode with 🔎 emoji",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "SearchCode"),
+)
+checker.check(
+    "ToolUseIndicators maps ListIssues",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "ListIssues"),
+)
+checker.check(
+    "ToolUseIndicators maps ReadIssue",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "ReadIssue"),
+)
+checker.check(
+    "ToolUseIndicators maps ListMergeRequests",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "ListMergeRequests"),
+)
+checker.check(
+    "ToolUseIndicators maps ReadMergeRequest",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "ReadMergeRequest"),
+)
+checker.check(
+    "ToolUseIndicators maps ReadMRDiff",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "ReadMRDiff"),
+)
+checker.check(
+    "ToolUseIndicators maps DispatchAction with 🚀 emoji",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "DispatchAction"),
+)
+
+# Context extraction logic
+checker.check(
+    "ToolUseIndicators extracts filename from file_path (ReadFile context)",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "split('/')"),
+)
+checker.check(
+    "ToolUseIndicators extracts search query (SearchCode context)",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "input.query"),
+)
+checker.check(
+    "ToolUseIndicators extracts path (BrowseRepoTree context)",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "input.path"),
+)
+
+# Fallback for unknown tools
+checker.check(
+    "ToolUseIndicators has fallback for unknown tools (⚙️)",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "⚙️"),
+)
+
+# Pulsing animation for active indicators
+checker.check(
+    "ToolUseIndicators uses animate-pulse for active visual feedback",
+    file_contains("resources/js/components/ToolUseIndicators.vue", "animate-pulse"),
+)
+
+# Store: activeToolCalls state
+checker.check(
+    "Conversations store has activeToolCalls ref",
+    file_contains("resources/js/stores/conversations.js", "const activeToolCalls = ref("),
+)
+checker.check(
+    "Conversations store exports activeToolCalls",
+    file_contains("resources/js/stores/conversations.js", "activeToolCalls,"),
+)
+
+# Store: tool_call event handling in streamMessage
+checker.check(
+    "streamMessage handles tool_call events",
+    file_contains("resources/js/stores/conversations.js", "event.type === 'tool_call'"),
+)
+checker.check(
+    "streamMessage handles tool_result events",
+    file_contains("resources/js/stores/conversations.js", "event.type === 'tool_result'"),
+)
+checker.check(
+    "streamMessage clears activeToolCalls on stream completion",
+    file_contains("resources/js/stores/conversations.js", "activeToolCalls.value = []"),
+)
+
+# MessageThread integration
+checker.check(
+    "MessageThread imports ToolUseIndicators",
+    file_contains("resources/js/components/MessageThread.vue", "import ToolUseIndicators"),
+)
+checker.check(
+    "MessageThread renders ToolUseIndicators conditionally",
+    file_contains("resources/js/components/MessageThread.vue", "store.activeToolCalls"),
+)
+checker.check(
+    "MessageThread auto-scrolls on tool calls change",
+    file_contains(
+        "resources/js/components/MessageThread.vue",
+        "store.activeToolCalls.length",
+    ),
+)
+
+# ToolUseIndicators tests
+checker.check(
+    "ToolUseIndicators test file exists",
+    file_exists("resources/js/components/ToolUseIndicators.test.js"),
+)
+checker.check(
+    "ToolUseIndicators tests cover empty toolCalls",
+    file_contains(
+        "resources/js/components/ToolUseIndicators.test.js",
+        "renders nothing when toolCalls is empty",
+    ),
+)
+checker.check(
+    "ToolUseIndicators tests cover BrowseRepoTree indicator",
+    file_contains(
+        "resources/js/components/ToolUseIndicators.test.js",
+        "renders indicator for BrowseRepoTree",
+    ),
+)
+checker.check(
+    "ToolUseIndicators tests cover ReadFile indicator",
+    file_contains(
+        "resources/js/components/ToolUseIndicators.test.js",
+        "renders indicator for ReadFile",
+    ),
+)
+checker.check(
+    "ToolUseIndicators tests cover SearchCode indicator",
+    file_contains(
+        "resources/js/components/ToolUseIndicators.test.js",
+        "renders indicator for SearchCode",
+    ),
+)
+checker.check(
+    "ToolUseIndicators tests cover multiple simultaneous tool calls",
+    file_contains(
+        "resources/js/components/ToolUseIndicators.test.js",
+        "renders multiple simultaneous tool calls",
+    ),
+)
+checker.check(
+    "ToolUseIndicators tests cover unknown tool fallback",
+    file_contains(
+        "resources/js/components/ToolUseIndicators.test.js",
+        "handles unknown tool with fallback",
+    ),
+)
+checker.check(
+    "ToolUseIndicators tests cover clearing on empty",
+    file_contains(
+        "resources/js/components/ToolUseIndicators.test.js",
+        "clears when toolCalls becomes empty",
+    ),
+)
+
+# Store tests for tool-call handling
+checker.check(
+    "Store tests cover tool_call tracking during streaming",
+    file_contains(
+        "resources/js/stores/conversations.test.js",
+        "tracks active tool calls",
+    ),
+)
+checker.check(
+    "Store tests cover tool_call addition during streaming",
+    file_contains(
+        "resources/js/stores/conversations.test.js",
+        "adds tool_call to activeToolCalls",
+    ),
+)
+checker.check(
+    "Store tests cover activeToolCalls cleared after stream",
+    file_contains(
+        "resources/js/stores/conversations.test.js",
+        "clears activeToolCalls when stream completes",
+    ),
+)
+
+# MessageThread tests for tool-use indicators
+checker.check(
+    "MessageThread tests cover tool-use indicators shown during streaming",
+    file_contains(
+        "resources/js/components/MessageThread.test.js",
+        "shows tool-use indicators during streaming",
+    ),
+)
+checker.check(
+    "MessageThread tests cover tool-use indicators hidden when not streaming",
+    file_contains(
+        "resources/js/components/MessageThread.test.js",
+        "hides tool-use indicators when not streaming",
+    ),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()

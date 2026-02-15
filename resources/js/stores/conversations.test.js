@@ -859,6 +859,85 @@ describe('useConversationsStore', () => {
             expect(assistantMsg.created_at).toBeDefined();
         });
 
+        it('tracks active tool calls from tool_call events', async () => {
+            const events = [
+                { type: 'stream_start' },
+                { type: 'tool_call', tool: 'ReadFile', input: { file_path: 'src/Auth.php' } },
+                { type: 'tool_result', tool: 'ReadFile', output: '<?php ...' },
+                { type: 'text_start' },
+                { type: 'text_delta', delta: 'Here is the file' },
+                { type: 'text_end' },
+                { type: 'stream_end' },
+                '[DONE]',
+            ];
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(events)));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Show me Auth.php');
+
+            // After stream completes, activeToolCalls should be cleared
+            expect(store.activeToolCalls).toEqual([]);
+        });
+
+        it('adds tool_call to activeToolCalls during streaming', async () => {
+            let controller;
+            const stream = new ReadableStream({
+                start(c) { controller = c; },
+            });
+            const encoder = new TextEncoder();
+
+            vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(
+                new Response(stream, {
+                    status: 200,
+                    headers: { 'Content-Type': 'text/event-stream' },
+                })
+            )));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            const promise = store.streamMessage('Test');
+            await vi.waitFor(() => expect(store.streaming).toBe(true));
+
+            controller.enqueue(encoder.encode('data: {"type":"stream_start"}\n\n'));
+            controller.enqueue(encoder.encode('data: {"type":"tool_call","tool":"BrowseRepoTree","input":{"project_id":1,"path":"src/"}}\n\n'));
+
+            await vi.waitFor(() => expect(store.activeToolCalls).toHaveLength(1));
+            expect(store.activeToolCalls[0].tool).toBe('BrowseRepoTree');
+            expect(store.activeToolCalls[0].input.path).toBe('src/');
+
+            controller.enqueue(encoder.encode('data: {"type":"tool_result","tool":"BrowseRepoTree","output":"file1.php\\nfile2.php"}\n\n'));
+
+            await vi.waitFor(() => expect(store.activeToolCalls).toHaveLength(0));
+
+            controller.enqueue(encoder.encode('data: {"type":"stream_end"}\n\ndata: [DONE]\n\n'));
+            controller.close();
+            await promise;
+        });
+
+        it('clears activeToolCalls when stream completes', async () => {
+            const events = [
+                { type: 'stream_start' },
+                { type: 'tool_call', tool: 'SearchCode', input: { query: 'processPayment' } },
+                // Note: no tool_result — simulates edge case
+                { type: 'stream_end' },
+                '[DONE]',
+            ];
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(events)));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Test');
+
+            expect(store.activeToolCalls).toEqual([]);
+        });
+
         it('re-fetches messages on stream error for connection resilience', async () => {
             // First call: fetch fails mid-stream
             const failStream = new ReadableStream({

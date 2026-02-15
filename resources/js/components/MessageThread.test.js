@@ -182,5 +182,32 @@ describe('MessageThread', () => {
             // Should NOT show the empty thread state when we're actively streaming
             expect(wrapper.find('[data-testid="empty-thread"]').exists()).toBe(false);
         });
+
+        it('shows tool-use indicators during streaming', () => {
+            const store = useConversationsStore();
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Show me auth', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            store.streaming = true;
+            store.activeToolCalls = [
+                { id: 'tc-1', tool: 'BrowseRepoTree', input: { path: 'src/' } },
+            ];
+
+            const wrapper = mountThread();
+            expect(wrapper.find('[data-testid="tool-use-indicators"]').exists()).toBe(true);
+            expect(wrapper.text()).toContain('Browsing');
+        });
+
+        it('hides tool-use indicators when not streaming', () => {
+            const store = useConversationsStore();
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            store.streaming = false;
+            store.activeToolCalls = [];
+
+            const wrapper = mountThread();
+            expect(wrapper.find('[data-testid="tool-use-indicators"]').exists()).toBe(false);
+        });
     });
 });

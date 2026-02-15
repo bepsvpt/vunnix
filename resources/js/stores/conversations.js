@@ -27,6 +27,7 @@ export const useConversationsStore = defineStore('conversations', () => {
     // Streaming state
     const streaming = ref(false);
     const streamingContent = ref('');
+    const activeToolCalls = ref([]);
 
     const selected = computed(() =>
         conversations.value.find((c) => c.id === selectedId.value) || null
@@ -156,6 +157,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         if (!selectedId.value) return;
         streaming.value = true;
         streamingContent.value = '';
+        activeToolCalls.value = [];
         messagesError.value = null;
 
         // Optimistic user message
@@ -200,6 +202,18 @@ export const useConversationsStore = defineStore('conversations', () => {
                         accumulated += event.delta;
                         streamingContent.value = accumulated;
                     }
+                    if (event.type === 'tool_call') {
+                        activeToolCalls.value.push({
+                            id: event.id || `tool-${Date.now()}`,
+                            tool: event.tool,
+                            input: event.input || {},
+                        });
+                    }
+                    if (event.type === 'tool_result') {
+                        activeToolCalls.value = activeToolCalls.value.filter(
+                            (tc) => tc.tool !== event.tool
+                        );
+                    }
                 },
                 onDone() {
                     // Finalize the assistant message
@@ -211,6 +225,7 @@ export const useConversationsStore = defineStore('conversations', () => {
                     };
                     messages.value.push(assistantMsg);
                     streamingContent.value = '';
+                    activeToolCalls.value = [];
                 },
                 async onError(err) {
                     messagesError.value = err.message || 'Stream interrupted';
@@ -294,6 +309,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         sending.value = false;
         streaming.value = false;
         streamingContent.value = '';
+        activeToolCalls.value = [];
     }
 
     return {
@@ -313,6 +329,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         sending,
         streaming,
         streamingContent,
+        activeToolCalls,
         fetchConversations,
         loadMore,
         toggleArchive,
