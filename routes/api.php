@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\TaskResultViewController;
 use App\Http\Controllers\TaskResultController;
@@ -50,6 +51,10 @@ Route::prefix('v1')->group(function () {
         // Returns full task result data for rendering result cards on page reload
         Route::get('/tasks/{task}/view', TaskResultViewController::class)
             ->name('api.tasks.view');
+
+        // Dashboard activity feed (T75)
+        Route::get('/activity', [ActivityController::class, 'index'])
+            ->name('api.activity.index');
     });
 
 });
