@@ -17,6 +17,12 @@ export const useConversationsStore = defineStore('conversations', () => {
     // Selected conversation ID (for highlighting active item)
     const selectedId = ref(null);
 
+    // Message state (for selected conversation)
+    const messages = ref([]);
+    const messagesLoading = ref(false);
+    const messagesError = ref(null);
+    const sending = ref(false);
+
     const selected = computed(() =>
         conversations.value.find((c) => c.id === selectedId.value) || null
     );
@@ -98,8 +104,51 @@ export const useConversationsStore = defineStore('conversations', () => {
         fetchConversations();
     }
 
-    function selectConversation(id) {
+    /**
+     * Fetch messages for a conversation by loading its detail.
+     */
+    async function fetchMessages(conversationId) {
+        messagesLoading.value = true;
+        messagesError.value = null;
+        try {
+            const response = await axios.get(`/api/v1/conversations/${conversationId}`);
+            messages.value = response.data.data.messages || [];
+        } catch (err) {
+            messagesError.value = err.response?.data?.message || 'Failed to load messages';
+            messages.value = [];
+        } finally {
+            messagesLoading.value = false;
+        }
+    }
+
+    /**
+     * Send a user message to the selected conversation.
+     */
+    async function sendMessage(content) {
+        if (!selectedId.value) return;
+        sending.value = true;
+        messagesError.value = null;
+        try {
+            const response = await axios.post(
+                `/api/v1/conversations/${selectedId.value}/messages`,
+                { content }
+            );
+            messages.value.push(response.data.data);
+        } catch (err) {
+            messagesError.value = err.response?.data?.message || 'Failed to send message';
+        } finally {
+            sending.value = false;
+        }
+    }
+
+    async function selectConversation(id) {
         selectedId.value = id;
+        if (id) {
+            await fetchMessages(id);
+        } else {
+            messages.value = [];
+            messagesError.value = null;
+        }
     }
 
     /**
@@ -153,6 +202,10 @@ export const useConversationsStore = defineStore('conversations', () => {
         searchQuery.value = '';
         showArchived.value = false;
         selectedId.value = null;
+        messages.value = [];
+        messagesLoading.value = false;
+        messagesError.value = null;
+        sending.value = false;
     }
 
     return {
@@ -166,6 +219,10 @@ export const useConversationsStore = defineStore('conversations', () => {
         showArchived,
         selectedId,
         selected,
+        messages,
+        messagesLoading,
+        messagesError,
+        sending,
         fetchConversations,
         loadMore,
         toggleArchive,
@@ -173,6 +230,8 @@ export const useConversationsStore = defineStore('conversations', () => {
         setSearchQuery,
         setShowArchived,
         selectConversation,
+        fetchMessages,
+        sendMessage,
         createConversation,
         addProjectToConversation,
         $reset,

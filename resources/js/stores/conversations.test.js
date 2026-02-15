@@ -290,25 +290,47 @@ describe('useConversationsStore', () => {
     });
 
     describe('selectConversation', () => {
-        it('sets selectedId', () => {
+        it('sets selectedId and triggers fetchMessages', async () => {
+            axios.get.mockResolvedValueOnce({
+                data: { data: { id: 'conv-1', messages: [{ id: 'msg-1', role: 'user', content: 'Hi', created_at: '2026-02-15T12:00:00+00:00' }] } },
+            });
+
             const store = useConversationsStore();
-            store.selectConversation('conv-1');
+            await store.selectConversation('conv-1');
             expect(store.selectedId).toBe('conv-1');
+            expect(axios.get).toHaveBeenCalledWith('/api/v1/conversations/conv-1');
         });
 
-        it('resolves selected computed', () => {
+        it('resolves selected computed', async () => {
+            axios.get.mockResolvedValueOnce({
+                data: { data: { id: 'conv-1', messages: [] } },
+            });
+
             const store = useConversationsStore();
             const conv = makeConversation({ id: 'conv-1' });
             store.conversations = [conv];
-            store.selectConversation('conv-1');
+            await store.selectConversation('conv-1');
             expect(store.selected).toEqual(conv);
         });
 
-        it('returns null for selected when no match', () => {
+        it('returns null for selected when no match', async () => {
+            axios.get.mockResolvedValueOnce({
+                data: { data: { id: 'conv-999', messages: [] } },
+            });
+
             const store = useConversationsStore();
             store.conversations = [makeConversation({ id: 'conv-1' })];
-            store.selectConversation('conv-999');
+            await store.selectConversation('conv-999');
             expect(store.selected).toBeNull();
+        });
+
+        it('clears messages when selecting null', async () => {
+            const store = useConversationsStore();
+            store.messages = [{ id: 'msg-1' }];
+            await store.selectConversation(null);
+
+            expect(store.selectedId).toBeNull();
+            expect(store.messages).toEqual([]);
         });
     });
 
@@ -489,6 +511,10 @@ describe('useConversationsStore', () => {
             store.searchQuery = 'test';
             store.showArchived = true;
             store.selectedId = 'conv-1';
+            store.messages = [{ id: 'msg-1' }];
+            store.messagesLoading = true;
+            store.messagesError = 'error';
+            store.sending = true;
 
             store.$reset();
 
@@ -501,6 +527,108 @@ describe('useConversationsStore', () => {
             expect(store.searchQuery).toBe('');
             expect(store.showArchived).toBe(false);
             expect(store.selectedId).toBeNull();
+            expect(store.messages).toEqual([]);
+            expect(store.messagesLoading).toBe(false);
+            expect(store.messagesError).toBeNull();
+            expect(store.sending).toBe(false);
+        });
+    });
+
+    describe('message actions', () => {
+        it('fetchMessages loads messages for a conversation', async () => {
+            const messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00+00:00' },
+                { id: 'msg-2', role: 'assistant', content: 'Hi!', created_at: '2026-02-15T12:00:01+00:00' },
+            ];
+            axios.get.mockResolvedValueOnce({
+                data: { data: { id: 1, messages } },
+            });
+
+            const store = useConversationsStore();
+            await store.fetchMessages(1);
+
+            expect(axios.get).toHaveBeenCalledWith('/api/v1/conversations/1');
+            expect(store.messages).toEqual(messages);
+        });
+
+        it('fetchMessages sets messagesLoading while fetching', async () => {
+            let resolve;
+            axios.get.mockReturnValueOnce(new Promise((r) => { resolve = r; }));
+
+            const store = useConversationsStore();
+            const promise = store.fetchMessages(1);
+
+            expect(store.messagesLoading).toBe(true);
+
+            resolve({ data: { data: { id: 1, messages: [] } } });
+            await promise;
+
+            expect(store.messagesLoading).toBe(false);
+        });
+
+        it('fetchMessages sets messagesError on failure', async () => {
+            axios.get.mockRejectedValueOnce({
+                response: { data: { message: 'Not found' } },
+            });
+
+            const store = useConversationsStore();
+            await store.fetchMessages(999);
+
+            expect(store.messagesError).toBe('Not found');
+            expect(store.messages).toEqual([]);
+        });
+
+        it('sendMessage posts and appends user message', async () => {
+            const userMessage = {
+                id: 'msg-new',
+                role: 'user',
+                content: 'Hello AI',
+                created_at: '2026-02-15T12:05:00+00:00',
+            };
+            axios.post.mockResolvedValueOnce({
+                data: { data: userMessage },
+            });
+
+            const store = useConversationsStore();
+            store.selectedId = 1;
+            store.messages = [];
+
+            await store.sendMessage('Hello AI');
+
+            expect(axios.post).toHaveBeenCalledWith('/api/v1/conversations/1/messages', {
+                content: 'Hello AI',
+            });
+            expect(store.messages).toHaveLength(1);
+            expect(store.messages[0].content).toBe('Hello AI');
+        });
+
+        it('sendMessage sets sending flag', async () => {
+            let resolve;
+            axios.post.mockReturnValueOnce(new Promise((r) => { resolve = r; }));
+
+            const store = useConversationsStore();
+            store.selectedId = 1;
+            const promise = store.sendMessage('Test');
+
+            expect(store.sending).toBe(true);
+
+            resolve({ data: { data: { id: 'msg-1', role: 'user', content: 'Test', created_at: '2026-02-15T12:00:00+00:00' } } });
+            await promise;
+
+            expect(store.sending).toBe(false);
+        });
+
+        it('sendMessage sets error on failure', async () => {
+            axios.post.mockRejectedValueOnce({
+                response: { data: { message: 'Validation error' } },
+            });
+
+            const store = useConversationsStore();
+            store.selectedId = 1;
+
+            await store.sendMessage('Test');
+
+            expect(store.messagesError).toBe('Validation error');
         });
     });
 });
