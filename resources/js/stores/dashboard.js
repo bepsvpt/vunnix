@@ -28,6 +28,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     // Filter state for activity feed tabs (§5.3)
     const activeFilter = ref(null); // null = 'All', or: 'code_review', 'feature_dev', 'ui_adjustment', 'prd_creation'
     const projectFilter = ref(null); // null = all projects, or project_id
+    const promptVersionFilter = ref(null); // null = all versions, or skill string like 'frontend-review:1.0'
+    const promptVersions = ref([]); // Available prompt versions for filter dropdown
 
     const FEED_CAP = 200;
 
@@ -120,7 +122,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
     async function fetchQuality() {
         qualityLoading.value = true;
         try {
-            const response = await axios.get('/api/v1/dashboard/quality');
+            const params = {};
+            if (promptVersionFilter.value) {
+                params.prompt_version = promptVersionFilter.value;
+            }
+            const response = await axios.get('/api/v1/dashboard/quality', { params });
             quality.value = response.data.data;
         } finally {
             qualityLoading.value = false;
@@ -176,6 +182,15 @@ export const useDashboardStore = defineStore('dashboard', () => {
         }
     }
 
+    async function fetchPromptVersions() {
+        try {
+            const response = await axios.get('/api/v1/prompt-versions');
+            promptVersions.value = response.data.data;
+        } catch (e) {
+            // Supplementary — don't block dashboard
+        }
+    }
+
     async function fetchOverrelianceAlerts() {
         try {
             const response = await axios.get('/api/v1/dashboard/overreliance-alerts');
@@ -216,6 +231,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         adoptionLoading.value = false;
         activeFilter.value = null;
         projectFilter.value = null;
+        promptVersionFilter.value = null;
+        promptVersions.value = [];
         isLoading.value = false;
         nextCursor.value = null;
     }
@@ -241,6 +258,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         adoptionLoading,
         activeFilter,
         projectFilter,
+        promptVersionFilter,
+        promptVersions,
         isLoading,
         nextCursor,
         hasMore,
@@ -255,6 +274,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         fetchEfficiency,
         fetchCost,
         fetchCostAlerts,
+        fetchPromptVersions,
         fetchOverrelianceAlerts,
         fetchAdoption,
         loadMore,
