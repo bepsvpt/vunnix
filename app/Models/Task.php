@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Task extends Model
 {
@@ -33,10 +34,13 @@ class Task extends Model
         'prompt',
         'response',
         'tokens_used',
+        'input_tokens',
+        'output_tokens',
         'model',
         'result',
         'prompt_version',
         'cost',
+        'duration_seconds',
         'retry_count',
         'error_reason',
         'superseded_by_id',
@@ -68,6 +72,11 @@ class Task extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function metric(): HasOne
+    {
+        return $this->hasOne(TaskMetric::class);
     }
 
     // ─── State Machine ──────────────────────────────────────────────

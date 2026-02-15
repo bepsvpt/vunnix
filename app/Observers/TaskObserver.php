@@ -2,9 +2,13 @@
 
 namespace App\Observers;
 
+use App\Enums\TaskStatus;
+use App\Enums\TaskType;
 use App\Events\TaskStatusChanged;
 use App\Models\Task;
+use App\Models\TaskMetric;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TaskObserver
 {
@@ -27,5 +31,127 @@ class TaskObserver
         ]);
 
         TaskStatusChanged::dispatch($task);
+
+        $this->recordMetricsOnTerminal($task);
+    }
+
+    /**
+     * Record a task_metrics row when a task reaches a terminal state.
+     *
+     * Only fires for Completed and Failed transitions. Superseded tasks
+     * have no meaningful execution data, so they are excluded.
+     *
+     * Idempotency: uses firstOrCreate keyed on task_id to prevent
+     * duplicate metrics if the observer fires more than once.
+     */
+    private function recordMetricsOnTerminal(Task $task): void
+    {
+        if (! in_array($task->status, [TaskStatus::Completed, TaskStatus::Failed], true)) {
+            return;
+        }
+
+        // Prevent duplicate metrics
+        if (TaskMetric::where('task_id', $task->id)->exists()) {
+            return;
+        }
+
+        $severities = $this->extractSeverityCounts($task);
+        $findingsCount = $this->extractFindingsCount($task);
+        $duration = $this->calculateDuration($task);
+
+        try {
+            TaskMetric::create([
+                'task_id' => $task->id,
+                'project_id' => $task->project_id,
+                'task_type' => $task->type->value,
+                'input_tokens' => $task->input_tokens ?? 0,
+                'output_tokens' => $task->output_tokens ?? 0,
+                'cost' => $task->cost ?? 0,
+                'duration' => $duration,
+                'severity_critical' => $severities['critical'],
+                'severity_high' => $severities['high'],
+                'severity_medium' => $severities['medium'],
+                'severity_low' => $severities['low'],
+                'findings_count' => $findingsCount,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('TaskObserver: failed to record metrics', [
+                'task_id' => $task->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Extract severity counts from the task result for review-type tasks.
+     *
+     * CodeReviewSchema defines severities as critical/major/minor.
+     * These map to the metrics columns as:
+     *   critical → severity_critical
+     *   major    → severity_high
+     *   minor    → severity_medium
+     *   (severity_low is always 0 — no 'low' severity in the review schema)
+     *
+     * @return array{critical: int, high: int, medium: int, low: int}
+     */
+    private function extractSeverityCounts(Task $task): array
+    {
+        $defaults = ['critical' => 0, 'high' => 0, 'medium' => 0, 'low' => 0];
+
+        if (! $this->isReviewType($task)) {
+            return $defaults;
+        }
+
+        $severities = $task->result['summary']['findings_by_severity'] ?? null;
+
+        if (! is_array($severities)) {
+            return $defaults;
+        }
+
+        return [
+            'critical' => (int) ($severities['critical'] ?? 0),
+            'high' => (int) ($severities['major'] ?? 0),
+            'medium' => (int) ($severities['minor'] ?? 0),
+            'low' => 0,
+        ];
+    }
+
+    /**
+     * Extract total findings count from the task result.
+     */
+    private function extractFindingsCount(Task $task): int
+    {
+        if (! $this->isReviewType($task)) {
+            return 0;
+        }
+
+        return (int) ($task->result['summary']['total_findings'] ?? 0);
+    }
+
+    /**
+     * Calculate task duration in seconds.
+     *
+     * Prefers the executor-reported duration_seconds (accurate wall-clock time).
+     * Falls back to completed_at - started_at if duration_seconds is not available.
+     */
+    private function calculateDuration(Task $task): int
+    {
+        if ($task->duration_seconds !== null) {
+            return $task->duration_seconds;
+        }
+
+        if ($task->started_at && $task->completed_at) {
+            return (int) $task->started_at->diffInSeconds($task->completed_at);
+        }
+
+        return 0;
+    }
+
+    /**
+     * Check if a task type produces structured review findings.
+     */
+    private function isReviewType(Task $task): bool
+    {
+        return in_array($task->type, [TaskType::CodeReview, TaskType::SecurityAudit], true);
     }
 }

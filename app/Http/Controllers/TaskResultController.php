@@ -54,6 +54,9 @@ class TaskResultController extends Controller
         $executorResult = $validated['result'] ?? [];
         $task->result = array_merge($existingMeta, $executorResult);
         $task->tokens_used = $tokens['input'] + $tokens['output'] + $tokens['thinking'];
+        $task->input_tokens = $tokens['input'];
+        $task->output_tokens = $tokens['output'];
+        $task->duration_seconds = $validated['duration_seconds'];
         $task->prompt_version = $validated['prompt_version'];
 
         if ($isCompleted) {
