@@ -33,6 +33,28 @@ it('fetches project details via getProject', function () {
     );
 });
 
+it('fetches project by path via getProjectByPath', function () {
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/mygroup%2Fmyproject' => Http::response([
+            'id' => 42,
+            'name' => 'myproject',
+            'path_with_namespace' => 'mygroup/myproject',
+            'visibility' => 'internal',
+        ]),
+    ]);
+
+    $client = new GitLabClient();
+    $result = $client->getProjectByPath('mygroup/myproject');
+
+    expect($result)
+        ->toHaveKey('id', 42)
+        ->toHaveKey('path_with_namespace', 'mygroup/myproject');
+
+    Http::assertSent(fn ($req) =>
+        str_contains($req->url(), '/api/v4/projects/mygroup%2Fmyproject')
+    );
+});
+
 it('fetches the authenticated user via getCurrentUser', function () {
     Http::fake([
         'gitlab.example.com/api/v4/user' => Http::response([

@@ -548,6 +548,22 @@ class GitLabClient
     }
 
     /**
+     * Get project details by path (e.g. "bepsvpt-gl/vunnix").
+     *
+     * GitLab accepts URL-encoded paths in place of numeric project IDs.
+     */
+    public function getProjectByPath(string $pathWithNamespace): array
+    {
+        $encoded = urlencode($pathWithNamespace);
+
+        $response = $this->request()->get(
+            $this->url("projects/{$encoded}"),
+        );
+
+        return $this->handleResponse($response, "getProjectByPath {$pathWithNamespace}")->json();
+    }
+
+    /**
      * Get a specific member of a project (including inherited members).
      *
      * Uses the /members/all endpoint which includes inherited members
