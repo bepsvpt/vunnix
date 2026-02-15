@@ -16,3 +16,9 @@ Schedule::command('metrics:aggregate')
 Schedule::command('cost-alerts:evaluate')
     ->everyFifteenMinutes()
     ->withoutOverlapping();
+
+Schedule::command('overreliance:evaluate')
+    ->weekly()
+    ->mondays()
+    ->at('09:00')
+    ->withoutOverlapping();
