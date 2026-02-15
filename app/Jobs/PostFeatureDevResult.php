@@ -92,6 +92,14 @@ class PostFeatureDevResult implements ShouldQueue
             return null;
         }
 
+        // T72: If this task targets an existing MR (designer iteration), update it
+        $existingMrIid = $result['existing_mr_iid'] ?? null;
+        if ($existingMrIid !== null && $task->mr_iid !== null) {
+            return $this->updateExistingMergeRequest(
+                $gitLab, $task, $mrTitle, $mrDescription, $gitlabProjectId
+            );
+        }
+
         try {
             $mr = $gitLab->createMergeRequest($gitlabProjectId, [
                 'source_branch' => $branch,
@@ -116,6 +124,44 @@ class PostFeatureDevResult implements ShouldQueue
             Log::warning('PostFeatureDevResult: failed to create merge request', [
                 'task_id' => $this->taskId,
                 'branch' => $branch,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Update an existing MR (designer iteration flow, T72).
+     *
+     * The executor already pushed new commits to the same branch.
+     * We update the MR title/description to reflect the correction.
+     */
+    private function updateExistingMergeRequest(
+        GitLabClient $gitLab,
+        Task $task,
+        string $mrTitle,
+        ?string $mrDescription,
+        int $gitlabProjectId,
+    ): int {
+        $mrIid = $task->mr_iid;
+
+        try {
+            $gitLab->updateMergeRequest($gitlabProjectId, $mrIid, array_filter([
+                'title' => $mrTitle,
+                'description' => $mrDescription,
+            ]));
+
+            Log::info('PostFeatureDevResult: existing MR updated (designer iteration)', [
+                'task_id' => $this->taskId,
+                'mr_iid' => $mrIid,
+            ]);
+
+            return $mrIid;
+        } catch (\Throwable $e) {
+            Log::warning('PostFeatureDevResult: failed to update existing MR', [
+                'task_id' => $this->taskId,
+                'mr_iid' => $mrIid,
                 'error' => $e->getMessage(),
             ]);
 
