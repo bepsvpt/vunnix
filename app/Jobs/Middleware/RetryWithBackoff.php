@@ -102,6 +102,15 @@ class RetryWithBackoff
             return;
         }
 
+        // Record this attempt in the job's history for DLQ persistence
+        if (property_exists($job, 'attemptHistory')) {
+            $job->attemptHistory[] = [
+                'attempt' => $attempts,
+                'timestamp' => now()->toIso8601String(),
+                'error' => "HTTP {$e->statusCode}: ".mb_substr($e->responseBody, 0, 500),
+            ];
+        }
+
         // Backoff index: attempt 1 → backoff[0]=30s, attempt 2 → backoff[1]=120s, attempt 3 → backoff[2]=480s
         $delay = self::BACKOFF_SECONDS[$attempts - 1] ?? end(self::BACKOFF_SECONDS);
 

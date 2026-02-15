@@ -29,6 +29,14 @@ class ProcessTaskResult implements ShouldQueue
 
     public int $tries = 4;
 
+    /**
+     * Accumulated by RetryWithBackoff middleware on each transient error.
+     * Passed to FailureHandler → DLQ entry on permanent failure.
+     *
+     * @var array<int, array{attempt: int, timestamp: string, error: string}>
+     */
+    public array $attemptHistory = [];
+
     public function __construct(
         public readonly int $taskId,
     ) {
@@ -206,7 +214,7 @@ class ProcessTaskResult implements ShouldQueue
             task: $task,
             failureReason: $failureReason,
             errorDetails: $errorDetails,
-            attempts: [],
+            attempts: $this->attemptHistory,
         );
     }
 }
