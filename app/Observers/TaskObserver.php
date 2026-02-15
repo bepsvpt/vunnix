@@ -7,6 +7,7 @@ use App\Enums\TaskType;
 use App\Events\TaskStatusChanged;
 use App\Models\Task;
 use App\Models\TaskMetric;
+use App\Services\CostAlertService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -74,6 +75,22 @@ class TaskObserver
                 'severity_low' => $severities['low'],
                 'findings_count' => $findingsCount,
             ]);
+
+            // Evaluate single-task cost outlier alert (T94)
+            if (($task->cost ?? 0) > 0) {
+                try {
+                    app(CostAlertService::class)->evaluateSingleTaskOutlier(
+                        $task->id,
+                        $task->type->value,
+                        (float) $task->cost,
+                    );
+                } catch (\Throwable $e) {
+                    Log::warning('TaskObserver: cost alert evaluation failed', [
+                        'task_id' => $task->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
         } catch (\Throwable $e) {
             Log::error('TaskObserver: failed to record metrics', [
                 'task_id' => $task->id,
