@@ -1055,6 +1055,197 @@ checker.check(
 )
 
 # ============================================================
+#  T100: API versioning + external access
+# ============================================================
+section("T100: API Versioning + External Access")
+
+# Model
+checker.check(
+    "ApiKey model exists",
+    file_exists("app/Models/ApiKey.php"),
+)
+checker.check(
+    "ApiKey has isActive method",
+    file_contains("app/Models/ApiKey.php", "isActive"),
+)
+checker.check(
+    "ApiKey has isRevoked method",
+    file_contains("app/Models/ApiKey.php", "isRevoked"),
+)
+checker.check(
+    "ApiKey has isExpired method",
+    file_contains("app/Models/ApiKey.php", "isExpired"),
+)
+checker.check(
+    "ApiKey has active scope",
+    file_contains("app/Models/ApiKey.php", "scopeActive"),
+)
+checker.check(
+    "ApiKey has recordUsage method",
+    file_contains("app/Models/ApiKey.php", "recordUsage"),
+)
+checker.check(
+    "ApiKey factory exists",
+    file_exists("database/factories/ApiKeyFactory.php"),
+)
+checker.check(
+    "User model has apiKeys relationship",
+    file_contains("app/Models/User.php", "apiKeys"),
+)
+
+# Service
+checker.check(
+    "ApiKeyService exists",
+    file_exists("app/Services/ApiKeyService.php"),
+)
+checker.check(
+    "ApiKeyService has generate method",
+    file_contains("app/Services/ApiKeyService.php", "function generate"),
+)
+checker.check(
+    "ApiKeyService has resolveUser method",
+    file_contains("app/Services/ApiKeyService.php", "function resolveUser"),
+)
+checker.check(
+    "ApiKeyService has revoke method",
+    file_contains("app/Services/ApiKeyService.php", "function revoke"),
+)
+checker.check(
+    "ApiKeyService uses SHA-256 hashing (D152)",
+    file_contains("app/Services/ApiKeyService.php", "sha256"),
+)
+
+# Middleware
+checker.check(
+    "AuthenticateApiKey middleware exists",
+    file_exists("app/Http/Middleware/AuthenticateApiKey.php"),
+)
+checker.check(
+    "AuthenticateSessionOrApiKey middleware exists",
+    file_exists("app/Http/Middleware/AuthenticateSessionOrApiKey.php"),
+)
+checker.check(
+    "Middleware registered in bootstrap/app.php",
+    file_contains("bootstrap/app.php", "api.key"),
+)
+checker.check(
+    "Dual-auth middleware registered in bootstrap/app.php",
+    file_contains("bootstrap/app.php", "auth.api_key_or_session"),
+)
+
+# Rate limiting
+checker.check(
+    "API key rate limiter registered",
+    file_contains("app/Providers/AppServiceProvider.php", "api_key"),
+)
+checker.check(
+    "Rate limit is per-key (60/min)",
+    file_contains("app/Providers/AppServiceProvider.php", "perMinute(60)"),
+)
+
+# Controller
+checker.check(
+    "ApiKeyController exists",
+    file_exists("app/Http/Controllers/Api/ApiKeyController.php"),
+)
+checker.check(
+    "ApiKeyController has index method",
+    file_contains("app/Http/Controllers/Api/ApiKeyController.php", "function index"),
+)
+checker.check(
+    "ApiKeyController has store method",
+    file_contains("app/Http/Controllers/Api/ApiKeyController.php", "function store"),
+)
+checker.check(
+    "ApiKeyController has destroy method",
+    file_contains("app/Http/Controllers/Api/ApiKeyController.php", "function destroy"),
+)
+checker.check(
+    "CreateApiKeyRequest exists",
+    file_exists("app/Http/Requests/CreateApiKeyRequest.php"),
+)
+
+# Admin controller
+checker.check(
+    "AdminApiKeyController exists",
+    file_exists("app/Http/Controllers/Api/AdminApiKeyController.php"),
+)
+checker.check(
+    "AdminApiKeyController has index method",
+    file_contains("app/Http/Controllers/Api/AdminApiKeyController.php", "function index"),
+)
+checker.check(
+    "AdminApiKeyController has destroy method",
+    file_contains("app/Http/Controllers/Api/AdminApiKeyController.php", "function destroy"),
+)
+
+# External API routes
+checker.check(
+    "External API routes registered",
+    file_contains("routes/api.php", "api.ext.tasks"),
+)
+checker.check(
+    "External projects route registered",
+    file_contains("routes/api.php", "api.ext.projects"),
+)
+checker.check(
+    "API key routes registered",
+    file_contains("routes/api.php", "api-keys"),
+)
+checker.check(
+    "Admin API key routes registered",
+    file_contains("routes/api.php", "admin/api-keys"),
+)
+
+# External stub controllers
+checker.check(
+    "ExternalTaskController exists",
+    file_exists("app/Http/Controllers/Api/ExternalTaskController.php"),
+)
+checker.check(
+    "ExternalProjectController exists",
+    file_exists("app/Http/Controllers/Api/ExternalProjectController.php"),
+)
+checker.check(
+    "ExternalMetricsController exists",
+    file_exists("app/Http/Controllers/Api/ExternalMetricsController.php"),
+)
+checker.check(
+    "ExternalActivityController exists",
+    file_exists("app/Http/Controllers/Api/ExternalActivityController.php"),
+)
+
+# Tests
+checker.check(
+    "ApiKey model test exists",
+    file_exists("tests/Feature/Models/ApiKeyTest.php"),
+)
+checker.check(
+    "ApiKeyService test exists",
+    file_exists("tests/Feature/Services/ApiKeyServiceTest.php"),
+)
+checker.check(
+    "AuthenticateApiKey middleware test exists",
+    file_exists("tests/Feature/Middleware/AuthenticateApiKeyTest.php"),
+)
+checker.check(
+    "Rate limit test exists",
+    file_exists("tests/Feature/Middleware/ApiKeyRateLimitTest.php"),
+)
+checker.check(
+    "ApiKeyController test exists",
+    file_exists("tests/Feature/Http/Controllers/Api/ApiKeyControllerTest.php"),
+)
+checker.check(
+    "AdminApiKeyController test exists",
+    file_exists("tests/Feature/Http/Controllers/Api/AdminApiKeyControllerTest.php"),
+)
+checker.check(
+    "External API auth test exists",
+    file_exists("tests/Feature/ExternalApiAuthTest.php"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
