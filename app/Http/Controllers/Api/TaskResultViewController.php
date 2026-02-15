@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Task;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class TaskResultViewController extends Controller
+{
+    public function __invoke(Request $request, Task $task): JsonResponse
+    {
+        // Authorization: user must have access to the task's project
+        if (! $request->user()->projects()->where('projects.id', $task->project_id)->exists()) {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+
+        return response()->json([
+            'data' => [
+                'task_id' => $task->id,
+                'status' => $task->status->value,
+                'type' => $task->type->value,
+                'title' => $task->result['title'] ?? $task->result['mr_title'] ?? null,
+                'mr_iid' => $task->mr_iid,
+                'issue_iid' => $task->issue_iid,
+                'project_id' => $task->project_id,
+                'error_reason' => $task->error_reason,
+                'result' => $task->result,
+            ],
+        ]);
+    }
+}

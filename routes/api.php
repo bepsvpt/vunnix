@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ConversationController;
+use App\Http\Controllers\Api\TaskResultViewController;
 use App\Http\Controllers\TaskResultController;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +45,11 @@ Route::prefix('v1')->group(function () {
 
         Route::patch('/conversations/{conversation}/archive', [ConversationController::class, 'archive'])
             ->name('api.conversations.archive');
+
+        // Task result view endpoint (T70)
+        // Returns full task result data for rendering result cards on page reload
+        Route::get('/tasks/{task}/view', TaskResultViewController::class)
+            ->name('api.tasks.view');
     });
 
 });
