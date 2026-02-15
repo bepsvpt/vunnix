@@ -12,6 +12,7 @@ use App\Jobs\ProcessAcceptanceTracking;
 use App\Jobs\ProcessCodeChangeCorrelation;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\AuditLogService;
 use App\Services\EventDeduplicator;
 use App\Services\EventRouter;
 use App\Services\GitLabClient;
@@ -103,6 +104,21 @@ class WebhookController extends Controller
         unset($payload['webhook_project']);
 
         $eventContext = $this->buildEventContext($eventType, $payload, $project);
+
+        try {
+            app(AuditLogService::class)->logWebhookReceived(
+                projectId: $project->id,
+                eventType: $eventType,
+                relevantIds: array_filter([
+                    'merge_request_iid' => $eventContext['merge_request_iid'] ?? null,
+                    'issue_iid' => $eventContext['issue_iid'] ?? null,
+                    'action' => $eventContext['action'] ?? null,
+                    'event_uuid' => $eventUuid,
+                ]),
+            );
+        } catch (\Throwable) {
+            // Audit logging should never break webhook processing
+        }
 
         Log::info('Webhook event received', [
             'project_id' => $project->id,
