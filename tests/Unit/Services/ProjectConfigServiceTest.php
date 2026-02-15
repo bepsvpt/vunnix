@@ -219,6 +219,14 @@ it('file config for nested key works with dot-notation', function () {
     expect($result)->toBe(false);
 });
 
+// ─── T93: PRD template setting key ──────────────────────────────
+
+it('includes prd_template in setting keys', function () {
+    $keys = ProjectConfigService::settingKeys();
+    expect($keys)->toHaveKey('prd_template');
+    expect($keys['prd_template'])->toBe('text');
+});
+
 it('allEffective includes file source indicator', function () {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create([

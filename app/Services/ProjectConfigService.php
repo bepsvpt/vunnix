@@ -38,6 +38,7 @@ class ProjectConfigService
             'ui_adjustment.screenshot_wait_ms' => 'integer',
             'labels.auto_label' => 'boolean',
             'labels.risk_labels' => 'boolean',
+            'prd_template' => 'text',
         ];
     }
 
