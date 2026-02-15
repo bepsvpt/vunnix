@@ -3,9 +3,10 @@
 ## Summary
 
 - **Current Milestone:** M6 — Pilot Launch
-- **Tasks Complete:** 107 / 116 (92.2%)
-- **Current Task:** **T106** — Deploy to cloud VM
+- **Code Tasks Complete:** 107 / 107 (100%) ✅
+- **Remaining:** 9 ops/manual tasks (T106–T114)
 - **Last Verified:** T105
+- **Status:** Codebase feature-complete. Remaining tasks are manual operations (VM deployment, GitLab setup, pilot verification, monitoring, rollout).
 
 ---
 
@@ -158,18 +159,18 @@
 - [x] T104: Infrastructure monitoring alerts [Depends: T6, T98]
 - [x] T116: Bot PAT rotation reminder (D144) [Depends: T90, T98]
 
-## M6 — Pilot Launch (1/7)
+## M6 — Pilot Launch (1/7) — remaining tasks are manual ops
 
 - [x] T105: Production Docker Compose (backup, log rotation) [Depends: T2]
-- [ ] **T106:** Deploy to cloud VM [Depends: T105]
-- [ ] T107: GitLab bot account setup [Depends: T106]
-- [ ] T108: Enable pilot project [Depends: T106, T107, T88, T45]
-- [ ] T109: Verify end-to-end Path A [Depends: T108, T39]
-- [ ] T110: Verify end-to-end Path B [Depends: T108, T72, T70]
-- [ ] T111: Pilot monitoring period (2–4 weeks) [Depends: T109, T110]
+- [ ] T106: Deploy to cloud VM *(manual ops)* [Depends: T105]
+- [ ] T107: GitLab bot account setup *(manual ops)* [Depends: T106]
+- [ ] T108: Enable pilot project *(manual ops)* [Depends: T106, T107, T88, T45]
+- [ ] T109: Verify end-to-end Path A *(manual verification)* [Depends: T108, T39]
+- [ ] T110: Verify end-to-end Path B *(manual verification)* [Depends: T108, T72, T70]
+- [ ] T111: Pilot monitoring period (2–4 weeks) *(manual monitoring)* [Depends: T109, T110]
 
-## M7 — Team-wide Rollout (0/3)
+## M7 — Team-wide Rollout (0/3) — all manual ops
 
-- [ ] T112: Onboarding materials (per-role docs) [Depends: T111]
-- [ ] T113: Batch rollout (3–5 projects per wave) [Depends: T112]
-- [ ] T114: Steady state operations [Depends: T113]
+- [ ] T112: Onboarding materials (per-role docs) *(manual)* [Depends: T111]
+- [ ] T113: Batch rollout (3–5 projects per wave) *(manual)* [Depends: T112]
+- [ ] T114: Steady state operations *(manual)* [Depends: T113]
