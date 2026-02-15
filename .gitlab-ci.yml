@@ -1,12 +1,17 @@
 # Vunnix CI/CD Pipeline
 #
-# Builds and publishes the executor Docker image to GitLab Container Registry.
-# Target projects pull this image to run AI-powered code reviews and tasks.
+# Two purposes:
 #
-# Image path: $CI_REGISTRY_IMAGE/executor:<tag>
-#   - Tagged as 'latest' on main branch
-#   - Tagged with version from executor/Dockerfile ENV on main branch
-#   - Tagged with short commit SHA on all branches
+# 1. BUILD — Builds and publishes the executor Docker image to GitLab
+#    Container Registry. Runs on changes to executor/ directory.
+#    Image path: $CI_REGISTRY_IMAGE/executor:<tag>
+#      - Tagged as 'latest' on main branch
+#      - Tagged with version from executor/Dockerfile ENV on main branch
+#      - Tagged with short commit SHA on all branches
+#
+# 2. EXECUTE — Runs AI-powered tasks (code review, feature dev, etc.) when
+#    triggered by the Vunnix Task Dispatcher via Pipeline Triggers API.
+#    The executor job only runs when VUNNIX_TASK_ID is set.
 #
 # Version alignment check (D126):
 #   Verifies shared constants (severity definitions, safety rules, output field
@@ -16,10 +21,12 @@
 #
 # @see §6.7 Executor Image
 # @see §14.1 Prompt Architecture (version alignment)
+# @see T45 CI pipeline template
 
 stages:
   - check
   - build
+  - execute
 
 variables:
   # Docker-in-Docker configuration
@@ -41,6 +48,9 @@ version-alignment:
     - apk add --no-cache bash
     - bash scripts/check-version-alignment.sh
   rules:
+    # Never run on Vunnix-triggered pipelines
+    - if: $VUNNIX_TASK_ID
+      when: never
     # Run on changes to executor/ or CE Agent class (when it exists)
     - if: $CI_COMMIT_BRANCH
       changes:
@@ -105,6 +115,9 @@ build-executor:
         echo "Non-default branch — only SHA tag pushed: ${EXECUTOR_IMAGE}:${CI_COMMIT_SHORT_SHA}"
       fi
   rules:
+    # Never run on Vunnix-triggered pipelines
+    - if: $VUNNIX_TASK_ID
+      when: never
     # Build on changes to executor/ on any branch
     - if: $CI_COMMIT_BRANCH
       changes:
@@ -120,3 +133,39 @@ build-executor:
   needs:
     - job: version-alignment
       optional: false
+
+# ── Vunnix Task Executor ──────────────────────────────────────
+# Runs AI-powered tasks when triggered by the Vunnix Task Dispatcher
+# via GitLab Pipeline Triggers API.
+#
+# The Task Dispatcher (app/Services/TaskDispatcher.php) calls
+# POST /api/v4/projects/:id/trigger/pipeline with VUNNIX_* variables.
+# This job picks them up, pulls the executor image, and runs the
+# entrypoint which invokes Claude CLI with the appropriate skill.
+#
+# Required CI/CD variables (set in project Settings > CI/CD):
+#   ANTHROPIC_API_KEY — Claude API key for the executor
+#
+# Pipeline variables (injected by TaskDispatcher per-trigger):
+#   VUNNIX_TASK_ID, VUNNIX_TASK_TYPE, VUNNIX_STRATEGY,
+#   VUNNIX_SKILLS, VUNNIX_TOKEN, VUNNIX_API_URL
+#
+# @see T45 CI pipeline template
+# @see §3.4 Task Dispatcher & Task Executor
+vunnix-executor:
+  stage: execute
+  image: "${CI_REGISTRY_IMAGE}/executor:latest"
+  variables:
+    GIT_DEPTH: 0  # Full clone — executor needs full codebase access
+  script:
+    - /vunnix-executor/entrypoint.sh
+  artifacts:
+    when: always
+    paths:
+      - vunnix-artifacts/
+    expire_in: 7 days
+  timeout: 20m  # D34: 20-minute hard limit per task
+  rules:
+    # Only run when triggered by Vunnix Task Dispatcher
+    - if: $VUNNIX_TASK_ID
+      when: always
