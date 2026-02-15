@@ -254,4 +254,82 @@ describe('DashboardQuality', () => {
 
         expect(adminStore.acknowledgeOverrelianceAlert).toHaveBeenCalledWith(1);
     });
+
+    // -- Prompt version filter (T102) --
+
+    it('renders prompt version filter dropdown when versions exist', () => {
+        const store = useDashboardStore();
+        store.quality = sampleQuality;
+        store.promptVersions = [
+            { skill: 'frontend-review:1.0', claude_md: 'executor:1.0', schema: 'review:1.0' },
+            { skill: 'frontend-review:1.1', claude_md: 'executor:1.0', schema: 'review:1.0' },
+        ];
+        const wrapper = mountQuality();
+        expect(wrapper.find('[data-testid="prompt-version-filter"]').exists()).toBe(true);
+    });
+
+    it('does not render prompt version filter when no versions available', () => {
+        const store = useDashboardStore();
+        store.quality = sampleQuality;
+        store.promptVersions = [];
+        const wrapper = mountQuality();
+        expect(wrapper.find('[data-testid="prompt-version-filter"]').exists()).toBe(false);
+    });
+
+    it('lists all prompt version options in dropdown', () => {
+        const store = useDashboardStore();
+        store.quality = sampleQuality;
+        store.promptVersions = [
+            { skill: 'frontend-review:1.0', claude_md: 'executor:1.0', schema: 'review:1.0' },
+            { skill: 'backend-review:1.0', claude_md: 'executor:1.0', schema: 'review:1.0' },
+        ];
+        const wrapper = mountQuality();
+        const options = wrapper.find('[data-testid="prompt-version-filter"]').findAll('option');
+        // "All Versions" + 2 skill options
+        expect(options).toHaveLength(3);
+        expect(options[0].text()).toBe('All Versions');
+        expect(options[1].text()).toBe('frontend-review:1.0');
+        expect(options[2].text()).toBe('backend-review:1.0');
+    });
+
+    it('sets promptVersionFilter on dropdown change', async () => {
+        const store = useDashboardStore();
+        store.quality = sampleQuality;
+        store.overrelianceAlerts = [];
+        store.promptVersions = [
+            { skill: 'frontend-review:1.0', claude_md: 'executor:1.0', schema: 'review:1.0' },
+        ];
+        // Mock store methods to keep state stable during re-render
+        store.fetchQuality = vi.fn().mockImplementation(() => {
+            store.quality = sampleQuality;
+            return Promise.resolve();
+        });
+        store.fetchPromptVersions = vi.fn().mockResolvedValue(undefined);
+        store.fetchOverrelianceAlerts = vi.fn().mockResolvedValue(undefined);
+        const wrapper = mountQuality();
+        const select = wrapper.find('[data-testid="prompt-version-filter"]');
+        await select.setValue('frontend-review:1.0');
+        expect(store.promptVersionFilter).toBe('frontend-review:1.0');
+    });
+
+    it('resets promptVersionFilter to null when "All Versions" selected', async () => {
+        const store = useDashboardStore();
+        store.quality = sampleQuality;
+        store.overrelianceAlerts = [];
+        store.promptVersionFilter = 'frontend-review:1.0';
+        store.promptVersions = [
+            { skill: 'frontend-review:1.0', claude_md: 'executor:1.0', schema: 'review:1.0' },
+        ];
+        // Mock store methods to keep state stable during re-render
+        store.fetchQuality = vi.fn().mockImplementation(() => {
+            store.quality = sampleQuality;
+            return Promise.resolve();
+        });
+        store.fetchPromptVersions = vi.fn().mockResolvedValue(undefined);
+        store.fetchOverrelianceAlerts = vi.fn().mockResolvedValue(undefined);
+        const wrapper = mountQuality();
+        const select = wrapper.find('[data-testid="prompt-version-filter"]');
+        await select.setValue('');
+        expect(store.promptVersionFilter).toBe(null);
+    });
 });

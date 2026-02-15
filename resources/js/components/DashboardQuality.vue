@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { useDashboardStore } from '@/stores/dashboard';
 import { useAdminStore } from '@/stores/admin';
 
@@ -9,6 +9,12 @@ const admin = useAdminStore();
 onMounted(() => {
     dashboard.fetchQuality();
     dashboard.fetchOverrelianceAlerts();
+    dashboard.fetchPromptVersions();
+});
+
+// Re-fetch quality when prompt version filter changes
+watch(() => dashboard.promptVersionFilter, () => {
+    dashboard.fetchQuality();
 });
 
 const quality = computed(() => dashboard.quality);
@@ -69,6 +75,28 @@ function severityPercent(count) {
 
     <!-- Quality cards -->
     <div v-else-if="quality" class="space-y-6">
+      <!-- Prompt version filter (T102) -->
+      <div class="flex items-center gap-3" v-if="dashboard.promptVersions.length > 0">
+        <label class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+          Prompt Version
+        </label>
+        <select
+          data-testid="prompt-version-filter"
+          class="text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-3 py-1.5 focus:ring-2 focus:ring-zinc-400 focus:border-zinc-400"
+          :value="dashboard.promptVersionFilter"
+          @change="dashboard.promptVersionFilter = $event.target.value || null"
+        >
+          <option value="">All Versions</option>
+          <option
+            v-for="pv in dashboard.promptVersions"
+            :key="pv.skill"
+            :value="pv.skill"
+          >
+            {{ pv.skill }}
+          </option>
+        </select>
+      </div>
+
       <!-- Active over-reliance alerts (T95) -->
       <div v-if="overrelianceAlerts.length > 0" data-testid="overreliance-alerts">
         <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">Over-Reliance Alerts</h3>
