@@ -12,3 +12,7 @@ Schedule::command('metrics:aggregate')
     ->everyFifteenMinutes()
     ->withoutOverlapping()
     ->runInBackground();
+
+Schedule::command('cost-alerts:evaluate')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping();
