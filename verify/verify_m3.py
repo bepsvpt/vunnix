@@ -2285,6 +2285,147 @@ checker.check(
     ),
 )
 
+# ============================================================
+#  T65: Chat Page — Message Thread + Markdown Rendering
+# ============================================================
+section("T65: Chat Page — Message Thread + Markdown Rendering")
+
+# MarkdownContent component
+checker.check(
+    "MarkdownContent component exists",
+    file_exists("resources/js/components/MarkdownContent.vue"),
+)
+checker.check(
+    "MarkdownContent imports markdown renderer",
+    file_contains("resources/js/components/MarkdownContent.vue", "getMarkdownRenderer")
+    or file_contains("resources/js/components/MarkdownContent.vue", "markdown-it"),
+)
+checker.check(
+    "MarkdownContent uses v-html for rendered output",
+    file_contains("resources/js/components/MarkdownContent.vue", "v-html"),
+)
+checker.check(
+    "MarkdownContent test exists",
+    file_exists("resources/js/components/MarkdownContent.test.js"),
+)
+
+# Markdown singleton module
+checker.check(
+    "Markdown lib module exists",
+    file_exists("resources/js/lib/markdown.js"),
+)
+checker.check(
+    "Markdown lib imports markdown-it",
+    file_contains("resources/js/lib/markdown.js", "markdown-it"),
+)
+checker.check(
+    "Markdown lib imports shiki plugin",
+    file_contains("resources/js/lib/markdown.js", "@shikijs/markdown-it"),
+)
+checker.check(
+    "Markdown lib sets link target _blank",
+    file_contains("resources/js/lib/markdown.js", "_blank"),
+)
+
+# MessageBubble component
+checker.check(
+    "MessageBubble component exists",
+    file_exists("resources/js/components/MessageBubble.vue"),
+)
+checker.check(
+    "MessageBubble has role-based styling",
+    file_contains("resources/js/components/MessageBubble.vue", "data-role"),
+)
+checker.check(
+    "MessageBubble renders MarkdownContent for assistant",
+    file_contains("resources/js/components/MessageBubble.vue", "MarkdownContent"),
+)
+checker.check(
+    "MessageBubble test exists",
+    file_exists("resources/js/components/MessageBubble.test.js"),
+)
+
+# MessageComposer component
+checker.check(
+    "MessageComposer component exists",
+    file_exists("resources/js/components/MessageComposer.vue"),
+)
+checker.check(
+    "MessageComposer has textarea",
+    file_contains("resources/js/components/MessageComposer.vue", "textarea"),
+)
+checker.check(
+    "MessageComposer emits send event",
+    file_contains("resources/js/components/MessageComposer.vue", "emit('send'")
+    or file_contains("resources/js/components/MessageComposer.vue", 'emit("send"'),
+)
+checker.check(
+    "MessageComposer test exists",
+    file_exists("resources/js/components/MessageComposer.test.js"),
+)
+
+# MessageThread component
+checker.check(
+    "MessageThread component exists",
+    file_exists("resources/js/components/MessageThread.vue"),
+)
+checker.check(
+    "MessageThread renders MessageBubble",
+    file_contains("resources/js/components/MessageThread.vue", "MessageBubble"),
+)
+checker.check(
+    "MessageThread renders MessageComposer",
+    file_contains("resources/js/components/MessageThread.vue", "MessageComposer"),
+)
+checker.check(
+    "MessageThread has scroll container",
+    file_contains("resources/js/components/MessageThread.vue", "overflow-y-auto"),
+)
+checker.check(
+    "MessageThread test exists",
+    file_exists("resources/js/components/MessageThread.test.js"),
+)
+
+# Store integration
+checker.check(
+    "Conversations store has messages state",
+    file_contains("resources/js/stores/conversations.js", "messages"),
+)
+checker.check(
+    "Conversations store has fetchMessages action",
+    file_contains("resources/js/stores/conversations.js", "fetchMessages"),
+)
+checker.check(
+    "Conversations store has sendMessage action",
+    file_contains("resources/js/stores/conversations.js", "sendMessage"),
+)
+
+# ChatPage integration
+checker.check(
+    "ChatPage imports MessageThread",
+    file_contains("resources/js/pages/ChatPage.vue", "MessageThread"),
+)
+checker.check(
+    "ChatPage no longer has T65 placeholder",
+    not file_contains("resources/js/pages/ChatPage.vue", "Message thread coming in T65"),
+)
+
+# Markdown typography styles
+checker.check(
+    "CSS has markdown-content styles",
+    file_contains("resources/css/app.css", ".markdown-content"),
+)
+
+# Shiki is installed
+checker.check(
+    "@shikijs/markdown-it is installed",
+    file_contains("package.json", '"@shikijs/markdown-it"'),
+)
+checker.check(
+    "shiki is installed",
+    file_contains("package.json", '"shiki"'),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()
