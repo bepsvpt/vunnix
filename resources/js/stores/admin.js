@@ -350,6 +350,62 @@ export const useAdminStore = defineStore('admin', () => {
         }
     }
 
+    // ─── Dead letter queue (T97) ─────────────────────────────────
+    const deadLetterEntries = ref([]);
+    const deadLetterLoading = ref(false);
+    const deadLetterError = ref(null);
+    const deadLetterDetail = ref(null);
+    const deadLetterDetailLoading = ref(false);
+
+    async function fetchDeadLetterEntries(filters = {}) {
+        deadLetterLoading.value = true;
+        deadLetterError.value = null;
+        try {
+            const { data } = await axios.get('/api/v1/admin/dead-letter', { params: filters });
+            deadLetterEntries.value = data.data;
+        } catch (e) {
+            deadLetterError.value = 'Failed to load dead letter queue.';
+        } finally {
+            deadLetterLoading.value = false;
+        }
+    }
+
+    async function fetchDeadLetterDetail(entryId) {
+        deadLetterDetailLoading.value = true;
+        try {
+            const { data } = await axios.get(`/api/v1/admin/dead-letter/${entryId}`);
+            deadLetterDetail.value = data.data;
+        } catch (e) {
+            deadLetterError.value = 'Failed to load entry details.';
+        } finally {
+            deadLetterDetailLoading.value = false;
+        }
+    }
+
+    async function retryDeadLetterEntry(entryId) {
+        try {
+            const { data } = await axios.post(`/api/v1/admin/dead-letter/${entryId}/retry`);
+            if (data.success) {
+                deadLetterEntries.value = deadLetterEntries.value.filter(e => e.id !== entryId);
+                deadLetterDetail.value = null;
+            }
+            return { success: true, data: data.data };
+        } catch (e) {
+            return { success: false, error: e.response?.data?.error || 'Failed to retry entry.' };
+        }
+    }
+
+    async function dismissDeadLetterEntry(entryId) {
+        try {
+            await axios.post(`/api/v1/admin/dead-letter/${entryId}/dismiss`);
+            deadLetterEntries.value = deadLetterEntries.value.filter(e => e.id !== entryId);
+            deadLetterDetail.value = null;
+            return { success: true };
+        } catch (e) {
+            return { success: false, error: e.response?.data?.error || 'Failed to dismiss entry.' };
+        }
+    }
+
     return {
         projects,
         loading,
@@ -409,5 +465,15 @@ export const useAdminStore = defineStore('admin', () => {
         overrelianceAlertsError,
         fetchOverrelianceAlerts,
         acknowledgeOverrelianceAlert,
+        // Dead letter queue (T97)
+        deadLetterEntries,
+        deadLetterLoading,
+        deadLetterError,
+        deadLetterDetail,
+        deadLetterDetailLoading,
+        fetchDeadLetterEntries,
+        fetchDeadLetterDetail,
+        retryDeadLetterEntry,
+        dismissDeadLetterEntry,
     };
 });

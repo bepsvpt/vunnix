@@ -7,6 +7,7 @@ import AdminRoleAssignments from '@/components/AdminRoleAssignments.vue';
 import AdminGlobalSettings from '@/components/AdminGlobalSettings.vue';
 import AdminProjectConfig from '@/components/AdminProjectConfig.vue';
 import AdminPrdTemplate from '@/components/AdminPrdTemplate.vue';
+import AdminDeadLetterQueue from '@/components/AdminDeadLetterQueue.vue';
 
 const admin = useAdminStore();
 
@@ -19,6 +20,7 @@ const tabs = [
     { key: 'roles', label: 'Roles' },
     { key: 'assignments', label: 'Assignments' },
     { key: 'settings', label: 'Settings' },
+    { key: 'dlq', label: 'Dead Letter' },
 ];
 
 onMounted(() => {
@@ -64,5 +66,6 @@ onMounted(() => {
     <AdminRoleList v-else-if="activeTab === 'roles'" />
     <AdminRoleAssignments v-else-if="activeTab === 'assignments'" />
     <AdminGlobalSettings v-else-if="activeTab === 'settings'" />
+    <AdminDeadLetterQueue v-else-if="activeTab === 'dlq'" />
   </div>
 </template>

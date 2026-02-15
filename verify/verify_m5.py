@@ -658,6 +658,87 @@ checker.check(
 )
 
 # ============================================================
+#  T97 — Dead letter queue — admin UI
+# ============================================================
+section("T97 — Dead letter queue — admin UI")
+
+# Controller
+checker.check(
+    "DeadLetterController exists",
+    file_exists("app/Http/Controllers/Api/DeadLetterController.php"),
+)
+checker.check(
+    "DeadLetterController has index method",
+    file_contains("app/Http/Controllers/Api/DeadLetterController.php", "function index"),
+)
+checker.check(
+    "DeadLetterController has show method",
+    file_contains("app/Http/Controllers/Api/DeadLetterController.php", "function show"),
+)
+checker.check(
+    "DeadLetterController has retry method",
+    file_contains("app/Http/Controllers/Api/DeadLetterController.php", "function retry"),
+)
+checker.check(
+    "DeadLetterController has dismiss method",
+    file_contains("app/Http/Controllers/Api/DeadLetterController.php", "function dismiss"),
+)
+checker.check(
+    "DeadLetterController has authorizeAdmin method",
+    file_contains("app/Http/Controllers/Api/DeadLetterController.php", "authorizeAdmin"),
+)
+
+# Routes
+checker.check(
+    "DLQ routes registered in api.php",
+    file_contains("routes/api.php", "/admin/dead-letter"),
+)
+
+# Vue component
+checker.check(
+    "AdminDeadLetterQueue component exists",
+    file_exists("resources/js/components/AdminDeadLetterQueue.vue"),
+)
+checker.check(
+    "Component has retry button test ID",
+    file_contains("resources/js/components/AdminDeadLetterQueue.vue", "dlq-retry-btn"),
+)
+checker.check(
+    "Component has dismiss button test ID",
+    file_contains("resources/js/components/AdminDeadLetterQueue.vue", "dlq-dismiss-btn"),
+)
+
+# Admin store
+checker.check(
+    "Admin store has fetchDeadLetterEntries",
+    file_contains("resources/js/stores/admin.js", "fetchDeadLetterEntries"),
+)
+checker.check(
+    "Admin store has retryDeadLetterEntry",
+    file_contains("resources/js/stores/admin.js", "retryDeadLetterEntry"),
+)
+checker.check(
+    "Admin store has dismissDeadLetterEntry",
+    file_contains("resources/js/stores/admin.js", "dismissDeadLetterEntry"),
+)
+
+# AdminPage integration
+checker.check(
+    "AdminPage includes dlq tab",
+    file_contains("resources/js/pages/AdminPage.vue", "dlq"),
+)
+
+# Tests
+checker.check(
+    "Component test file exists",
+    file_exists("resources/js/components/AdminDeadLetterQueue.test.js"),
+)
+checker.check(
+    "Controller test file exists",
+    file_exists("tests/Feature/Http/Controllers/Api/DeadLetterControllerTest.php"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
