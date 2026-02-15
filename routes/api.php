@@ -110,6 +110,10 @@ Route::prefix('v1')->group(function () {
             ->name('api.admin.permissions.index');
         Route::post('/admin/roles', [AdminRoleController::class, 'store'])
             ->name('api.admin.roles.store');
+        Route::put('/admin/roles/{role}', [AdminRoleController::class, 'update'])
+            ->name('api.admin.roles.update');
+        Route::delete('/admin/roles/{role}', [AdminRoleController::class, 'destroy'])
+            ->name('api.admin.roles.destroy');
     });
 
 });
