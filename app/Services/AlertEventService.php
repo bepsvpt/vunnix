@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Models\AlertEvent;
 use App\Services\TeamChat\TeamChatNotificationService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 
@@ -31,6 +33,9 @@ class AlertEventService
             'queue_depth' => fn () => $this->evaluateQueueDepth($now),
             'auth_failure' => fn () => $this->evaluateAuthFailure($now),
             'disk_usage' => fn () => $this->evaluateDiskUsage($now),
+            'container_health' => fn () => $this->evaluateContainerHealth($now),
+            'cpu_usage' => fn () => $this->evaluateCpuUsage($now),
+            'memory_usage' => fn () => $this->evaluateMemoryUsage($now),
         ];
 
         foreach ($checks as $check) {
@@ -320,6 +325,246 @@ class AlertEventService
     }
 
     /**
+     * Container health: polls /health endpoint, sustained failure >2 min.
+     */
+    public function evaluateContainerHealth(?Carbon $now = null): ?AlertEvent
+    {
+        $now ??= now();
+        $activeAlert = AlertEvent::active()->ofType('container_health')->first();
+
+        try {
+            $response = Http::timeout(5)->get('http://127.0.0.1/health');
+            $healthy = $response->successful() && ($response->json('status') === 'healthy');
+        } catch (\Throwable) {
+            $healthy = false;
+        }
+
+        if (! $healthy) {
+            $firstFailure = Cache::get('infra:health_first_failure');
+            if (! $firstFailure) {
+                Cache::put('infra:health_first_failure', $now->toIso8601String(), 3600);
+
+                return null;
+            }
+
+            $duration = (int) $now->diffInMinutes(Carbon::parse($firstFailure), absolute: true);
+            if ($duration < 2) {
+                return null;
+            }
+
+            if ($activeAlert) {
+                return null;
+            }
+
+            $alert = AlertEvent::create([
+                'alert_type' => 'container_health',
+                'status' => 'active',
+                'severity' => 'high',
+                'message' => "Container unhealthy for >{$duration} minutes.",
+                'context' => ['duration_minutes' => $duration],
+                'detected_at' => $now,
+            ]);
+
+            $this->notifyAlert($alert);
+
+            return $alert;
+        }
+
+        // Healthy — clear failure tracking and resolve active alert
+        Cache::forget('infra:health_first_failure');
+
+        if ($activeAlert) {
+            $activeAlert->update([
+                'status' => 'resolved',
+                'resolved_at' => $now,
+            ]);
+
+            $this->notifyRecovery($activeAlert);
+
+            return $activeAlert;
+        }
+
+        return null;
+    }
+
+    /**
+     * CPU usage: sustained >90% for >5 minutes.
+     * Reads from Cache::get('infra:cpu_current') (set by scheduled collector),
+     * falls back to sys_getloadavg() / CPU count.
+     */
+    public function evaluateCpuUsage(?Carbon $now = null): ?AlertEvent
+    {
+        $now ??= now();
+        $threshold = 90.0;
+        $sustainedMinutes = 5;
+
+        $cpuPercent = Cache::get('infra:cpu_current');
+        if ($cpuPercent === null) {
+            $cpuPercent = $this->getSystemCpuPercent();
+        }
+
+        $activeAlert = AlertEvent::active()->ofType('cpu_usage')->first();
+
+        if ($cpuPercent !== null && $cpuPercent > $threshold) {
+            $firstHigh = Cache::get('infra:cpu_first_high');
+            if (! $firstHigh) {
+                Cache::put('infra:cpu_first_high', $now->toIso8601String(), 3600);
+
+                return null;
+            }
+
+            $duration = (int) $now->diffInMinutes(Carbon::parse($firstHigh), absolute: true);
+            if ($duration < $sustainedMinutes) {
+                return null;
+            }
+
+            if ($activeAlert) {
+                return null;
+            }
+
+            $rounded = round($cpuPercent, 1);
+            $alert = AlertEvent::create([
+                'alert_type' => 'cpu_usage',
+                'status' => 'active',
+                'severity' => 'high',
+                'message' => "CPU usage at {$rounded}% for >{$duration} minutes (threshold: {$threshold}%).",
+                'context' => ['cpu_percent' => $rounded, 'duration_minutes' => $duration],
+                'detected_at' => $now,
+            ]);
+
+            $this->notifyAlert($alert);
+
+            return $alert;
+        }
+
+        // Below threshold — clear tracking, resolve if active
+        Cache::forget('infra:cpu_first_high');
+
+        if ($activeAlert) {
+            $activeAlert->update([
+                'status' => 'resolved',
+                'resolved_at' => $now,
+            ]);
+
+            $this->notifyRecovery($activeAlert);
+
+            return $activeAlert;
+        }
+
+        return null;
+    }
+
+    /**
+     * Memory usage: sustained >85% for >5 minutes.
+     * Reads from Cache::get('infra:memory_current') (set by scheduled collector),
+     * falls back to system memory info.
+     */
+    public function evaluateMemoryUsage(?Carbon $now = null): ?AlertEvent
+    {
+        $now ??= now();
+        $threshold = 85.0;
+        $sustainedMinutes = 5;
+
+        $memoryPercent = Cache::get('infra:memory_current');
+        if ($memoryPercent === null) {
+            $memoryPercent = $this->getSystemMemoryPercent();
+        }
+
+        $activeAlert = AlertEvent::active()->ofType('memory_usage')->first();
+
+        if ($memoryPercent !== null && $memoryPercent > $threshold) {
+            $firstHigh = Cache::get('infra:memory_first_high');
+            if (! $firstHigh) {
+                Cache::put('infra:memory_first_high', $now->toIso8601String(), 3600);
+
+                return null;
+            }
+
+            $duration = (int) $now->diffInMinutes(Carbon::parse($firstHigh), absolute: true);
+            if ($duration < $sustainedMinutes) {
+                return null;
+            }
+
+            if ($activeAlert) {
+                return null;
+            }
+
+            $rounded = round($memoryPercent, 1);
+            $alert = AlertEvent::create([
+                'alert_type' => 'memory_usage',
+                'status' => 'active',
+                'severity' => 'high',
+                'message' => "Memory usage at {$rounded}% for >{$duration} minutes (threshold: {$threshold}%).",
+                'context' => ['memory_percent' => $rounded, 'duration_minutes' => $duration],
+                'detected_at' => $now,
+            ]);
+
+            $this->notifyAlert($alert);
+
+            return $alert;
+        }
+
+        // Below threshold — clear tracking, resolve if active
+        Cache::forget('infra:memory_first_high');
+
+        if ($activeAlert) {
+            $activeAlert->update([
+                'status' => 'resolved',
+                'resolved_at' => $now,
+            ]);
+
+            $this->notifyRecovery($activeAlert);
+
+            return $activeAlert;
+        }
+
+        return null;
+    }
+
+    /**
+     * Get CPU usage percentage from system load average.
+     */
+    private function getSystemCpuPercent(): ?float
+    {
+        if (! function_exists('sys_getloadavg')) {
+            return null;
+        }
+
+        $load = sys_getloadavg();
+        if ($load === false) {
+            return null;
+        }
+
+        // Use 1-minute load average, normalize by CPU count
+        $cpuCount = 1;
+        if (is_readable('/proc/cpuinfo')) {
+            $cpuCount = max(1, substr_count((string) file_get_contents('/proc/cpuinfo'), 'processor'));
+        }
+
+        return min(100.0, ($load[0] / $cpuCount) * 100);
+    }
+
+    /**
+     * Get system memory usage percentage.
+     */
+    private function getSystemMemoryPercent(): ?float
+    {
+        if (is_readable('/proc/meminfo')) {
+            $meminfo = (string) file_get_contents('/proc/meminfo');
+            if (preg_match('/MemTotal:\s+(\d+)/', $meminfo, $totalMatch)
+                && preg_match('/MemAvailable:\s+(\d+)/', $meminfo, $availMatch)) {
+                $total = (int) $totalMatch[1];
+                $available = (int) $availMatch[1];
+                if ($total > 0) {
+                    return round((1 - $available / $total) * 100, 1);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Send a team chat notification for a newly detected alert.
      */
     public function notifyAlert(AlertEvent $alert): void
@@ -351,6 +596,9 @@ class AlertEventService
             'infrastructure' => 'Infrastructure issue',
             'auth_failure' => 'Auth failure',
             'disk_usage' => 'Disk usage',
+            'container_health' => 'Container health',
+            'cpu_usage' => 'High CPU usage',
+            'memory_usage' => 'High memory usage',
         ];
 
         $label = $typeLabels[$alert->alert_type] ?? $alert->alert_type;

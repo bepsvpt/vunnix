@@ -433,6 +433,151 @@ it('sends task failed notification with error reason', function () {
     });
 });
 
+// ─── Container Health Detection (T104) ─────────────────────────
+
+it('detects container health issue when health endpoint reports unhealthy', function () {
+    Http::swap(new \Illuminate\Http\Client\Factory());
+    Http::fake([
+        'http://127.0.0.1/health' => Http::response([
+            'status' => 'unhealthy',
+            'checks' => [
+                'postgresql' => ['status' => 'ok'],
+                'redis' => ['status' => 'fail', 'error' => 'Connection refused'],
+                'queue_worker' => ['status' => 'ok'],
+                'reverb' => ['status' => 'ok'],
+                'disk' => ['status' => 'ok'],
+            ],
+        ], 503),
+        '*' => Http::response('ok', 200),
+    ]);
+    Cache::put('infra:health_first_failure', now()->subMinutes(3)->toIso8601String(), 3600);
+
+    $service = app(AlertEventService::class);
+    $alert = $service->evaluateContainerHealth();
+
+    expect($alert)->not->toBeNull();
+    expect($alert->alert_type)->toBe('container_health');
+    expect($alert->status)->toBe('active');
+    expect($alert->severity)->toBe('high');
+    expect($alert->message)->toContain('unhealthy');
+});
+
+it('does not trigger container health alert if unhealthy for less than 2 minutes', function () {
+    Http::swap(new \Illuminate\Http\Client\Factory());
+    Http::fake([
+        'http://127.0.0.1/health' => Http::response(['status' => 'unhealthy', 'checks' => []], 503),
+        '*' => Http::response('ok', 200),
+    ]);
+    Cache::put('infra:health_first_failure', now()->toIso8601String(), 3600);
+
+    $service = app(AlertEventService::class);
+    expect($service->evaluateContainerHealth())->toBeNull();
+});
+
+it('resolves container health alert when health endpoint recovers', function () {
+    Http::swap(new \Illuminate\Http\Client\Factory());
+    Http::fake([
+        'http://127.0.0.1/health' => Http::response(['status' => 'healthy', 'checks' => []], 200),
+        '*' => Http::response('ok', 200),
+    ]);
+    AlertEvent::factory()->create([
+        'alert_type' => 'container_health',
+        'status' => 'active',
+        'notified_at' => now()->subHour(),
+    ]);
+
+    $service = app(AlertEventService::class);
+    $resolved = $service->evaluateContainerHealth();
+
+    expect($resolved)->not->toBeNull();
+    expect($resolved->status)->toBe('resolved');
+    expect($resolved->recovery_notified_at)->not->toBeNull();
+});
+
+// ─── CPU Usage Detection (T104) ────────────────────────────────
+
+it('detects high CPU usage when sustained above 90% for 5+ minutes', function () {
+    Http::fake(['*' => Http::response('ok', 200)]);
+    Cache::put('infra:cpu_first_high', now()->subMinutes(6)->toIso8601String(), 3600);
+    Cache::put('infra:cpu_current', 95.2, 300);
+
+    $service = app(AlertEventService::class);
+    $alert = $service->evaluateCpuUsage();
+
+    expect($alert)->not->toBeNull();
+    expect($alert->alert_type)->toBe('cpu_usage');
+    expect($alert->severity)->toBe('high');
+    expect($alert->message)->toContain('CPU');
+});
+
+it('does not trigger CPU alert if high for less than 5 minutes', function () {
+    Http::fake(['*' => Http::response('ok', 200)]);
+    Cache::put('infra:cpu_first_high', now()->subMinutes(2)->toIso8601String(), 3600);
+    Cache::put('infra:cpu_current', 95.0, 300);
+
+    $service = app(AlertEventService::class);
+    expect($service->evaluateCpuUsage())->toBeNull();
+});
+
+it('resolves CPU alert when usage drops below threshold', function () {
+    Http::fake(['*' => Http::response('ok', 200)]);
+    AlertEvent::factory()->create([
+        'alert_type' => 'cpu_usage',
+        'status' => 'active',
+        'notified_at' => now()->subHour(),
+    ]);
+    Cache::forget('infra:cpu_first_high');
+    Cache::put('infra:cpu_current', 10.0, 300); // Below 90% threshold
+
+    $service = app(AlertEventService::class);
+    $resolved = $service->evaluateCpuUsage();
+
+    expect($resolved)->not->toBeNull();
+    expect($resolved->status)->toBe('resolved');
+});
+
+// ─── Memory Usage Detection (T104) ─────────────────────────────
+
+it('detects high memory usage when sustained above 85% for 5+ minutes', function () {
+    Http::fake(['*' => Http::response('ok', 200)]);
+    Cache::put('infra:memory_first_high', now()->subMinutes(6)->toIso8601String(), 3600);
+    Cache::put('infra:memory_current', 92.5, 300);
+
+    $service = app(AlertEventService::class);
+    $alert = $service->evaluateMemoryUsage();
+
+    expect($alert)->not->toBeNull();
+    expect($alert->alert_type)->toBe('memory_usage');
+    expect($alert->severity)->toBe('high');
+    expect($alert->message)->toContain('Memory');
+});
+
+it('does not trigger memory alert if high for less than 5 minutes', function () {
+    Http::fake(['*' => Http::response('ok', 200)]);
+    Cache::put('infra:memory_first_high', now()->subMinutes(2)->toIso8601String(), 3600);
+    Cache::put('infra:memory_current', 92.5, 300);
+
+    $service = app(AlertEventService::class);
+    expect($service->evaluateMemoryUsage())->toBeNull();
+});
+
+it('resolves memory alert when usage drops below threshold', function () {
+    Http::fake(['*' => Http::response('ok', 200)]);
+    AlertEvent::factory()->create([
+        'alert_type' => 'memory_usage',
+        'status' => 'active',
+        'notified_at' => now()->subHour(),
+    ]);
+    Cache::forget('infra:memory_first_high');
+    Cache::put('infra:memory_current', 20.0, 300); // Below 85% threshold
+
+    $service = app(AlertEventService::class);
+    $resolved = $service->evaluateMemoryUsage();
+
+    expect($resolved)->not->toBeNull();
+    expect($resolved->status)->toBe('resolved');
+});
+
 // ─── Cost Alert Notifications ───────────────────────────────────
 
 it('sends cost alert notification', function () {
