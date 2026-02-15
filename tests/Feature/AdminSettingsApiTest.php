@@ -275,3 +275,62 @@ it('returns updated settings list after update', function () {
             ],
         ]);
 });
+
+// ─── Integration: settings update → config reads ────────────────
+
+it('change AI model → GlobalSetting::get returns new value', function () {
+    $project = Project::factory()->create();
+    $user = createSettingsAdmin($project);
+
+    // Set initial value
+    GlobalSetting::set('ai_model', 'opus', 'string');
+
+    // Update via API
+    $this->actingAs($user)->putJson('/api/v1/admin/settings', [
+        'settings' => [
+            ['key' => 'ai_model', 'value' => 'sonnet', 'type' => 'string'],
+        ],
+    ])->assertOk();
+
+    // Verify model reads new value (cache should be invalidated)
+    expect(GlobalSetting::get('ai_model'))->toBe('sonnet');
+});
+
+it('change language → GlobalSetting::get returns new language', function () {
+    $project = Project::factory()->create();
+    $user = createSettingsAdmin($project);
+
+    GlobalSetting::set('ai_language', 'en', 'string');
+
+    $this->actingAs($user)->putJson('/api/v1/admin/settings', [
+        'settings' => [
+            ['key' => 'ai_language', 'value' => 'ja', 'type' => 'string'],
+        ],
+    ])->assertOk();
+
+    expect(GlobalSetting::get('ai_language'))->toBe('ja');
+});
+
+it('settings persist across index calls', function () {
+    $project = Project::factory()->create();
+    $user = createSettingsAdmin($project);
+
+    // Set settings
+    $this->actingAs($user)->putJson('/api/v1/admin/settings', [
+        'settings' => [
+            ['key' => 'ai_model', 'value' => 'haiku', 'type' => 'string'],
+            ['key' => 'timeout_minutes', 'value' => 20, 'type' => 'integer'],
+        ],
+    ])->assertOk();
+
+    // Fetch and verify
+    $response = $this->actingAs($user)->getJson('/api/v1/admin/settings');
+    $response->assertOk();
+
+    $data = collect($response->json('data'));
+    $model = $data->firstWhere('key', 'ai_model');
+    $timeout = $data->firstWhere('key', 'timeout_minutes');
+
+    expect($model['value'])->toBe('haiku');
+    expect($timeout['value'])->toBe(20);
+});
