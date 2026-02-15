@@ -83,4 +83,41 @@ describe('AdminPage', () => {
 
         expect(wrapper.find('[data-testid="project-status-1"]').text()).toContain('Disabled');
     });
+
+    it('shows Roles tab', () => {
+        const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
+        expect(wrapper.find('[data-testid="admin-tab-roles"]').exists()).toBe(true);
+    });
+
+    it('shows Assignments tab', () => {
+        const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
+        expect(wrapper.find('[data-testid="admin-tab-assignments"]').exists()).toBe(true);
+    });
+
+    it('switches to Roles tab content on click', async () => {
+        const admin = useAdminStore();
+        vi.spyOn(admin, 'fetchRoles').mockResolvedValue();
+        vi.spyOn(admin, 'fetchPermissions').mockResolvedValue();
+
+        const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
+        await wrapper.find('[data-testid="admin-tab-roles"]').trigger('click');
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.text()).toContain('Roles');
+        expect(wrapper.find('[data-testid="create-role-btn"]').exists()).toBe(true);
+    });
+
+    it('switches to Assignments tab content on click', async () => {
+        const admin = useAdminStore();
+        vi.spyOn(admin, 'fetchAssignments').mockResolvedValue();
+        vi.spyOn(admin, 'fetchUsers').mockResolvedValue();
+        vi.spyOn(admin, 'fetchRoles').mockResolvedValue();
+
+        const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
+        await wrapper.find('[data-testid="admin-tab-assignments"]').trigger('click');
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.text()).toContain('Role Assignments');
+        expect(wrapper.find('[data-testid="assign-role-btn"]').exists()).toBe(true);
+    });
 });
