@@ -51,8 +51,15 @@ version-alignment:
     # Never run on Vunnix-triggered pipelines
     - if: $VUNNIX_TASK_ID
       when: never
-    # Run on changes to executor/ or CE Agent class (compare against main
-    # to avoid false positives on first push to new branches)
+    # Main branch — default changes detection (compares against previous commit)
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        paths:
+          - executor/**/*
+          - executor/*
+          - app/AI/**/*
+      when: always
+    # Feature branches — compare against main to avoid false positives on first push
     - if: $CI_COMMIT_BRANCH
       changes:
         compare_to: refs/heads/main
@@ -122,8 +129,14 @@ build-executor:
     # Never run on Vunnix-triggered pipelines
     - if: $VUNNIX_TASK_ID
       when: never
-    # Build on changes to executor/ (compare against main to avoid
-    # false positives on first push to new branches)
+    # Main branch — default changes detection (compares against previous commit)
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        paths:
+          - executor/**/*
+          - executor/*
+      when: always
+    # Feature branches — compare against main to avoid false positives on first push
     - if: $CI_COMMIT_BRANCH
       changes:
         compare_to: refs/heads/main
