@@ -3,10 +3,12 @@ import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import DashboardQuality from './DashboardQuality.vue';
 import { useDashboardStore } from '@/stores/dashboard';
+import { useAdminStore } from '@/stores/admin';
 
 vi.mock('axios', () => ({
     default: {
         get: vi.fn().mockResolvedValue({ data: { data: null } }),
+        patch: vi.fn().mockResolvedValue({ data: { success: true } }),
     },
 }));
 
@@ -186,5 +188,70 @@ describe('DashboardQuality', () => {
         expect(wrapper.find('[data-testid="total-reviews-value"]').text()).toBe('0');
         expect(wrapper.find('[data-testid="severity-critical-count"]').text()).toBe('0');
         expect(wrapper.find('[data-testid="severity-critical-pct"]').text()).toBe('0%');
+    });
+
+    // -- Over-reliance alerts (T95) --
+
+    const sampleOverrelianceAlerts = [
+        {
+            id: 1,
+            rule: 'high_acceptance_rate',
+            severity: 'warning',
+            message: 'Acceptance rate has been above 95% for 2 consecutive weeks (avg: 97.5%).',
+            context: { weekly_rates: [], consecutive_weeks: 2, threshold: 95 },
+            acknowledged: false,
+            created_at: '2026-02-15T09:00:00.000Z',
+        },
+        {
+            id: 2,
+            rule: 'zero_reactions',
+            severity: 'info',
+            message: 'Zero negative reactions across 30 findings in the last 30 days.',
+            context: { total_findings: 30, negative_count: 0, lookback_days: 30 },
+            acknowledged: false,
+            created_at: '2026-02-15T09:00:00.000Z',
+        },
+    ];
+
+    it('renders overreliance alert cards when data exists', () => {
+        const store = useDashboardStore();
+        store.quality = sampleQuality;
+        store.overrelianceAlerts = sampleOverrelianceAlerts;
+        const wrapper = mountQuality();
+        expect(wrapper.find('[data-testid="overreliance-alerts"]').exists()).toBe(true);
+        expect(wrapper.findAll('[data-testid^="overreliance-alert-"]')).toHaveLength(2);
+    });
+
+    it('does not render overreliance alerts section when empty', () => {
+        const store = useDashboardStore();
+        store.quality = sampleQuality;
+        store.overrelianceAlerts = [];
+        const wrapper = mountQuality();
+        expect(wrapper.find('[data-testid="overreliance-alerts"]').exists()).toBe(false);
+    });
+
+    it('displays rule label and message for overreliance alerts', () => {
+        const store = useDashboardStore();
+        store.quality = sampleQuality;
+        store.overrelianceAlerts = sampleOverrelianceAlerts;
+        const wrapper = mountQuality();
+
+        const alert1 = wrapper.find('[data-testid="overreliance-alert-1"]');
+        expect(alert1.text()).toContain('High Acceptance Rate');
+        expect(alert1.text()).toContain('above 95%');
+    });
+
+    it('calls acknowledgeOverrelianceAlert on dismiss click', async () => {
+        const store = useDashboardStore();
+        store.quality = sampleQuality;
+        store.overrelianceAlerts = [sampleOverrelianceAlerts[0]];
+        store.fetchOverrelianceAlerts = vi.fn().mockResolvedValue(undefined);
+        const adminStore = useAdminStore();
+        adminStore.acknowledgeOverrelianceAlert = vi.fn().mockResolvedValue({ success: true });
+
+        const wrapper = mountQuality();
+        await wrapper.find('[data-testid="overreliance-acknowledge-btn"]').trigger('click');
+
+        expect(adminStore.acknowledgeOverrelianceAlert).toHaveBeenCalledWith(1);
     });
 });

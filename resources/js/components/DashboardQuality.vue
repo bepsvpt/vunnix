@@ -1,14 +1,35 @@
 <script setup>
 import { computed, onMounted } from 'vue';
 import { useDashboardStore } from '@/stores/dashboard';
+import { useAdminStore } from '@/stores/admin';
 
 const dashboard = useDashboardStore();
+const admin = useAdminStore();
 
 onMounted(() => {
     dashboard.fetchQuality();
+    dashboard.fetchOverrelianceAlerts();
 });
 
 const quality = computed(() => dashboard.quality);
+const overrelianceAlerts = computed(() => dashboard.overrelianceAlerts);
+
+const overrelianceRuleLabels = {
+    high_acceptance_rate: 'High Acceptance Rate',
+    critical_acceptance_rate: 'Critical Finding Acceptance',
+    bulk_resolution: 'Bulk Resolution Pattern',
+    zero_reactions: 'Zero Negative Reactions',
+};
+
+const overrelianceSeverityColors = {
+    warning: 'bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200',
+    info: 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200',
+};
+
+async function handleOverrelianceAcknowledge(alertId) {
+    await admin.acknowledgeOverrelianceAlert(alertId);
+    dashboard.fetchOverrelianceAlerts();
+}
 
 const acceptanceRateDisplay = computed(() => {
     if (!quality.value || quality.value.acceptance_rate === null) return '—';
@@ -48,6 +69,32 @@ function severityPercent(count) {
 
     <!-- Quality cards -->
     <div v-else-if="quality" class="space-y-6">
+      <!-- Active over-reliance alerts (T95) -->
+      <div v-if="overrelianceAlerts.length > 0" data-testid="overreliance-alerts">
+        <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">Over-Reliance Alerts</h3>
+        <div class="space-y-2">
+          <div
+            v-for="alert in overrelianceAlerts"
+            :key="alert.id"
+            :data-testid="`overreliance-alert-${alert.id}`"
+            :class="['rounded-lg border p-3 flex items-start justify-between', overrelianceSeverityColors[alert.severity] || overrelianceSeverityColors.warning]"
+          >
+            <div>
+              <span class="text-xs font-semibold uppercase">{{ overrelianceRuleLabels[alert.rule] || alert.rule }}</span>
+              <p class="text-sm mt-0.5">{{ alert.message }}</p>
+              <p class="text-xs opacity-70 mt-1">{{ new Date(alert.created_at).toLocaleString() }}</p>
+            </div>
+            <button
+              data-testid="overreliance-acknowledge-btn"
+              class="ml-3 flex-shrink-0 text-xs font-medium underline opacity-70 hover:opacity-100"
+              @click="handleOverrelianceAcknowledge(alert.id)"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Top row: Acceptance rate + Avg findings per review + Total reviews -->
       <div class="grid grid-cols-3 gap-4">
         <div
