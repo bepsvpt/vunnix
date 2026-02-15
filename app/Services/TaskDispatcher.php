@@ -164,7 +164,7 @@ class TaskDispatcher
 
             $pipelineResult = $this->gitLabClient->triggerPipeline(
                 projectId: $task->project->gitlab_project_id,
-                ref: $task->commit_sha ?? 'main',
+                ref: $this->resolvePipelineRef($task),
                 triggerToken: $triggerToken,
                 variables: $variables,
             );
@@ -260,5 +260,33 @@ class TaskDispatcher
             // Safe fallback: mixed-review covers both frontend and backend
             return ReviewStrategy::MixedReview;
         }
+    }
+
+    /**
+     * Resolve the pipeline ref for triggering.
+     *
+     * The Pipeline Triggers API only accepts branch/tag names, not commit SHAs.
+     * For MR-based tasks, fetch the source branch from GitLab.
+     */
+    private function resolvePipelineRef(Task $task): string
+    {
+        if ($task->mr_iid !== null) {
+            try {
+                $mr = $this->gitLabClient->getMergeRequest(
+                    $task->project->gitlab_project_id,
+                    $task->mr_iid,
+                );
+
+                return $mr['source_branch'] ?? 'main';
+            } catch (\Throwable $e) {
+                Log::warning('TaskDispatcher: failed to resolve MR source branch, falling back to main', [
+                    'task_id' => $task->id,
+                    'mr_iid' => $task->mr_iid,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return 'main';
     }
 }
