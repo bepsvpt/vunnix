@@ -197,6 +197,26 @@ it('validates required fields for review trigger', function () {
     ], $this->headers)->assertStatus(422);
 });
 
+// ─── prompt_version in task responses ────────────────────────
+
+it('includes prompt_version in task detail response', function () {
+    $task = Task::factory()->create([
+        'project_id' => $this->project->id,
+        'status' => TaskStatus::Completed,
+        'prompt_version' => [
+            'skill' => 'frontend-review:1.0',
+            'claude_md' => 'executor:1.0',
+            'schema' => 'review:1.0',
+        ],
+    ]);
+
+    $this->getJson('/api/v1/ext/tasks/'.$task->id, $this->headers)
+        ->assertOk()
+        ->assertJsonPath('data.prompt_version.skill', 'frontend-review:1.0')
+        ->assertJsonPath('data.prompt_version.claude_md', 'executor:1.0')
+        ->assertJsonPath('data.prompt_version.schema', 'review:1.0');
+});
+
 // ─── GET /metrics/summary ───────────────────────────────────
 
 it('returns metrics summary', function () {

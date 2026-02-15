@@ -26,6 +26,7 @@ class ExternalTaskResource extends JsonResource
             'duration_seconds' => $this->duration_seconds,
             'error_reason' => $this->error_reason,
             'retry_count' => $this->retry_count,
+            'prompt_version' => $this->prompt_version,
             'started_at' => $this->started_at?->toIso8601String(),
             'completed_at' => $this->completed_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),
