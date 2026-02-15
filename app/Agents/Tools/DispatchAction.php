@@ -82,6 +82,9 @@ class DispatchAction implements Tool
             'labels' => $schema
                 ->string()
                 ->description('Comma-separated labels to apply (e.g., "feature,ai::created").'),
+            'existing_mr_iid' => $schema
+                ->integer()
+                ->description('Existing MR IID to push corrections to (for designer iteration flow). When set, the executor pushes to the same branch and updates the existing MR instead of creating a new one.'),
             'user_id' => $schema
                 ->integer()
                 ->description('The authenticated user ID dispatching this action.')

@@ -91,6 +91,15 @@ it('returns error for invalid action type', function () {
 
 // ─── Action type mapping ───────────────────────────────────────
 
+it('includes existing_mr_iid in schema parameters', function () {
+    $schema = new JsonSchemaTypeFactory;
+    $params = $this->tool->schema($schema);
+
+    expect($params)->toHaveKey('existing_mr_iid');
+});
+
+// ─── Action type mapping ───────────────────────────────────────
+
 it('maps action types to TaskType enum correctly', function () {
     $mapping = DispatchAction::ACTION_TYPE_MAP;
 
