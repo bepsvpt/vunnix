@@ -2101,6 +2101,190 @@ checker.check(
     file_exists("resources/js/components/ConversationList.test.js"),
 )
 
+# ============================================================
+#  T64: Chat Page — New Conversation Flow
+# ============================================================
+section("T64: Chat Page — New Conversation Flow")
+
+# Backend: conversation_projects pivot migration
+checker.check(
+    "conversation_projects pivot migration exists",
+    file_exists(
+        "database/migrations/2024_01_01_000021_create_conversation_projects_table.php"
+    ),
+)
+
+# Conversation model — projects relationship
+checker.check(
+    "Conversation model has projects relationship",
+    file_contains("app/Models/Conversation.php", "public function projects"),
+)
+checker.check(
+    "Conversation model references conversation_projects pivot table",
+    file_contains("app/Models/Conversation.php", "conversation_projects"),
+)
+
+# ConversationPolicy — addProject method
+checker.check(
+    "ConversationPolicy has addProject method",
+    file_contains("app/Policies/ConversationPolicy.php", "public function addProject"),
+)
+
+# API endpoint: POST /conversations/{id}/projects
+checker.check(
+    "ConversationController has addProject action",
+    file_contains(
+        "app/Http/Controllers/Api/ConversationController.php",
+        "public function addProject",
+    ),
+)
+checker.check(
+    "Route for adding project to conversation exists",
+    file_contains("routes/api.php", "api.conversations.projects.store"),
+)
+
+# ConversationResource includes projects via whenLoaded
+checker.check(
+    "ConversationResource includes projects via whenLoaded",
+    file_contains(
+        "app/Http/Resources/ConversationResource.php",
+        "whenLoaded('projects'",
+    ),
+)
+
+# NewConversationDialog component
+checker.check(
+    "NewConversationDialog component exists",
+    file_exists("resources/js/components/NewConversationDialog.vue"),
+)
+checker.check(
+    "NewConversationDialog uses script setup",
+    file_contains("resources/js/components/NewConversationDialog.vue", "<script setup>"),
+)
+checker.check(
+    "NewConversationDialog filters by chat.access permission",
+    file_contains("resources/js/components/NewConversationDialog.vue", "chat.access"),
+)
+checker.check(
+    "NewConversationDialog emits create event",
+    file_contains("resources/js/components/NewConversationDialog.vue", "'create'"),
+)
+
+# CrossProjectWarningDialog component (D128)
+checker.check(
+    "CrossProjectWarningDialog component exists",
+    file_exists("resources/js/components/CrossProjectWarningDialog.vue"),
+)
+checker.check(
+    "CrossProjectWarningDialog uses script setup",
+    file_contains("resources/js/components/CrossProjectWarningDialog.vue", "<script setup>"),
+)
+checker.check(
+    "CrossProjectWarningDialog shows visibility warning",
+    file_contains(
+        "resources/js/components/CrossProjectWarningDialog.vue",
+        "Cross-Project Visibility Warning",
+    ),
+)
+checker.check(
+    "CrossProjectWarningDialog warns about irreversibility",
+    file_contains(
+        "resources/js/components/CrossProjectWarningDialog.vue",
+        "cannot be undone",
+    ),
+)
+checker.check(
+    "CrossProjectWarningDialog accepts existingProjectName prop",
+    file_contains(
+        "resources/js/components/CrossProjectWarningDialog.vue",
+        "existingProjectName",
+    ),
+)
+checker.check(
+    "CrossProjectWarningDialog accepts newProjectName prop",
+    file_contains(
+        "resources/js/components/CrossProjectWarningDialog.vue",
+        "newProjectName",
+    ),
+)
+
+# Store: createConversation and addProjectToConversation
+checker.check(
+    "Conversations store has createConversation action",
+    file_contains(
+        "resources/js/stores/conversations.js",
+        "async function createConversation",
+    ),
+)
+checker.check(
+    "Conversations store has addProjectToConversation action",
+    file_contains(
+        "resources/js/stores/conversations.js",
+        "async function addProjectToConversation",
+    ),
+)
+checker.check(
+    "createConversation POSTs to /api/v1/conversations",
+    file_contains(
+        "resources/js/stores/conversations.js",
+        "axios.post('/api/v1/conversations'",
+    ),
+)
+checker.check(
+    "addProjectToConversation POSTs to conversations/{id}/projects",
+    file_contains(
+        "resources/js/stores/conversations.js",
+        "/projects",
+    ),
+)
+
+# ConversationList integration
+checker.check(
+    "ConversationList imports NewConversationDialog",
+    file_contains(
+        "resources/js/components/ConversationList.vue",
+        "import NewConversationDialog",
+    ),
+)
+checker.check(
+    "ConversationList has New Conversation button",
+    file_contains(
+        "resources/js/components/ConversationList.vue",
+        "New Conversation",
+    ),
+)
+checker.check(
+    "ConversationList renders NewConversationDialog with v-if",
+    file_contains(
+        "resources/js/components/ConversationList.vue",
+        "showNewDialog",
+    ),
+)
+
+# Tests
+checker.check(
+    "NewConversationDialog tests exist",
+    file_exists("resources/js/components/NewConversationDialog.test.js"),
+)
+checker.check(
+    "CrossProjectWarningDialog tests exist",
+    file_exists("resources/js/components/CrossProjectWarningDialog.test.js"),
+)
+checker.check(
+    "Store tests cover createConversation",
+    file_contains(
+        "resources/js/stores/conversations.test.js",
+        "createConversation",
+    ),
+)
+checker.check(
+    "Store tests cover addProjectToConversation",
+    file_contains(
+        "resources/js/stores/conversations.test.js",
+        "addProjectToConversation",
+    ),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()

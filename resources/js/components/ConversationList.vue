@@ -1,11 +1,14 @@
 <script setup>
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useConversationsStore } from '@/stores/conversations';
 import { useAuthStore } from '@/stores/auth';
 import ConversationListItem from './ConversationListItem.vue';
+import NewConversationDialog from './NewConversationDialog.vue';
 
 const store = useConversationsStore();
 const auth = useAuthStore();
+
+const showNewDialog = ref(false);
 
 let searchTimeout = null;
 
@@ -39,6 +42,15 @@ function projectNameForId(projectId) {
     return project ? project.name : '';
 }
 
+async function onCreateConversation(projectId) {
+    try {
+        await store.createConversation(projectId);
+        showNewDialog.value = false;
+    } catch {
+        // Error is set in the store; dialog stays open so user can retry
+    }
+}
+
 onMounted(() => {
     store.fetchConversations();
 });
@@ -46,6 +58,17 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col h-full">
+    <!-- New conversation button -->
+    <div class="p-3 border-b border-zinc-200 dark:border-zinc-800">
+      <button
+        type="button"
+        class="w-full px-3 py-2 text-sm font-medium rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
+        @click="showNewDialog = true"
+      >
+        + New Conversation
+      </button>
+    </div>
+
     <!-- Search + filters -->
     <div class="p-3 space-y-2 border-b border-zinc-200 dark:border-zinc-800">
       <input
@@ -133,5 +156,12 @@ onMounted(() => {
     >
       {{ store.error }}
     </div>
+
+    <!-- New conversation dialog -->
+    <NewConversationDialog
+      v-if="showNewDialog"
+      @create="onCreateConversation"
+      @close="showNewDialog = false"
+    />
   </div>
 </template>

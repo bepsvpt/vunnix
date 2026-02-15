@@ -351,6 +351,132 @@ describe('useConversationsStore', () => {
         });
     });
 
+    describe('createConversation', () => {
+        it('creates conversation and adds to top of list', async () => {
+            const newConv = makeConversation({ id: 'conv-new', title: 'New Chat' });
+            axios.post.mockResolvedValue({ data: { data: newConv } });
+
+            const store = useConversationsStore();
+            store.conversations = [makeConversation({ id: 'conv-old' })];
+
+            const result = await store.createConversation(5);
+
+            expect(axios.post).toHaveBeenCalledWith('/api/v1/conversations', {
+                project_id: 5,
+            });
+            expect(store.conversations).toHaveLength(2);
+            expect(store.conversations[0].id).toBe('conv-new');
+            expect(store.conversations[1].id).toBe('conv-old');
+            expect(result).toEqual(newConv);
+        });
+
+        it('selects the newly created conversation', async () => {
+            const newConv = makeConversation({ id: 'conv-new' });
+            axios.post.mockResolvedValue({ data: { data: newConv } });
+
+            const store = useConversationsStore();
+            await store.createConversation(1);
+
+            expect(store.selectedId).toBe('conv-new');
+        });
+
+        it('sets error and throws on failure', async () => {
+            axios.post.mockRejectedValue({
+                response: { data: { message: 'Unauthorized' } },
+            });
+
+            const store = useConversationsStore();
+
+            await expect(store.createConversation(1)).rejects.toBeTruthy();
+            expect(store.error).toBe('Unauthorized');
+        });
+
+        it('uses fallback error message when no response message', async () => {
+            axios.post.mockRejectedValue(new Error('Network error'));
+
+            const store = useConversationsStore();
+
+            await expect(store.createConversation(1)).rejects.toBeTruthy();
+            expect(store.error).toBe('Failed to create conversation');
+        });
+
+        it('clears previous error on new create attempt', async () => {
+            const store = useConversationsStore();
+            store.error = 'Previous error';
+
+            const newConv = makeConversation({ id: 'conv-new' });
+            axios.post.mockResolvedValue({ data: { data: newConv } });
+
+            await store.createConversation(1);
+
+            expect(store.error).toBeNull();
+        });
+    });
+
+    describe('addProjectToConversation', () => {
+        it('adds project and updates conversation in list', async () => {
+            const updatedConv = makeConversation({
+                id: 'conv-1',
+                additional_projects: [{ id: 2, name: 'New Project' }],
+            });
+            axios.post.mockResolvedValue({ data: { data: updatedConv } });
+
+            const store = useConversationsStore();
+            store.conversations = [makeConversation({ id: 'conv-1' })];
+
+            const result = await store.addProjectToConversation('conv-1', 2);
+
+            expect(axios.post).toHaveBeenCalledWith(
+                '/api/v1/conversations/conv-1/projects',
+                { project_id: 2 }
+            );
+            expect(store.conversations[0].additional_projects).toEqual([
+                { id: 2, name: 'New Project' },
+            ]);
+            expect(result).toEqual(updatedConv);
+        });
+
+        it('sets error and throws on failure', async () => {
+            axios.post.mockRejectedValue({
+                response: { data: { message: 'Cross-project not allowed' } },
+            });
+
+            const store = useConversationsStore();
+            store.conversations = [makeConversation({ id: 'conv-1' })];
+
+            await expect(
+                store.addProjectToConversation('conv-1', 2)
+            ).rejects.toBeTruthy();
+            expect(store.error).toBe('Cross-project not allowed');
+        });
+
+        it('uses fallback error message when no response message', async () => {
+            axios.post.mockRejectedValue(new Error('Network error'));
+
+            const store = useConversationsStore();
+            store.conversations = [makeConversation({ id: 'conv-1' })];
+
+            await expect(
+                store.addProjectToConversation('conv-1', 2)
+            ).rejects.toBeTruthy();
+            expect(store.error).toBe('Failed to add project');
+        });
+
+        it('does not modify list if conversation not found', async () => {
+            const updatedConv = makeConversation({ id: 'conv-999' });
+            axios.post.mockResolvedValue({ data: { data: updatedConv } });
+
+            const store = useConversationsStore();
+            store.conversations = [makeConversation({ id: 'conv-1' })];
+
+            await store.addProjectToConversation('conv-999', 2);
+
+            // Original conversation untouched
+            expect(store.conversations).toHaveLength(1);
+            expect(store.conversations[0].id).toBe('conv-1');
+        });
+    });
+
     describe('$reset', () => {
         it('resets all state to defaults', () => {
             const store = useConversationsStore();
