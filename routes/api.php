@@ -127,6 +127,8 @@ Route::prefix('v1')->group(function () {
         // Admin global settings (T90)
         Route::get('/admin/settings', [AdminSettingsController::class, 'index'])
             ->name('api.admin.settings.index');
+        Route::put('/admin/settings', [AdminSettingsController::class, 'update'])
+            ->name('api.admin.settings.update');
     });
 
 });

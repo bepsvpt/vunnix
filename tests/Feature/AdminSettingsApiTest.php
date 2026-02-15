@@ -134,3 +134,144 @@ it('returns 401 for unauthenticated request', function () {
 
     $response->assertUnauthorized();
 });
+
+// ─── PUT /admin/settings ────────────────────────────────────────
+
+it('updates a single setting', function () {
+    $project = Project::factory()->create();
+    $user = createSettingsAdmin($project);
+
+    $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
+        'settings' => [
+            ['key' => 'ai_model', 'value' => 'sonnet', 'type' => 'string'],
+        ],
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('success', true);
+
+    expect(GlobalSetting::get('ai_model'))->toBe('sonnet');
+});
+
+it('updates multiple settings at once', function () {
+    $project = Project::factory()->create();
+    $user = createSettingsAdmin($project);
+
+    $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
+        'settings' => [
+            ['key' => 'ai_model', 'value' => 'sonnet', 'type' => 'string'],
+            ['key' => 'timeout_minutes', 'value' => 15, 'type' => 'integer'],
+            ['key' => 'ai_language', 'value' => 'ja', 'type' => 'string'],
+        ],
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('success', true);
+
+    expect(GlobalSetting::get('ai_model'))->toBe('sonnet');
+    expect(GlobalSetting::get('timeout_minutes'))->toBe(15);
+    expect(GlobalSetting::get('ai_language'))->toBe('ja');
+});
+
+it('updates json-type settings', function () {
+    $project = Project::factory()->create();
+    $user = createSettingsAdmin($project);
+
+    $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
+        'settings' => [
+            ['key' => 'ai_prices', 'value' => ['input' => 3.0, 'output' => 15.0], 'type' => 'json'],
+        ],
+    ]);
+
+    $response->assertOk();
+
+    $prices = GlobalSetting::get('ai_prices');
+    expect($prices)->toBeArray();
+    expect($prices['input'])->toEqual(3.0);
+    expect($prices['output'])->toEqual(15.0);
+});
+
+it('updates bot_pat_created_at via settings', function () {
+    $project = Project::factory()->create();
+    $user = createSettingsAdmin($project);
+
+    $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
+        'settings' => [
+            ['key' => 'bot_pat_created_at', 'value' => '2026-01-15T00:00:00Z'],
+        ],
+    ]);
+
+    $response->assertOk();
+
+    $setting = GlobalSetting::where('key', 'bot_pat_created_at')->first();
+    expect($setting)->not->toBeNull();
+});
+
+it('updates team chat webhook settings', function () {
+    $project = Project::factory()->create();
+    $user = createSettingsAdmin($project);
+
+    $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
+        'settings' => [
+            ['key' => 'team_chat_webhook_url', 'value' => 'https://hooks.slack.com/services/T00/B00/xxx', 'type' => 'string'],
+            ['key' => 'team_chat_platform', 'value' => 'slack', 'type' => 'string'],
+        ],
+    ]);
+
+    $response->assertOk();
+    expect(GlobalSetting::get('team_chat_webhook_url'))->toBe('https://hooks.slack.com/services/T00/B00/xxx');
+    expect(GlobalSetting::get('team_chat_platform'))->toBe('slack');
+});
+
+it('rejects update with empty settings array', function () {
+    $project = Project::factory()->create();
+    $user = createSettingsAdmin($project);
+
+    $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
+        'settings' => [],
+    ]);
+
+    $response->assertUnprocessable();
+});
+
+it('rejects update without settings key', function () {
+    $project = Project::factory()->create();
+    $user = createSettingsAdmin($project);
+
+    $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', []);
+
+    $response->assertUnprocessable();
+});
+
+it('returns 403 for non-admin on update', function () {
+    $project = Project::factory()->create();
+    $user = createNonSettingsAdmin($project);
+
+    $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
+        'settings' => [
+            ['key' => 'ai_model', 'value' => 'sonnet', 'type' => 'string'],
+        ],
+    ]);
+
+    $response->assertForbidden();
+});
+
+it('returns updated settings list after update', function () {
+    $project = Project::factory()->create();
+    $user = createSettingsAdmin($project);
+
+    $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
+        'settings' => [
+            ['key' => 'ai_model', 'value' => 'sonnet', 'type' => 'string'],
+        ],
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonStructure([
+            'success',
+            'data' => [
+                '*' => ['key', 'value', 'type'],
+            ],
+        ]);
+});
