@@ -1,4 +1,18 @@
 <script setup>
+import { onMounted, onUnmounted } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import { useDashboardRealtime } from '@/composables/useDashboardRealtime';
+
+const auth = useAuthStore();
+const { subscribe, unsubscribe } = useDashboardRealtime();
+
+onMounted(() => {
+    subscribe(auth.projects);
+});
+
+onUnmounted(() => {
+    unsubscribe();
+});
 </script>
 
 <template>
