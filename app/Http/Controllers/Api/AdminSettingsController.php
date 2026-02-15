@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\GlobalSettingResource;
 use App\Models\GlobalSetting;
+use App\Services\AuditLogService;
 use App\Services\TeamChat\TeamChatNotificationService;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\Admin\UpdateSettingsRequest;
@@ -34,15 +35,30 @@ class AdminSettingsController extends Controller
             $value = $item['value'];
             $type = $item['type'] ?? 'string';
 
+            $oldSetting = GlobalSetting::where('key', $key)->first();
+            $oldValue = $oldSetting?->value;
+
             if ($key === 'bot_pat_created_at') {
                 GlobalSetting::updateOrCreate(
                     ['key' => $key],
                     ['bot_pat_created_at' => $value, 'value' => $value, 'type' => 'string']
                 );
-                continue;
+            } else {
+                GlobalSetting::set($key, $value, $type);
             }
 
-            GlobalSetting::set($key, $value, $type);
+            if ($oldValue !== $value) {
+                try {
+                    app(AuditLogService::class)->logConfigurationChange(
+                        userId: $request->user()->id,
+                        key: $key,
+                        oldValue: $oldValue,
+                        newValue: $value,
+                    );
+                } catch (\Throwable) {
+                    // Audit logging should never break settings update
+                }
+            }
         }
 
         $settings = GlobalSetting::orderBy('key')->get();
