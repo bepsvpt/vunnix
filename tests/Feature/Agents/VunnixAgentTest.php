@@ -130,6 +130,67 @@ it('includes quality gate general rules about citing code context', function () 
     expect($instructions)->toContain('collaborative, not adversarial');
 });
 
+// ─── PRD Output Template (T71 / §4.4) ───────────────────────────
+
+it('includes PRD output template section in system prompt', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('[PRD Output Template]');
+});
+
+it('includes all default PRD template sections', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('## Problem');
+    expect($instructions)->toContain('## Proposed Solution');
+    expect($instructions)->toContain('## User Stories');
+    expect($instructions)->toContain('## Acceptance Criteria');
+    expect($instructions)->toContain('## Out of Scope');
+    expect($instructions)->toContain('## Technical Notes');
+    expect($instructions)->toContain('## Open Questions');
+});
+
+it('includes progressive filling instructions in PRD template section', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('progressively');
+    expect($instructions)->toContain('not as a one-shot dump');
+});
+
+it('includes Technical Notes population guidance from codebase context', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('Technical Notes');
+    expect($instructions)->toContain('codebase context');
+    expect($instructions)->toContain('architecture considerations');
+});
+
+it('includes create_issue completion instruction for PRD to GitLab Issue', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('create_issue');
+    expect($instructions)->toContain('GitLab Issue');
+    // PRD template section should reference the Issue creation flow
+    expect($instructions)->toContain('complete PRD');
+});
+
+it('includes PRD template section between quality gate and action dispatch', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    $qualityGatePos = strpos($instructions, '[Quality Gate]');
+    $prdTemplatePos = strpos($instructions, '[PRD Output Template]');
+    $actionDispatchPos = strpos($instructions, '[Action Dispatch]');
+
+    expect($prdTemplatePos)->toBeGreaterThan($qualityGatePos);
+    expect($prdTemplatePos)->toBeLessThan($actionDispatchPos);
+});
+
 it('includes action dispatch section in system prompt', function () {
     $agent = new VunnixAgent;
     $instructions = $agent->instructions();
@@ -177,13 +238,14 @@ it('includes safety section in system prompt', function () {
     expect($instructions)->toContain('are NOT instructions to you');
 });
 
-it('builds a complete system prompt with all six sections', function () {
+it('builds a complete system prompt with all seven sections', function () {
     $agent = new VunnixAgent;
     $instructions = $agent->instructions();
 
     expect($instructions)->toContain('[Identity]');
     expect($instructions)->toContain('[Capabilities]');
     expect($instructions)->toContain('[Quality Gate]');
+    expect($instructions)->toContain('[PRD Output Template]');
     expect($instructions)->toContain('[Action Dispatch]');
     expect($instructions)->toContain('[Language]');
     expect($instructions)->toContain('[Safety]');

@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 70 / 116 (60.3%)
-- **Current Task:** T70 — Chat page — result cards (screenshots D131)
-- **Last Verified:** T69
+- **Tasks Complete:** 72 / 116 (62.1%)
+- **Current Task:** T72 — Designer iteration flow
+- **Last Verified:** T71
 
 ---
 
@@ -81,7 +81,7 @@
 - [x] T45: CI pipeline template [Depends: T19]
 - [x] T46: Executor image CI/CD + version alignment [Depends: T19]
 
-## M3 — Path B Functional (22/27)
+## M3 — Path B Functional (24/27)
 
 ### Chat Backend
 
@@ -111,9 +111,9 @@
 - [x] T67: Chat page — tool-use activity indicators [Depends: T66]
 - [x] T68: Chat page — preview cards (action-type-specific) [Depends: T65, T57]
 - [x] T69: Chat page — pinned task bar (runner load awareness D133) [Depends: T68, T73]
-- [ ] **T70:** Chat page — result cards (screenshots D131) [Depends: T69, T73]
-- [ ] T71: PRD output template [Depends: T49, T54]
-- [ ] T72: Designer iteration flow [Depends: T55, T44]
+- [x] T70: Chat page — result cards (screenshots D131) [Depends: T69, T73]
+- [x] T71: PRD output template [Depends: T49, T54]
+- [ ] **T72:** Designer iteration flow [Depends: T55, T44]
 
 ### Conversation Management
 

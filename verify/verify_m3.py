@@ -3421,6 +3421,79 @@ checker.check(
     file_contains("app/Listeners/DeliverTaskResultToConversation.php", "[System: Task result delivered]"),
 )
 
+# ============================================================
+#  T71: PRD output template
+# ============================================================
+section("T71: PRD Output Template")
+
+# System prompt includes PRD template section
+checker.check(
+    "VunnixAgent has prdTemplateSection method",
+    file_contains("app/Agents/VunnixAgent.php", "prdTemplateSection"),
+)
+checker.check(
+    "PRD template section header in system prompt",
+    file_contains("app/Agents/VunnixAgent.php", "[PRD Output Template]"),
+)
+
+# Default template sections present
+checker.check(
+    "PRD template includes Problem section",
+    file_contains("app/Agents/VunnixAgent.php", "## Problem"),
+)
+checker.check(
+    "PRD template includes Proposed Solution section",
+    file_contains("app/Agents/VunnixAgent.php", "## Proposed Solution"),
+)
+checker.check(
+    "PRD template includes User Stories section",
+    file_contains("app/Agents/VunnixAgent.php", "## User Stories"),
+)
+checker.check(
+    "PRD template includes Acceptance Criteria section",
+    file_contains("app/Agents/VunnixAgent.php", "## Acceptance Criteria"),
+)
+checker.check(
+    "PRD template includes Out of Scope section",
+    file_contains("app/Agents/VunnixAgent.php", "## Out of Scope"),
+)
+checker.check(
+    "PRD template includes Technical Notes section",
+    file_contains("app/Agents/VunnixAgent.php", "## Technical Notes"),
+)
+checker.check(
+    "PRD template includes Open Questions section",
+    file_contains("app/Agents/VunnixAgent.php", "## Open Questions"),
+)
+
+# Progressive filling behavior
+checker.check(
+    "PRD template has progressive filling instructions",
+    file_contains("app/Agents/VunnixAgent.php", "progressively"),
+)
+checker.check(
+    "PRD template prohibits one-shot dump",
+    file_contains("app/Agents/VunnixAgent.php", "not as a one-shot dump"),
+)
+
+# Completion to Issue flow
+checker.check(
+    "PRD template references create_issue action for completion",
+    file_contains("app/Agents/VunnixAgent.php", "create_issue"),
+)
+
+# Section ordering: PRD template between Quality Gate and Action Dispatch
+checker.check(
+    "buildSystemPrompt includes prdTemplateSection call",
+    file_contains("app/Agents/VunnixAgent.php", "$this->prdTemplateSection()"),
+)
+
+# Tests exist
+checker.check(
+    "PRD template tests exist in VunnixAgentTest",
+    file_contains("tests/Feature/Agents/VunnixAgentTest.php", "PRD Output Template"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()

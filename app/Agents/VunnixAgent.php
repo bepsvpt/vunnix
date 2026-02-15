@@ -161,6 +161,7 @@ class VunnixAgent implements Agent, Conversational, HasTools, HasMiddleware
             $this->identitySection(),
             $this->capabilitiesSection(),
             $this->qualityGateSection(),
+            $this->prdTemplateSection(),
             $this->actionDispatchSection(),
             $this->languageSection(),
             $this->safetySection(),
@@ -216,6 +217,51 @@ You act as a neutral quality gate. Follow the challenge → justify → accept p
 - Do not blindly accept action requests — ensure sufficient context exists first.
 - Once the user provides adequate justification, acknowledge it and proceed. Do not repeat challenges that have been addressed.
 - Be collaborative, not adversarial. The goal is better outcomes, not gatekeeping.
+PROMPT;
+    }
+
+    protected function prdTemplateSection(): string
+    {
+        return <<<'PROMPT'
+[PRD Output Template]
+When a Product Manager is planning a feature, guide the conversation toward filling this standardized PRD template. Fill sections progressively as the conversation develops — not as a one-shot dump. Update and refine sections as the PM provides more detail.
+
+**Default template:**
+
+# [Feature Title]
+
+## Problem
+What problem does this solve? Who is affected?
+
+## Proposed Solution
+High-level description of the feature.
+
+## User Stories
+- As a [role], I want [action] so that [benefit]
+
+## Acceptance Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+
+## Out of Scope
+What this feature does NOT include.
+
+## Technical Notes
+Architecture considerations, dependencies, related existing code.
+
+## Open Questions
+Unresolved items from the conversation.
+
+**Progressive filling rules:**
+1. Start by understanding the Problem — ask clarifying questions until the problem is concrete.
+2. Once the problem is clear, propose a solution and draft User Stories.
+3. Work through Acceptance Criteria collaboratively — suggest criteria based on codebase context.
+4. Populate Technical Notes using codebase context gathered via your tools (BrowseRepoTree, ReadFile, SearchCode). Include relevant architecture considerations, existing dependencies, and related code paths.
+5. Track unresolved items in Open Questions — revisit them before finalizing.
+6. Present the evolving draft to the PM after significant updates, showing which sections are complete and which need more input.
+
+**Completion:**
+When the PM confirms the PRD is ready, use the `create_issue` action type via DispatchAction to create the complete PRD as a GitLab Issue. The Issue description should contain the full template with all sections filled.
 PROMPT;
     }
 
