@@ -54,10 +54,10 @@ __pycache__/
 *.pyc
 
 # Runner session logs (can be large)
-verify/logs/
+docs/autopilot/logs/
 
 # Session handoff (ephemeral Claude-to-Claude state)
-handoff.md
+docs/autopilot/handoff.md
 
 **/caddy
 frankenphp

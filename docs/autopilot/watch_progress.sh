@@ -1,9 +1,9 @@
 #!/bin/bash
 # Vunnix Development Progress Monitor
-# Run in a separate terminal: bash verify/watch_progress.sh
+# Run in a separate terminal: bash docs/autopilot/watch_progress.sh
 # Refreshes every 30 seconds.
 
-cd "$(dirname "$0")/.." || exit 1
+cd "$(dirname "$0")/../.." || exit 1
 
 while true; do
     clear
@@ -13,19 +13,19 @@ while true; do
     echo ""
 
     # Summary from progress.md
-    if [ -f progress.md ]; then
-        sed -n '/^## Summary/,/^---/p' progress.md | grep -E '^\- ' | sed 's/^/  /'
+    if [ -f docs/autopilot/progress.md ]; then
+        sed -n '/^## Summary/,/^---/p' docs/autopilot/progress.md | grep -E '^\- ' | sed 's/^/  /'
     else
-        echo "  progress.md not found!"
+        echo "  docs/autopilot/progress.md not found!"
     fi
 
     echo ""
     echo "──────────────────────────────────────────────"
 
     # Count tasks
-    if [ -f progress.md ]; then
-        DONE=$(grep -c '^\- \[x\]' progress.md 2>/dev/null) || DONE=0
-        TODO=$(grep -c '^\- \[ \]' progress.md 2>/dev/null) || TODO=0
+    if [ -f docs/autopilot/progress.md ]; then
+        DONE=$(grep -c '^\- \[x\]' docs/autopilot/progress.md 2>/dev/null) || DONE=0
+        TODO=$(grep -c '^\- \[ \]' docs/autopilot/progress.md 2>/dev/null) || TODO=0
         TOTAL=$((DONE + TODO))
         if [ "$TOTAL" -gt 0 ]; then
             PCT=$((DONE * 100 / TOTAL))
@@ -60,8 +60,8 @@ while true; do
     echo "──────────────────────────────────────────────"
     echo "  Current milestone progress:"
 
-    if [ -f progress.md ]; then
-        grep -E '^## M[0-9]' progress.md | sed 's/^/  /'
+    if [ -f docs/autopilot/progress.md ]; then
+        grep -E '^## M[0-9]' docs/autopilot/progress.md | sed 's/^/  /'
     fi
 
     echo ""

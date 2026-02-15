@@ -6,7 +6,7 @@
 # Runs Claude Code CLI in non-interactive mode, automatically
 # restarting sessions when they end. Each session starts fresh
 # (no --continue) to avoid context overflow since auto-compact
-# is disabled. State lives in progress.md, not conversation.
+# is disabled. State lives in docs/autopilot/progress.md, not conversation.
 #
 # Usage:
 #   ./run.sh                         Run with defaults
@@ -17,8 +17,8 @@
 #   ./run.sh --retry-delay 600       Override rate-limit wait (sec)
 #
 # Monitor in another terminal:
-#   bash verify/watch_progress.sh    Progress dashboard
-#   tail -f verify/logs/runner.log   Runner log
+#   bash docs/autopilot/watch_progress.sh    Progress dashboard
+#   tail -f docs/autopilot/logs/runner.log   Runner log
 # ============================================================
 
 set -uo pipefail
@@ -36,7 +36,8 @@ MAX_CONSECUTIVE_ERRORS=5   # Stop after this many errors in a row
 
 # --- Paths ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOG_DIR="$SCRIPT_DIR/verify/logs"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+LOG_DIR="$SCRIPT_DIR/logs"
 RUNNER_LOG="$LOG_DIR/runner.log"
 PROGRESS_FILE="$SCRIPT_DIR/progress.md"
 
@@ -66,8 +67,8 @@ while [[ $# -gt 0 ]]; do
             echo "  -h, --help         Show this help"
             echo ""
             echo "Monitor in another terminal:"
-            echo "  bash verify/watch_progress.sh    Progress dashboard"
-            echo "  tail -f verify/logs/runner.log   Runner log"
+            echo "  bash docs/autopilot/watch_progress.sh    Progress dashboard"
+            echo "  tail -f docs/autopilot/logs/runner.log   Runner log"
             exit 0 ;;
         *)
             echo "Unknown option: $1 (use --help for usage)"
@@ -200,7 +201,7 @@ log "  Error wait:    ${ERROR_DELAY}s"
 log "  Between:       ${BETWEEN_SESSIONS}s"
 log "  Budget:        ${BUDGET:-unlimited} per session"
 log "  Max errors:    $MAX_CONSECUTIVE_ERRORS consecutive"
-log "  Working dir:   $SCRIPT_DIR"
+log "  Working dir:   $PROJECT_ROOT"
 log "  Logs:          $LOG_DIR"
 log ""
 show_progress
@@ -246,7 +247,7 @@ while $RUNNING; do
     # Run Claude in non-interactive mode
     # All output (stdout + stderr) goes to the session log file.
     # The terminal only shows our log() messages for clean monitoring.
-    cd "$SCRIPT_DIR"
+    cd "$PROJECT_ROOT"
     claude -p "$PROMPT" \
         --output-format stream-json \
         --verbose \

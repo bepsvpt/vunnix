@@ -18,11 +18,9 @@ bootstrap/cache/*
 coverage/
 __pycache__
 *.pyc
-verify/logs/
+docs/
+verify/
 CLAUDE.md
-vunnix.md
-progress.md
-run.sh
 .idea
 .vscode
 .DS_Store
