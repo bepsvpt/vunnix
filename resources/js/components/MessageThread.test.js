@@ -7,6 +7,7 @@ import MessageBubble from './MessageBubble.vue';
 import MessageComposer from './MessageComposer.vue';
 import ActionPreviewCard from './ActionPreviewCard.vue';
 import PinnedTaskBar from './PinnedTaskBar.vue';
+import ResultCard from './ResultCard.vue';
 import { useConversationsStore } from '@/stores/conversations';
 
 vi.mock('axios');
@@ -269,6 +270,99 @@ describe('MessageThread', () => {
             const bar = wrapper.findComponent(PinnedTaskBar);
             expect(bar.props('tasks')).toHaveLength(1);
             expect(bar.props('tasks')[0].task_id).toBe(42);
+        });
+    });
+
+    describe('result card integration (T70)', () => {
+        it('renders ResultCard for completed results in the conversation', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00Z' },
+            ];
+            store.completedResults.push({
+                task_id: 42,
+                status: 'completed',
+                type: 'feature_dev',
+                title: 'Add payment',
+                mr_iid: 123,
+                issue_iid: null,
+                result_summary: 'Created MR',
+                error_reason: null,
+                result_data: { branch: 'ai/test', target_branch: 'main', files_changed: [] },
+                conversation_id: 'conv-1',
+                project_id: 1,
+                gitlab_url: '',
+            });
+
+            const wrapper = mountThread();
+            expect(wrapper.findComponent(ResultCard).exists()).toBe(true);
+        });
+
+        it('does not render ResultCard when no completed results', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00Z' },
+            ];
+
+            const wrapper = mountThread();
+            expect(wrapper.findComponent(ResultCard).exists()).toBe(false);
+        });
+
+        it('does not render ResultCard for other conversations', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00Z' },
+            ];
+            store.completedResults.push({
+                task_id: 42,
+                status: 'completed',
+                type: 'feature_dev',
+                title: 'Add payment',
+                mr_iid: 123,
+                issue_iid: null,
+                result_summary: 'Created MR',
+                error_reason: null,
+                result_data: {},
+                conversation_id: 'conv-2',
+                project_id: 1,
+                gitlab_url: '',
+            });
+
+            const wrapper = mountThread();
+            expect(wrapper.findComponent(ResultCard).exists()).toBe(false);
+        });
+
+        it('passes correct props to ResultCard', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00Z' },
+            ];
+            store.completedResults.push({
+                task_id: 42,
+                status: 'completed',
+                type: 'feature_dev',
+                title: 'Add payment',
+                mr_iid: 123,
+                issue_iid: null,
+                result_summary: 'Created MR',
+                error_reason: null,
+                result_data: { branch: 'ai/test', target_branch: 'main', files_changed: [{ path: 'foo.php', action: 'created', summary: 'New file' }] },
+                conversation_id: 'conv-1',
+                project_id: 1,
+                gitlab_url: 'https://gitlab.example.com/project',
+            });
+
+            const wrapper = mountThread();
+            const card = wrapper.findComponent(ResultCard);
+            const props = card.props('result');
+            expect(props.task_id).toBe(42);
+            expect(props.status).toBe('completed');
+            expect(props.mr_iid).toBe(123);
+            expect(props.branch).toBe('ai/test');
         });
     });
 

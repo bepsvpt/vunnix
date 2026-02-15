@@ -7,7 +7,27 @@ import TypingIndicator from './TypingIndicator.vue';
 import ToolUseIndicators from './ToolUseIndicators.vue';
 import ActionPreviewCard from './ActionPreviewCard.vue';
 import PinnedTaskBar from './PinnedTaskBar.vue';
+import ResultCard from './ResultCard.vue';
 import MarkdownContent from './MarkdownContent.vue';
+
+function buildResultCardProps(result) {
+    return {
+        task_id: result.task_id,
+        status: result.status,
+        type: result.type,
+        title: result.title,
+        mr_iid: result.mr_iid,
+        issue_iid: result.issue_iid,
+        branch: result.result_data?.branch || null,
+        target_branch: result.result_data?.target_branch || 'main',
+        files_changed: result.result_data?.files_changed || null,
+        result_summary: result.result_summary,
+        error_reason: result.error_reason,
+        screenshot: result.result_data?.screenshot || null,
+        project_id: result.project_id,
+        gitlab_url: result.gitlab_url || '',
+    };
+}
 
 const store = useConversationsStore();
 const scrollContainer = ref(null);
@@ -76,6 +96,15 @@ async function handleSend(content) {
           :key="message.id"
           :message="message"
         />
+
+        <!-- Result cards: completed task results delivered via Reverb (T70) -->
+        <div
+          v-for="result in store.completedResultsForConversation"
+          :key="`result-${result.task_id}`"
+          class="flex w-full justify-start"
+        >
+          <ResultCard :result="buildResultCardProps(result)" />
+        </div>
 
         <!-- Tool-use activity indicators: shows what tools the AI is calling -->
         <ToolUseIndicators

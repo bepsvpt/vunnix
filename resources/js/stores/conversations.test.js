@@ -1381,6 +1381,222 @@ describe('useConversationsStore', () => {
         });
     });
 
+    describe('result card delivery (T70)', () => {
+        it('adds completed result to completedResults when deliverTaskResult is called', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+
+            store.trackTask({
+                task_id: 42,
+                status: 'running',
+                type: 'feature_dev',
+                title: 'Test task',
+                conversation_id: 'conv-1',
+                project_id: 1,
+            });
+
+            store.deliverTaskResult(42, {
+                status: 'completed',
+                type: 'feature_dev',
+                title: 'Test task',
+                mr_iid: 123,
+                issue_iid: null,
+                result_summary: 'Created MR',
+                error_reason: null,
+                result_data: {
+                    branch: 'ai/test',
+                    target_branch: 'main',
+                    files_changed: [{ path: 'foo.php', action: 'created', summary: 'New file' }],
+                },
+                conversation_id: 'conv-1',
+                project_id: 1,
+            });
+
+            expect(store.completedResults.length).toBe(1);
+            expect(store.completedResults[0].task_id).toBe(42);
+            expect(store.completedResults[0].status).toBe('completed');
+        });
+
+        it('appends system context marker message on result delivery', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            store.deliverTaskResult(42, {
+                status: 'completed',
+                type: 'feature_dev',
+                title: 'Test task',
+                mr_iid: 123,
+                issue_iid: null,
+                result_summary: 'Done',
+                error_reason: null,
+                result_data: {},
+                conversation_id: 'conv-1',
+                project_id: 1,
+            });
+
+            expect(store.messages.length).toBe(1);
+            expect(store.messages[0].content).toContain('[System: Task result delivered]');
+            expect(store.messages[0].role).toBe('system');
+        });
+
+        it('completedResultsForConversation only returns results for selected conversation', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+
+            store.completedResults.push(
+                { task_id: 1, conversation_id: 'conv-1', status: 'completed' },
+                { task_id: 2, conversation_id: 'conv-2', status: 'completed' },
+            );
+
+            expect(store.completedResultsForConversation.length).toBe(1);
+            expect(store.completedResultsForConversation[0].task_id).toBe(1);
+        });
+
+        it('delivers result card on terminal Reverb event via subscribeToTask', () => {
+            vi.useFakeTimers();
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            store.trackTask({
+                task_id: 42,
+                status: 'running',
+                type: 'feature_dev',
+                title: 'Payment feature',
+                pipeline_id: 100,
+                pipeline_status: 'running',
+                started_at: '2026-02-15T12:00:00Z',
+                project_id: 1,
+                conversation_id: 'conv-1',
+            });
+
+            store.subscribeToTask(42);
+
+            // Simulate terminal event
+            const callback = mockListenFn.mock.calls[0][1];
+            callback({
+                task_id: 42,
+                status: 'completed',
+                type: 'feature_dev',
+                title: 'Payment feature',
+                mr_iid: 123,
+                issue_iid: null,
+                result_summary: 'Created MR',
+                error_reason: null,
+                result_data: { branch: 'ai/payment', target_branch: 'main', files_changed: [] },
+                conversation_id: 'conv-1',
+                project_id: 1,
+                pipeline_id: 100,
+                pipeline_status: 'success',
+                started_at: '2026-02-15T12:00:00Z',
+            });
+
+            expect(store.completedResults.length).toBe(1);
+            expect(store.completedResults[0].task_id).toBe(42);
+            expect(store.messages.some(m => m.content.includes('[System: Task result delivered]'))).toBe(true);
+
+            vi.useRealTimers();
+        });
+
+        it('hydrates result cards from system messages after fetchMessages', async () => {
+            axios.get
+                .mockResolvedValueOnce({
+                    data: {
+                        data: {
+                            id: 'conv-1',
+                            messages: [
+                                { id: 'msg-1', role: 'user', content: 'Do it', created_at: '2026-02-15T12:00:00Z' },
+                                { id: 'msg-2', role: 'system', content: '[System: Task result delivered] Task #42 "Add payment" completed.', created_at: '2026-02-15T12:01:00Z' },
+                            ],
+                        },
+                    },
+                })
+                .mockResolvedValueOnce({
+                    data: {
+                        data: {
+                            task_id: 42,
+                            status: 'completed',
+                            type: 'feature_dev',
+                            title: 'Add payment',
+                            mr_iid: 123,
+                            issue_iid: null,
+                            project_id: 1,
+                            error_reason: null,
+                            result: {
+                                branch: 'ai/payment',
+                                files_changed: [{ path: 'foo.php', action: 'created', summary: 'New' }],
+                                notes: 'Done',
+                            },
+                        },
+                    },
+                });
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            await store.fetchMessages('conv-1');
+
+            expect(store.completedResults.length).toBe(1);
+            expect(store.completedResults[0].task_id).toBe(42);
+            expect(store.completedResults[0].result_data.branch).toBe('ai/payment');
+        });
+
+        it('does not re-hydrate already-existing result cards', async () => {
+            axios.get
+                .mockResolvedValueOnce({
+                    data: {
+                        data: {
+                            id: 'conv-1',
+                            messages: [
+                                { id: 'msg-2', role: 'system', content: '[System: Task result delivered] Task #42 "Add payment" completed.', created_at: '2026-02-15T12:01:00Z' },
+                            ],
+                        },
+                    },
+                });
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            // Pre-populate completedResults
+            store.completedResults.push({ task_id: 42, conversation_id: 'conv-1', status: 'completed' });
+
+            const callsBefore = axios.get.mock.calls.length;
+            await store.fetchMessages('conv-1');
+
+            // Should only have made one additional call (conversation fetch), not a task view fetch
+            expect(axios.get.mock.calls.length - callsBefore).toBe(1);
+            expect(store.completedResults.length).toBe(1);
+        });
+
+        it('silently skips hydration when task API returns error', async () => {
+            axios.get
+                .mockResolvedValueOnce({
+                    data: {
+                        data: {
+                            id: 'conv-1',
+                            messages: [
+                                { id: 'msg-2', role: 'system', content: '[System: Task result delivered] Task #99 "Deleted task" completed.', created_at: '2026-02-15T12:01:00Z' },
+                            ],
+                        },
+                    },
+                })
+                .mockRejectedValueOnce(new Error('Not found'));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            await store.fetchMessages('conv-1');
+
+            expect(store.completedResults.length).toBe(0);
+        });
+
+        it('$reset clears completedResults', () => {
+            const store = useConversationsStore();
+            store.completedResults.push({ task_id: 1, conversation_id: 'conv-1', status: 'completed' });
+
+            store.$reset();
+            expect(store.completedResults).toEqual([]);
+        });
+    });
+
     describe('action preview state (T68)', () => {
         it('initializes pendingAction as null', () => {
             const store = useConversationsStore();

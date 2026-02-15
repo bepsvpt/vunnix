@@ -36,6 +36,9 @@ export const useConversationsStore = defineStore('conversations', () => {
     // Active task tracking (T69 — pinned task bar)
     const activeTasks = ref(new Map());
 
+    // Completed task results for result cards (T70)
+    const completedResults = ref([]);
+
     const selected = computed(() =>
         conversations.value.find((c) => c.id === selectedId.value) || null
     );
@@ -46,6 +49,12 @@ export const useConversationsStore = defineStore('conversations', () => {
         return [...activeTasks.value.values()].filter(
             (t) => t.conversation_id === selectedId.value && !isTerminalStatus(t.status)
         );
+    });
+
+    // T70: Completed results for the currently selected conversation
+    const completedResultsForConversation = computed(() => {
+        if (!selectedId.value) return [];
+        return completedResults.value.filter(r => r.conversation_id === selectedId.value);
     });
 
     function isTerminalStatus(status) {
@@ -69,6 +78,36 @@ export const useConversationsStore = defineStore('conversations', () => {
         const updated = new Map(activeTasks.value);
         updated.delete(taskId);
         activeTasks.value = updated;
+    }
+
+    /**
+     * T70: Deliver a completed/failed task result for rendering as a ResultCard.
+     * Called on terminal Reverb events. Adds to completedResults and appends
+     * a system context marker message so the AI sees the status change.
+     */
+    function deliverTaskResult(taskId, eventData) {
+        completedResults.value.push({
+            task_id: taskId,
+            status: eventData.status,
+            type: eventData.type,
+            title: eventData.title,
+            mr_iid: eventData.mr_iid,
+            issue_iid: eventData.issue_iid,
+            result_summary: eventData.result_summary,
+            error_reason: eventData.error_reason,
+            result_data: eventData.result_data || {},
+            conversation_id: eventData.conversation_id,
+            project_id: eventData.project_id,
+            gitlab_url: '',
+        });
+
+        // Append system context marker message
+        messages.value.push({
+            id: `system-result-${taskId}-${Date.now()}`,
+            role: 'system',
+            content: `[System: Task result delivered] Task #${taskId} "${eventData.title}" ${eventData.status}.`,
+            created_at: new Date().toISOString(),
+        });
     }
 
     /**
@@ -121,8 +160,9 @@ export const useConversationsStore = defineStore('conversations', () => {
                 result_summary: event.result_summary,
             });
 
-            // If terminal, schedule removal after brief delay
+            // If terminal, deliver result card and schedule cleanup
             if (['completed', 'failed', 'superseded'].includes(event.status)) {
+                deliverTaskResult(event.task_id, event);
                 setTimeout(() => {
                     removeTask(event.task_id);
                     unsubscribeFromTask(event.task_id);
@@ -223,6 +263,7 @@ export const useConversationsStore = defineStore('conversations', () => {
 
     /**
      * Fetch messages for a conversation by loading its detail.
+     * After loading, hydrates result cards from persisted system messages (T70).
      */
     async function fetchMessages(conversationId) {
         messagesLoading.value = true;
@@ -230,11 +271,57 @@ export const useConversationsStore = defineStore('conversations', () => {
         try {
             const response = await axios.get(`/api/v1/conversations/${conversationId}`);
             messages.value = response.data.data.messages || [];
+            await hydrateResultCards();
         } catch (err) {
             messagesError.value = err.response?.data?.message || 'Failed to load messages';
             messages.value = [];
         } finally {
             messagesLoading.value = false;
+        }
+    }
+
+    /**
+     * T70: Parse system result messages and fetch task result data for result cards.
+     * Called after fetchMessages to hydrate result cards from persisted messages.
+     */
+    async function hydrateResultCards() {
+        const systemResultMessages = messages.value.filter(
+            (m) => m.role === 'system' && m.content.includes('[System: Task result delivered]')
+        );
+
+        for (const msg of systemResultMessages) {
+            const match = msg.content.match(/Task #(\d+)/);
+            if (!match) continue;
+            const taskId = parseInt(match[1], 10);
+
+            // Skip if already hydrated
+            if (completedResults.value.some((r) => r.task_id === taskId)) continue;
+
+            try {
+                const response = await axios.get(`/api/v1/tasks/${taskId}/view`);
+                const data = response.data.data;
+                completedResults.value.push({
+                    task_id: data.task_id,
+                    status: data.status,
+                    type: data.type,
+                    title: data.title,
+                    mr_iid: data.mr_iid,
+                    issue_iid: data.issue_iid,
+                    result_summary: data.result?.notes || data.result?.summary || null,
+                    error_reason: data.error_reason,
+                    result_data: {
+                        branch: data.result?.branch || null,
+                        target_branch: data.result?.target_branch || 'main',
+                        files_changed: data.result?.files_changed || null,
+                        screenshot: data.result?.screenshot || null,
+                    },
+                    conversation_id: selectedId.value,
+                    project_id: data.project_id,
+                    gitlab_url: '',
+                });
+            } catch {
+                // Task may have been deleted or user lost access — skip silently
+            }
         }
     }
 
@@ -477,6 +564,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         pendingAction.value = null;
         activeTasks.value = new Map();
         taskSubscriptions.value = new Set();
+        completedResults.value = [];
     }
 
     return {
@@ -500,9 +588,12 @@ export const useConversationsStore = defineStore('conversations', () => {
         pendingAction,
         activeTasks,
         activeTasksForConversation,
+        completedResults,
+        completedResultsForConversation,
         trackTask,
         updateTaskStatus,
         removeTask,
+        deliverTaskResult,
         parseTaskDispatchMessage,
         subscribeToTask,
         unsubscribeFromTask,
@@ -514,6 +605,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         setShowArchived,
         selectConversation,
         fetchMessages,
+        hydrateResultCards,
         sendMessage,
         streamMessage,
         confirmAction,
