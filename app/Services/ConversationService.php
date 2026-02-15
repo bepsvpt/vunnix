@@ -104,6 +104,15 @@ class ConversationService
     public function streamResponse(Conversation $conversation, User $user, string $content): StreamableAgentResponse
     {
         $agent = VunnixAgent::make();
+
+        // Inject project context for per-project config (T93: PRD template)
+        if ($conversation->project_id) {
+            $project = Project::find($conversation->project_id);
+            if ($project) {
+                $agent->setProject($project);
+            }
+        }
+
         $agent->continue($conversation->id, $user);
 
         return $agent->stream($content);

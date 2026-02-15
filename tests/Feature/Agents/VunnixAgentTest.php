@@ -6,6 +6,7 @@ use App\Models\GlobalSetting;
 use App\Models\Message;
 use App\Models\Permission;
 use App\Models\Project;
+use App\Models\ProjectConfig;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -567,6 +568,61 @@ it('explains permission denial when user lacks chat.dispatch_task', function () 
     VunnixAgent::assertPrompted(
         fn ($prompt) => str_contains($prompt->prompt, 'create an issue')
     );
+});
+
+// ─── System Prompt Dynamic Behavior ─────────────────────────────
+
+// ─── PRD Template Configuration (T93) ───────────────────────────
+
+it('uses default PRD template when no override exists', function () {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('[PRD Output Template]')
+        ->and($instructions)->toContain('## Problem')
+        ->and($instructions)->toContain('## Proposed Solution');
+});
+
+it('uses project-level PRD template when set', function () {
+    $project = Project::factory()->create();
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'settings' => ['prd_template' => '# Custom PRD\n\n## Requirements\nList requirements here.'],
+    ]);
+
+    $agent = new VunnixAgent;
+    $agent->setProject($project);
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('# Custom PRD')
+        ->and($instructions)->toContain('## Requirements')
+        ->and($instructions)->not->toContain('## Proposed Solution');
+});
+
+it('uses global PRD template when set and no project override', function () {
+    GlobalSetting::set('prd_template', '# Global PRD\n\n## Business Case', 'string');
+
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('# Global PRD')
+        ->and($instructions)->toContain('## Business Case');
+});
+
+it('project PRD template takes precedence over global', function () {
+    $project = Project::factory()->create();
+    GlobalSetting::set('prd_template', '# Global PRD', 'string');
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'settings' => ['prd_template' => '# Project PRD'],
+    ]);
+
+    $agent = new VunnixAgent;
+    $agent->setProject($project);
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('# Project PRD')
+        ->and($instructions)->not->toContain('# Global PRD');
 });
 
 // ─── System Prompt Dynamic Behavior ─────────────────────────────

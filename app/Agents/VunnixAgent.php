@@ -13,6 +13,8 @@ use App\Agents\Tools\ReadMergeRequest;
 use App\Agents\Tools\ReadMRDiff;
 use App\Agents\Tools\SearchCode;
 use App\Models\GlobalSetting;
+use App\Models\Project;
+use App\Services\ProjectConfigService;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
@@ -44,6 +46,17 @@ class VunnixAgent implements Agent, Conversational, HasTools, HasMiddleware
      * When set, these replace the full conversation history for the API call.
      */
     protected ?array $prunedMessages = null;
+
+    /**
+     * The project context for per-project config (e.g., PRD template).
+     * Set by ConversationService before streaming.
+     */
+    protected ?Project $project = null;
+
+    public function setProject(Project $project): void
+    {
+        $this->project = $project;
+    }
 
     /**
      * Model ID mapping from GlobalSetting ai_model values to Anthropic model IDs.
@@ -222,35 +235,15 @@ PROMPT;
 
     protected function prdTemplateSection(): string
     {
-        return <<<'PROMPT'
+        $template = $this->resolveTemplate();
+
+        return <<<PROMPT
 [PRD Output Template]
 When a Product Manager is planning a feature, guide the conversation toward filling this standardized PRD template. Fill sections progressively as the conversation develops — not as a one-shot dump. Update and refine sections as the PM provides more detail.
 
-**Default template:**
+**Template:**
 
-# [Feature Title]
-
-## Problem
-What problem does this solve? Who is affected?
-
-## Proposed Solution
-High-level description of the feature.
-
-## User Stories
-- As a [role], I want [action] so that [benefit]
-
-## Acceptance Criteria
-- [ ] Criterion 1
-- [ ] Criterion 2
-
-## Out of Scope
-What this feature does NOT include.
-
-## Technical Notes
-Architecture considerations, dependencies, related existing code.
-
-## Open Questions
-Unresolved items from the conversation.
+{$template}
 
 **Progressive filling rules:**
 1. Start by understanding the Problem — ask clarifying questions until the problem is concrete.
@@ -263,6 +256,27 @@ Unresolved items from the conversation.
 **Completion:**
 When the PM confirms the PRD is ready, use the `create_issue` action type via DispatchAction to create the complete PRD as a GitLab Issue. The Issue description should contain the full template with all sections filled.
 PROMPT;
+    }
+
+    /**
+     * Resolve PRD template: project config → global setting → hardcoded default.
+     */
+    protected function resolveTemplate(): string
+    {
+        if ($this->project) {
+            $configService = app(ProjectConfigService::class);
+            $projectTemplate = $configService->get($this->project, 'prd_template');
+            if ($projectTemplate !== null) {
+                return $projectTemplate;
+            }
+        }
+
+        $globalTemplate = GlobalSetting::get('prd_template');
+        if ($globalTemplate !== null) {
+            return $globalTemplate;
+        }
+
+        return GlobalSetting::defaultPrdTemplate();
     }
 
     protected function actionDispatchSection(): string
