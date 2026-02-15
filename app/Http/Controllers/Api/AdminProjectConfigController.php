@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateProjectConfigRequest;
 use App\Http\Resources\ProjectConfigResource;
 use App\Models\Project;
+use App\Services\AuditLogService;
 use App\Services\ProjectConfigService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class AdminProjectConfigController extends Controller
 {
@@ -34,7 +36,27 @@ class AdminProjectConfigController extends Controller
     {
         $this->authorizeAdmin($request);
 
-        $this->configService->bulkSet($project, $request->validated()['settings']);
+        $oldSettings = $project->projectConfig?->settings ?? [];
+        $overrides = $request->validated()['settings'];
+
+        $this->configService->bulkSet($project, $overrides);
+
+        foreach ($overrides as $key => $value) {
+            $oldValue = Arr::get($oldSettings, $key);
+            if ($oldValue !== $value) {
+                try {
+                    app(AuditLogService::class)->logConfigurationChange(
+                        userId: $request->user()->id,
+                        key: $key,
+                        oldValue: $oldValue,
+                        newValue: $value,
+                        projectId: $project->id,
+                    );
+                } catch (\Throwable) {
+                    // Audit logging should never break config update
+                }
+            }
+        }
 
         $project->load('projectConfig');
         $config = $project->projectConfig;
