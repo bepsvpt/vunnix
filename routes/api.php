@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AdminProjectController;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminProjectConfigController;
 use App\Http\Controllers\Api\AdminSettingsController;
+use App\Http\Controllers\Api\PrdTemplateController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DashboardOverviewController;
 use App\Http\Controllers\Api\DashboardDesignerActivityController;
@@ -136,6 +137,16 @@ Route::prefix('v1')->group(function () {
             ->name('api.admin.projects.config.show');
         Route::put('/admin/projects/{project}/config', [AdminProjectConfigController::class, 'update'])
             ->name('api.admin.projects.config.update');
+
+        // PRD template management (T93)
+        Route::get('/admin/projects/{project}/prd-template', [PrdTemplateController::class, 'showProject'])
+            ->name('api.admin.projects.prd-template.show');
+        Route::put('/admin/projects/{project}/prd-template', [PrdTemplateController::class, 'updateProject'])
+            ->name('api.admin.projects.prd-template.update');
+        Route::get('/admin/prd-template', [PrdTemplateController::class, 'showGlobal'])
+            ->name('api.admin.prd-template.show');
+        Route::put('/admin/prd-template', [PrdTemplateController::class, 'updateGlobal'])
+            ->name('api.admin.prd-template.update');
     });
 
 });
