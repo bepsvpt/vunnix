@@ -10,7 +10,9 @@ use App\Models\User;
 use App\Observers\TaskObserver;
 use App\Policies\ConversationPolicy;
 use App\Services\TaskTokenService;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -46,6 +48,20 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Conversation::class, ConversationPolicy::class);
 
         $this->registerPermissionGates();
+        $this->registerRateLimiters();
+    }
+
+    /**
+     * Register API key rate limiter (per-key, 60 req/min).
+     */
+    private function registerRateLimiters(): void
+    {
+        RateLimiter::for('api_key', function (\Illuminate\Http\Request $request) {
+            $bearer = $request->bearerToken();
+            $keyHash = $bearer ? hash('sha256', $bearer) : $request->ip();
+
+            return Limit::perMinute(60)->by('api_key:' . $keyHash);
+        });
     }
 
     /**
