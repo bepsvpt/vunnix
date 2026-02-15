@@ -18,6 +18,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const cost = ref(null);
     const costLoading = ref(false);
     const costAlerts = ref([]);
+    const infrastructureAlerts = ref([]);
+    const infrastructureStatus = ref(null);
     const overrelianceAlerts = ref([]);
     const adoption = ref(null);
     const adoptionLoading = ref(false);
@@ -191,6 +193,20 @@ export const useDashboardStore = defineStore('dashboard', () => {
         }
     }
 
+    async function fetchInfrastructureAlerts() {
+        try {
+            const response = await axios.get('/api/v1/dashboard/infrastructure-alerts');
+            infrastructureAlerts.value = response.data.data;
+            // Derive overall status from active alerts
+            infrastructureStatus.value = {
+                overall_status: infrastructureAlerts.value.length > 0 ? 'degraded' : 'healthy',
+                active_alerts_count: infrastructureAlerts.value.length,
+            };
+        } catch (e) {
+            // Supplementary — don't block dashboard
+        }
+    }
+
     async function fetchOverrelianceAlerts() {
         try {
             const response = await axios.get('/api/v1/dashboard/overreliance-alerts');
@@ -226,6 +242,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         cost.value = null;
         costLoading.value = false;
         costAlerts.value = [];
+        infrastructureAlerts.value = [];
+        infrastructureStatus.value = null;
         overrelianceAlerts.value = [];
         adoption.value = null;
         adoptionLoading.value = false;
@@ -253,6 +271,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         cost,
         costLoading,
         costAlerts,
+        infrastructureAlerts,
+        infrastructureStatus,
         overrelianceAlerts,
         adoption,
         adoptionLoading,
@@ -274,6 +294,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         fetchEfficiency,
         fetchCost,
         fetchCostAlerts,
+        fetchInfrastructureAlerts,
         fetchPromptVersions,
         fetchOverrelianceAlerts,
         fetchAdoption,

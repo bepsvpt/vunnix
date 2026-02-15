@@ -597,3 +597,60 @@ it('sends cost alert notification', function () {
             && str_contains($request['text'], '$50.00');
     });
 });
+
+// ─── T104 Integration: Queue Depth Alert Lifecycle ──────────────
+
+it('T104 integration: queue depth alert → dashboard + chat → recovery', function () {
+    config(['vunnix.queue_depth_threshold' => 50]);
+
+    $project = Project::factory()->enabled()->create();
+
+    // Create 51 queued tasks to exceed the threshold
+    for ($i = 0; $i < 51; $i++) {
+        Task::factory()->create([
+            'project_id' => $project->id,
+            'status' => TaskStatus::Queued,
+        ]);
+    }
+
+    $service = app(AlertEventService::class);
+
+    // Phase 1: Queue depth exceeds threshold → alert fires
+    $alert = $service->evaluateQueueDepth();
+
+    expect($alert)->not->toBeNull();
+    expect($alert->alert_type)->toBe('queue_depth');
+    expect($alert->status)->toBe('active');
+    expect($alert->severity)->toBe('medium');
+    expect($alert->notified_at)->not->toBeNull();
+
+    // Alert should be visible via dashboard query
+    $activeAlerts = AlertEvent::active()->ofType('queue_depth')->get();
+    expect($activeAlerts)->toHaveCount(1);
+
+    // Phase 2: Drain queue — mark all tasks as completed
+    Task::where('status', TaskStatus::Queued->value)->update([
+        'status' => TaskStatus::Completed->value,
+        'completed_at' => now(),
+    ]);
+
+    // Re-evaluate — should resolve the alert
+    $resolved = $service->evaluateQueueDepth();
+
+    expect($resolved)->not->toBeNull();
+    expect($resolved->status)->toBe('resolved');
+    expect($resolved->resolved_at)->not->toBeNull();
+    expect($resolved->recovery_notified_at)->not->toBeNull();
+
+    // No more active queue_depth alerts
+    $remainingActive = AlertEvent::active()->ofType('queue_depth')->get();
+    expect($remainingActive)->toHaveCount(0);
+
+    // Verify exactly 2 notifications sent (alert + recovery)
+    $chatRequests = Http::recorded(function ($request) {
+        $text = $request['text'] ?? '';
+
+        return str_contains($text, 'Queue depth') || str_contains($text, 'resolved');
+    });
+    expect($chatRequests)->toHaveCount(2);
+});

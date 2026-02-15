@@ -10,6 +10,7 @@ import DashboardPMActivity from '@/components/DashboardPMActivity.vue';
 import DashboardDesignerActivity from '@/components/DashboardDesignerActivity.vue';
 import DashboardEfficiency from '@/components/DashboardEfficiency.vue';
 import DashboardCost from '@/components/DashboardCost.vue';
+import DashboardInfrastructure from '@/components/DashboardInfrastructure.vue';
 import DashboardAdoption from '@/components/DashboardAdoption.vue';
 
 const auth = useAuthStore();
@@ -32,6 +33,7 @@ const views = computed(() => {
     const v = [...baseViews];
     if (auth.hasPermission('admin.global_config')) {
         v.push({ key: 'cost', label: 'Cost' });
+        v.push({ key: 'infrastructure', label: 'Infrastructure' });
     }
     v.push({ key: 'activity', label: 'Activity' });
     return v;
@@ -80,6 +82,7 @@ watch(() => dashboard.metricsUpdates.length, () => {
     <DashboardDesignerActivity v-else-if="activeView === 'designer-activity'" />
     <DashboardEfficiency v-else-if="activeView === 'efficiency'" />
     <DashboardCost v-else-if="activeView === 'cost'" />
+    <DashboardInfrastructure v-else-if="activeView === 'infrastructure'" />
     <DashboardAdoption v-else-if="activeView === 'adoption'" />
     <ActivityFeed v-else-if="activeView === 'activity'" />
   </div>

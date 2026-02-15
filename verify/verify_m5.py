@@ -1529,6 +1529,139 @@ checker.check(
 )
 
 # ============================================================
+#  T104: Infrastructure Monitoring Alerts
+# ============================================================
+section("T104: Infrastructure Monitoring Alerts")
+
+# AlertEventService — new evaluate methods
+checker.check(
+    "AlertEventService has evaluateContainerHealth",
+    file_contains("app/Services/AlertEventService.php", "evaluateContainerHealth"),
+)
+checker.check(
+    "AlertEventService has evaluateCpuUsage",
+    file_contains("app/Services/AlertEventService.php", "evaluateCpuUsage"),
+)
+checker.check(
+    "AlertEventService has evaluateMemoryUsage",
+    file_contains("app/Services/AlertEventService.php", "evaluateMemoryUsage"),
+)
+
+# evaluateAll registers all 3 new types
+checker.check(
+    "evaluateAll includes container_health check",
+    file_contains("app/Services/AlertEventService.php", "'container_health'"),
+)
+checker.check(
+    "evaluateAll includes cpu_usage check",
+    file_contains("app/Services/AlertEventService.php", "'cpu_usage'"),
+)
+checker.check(
+    "evaluateAll includes memory_usage check",
+    file_contains("app/Services/AlertEventService.php", "'memory_usage'"),
+)
+
+# InfrastructureAlertController
+checker.check(
+    "InfrastructureAlertController exists",
+    file_exists("app/Http/Controllers/Api/InfrastructureAlertController.php"),
+)
+checker.check(
+    "InfrastructureAlertController has index method",
+    file_contains("app/Http/Controllers/Api/InfrastructureAlertController.php", "function index"),
+)
+checker.check(
+    "InfrastructureAlertController has acknowledge method",
+    file_contains("app/Http/Controllers/Api/InfrastructureAlertController.php", "function acknowledge"),
+)
+
+# Routes
+checker.check(
+    "Infrastructure alerts index route registered",
+    file_contains("routes/api.php", "infrastructure-alerts"),
+)
+checker.check(
+    "Infrastructure alerts acknowledge route registered",
+    file_contains("routes/api.php", "infrastructure-alerts/{alertEvent}/acknowledge"),
+)
+
+# DashboardInfrastructure Vue component
+checker.check(
+    "DashboardInfrastructure.vue exists",
+    file_exists("resources/js/components/DashboardInfrastructure.vue"),
+)
+checker.check(
+    "DashboardInfrastructure has infra-status-banner test ID",
+    file_contains("resources/js/components/DashboardInfrastructure.vue", "infra-status-banner"),
+)
+checker.check(
+    "DashboardInfrastructure has infra-checks-grid test ID",
+    file_contains("resources/js/components/DashboardInfrastructure.vue", "infra-checks-grid"),
+)
+checker.check(
+    "DashboardInfrastructure has infra-alerts test ID",
+    file_contains("resources/js/components/DashboardInfrastructure.vue", "infra-alerts"),
+)
+
+# DashboardPage integration
+checker.check(
+    "DashboardPage imports DashboardInfrastructure",
+    file_contains("resources/js/pages/DashboardPage.vue", "DashboardInfrastructure"),
+)
+checker.check(
+    "DashboardPage has infrastructure tab",
+    file_contains("resources/js/pages/DashboardPage.vue", "infrastructure"),
+)
+
+# Dashboard store — fetch methods
+checker.check(
+    "Dashboard store has fetchInfrastructureAlerts",
+    file_contains("resources/js/stores/dashboard.js", "fetchInfrastructureAlerts"),
+)
+checker.check(
+    "Dashboard store has infrastructureAlerts ref",
+    file_contains("resources/js/stores/dashboard.js", "infrastructureAlerts"),
+)
+checker.check(
+    "Dashboard store has infrastructureStatus ref",
+    file_contains("resources/js/stores/dashboard.js", "infrastructureStatus"),
+)
+
+# Admin store — acknowledge
+checker.check(
+    "Admin store has acknowledgeInfrastructureAlert",
+    file_contains("resources/js/stores/admin.js", "acknowledgeInfrastructureAlert"),
+)
+
+# Scheduler (EvaluateSystemAlerts already covers this)
+checker.check(
+    "EvaluateSystemAlerts command exists",
+    file_exists("app/Console/Commands/EvaluateSystemAlerts.php"),
+)
+
+# Tests
+checker.check(
+    "Container health test exists",
+    file_contains("tests/Feature/Services/AlertEventServiceTest.php", "container health"),
+)
+checker.check(
+    "CPU usage test exists",
+    file_contains("tests/Feature/Services/AlertEventServiceTest.php", "CPU"),
+)
+checker.check(
+    "Memory usage test exists",
+    file_contains("tests/Feature/Services/AlertEventServiceTest.php", "memory"),
+)
+checker.check(
+    "T104 integration test exists",
+    file_contains("tests/Feature/Services/AlertEventServiceTest.php", "T104 integration"),
+)
+checker.check(
+    "InfrastructureAlertController test exists",
+    file_exists("tests/Feature/Http/Controllers/Api/InfrastructureAlertControllerTest.php"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()

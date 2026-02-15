@@ -365,6 +365,16 @@ export const useAdminStore = defineStore('admin', () => {
         }
     }
 
+    // ─── Infrastructure alerts (T104) ──────────────────────────────
+    async function acknowledgeInfrastructureAlert(alertId) {
+        try {
+            await axios.patch(`/api/v1/dashboard/infrastructure-alerts/${alertId}/acknowledge`);
+            return { success: true };
+        } catch (e) {
+            return { success: false, error: e.response?.data?.error || 'Failed to acknowledge alert.' };
+        }
+    }
+
     // ─── Dead letter queue (T97) ─────────────────────────────────
     const deadLetterEntries = ref([]);
     const deadLetterLoading = ref(false);
@@ -481,6 +491,8 @@ export const useAdminStore = defineStore('admin', () => {
         overrelianceAlertsError,
         fetchOverrelianceAlerts,
         acknowledgeOverrelianceAlert,
+        // Infrastructure alerts (T104)
+        acknowledgeInfrastructureAlert,
         // Dead letter queue (T97)
         deadLetterEntries,
         deadLetterLoading,
