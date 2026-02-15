@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminProjectConfigController;
 use App\Http\Controllers\Api\AdminSettingsController;
 use App\Http\Controllers\Api\CostAlertController;
+use App\Http\Controllers\Api\OverrelianceAlertController;
 use App\Http\Controllers\Api\PrdTemplateController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DashboardOverviewController;
@@ -144,6 +145,12 @@ Route::prefix('v1')->group(function () {
             ->name('api.dashboard.cost-alerts.index');
         Route::patch('/dashboard/cost-alerts/{costAlert}/acknowledge', [CostAlertController::class, 'acknowledge'])
             ->name('api.dashboard.cost-alerts.acknowledge');
+
+        // Over-reliance alert management (T95) — admin-only via RBAC
+        Route::get('/dashboard/overreliance-alerts', [OverrelianceAlertController::class, 'index'])
+            ->name('api.dashboard.overreliance-alerts.index');
+        Route::patch('/dashboard/overreliance-alerts/{overrelianceAlert}/acknowledge', [OverrelianceAlertController::class, 'acknowledge'])
+            ->name('api.dashboard.overreliance-alerts.acknowledge');
 
         // PRD template management (T93)
         Route::get('/admin/projects/{project}/prd-template', [PrdTemplateController::class, 'showProject'])
