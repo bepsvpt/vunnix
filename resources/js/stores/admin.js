@@ -322,6 +322,34 @@ export const useAdminStore = defineStore('admin', () => {
         }
     }
 
+    // ─── Over-reliance alerts (T95) ──────────────────────────────
+    const overrelianceAlerts = ref([]);
+    const overrelianceAlertsLoading = ref(false);
+    const overrelianceAlertsError = ref(null);
+
+    async function fetchOverrelianceAlerts() {
+        overrelianceAlertsLoading.value = true;
+        overrelianceAlertsError.value = null;
+        try {
+            const { data } = await axios.get('/api/v1/dashboard/overreliance-alerts');
+            overrelianceAlerts.value = data.data;
+        } catch (e) {
+            overrelianceAlertsError.value = 'Failed to load over-reliance alerts.';
+        } finally {
+            overrelianceAlertsLoading.value = false;
+        }
+    }
+
+    async function acknowledgeOverrelianceAlert(alertId) {
+        try {
+            await axios.patch(`/api/v1/dashboard/overreliance-alerts/${alertId}/acknowledge`);
+            overrelianceAlerts.value = overrelianceAlerts.value.filter((a) => a.id !== alertId);
+            return { success: true };
+        } catch (e) {
+            return { success: false, error: e.response?.data?.error || 'Failed to acknowledge alert.' };
+        }
+    }
+
     return {
         projects,
         loading,
@@ -375,5 +403,11 @@ export const useAdminStore = defineStore('admin', () => {
         costAlertsError,
         fetchCostAlerts,
         acknowledgeCostAlert,
+        // Over-reliance alerts (T95)
+        overrelianceAlerts,
+        overrelianceAlertsLoading,
+        overrelianceAlertsError,
+        fetchOverrelianceAlerts,
+        acknowledgeOverrelianceAlert,
     };
 });

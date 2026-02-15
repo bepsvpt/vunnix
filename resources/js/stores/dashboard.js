@@ -18,6 +18,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const cost = ref(null);
     const costLoading = ref(false);
     const costAlerts = ref([]);
+    const overrelianceAlerts = ref([]);
     const adoption = ref(null);
     const adoptionLoading = ref(false);
     const isLoading = ref(false);
@@ -175,6 +176,15 @@ export const useDashboardStore = defineStore('dashboard', () => {
         }
     }
 
+    async function fetchOverrelianceAlerts() {
+        try {
+            const response = await axios.get('/api/v1/dashboard/overreliance-alerts');
+            overrelianceAlerts.value = response.data.data;
+        } catch (e) {
+            // Supplementary — don't block dashboard
+        }
+    }
+
     async function fetchAdoption() {
         adoptionLoading.value = true;
         try {
@@ -201,6 +211,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         cost.value = null;
         costLoading.value = false;
         costAlerts.value = [];
+        overrelianceAlerts.value = [];
         adoption.value = null;
         adoptionLoading.value = false;
         activeFilter.value = null;
@@ -225,6 +236,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         cost,
         costLoading,
         costAlerts,
+        overrelianceAlerts,
         adoption,
         adoptionLoading,
         activeFilter,
@@ -243,6 +255,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         fetchEfficiency,
         fetchCost,
         fetchCostAlerts,
+        fetchOverrelianceAlerts,
         fetchAdoption,
         loadMore,
         $reset,
