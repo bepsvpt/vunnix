@@ -26,6 +26,7 @@ class TaskDispatcher
         private readonly GitLabClient $gitLabClient,
         private readonly StrategyResolver $strategyResolver,
         private readonly TaskTokenService $taskTokenService,
+        private readonly VunnixTomlService $vunnixTomlService,
     ) {}
 
     /**
@@ -98,6 +99,18 @@ class TaskDispatcher
         $task->result = array_merge($task->result ?? [], [
             'strategy' => $strategy->value,
         ]);
+
+        // T92: Read optional .vunnix.toml from repo
+        $fileConfig = $this->vunnixTomlService->read(
+            $task->project->gitlab_project_id,
+            $task->commit_sha ?? 'main',
+        );
+
+        if (! empty($fileConfig)) {
+            $task->result = array_merge($task->result ?? [], [
+                'file_config' => $fileConfig,
+            ]);
+        }
 
         // Look up the CI trigger token from project config
         $triggerToken = $task->project->projectConfig?->ci_trigger_token;

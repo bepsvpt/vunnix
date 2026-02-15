@@ -583,3 +583,94 @@ it('dispatches ProcessTaskResult for server-side PrdCreation tasks', function ()
         return $job->taskId === $task->id;
     });
 });
+
+// ─── T92: .vunnix.toml file config ──────────────────────────────
+
+it('reads .vunnix.toml from repo and stores file_config in task result', function () {
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    $tomlContent = base64_encode("[general]\nmodel = \"sonnet\"\n\n[code_review]\nauto_review = false");
+
+    Http::fake([
+        '*/api/v4/projects/100/repository/files/.vunnix.toml*' => Http::response([
+            'content' => $tomlContent,
+            'encoding' => 'base64',
+        ]),
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::FeatureDev,
+        'project_id' => $project->id,
+        'mr_iid' => null,
+        'issue_iid' => 5,
+        'commit_sha' => 'abc123',
+    ]);
+
+    $dispatcher = app(TaskDispatcher::class);
+    $dispatcher->dispatch($task);
+
+    $task->refresh();
+
+    expect($task->result['file_config'])->toBe([
+        'ai_model' => 'sonnet',
+        'code_review.auto_review' => false,
+    ]);
+});
+
+it('gracefully handles missing .vunnix.toml (404)', function () {
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/repository/files/.vunnix.toml*' => Http::response(['message' => '404 File Not Found'], 404),
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::FeatureDev,
+        'project_id' => $project->id,
+        'mr_iid' => null,
+        'issue_iid' => 5,
+    ]);
+
+    $dispatcher = app(TaskDispatcher::class);
+    $dispatcher->dispatch($task);
+
+    $task->refresh();
+
+    expect($task->status)->toBe(TaskStatus::Running)
+        ->and($task->result)->not->toHaveKey('file_config');
+});
+
+it('does not read .vunnix.toml for server-side tasks', function () {
+    Queue::fake([\App\Jobs\ProcessTaskResult::class]);
+    Http::fake();
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::PrdCreation,
+        'mr_iid' => null,
+        'issue_iid' => 10,
+    ]);
+
+    $dispatcher = app(TaskDispatcher::class);
+    $dispatcher->dispatch($task);
+
+    // Server-side tasks don't trigger GitLab file reads
+    Http::assertNotSent(function ($request) {
+        return str_contains($request->url(), '.vunnix.toml');
+    });
+});
