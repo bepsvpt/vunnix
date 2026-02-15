@@ -176,6 +176,71 @@ checker.check(
 )
 
 # ============================================================
+#  T75: Dashboard — activity feed
+# ============================================================
+section("T75: Dashboard — Activity Feed")
+
+# Backend
+checker.check(
+    "ActivityResource exists",
+    file_exists("app/Http/Resources/ActivityResource.php"),
+)
+checker.check(
+    "ActivityController exists",
+    file_exists("app/Http/Controllers/Api/ActivityController.php"),
+)
+checker.check(
+    "ActivityController uses cursor pagination",
+    file_contains("app/Http/Controllers/Api/ActivityController.php", "cursorPaginate"),
+)
+checker.check(
+    "Activity route registered",
+    file_contains("routes/api.php", "/activity"),
+)
+checker.check(
+    "Activity API test exists",
+    file_exists("tests/Feature/ActivityFeedApiTest.php"),
+)
+
+# Frontend
+checker.check(
+    "ActivityFeed component exists",
+    file_exists("resources/js/components/ActivityFeed.vue"),
+)
+checker.check(
+    "ActivityFeedItem component exists",
+    file_exists("resources/js/components/ActivityFeedItem.vue"),
+)
+checker.check(
+    "ActivityFeed has filter tabs",
+    file_contains("resources/js/components/ActivityFeed.vue", "filter-tab"),
+)
+checker.check(
+    "Dashboard store has fetchActivity",
+    file_contains("resources/js/stores/dashboard.js", "fetchActivity"),
+)
+checker.check(
+    "Dashboard store has loadMore",
+    file_contains("resources/js/stores/dashboard.js", "loadMore"),
+)
+checker.check(
+    "DashboardPage imports ActivityFeed",
+    file_contains("resources/js/pages/DashboardPage.vue", "ActivityFeed"),
+)
+checker.check(
+    "DashboardPage calls fetchActivity on mount",
+    file_contains("resources/js/pages/DashboardPage.vue", "fetchActivity"),
+)
+checker.check(
+    "ActivityFeed test exists",
+    file_exists("resources/js/components/ActivityFeed.test.js"),
+)
+checker.check(
+    "ActivityFeedItem test exists",
+    file_exists("resources/js/components/ActivityFeedItem.test.js"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
