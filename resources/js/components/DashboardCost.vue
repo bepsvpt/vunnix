@@ -1,14 +1,35 @@
 <script setup>
 import { computed, onMounted } from 'vue';
 import { useDashboardStore } from '@/stores/dashboard';
+import { useAdminStore } from '@/stores/admin';
 
 const dashboard = useDashboardStore();
+const admin = useAdminStore();
 
 onMounted(() => {
     dashboard.fetchCost();
+    dashboard.fetchCostAlerts();
 });
 
 const cost = computed(() => dashboard.cost);
+const costAlerts = computed(() => dashboard.costAlerts);
+
+const severityColors = {
+    critical: 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200',
+    warning: 'bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200',
+};
+
+const ruleLabels = {
+    monthly_anomaly: 'Monthly Anomaly',
+    daily_spike: 'Daily Spike',
+    single_task_outlier: 'Single Task Outlier',
+    approaching_projection: 'Approaching Projection',
+};
+
+async function handleAcknowledge(alertId) {
+    await admin.acknowledgeCostAlert(alertId);
+    dashboard.fetchCostAlerts();
+}
 
 const typeLabels = {
     code_review: 'Code Review',
@@ -77,6 +98,32 @@ const monthlyTrend = computed(() => {
 
     <!-- Cost data -->
     <div v-else-if="cost" class="space-y-6">
+      <!-- Active cost alerts (T94) -->
+      <div v-if="costAlerts.length > 0" data-testid="cost-alerts">
+        <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">Active Alerts</h3>
+        <div class="space-y-2">
+          <div
+            v-for="alert in costAlerts"
+            :key="alert.id"
+            :data-testid="`cost-alert-${alert.id}`"
+            :class="['rounded-lg border p-3 flex items-start justify-between', severityColors[alert.severity] || severityColors.warning]"
+          >
+            <div>
+              <span class="text-xs font-semibold uppercase">{{ ruleLabels[alert.rule] || alert.rule }}</span>
+              <p class="text-sm mt-0.5">{{ alert.message }}</p>
+              <p class="text-xs opacity-70 mt-1">{{ new Date(alert.created_at).toLocaleString() }}</p>
+            </div>
+            <button
+              data-testid="acknowledge-btn"
+              class="ml-3 flex-shrink-0 text-xs font-medium underline opacity-70 hover:opacity-100"
+              @click="handleAcknowledge(alert.id)"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Summary row: Total Cost + Total Tokens -->
       <div class="grid grid-cols-2 gap-4">
         <div
