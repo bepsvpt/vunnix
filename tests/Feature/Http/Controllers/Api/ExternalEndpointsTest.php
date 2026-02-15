@@ -217,6 +217,32 @@ it('includes prompt_version in task detail response', function () {
         ->assertJsonPath('data.prompt_version.schema', 'review:1.0');
 });
 
+it('filters tasks by prompt_version skill', function () {
+    Task::factory()->create([
+        'project_id' => $this->project->id,
+        'status' => TaskStatus::Completed,
+        'prompt_version' => [
+            'skill' => 'frontend-review:1.0',
+            'claude_md' => 'executor:1.0',
+            'schema' => 'review:1.0',
+        ],
+    ]);
+    Task::factory()->create([
+        'project_id' => $this->project->id,
+        'status' => TaskStatus::Completed,
+        'prompt_version' => [
+            'skill' => 'frontend-review:1.1',
+            'claude_md' => 'executor:1.0',
+            'schema' => 'review:1.0',
+        ],
+    ]);
+
+    $this->getJson('/api/v1/ext/tasks?prompt_version=frontend-review:1.0', $this->headers)
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.prompt_version.skill', 'frontend-review:1.0');
+});
+
 // ─── GET /metrics/summary ───────────────────────────────────
 
 it('returns metrics summary', function () {

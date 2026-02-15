@@ -24,6 +24,7 @@ class ExternalTaskController extends Controller
             'status' => ['nullable', 'string', 'in:received,queued,running,completed,failed,superseded'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date'],
+            'prompt_version' => ['nullable', 'string', 'max:255'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'cursor' => ['nullable', 'string'],
         ]);
@@ -57,6 +58,10 @@ class ExternalTaskController extends Controller
 
         if ($dateTo = $request->input('date_to')) {
             $query->where('created_at', '<=', $dateTo.' 23:59:59');
+        }
+
+        if ($promptVersion = $request->input('prompt_version')) {
+            $query->whereJsonContains('prompt_version->skill', $promptVersion);
         }
 
         $perPage = $request->integer('per_page', 25);
