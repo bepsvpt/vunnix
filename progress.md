@@ -2,10 +2,10 @@
 
 ## Summary
 
-- **Current Milestone:** M5 — Admin & Configuration ✅
-- **Tasks Complete:** 106 / 116 (91.4%)
-- **Current Task:** **T105** — Production Docker Compose (backup, log rotation)
-- **Last Verified:** T116
+- **Current Milestone:** M6 — Pilot Launch
+- **Tasks Complete:** 107 / 116 (92.2%)
+- **Current Task:** **T106** — Deploy to cloud VM
+- **Last Verified:** T105
 
 ---
 
@@ -158,10 +158,10 @@
 - [x] T104: Infrastructure monitoring alerts [Depends: T6, T98]
 - [x] T116: Bot PAT rotation reminder (D144) [Depends: T90, T98]
 
-## M6 — Pilot Launch (0/7)
+## M6 — Pilot Launch (1/7)
 
-- [ ] **T105:** Production Docker Compose (backup, log rotation) [Depends: T2]
-- [ ] T106: Deploy to cloud VM [Depends: T105]
+- [x] T105: Production Docker Compose (backup, log rotation) [Depends: T2]
+- [ ] **T106:** Deploy to cloud VM [Depends: T105]
 - [ ] T107: GitLab bot account setup [Depends: T106]
 - [ ] T108: Enable pilot project [Depends: T106, T107, T88, T45]
 - [ ] T109: Verify end-to-end Path A [Depends: T108, T39]
