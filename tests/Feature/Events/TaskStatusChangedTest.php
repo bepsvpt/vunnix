@@ -48,3 +48,86 @@ test('TaskStatusChanged event name is task.status.changed', function () {
 
     expect($event->broadcastAs())->toBe('task.status.changed');
 });
+
+// -- T70: Result card data in broadcast payload --
+
+test('includes result_data in broadcast payload for completed feature_dev task', function () {
+    $task = Task::factory()->create([
+        'type' => 'feature_dev',
+        'status' => 'completed',
+        'mr_iid' => 123,
+        'issue_iid' => null,
+        'result' => [
+            'branch' => 'ai/payment-feature',
+            'mr_title' => 'Add payment flow',
+            'mr_description' => 'Implements Stripe checkout',
+            'files_changed' => [
+                ['path' => 'app/Payment.php', 'action' => 'created', 'summary' => 'Payment model'],
+            ],
+            'tests_added' => true,
+            'notes' => 'Added tests',
+        ],
+    ]);
+
+    $event = new TaskStatusChanged($task);
+    $payload = $event->broadcastWith();
+
+    expect($payload)->toHaveKey('result_data');
+    expect($payload['result_data'])->toHaveKey('branch', 'ai/payment-feature');
+    expect($payload['result_data'])->toHaveKey('target_branch');
+    expect($payload['result_data']['files_changed'])->toHaveCount(1);
+    expect($payload['result_data'])->not->toHaveKey('screenshot');
+});
+
+test('includes screenshot in broadcast payload for completed ui_adjustment task', function () {
+    $task = Task::factory()->create([
+        'type' => 'ui_adjustment',
+        'status' => 'completed',
+        'mr_iid' => 456,
+        'result' => [
+            'branch' => 'ai/fix-padding',
+            'mr_title' => 'Fix card padding',
+            'mr_description' => 'Fixes padding on cards',
+            'files_changed' => [
+                ['path' => 'src/Card.vue', 'action' => 'modified', 'summary' => 'Fixed padding'],
+            ],
+            'tests_added' => false,
+            'notes' => 'Visual fix',
+            'screenshot' => 'iVBORw0KGgoAAAANSUhEUg==',
+            'screenshot_mobile' => null,
+        ],
+    ]);
+
+    $event = new TaskStatusChanged($task);
+    $payload = $event->broadcastWith();
+
+    expect($payload['result_data'])->toHaveKey('screenshot', 'iVBORw0KGgoAAAANSUhEUg==');
+});
+
+test('includes error_reason in broadcast payload for failed task', function () {
+    $task = Task::factory()->create([
+        'type' => 'feature_dev',
+        'status' => 'failed',
+        'error_reason' => 'Schema validation failed',
+        'result' => null,
+    ]);
+
+    $event = new TaskStatusChanged($task);
+    $payload = $event->broadcastWith();
+
+    expect($payload)->toHaveKey('error_reason', 'Schema validation failed');
+});
+
+test('omits result_data for non-terminal tasks', function () {
+    $task = Task::factory()->create([
+        'type' => 'feature_dev',
+        'status' => 'running',
+        'started_at' => now(),
+        'result' => ['branch' => 'ai/something'],
+    ]);
+
+    $event = new TaskStatusChanged($task);
+    $payload = $event->broadcastWith();
+
+    expect($payload)->not->toHaveKey('result_data');
+});

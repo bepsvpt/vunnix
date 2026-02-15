@@ -33,7 +33,7 @@ class TaskStatusChanged implements ShouldBroadcast
      */
     public function broadcastWith(): array
     {
-        return [
+        $payload = [
             'task_id' => $this->task->id,
             'status' => $this->task->status->value,
             'type' => $this->task->type->value,
@@ -42,12 +42,44 @@ class TaskStatusChanged implements ShouldBroadcast
             'pipeline_status' => $this->task->pipeline_status,
             'mr_iid' => $this->task->mr_iid,
             'issue_iid' => $this->task->issue_iid,
-            'title' => $this->task->result['title'] ?? null,
+            'title' => $this->task->result['title'] ?? $this->task->result['mr_title'] ?? null,
             'started_at' => $this->task->started_at?->toIso8601String(),
             'conversation_id' => $this->task->conversation_id,
-            'result_summary' => $this->task->isTerminal() ? ($this->task->result['summary'] ?? null) : null,
+            'result_summary' => $this->task->isTerminal() ? ($this->task->result['summary'] ?? $this->task->result['notes'] ?? null) : null,
+            'error_reason' => $this->task->isTerminal() ? $this->task->error_reason : null,
             'timestamp' => now()->toIso8601String(),
         ];
+
+        // Add structured result data for terminal tasks (used by ResultCard)
+        if ($this->task->isTerminal() && $this->task->result !== null) {
+            $payload['result_data'] = $this->buildResultData();
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Build result card data from the task result, based on task type.
+     */
+    private function buildResultData(): array
+    {
+        $result = $this->task->result;
+        $data = [];
+
+        if (isset($result['branch'])) {
+            $data['branch'] = $result['branch'];
+        }
+        $data['target_branch'] = $result['target_branch'] ?? 'main';
+        if (isset($result['files_changed'])) {
+            $data['files_changed'] = $result['files_changed'];
+        }
+
+        // UI adjustment: include screenshot
+        if ($this->task->type === \App\Enums\TaskType::UiAdjustment) {
+            $data['screenshot'] = $result['screenshot'] ?? null;
+        }
+
+        return $data;
     }
 
     public function broadcastAs(): string
