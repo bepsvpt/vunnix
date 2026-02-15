@@ -3,10 +3,12 @@ import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import DashboardCost from './DashboardCost.vue';
 import { useDashboardStore } from '@/stores/dashboard';
+import { useAdminStore } from '@/stores/admin';
 
 vi.mock('axios', () => ({
     default: {
         get: vi.fn().mockResolvedValue({ data: { data: null } }),
+        patch: vi.fn().mockResolvedValue({ data: { success: true } }),
     },
 }));
 
@@ -243,5 +245,94 @@ describe('DashboardCost', () => {
         store.cost = { ...sampleCost, total_tokens: 0 };
         const wrapper = mountCost();
         expect(wrapper.find('[data-testid="total-tokens-value"]').text()).toBe('0');
+    });
+
+    // -- Cost alerts (T94) --
+
+    const sampleAlerts = [
+        {
+            id: 1,
+            rule: 'monthly_anomaly',
+            severity: 'critical',
+            message: 'Monthly spend ($120.00) exceeds 2× the rolling 3-month average ($40.00).',
+            context: { current_spend: 120, avg_monthly: 40, threshold: 80, period: '2026-02' },
+            acknowledged: false,
+            created_at: '2026-02-15T10:00:00.000Z',
+        },
+        {
+            id: 2,
+            rule: 'single_task_outlier',
+            severity: 'warning',
+            message: 'Task #42 (code_review) cost $1.5000 exceeds 3× the type average ($0.3000).',
+            context: { task_id: 42, task_type: 'code_review', task_cost: 1.5, avg_cost_for_type: 0.3, threshold: 0.9 },
+            acknowledged: false,
+            created_at: '2026-02-15T11:00:00.000Z',
+        },
+    ];
+
+    it('renders alert cards when costAlerts has data', () => {
+        const store = useDashboardStore();
+        store.cost = sampleCost;
+        store.costAlerts = sampleAlerts;
+        const wrapper = mountCost();
+        expect(wrapper.find('[data-testid="cost-alerts"]').exists()).toBe(true);
+        expect(wrapper.findAll('[data-testid^="cost-alert-"]')).toHaveLength(2);
+    });
+
+    it('does not render alerts section when costAlerts is empty', () => {
+        const store = useDashboardStore();
+        store.cost = sampleCost;
+        store.costAlerts = [];
+        const wrapper = mountCost();
+        expect(wrapper.find('[data-testid="cost-alerts"]').exists()).toBe(false);
+    });
+
+    it('displays rule label and message for each alert', () => {
+        const store = useDashboardStore();
+        store.cost = sampleCost;
+        store.costAlerts = sampleAlerts;
+        const wrapper = mountCost();
+
+        const alert1 = wrapper.find('[data-testid="cost-alert-1"]');
+        expect(alert1.text()).toContain('Monthly Anomaly');
+        expect(alert1.text()).toContain('Monthly spend ($120.00) exceeds 2×');
+
+        const alert2 = wrapper.find('[data-testid="cost-alert-2"]');
+        expect(alert2.text()).toContain('Single Task Outlier');
+        expect(alert2.text()).toContain('Task #42');
+    });
+
+    it('applies critical severity colors for critical alerts', () => {
+        const store = useDashboardStore();
+        store.cost = sampleCost;
+        store.costAlerts = [sampleAlerts[0]]; // monthly_anomaly = critical
+        const wrapper = mountCost();
+        const alert = wrapper.find('[data-testid="cost-alert-1"]');
+        expect(alert.classes()).toContain('bg-red-100');
+        expect(alert.classes()).toContain('border-red-300');
+    });
+
+    it('applies warning severity colors for warning alerts', () => {
+        const store = useDashboardStore();
+        store.cost = sampleCost;
+        store.costAlerts = [sampleAlerts[1]]; // single_task_outlier = warning
+        const wrapper = mountCost();
+        const alert = wrapper.find('[data-testid="cost-alert-2"]');
+        expect(alert.classes()).toContain('bg-amber-100');
+        expect(alert.classes()).toContain('border-amber-300');
+    });
+
+    it('calls acknowledgeCostAlert on dismiss click', async () => {
+        const store = useDashboardStore();
+        store.cost = sampleCost;
+        store.costAlerts = [sampleAlerts[0]];
+        const admin = useAdminStore();
+        admin.acknowledgeCostAlert = vi.fn().mockResolvedValue({ success: true });
+        store.fetchCostAlerts = vi.fn().mockResolvedValue(undefined);
+
+        const wrapper = mountCost();
+        await wrapper.find('[data-testid="acknowledge-btn"]').trigger('click');
+
+        expect(admin.acknowledgeCostAlert).toHaveBeenCalledWith(1);
     });
 });
