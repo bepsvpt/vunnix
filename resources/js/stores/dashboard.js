@@ -17,6 +17,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const efficiencyLoading = ref(false);
     const cost = ref(null);
     const costLoading = ref(false);
+    const adoption = ref(null);
+    const adoptionLoading = ref(false);
     const isLoading = ref(false);
     const nextCursor = ref(null);
     const hasMore = computed(() => nextCursor.value !== null);
@@ -163,6 +165,16 @@ export const useDashboardStore = defineStore('dashboard', () => {
         }
     }
 
+    async function fetchAdoption() {
+        adoptionLoading.value = true;
+        try {
+            const response = await axios.get('/api/v1/dashboard/adoption');
+            adoption.value = response.data.data;
+        } finally {
+            adoptionLoading.value = false;
+        }
+    }
+
     function $reset() {
         activityFeed.value = [];
         metricsUpdates.value = [];
@@ -178,6 +190,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         efficiencyLoading.value = false;
         cost.value = null;
         costLoading.value = false;
+        adoption.value = null;
+        adoptionLoading.value = false;
         activeFilter.value = null;
         projectFilter.value = null;
         isLoading.value = false;
@@ -199,6 +213,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         efficiencyLoading,
         cost,
         costLoading,
+        adoption,
+        adoptionLoading,
         activeFilter,
         projectFilter,
         isLoading,
@@ -214,6 +230,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         fetchDesignerActivity,
         fetchEfficiency,
         fetchCost,
+        fetchAdoption,
         loadMore,
         $reset,
     };

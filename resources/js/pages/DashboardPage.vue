@@ -10,6 +10,7 @@ import DashboardPMActivity from '@/components/DashboardPMActivity.vue';
 import DashboardDesignerActivity from '@/components/DashboardDesignerActivity.vue';
 import DashboardEfficiency from '@/components/DashboardEfficiency.vue';
 import DashboardCost from '@/components/DashboardCost.vue';
+import DashboardAdoption from '@/components/DashboardAdoption.vue';
 
 const auth = useAuthStore();
 const dashboard = useDashboardStore();
@@ -23,6 +24,7 @@ const baseViews = [
     { key: 'pm-activity', label: 'PM Activity' },
     { key: 'designer-activity', label: 'Designer Activity' },
     { key: 'efficiency', label: 'Efficiency' },
+    { key: 'adoption', label: 'Adoption' },
 ];
 
 // Cost tab is admin-only (D29)
@@ -78,6 +80,7 @@ watch(() => dashboard.metricsUpdates.length, () => {
     <DashboardDesignerActivity v-else-if="activeView === 'designer-activity'" />
     <DashboardEfficiency v-else-if="activeView === 'efficiency'" />
     <DashboardCost v-else-if="activeView === 'cost'" />
+    <DashboardAdoption v-else-if="activeView === 'adoption'" />
     <ActivityFeed v-else-if="activeView === 'activity'" />
   </div>
 </template>

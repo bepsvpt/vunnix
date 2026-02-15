@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DashboardOverviewController;
 use App\Http\Controllers\Api\DashboardDesignerActivityController;
+use App\Http\Controllers\Api\DashboardAdoptionController;
 use App\Http\Controllers\Api\DashboardCostController;
 use App\Http\Controllers\Api\DashboardEfficiencyController;
 use App\Http\Controllers\Api\DashboardPMActivityController;
@@ -85,6 +86,10 @@ Route::prefix('v1')->group(function () {
         // Dashboard cost metrics (T81) — admin-only via RBAC (D29)
         Route::get('/dashboard/cost', DashboardCostController::class)
             ->name('api.dashboard.cost');
+
+        // Dashboard adoption metrics (T82)
+        Route::get('/dashboard/adoption', DashboardAdoptionController::class)
+            ->name('api.dashboard.adoption');
     });
 
 });
