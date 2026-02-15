@@ -23,7 +23,8 @@ class BackupDatabase extends Command
 
         $timestamp = now()->format('Y-m-d_His');
         $database = config('database.connections.pgsql.database');
-        $filename = "{$database}_{$timestamp}.sql.gz";
+        $safeDbName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $database);
+        $filename = "{$safeDbName}_{$timestamp}.sql.gz";
         $filepath = "{$backupDir}/{$filename}";
 
         $host = config('database.connections.pgsql.host');
@@ -48,7 +49,7 @@ class BackupDatabase extends Command
             return self::FAILURE;
         }
 
-        $size = filesize($filepath);
+        $size = file_exists($filepath) ? filesize($filepath) : 0;
         $this->info("Backup completed: {$filename} (" . number_format($size / 1024) . " KB)");
 
         $this->pruneOldBackups($backupDir, (int) $this->option('retention'));

@@ -1,0 +1,140 @@
+<?php
+
+use Illuminate\Support\Facades\Process;
+
+beforeEach(function () {
+    $this->backupDir = storage_path('backups/test_' . uniqid());
+});
+
+afterEach(function () {
+    // Clean up test backup directory
+    if (is_dir($this->backupDir)) {
+        foreach (glob("{$this->backupDir}/*") as $file) {
+            unlink($file);
+        }
+        rmdir($this->backupDir);
+    }
+});
+
+it('creates backup directory if it does not exist', function () {
+    Process::fake([
+        '*pg_dump*' => Process::result(output: ''),
+    ]);
+
+    $this->artisan('backup:database', ['--path' => $this->backupDir])
+        ->assertSuccessful();
+
+    expect(is_dir($this->backupDir))->toBeTrue();
+});
+
+it('runs pg_dump with correct connection parameters', function () {
+    Process::fake([
+        '*pg_dump*' => Process::result(output: ''),
+    ]);
+
+    $this->artisan('backup:database', ['--path' => $this->backupDir])
+        ->assertSuccessful();
+
+    $host = config('database.connections.pgsql.host');
+    $port = config('database.connections.pgsql.port');
+    $username = config('database.connections.pgsql.username');
+    $database = config('database.connections.pgsql.database');
+
+    Process::assertRan(function ($process) use ($host, $port, $username, $database) {
+        $command = $process->command;
+
+        return str_contains($command, "pg_dump -h {$host} -p {$port} -U {$username} {$database}")
+            && str_contains($command, 'gzip');
+    });
+});
+
+it('targets a gzipped backup file via pg_dump pipe', function () {
+    Process::fake([
+        '*pg_dump*' => Process::result(output: ''),
+    ]);
+
+    $this->artisan('backup:database', ['--path' => $this->backupDir])
+        ->assertSuccessful();
+
+    Process::assertRan(function ($process) {
+        return str_contains($process->command, '.sql.gz')
+            && str_contains($process->command, 'gzip');
+    });
+});
+
+it('outputs failure message on pg_dump error', function () {
+    Process::fake([
+        '*pg_dump*' => Process::result(errorOutput: 'connection refused', exitCode: 1),
+    ]);
+
+    $this->artisan('backup:database', ['--path' => $this->backupDir])
+        ->assertFailed();
+});
+
+it('prunes backups older than retention period', function () {
+    Process::fake([
+        '*pg_dump*' => Process::result(output: ''),
+    ]);
+
+    // Create the directory and old backup files
+    mkdir($this->backupDir, 0755, true);
+
+    $oldFile = "{$this->backupDir}/vunnix_2025-01-01_020000.sql.gz";
+    file_put_contents($oldFile, 'old backup');
+    touch($oldFile, now()->subDays(31)->timestamp);
+
+    $recentFile = "{$this->backupDir}/vunnix_2026-02-14_020000.sql.gz";
+    file_put_contents($recentFile, 'recent backup');
+    touch($recentFile, now()->subDays(1)->timestamp);
+
+    $this->artisan('backup:database', ['--path' => $this->backupDir, '--retention' => 30])
+        ->assertSuccessful();
+
+    // Old file should be pruned, recent file + new backup should remain
+    expect(file_exists($oldFile))->toBeFalse();
+    expect(file_exists($recentFile))->toBeTrue();
+});
+
+it('uses default retention of 30 days', function () {
+    Process::fake([
+        '*pg_dump*' => Process::result(output: ''),
+    ]);
+
+    mkdir($this->backupDir, 0755, true);
+
+    $oldFile = "{$this->backupDir}/vunnix_2025-06-01_020000.sql.gz";
+    file_put_contents($oldFile, 'old backup');
+    touch($oldFile, now()->subDays(35)->timestamp);
+
+    $this->artisan('backup:database', ['--path' => $this->backupDir])
+        ->assertSuccessful();
+
+    expect(file_exists($oldFile))->toBeFalse();
+});
+
+it('does not pass password on command line', function () {
+    Process::fake([
+        '*pg_dump*' => Process::result(output: ''),
+    ]);
+
+    $this->artisan('backup:database', ['--path' => $this->backupDir])
+        ->assertSuccessful();
+
+    Process::assertRan(function ($process) {
+        // Password should be via PGPASSWORD env var, not --password flag
+        return ! str_contains($process->command, '--password')
+            && ! str_contains($process->command, '-W');
+    });
+});
+
+it('cleans up partial file on failure', function () {
+    Process::fake([
+        '*pg_dump*' => Process::result(errorOutput: 'disk full', exitCode: 1),
+    ]);
+
+    $this->artisan('backup:database', ['--path' => $this->backupDir])
+        ->assertFailed();
+
+    $files = glob("{$this->backupDir}/*.sql.gz");
+    expect($files)->toHaveCount(0);
+});
