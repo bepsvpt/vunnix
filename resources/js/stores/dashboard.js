@@ -1,9 +1,13 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import axios from 'axios';
 
 export const useDashboardStore = defineStore('dashboard', () => {
     const activityFeed = ref([]);
     const metricsUpdates = ref([]);
+    const isLoading = ref(false);
+    const nextCursor = ref(null);
+    const hasMore = computed(() => nextCursor.value !== null);
 
     // Filter state for activity feed tabs (§5.3)
     const activeFilter = ref(null); // null = 'All', or: 'code_review', 'feature_dev', 'ui_adjustment', 'prd_creation'
@@ -54,11 +58,46 @@ export const useDashboardStore = defineStore('dashboard', () => {
         return items;
     });
 
+    async function fetchActivity(filter = null) {
+        isLoading.value = true;
+        activeFilter.value = filter;
+        nextCursor.value = null;
+
+        try {
+            const params = { per_page: 25 };
+            if (filter) params.type = filter;
+
+            const response = await axios.get('/api/v1/activity', { params });
+            activityFeed.value = response.data.data;
+            nextCursor.value = response.data.meta?.next_cursor ?? null;
+        } finally {
+            isLoading.value = false;
+        }
+    }
+
+    async function loadMore() {
+        if (!nextCursor.value || isLoading.value) return;
+        isLoading.value = true;
+
+        try {
+            const params = { per_page: 25, cursor: nextCursor.value };
+            if (activeFilter.value) params.type = activeFilter.value;
+
+            const response = await axios.get('/api/v1/activity', { params });
+            activityFeed.value.push(...response.data.data);
+            nextCursor.value = response.data.meta?.next_cursor ?? null;
+        } finally {
+            isLoading.value = false;
+        }
+    }
+
     function $reset() {
         activityFeed.value = [];
         metricsUpdates.value = [];
         activeFilter.value = null;
         projectFilter.value = null;
+        isLoading.value = false;
+        nextCursor.value = null;
     }
 
     return {
@@ -66,9 +105,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
         metricsUpdates,
         activeFilter,
         projectFilter,
+        isLoading,
+        nextCursor,
+        hasMore,
         filteredFeed,
         addActivityItem,
         addMetricsUpdate,
+        fetchActivity,
+        loadMore,
         $reset,
     };
 });
