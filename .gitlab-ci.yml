@@ -73,8 +73,8 @@ build-executor:
   before_script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
   script:
-    # Extract version from Dockerfile ENV
-    - EXECUTOR_VERSION=$(grep -oP 'VUNNIX_EXECUTOR_VERSION="\K[^"]+' executor/Dockerfile)
+    # Extract version from Dockerfile ENV (sed for BusyBox compatibility — Alpine has no GNU grep -P)
+    - EXECUTOR_VERSION=$(sed -n 's/.*VUNNIX_EXECUTOR_VERSION="\([^"]*\)".*/\1/p' executor/Dockerfile)
     - echo "Building executor image version ${EXECUTOR_VERSION}"
 
     # Build the image
