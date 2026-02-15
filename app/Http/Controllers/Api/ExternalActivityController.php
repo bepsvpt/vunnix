@@ -1,0 +1,16 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class ExternalActivityController extends Controller
+{
+    public function index(Request $request): JsonResponse
+    {
+        // Stub — full implementation in T101
+        return response()->json(['data' => []]);
+    }
+}

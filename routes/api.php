@@ -1,12 +1,18 @@
 <?php
 
 use App\Http\Controllers\Api\ActivityController;
+use App\Http\Controllers\Api\AdminApiKeyController;
 use App\Http\Controllers\Api\AdminProjectController;
 use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminProjectConfigController;
 use App\Http\Controllers\Api\AdminSettingsController;
+use App\Http\Controllers\Api\ApiKeyController;
 use App\Http\Controllers\Api\CostAlertController;
 use App\Http\Controllers\Api\DeadLetterController;
+use App\Http\Controllers\Api\ExternalActivityController;
+use App\Http\Controllers\Api\ExternalMetricsController;
+use App\Http\Controllers\Api\ExternalProjectController;
+use App\Http\Controllers\Api\ExternalTaskController;
 use App\Http\Controllers\Api\OverrelianceAlertController;
 use App\Http\Controllers\Api\PrdTemplateController;
 use App\Http\Controllers\Api\ConversationController;
@@ -174,6 +180,37 @@ Route::prefix('v1')->group(function () {
             ->name('api.admin.prd-template.show');
         Route::put('/admin/prd-template', [PrdTemplateController::class, 'updateGlobal'])
             ->name('api.admin.prd-template.update');
+
+        // API key management (T100) — users manage their own keys
+        Route::get('/api-keys', [ApiKeyController::class, 'index'])
+            ->name('api.api-keys.index');
+        Route::post('/api-keys', [ApiKeyController::class, 'store'])
+            ->name('api.api-keys.store');
+        Route::delete('/api-keys/{apiKey}', [ApiKeyController::class, 'destroy'])
+            ->name('api.api-keys.destroy');
+
+        // Admin API key management (T100) — list all, revoke any
+        Route::get('/admin/api-keys', [AdminApiKeyController::class, 'index'])
+            ->name('api.admin.api-keys.index');
+        Route::delete('/admin/api-keys/{apiKey}', [AdminApiKeyController::class, 'destroy'])
+            ->name('api.admin.api-keys.destroy');
     });
+
+    // External API (T100) — accepts session auth OR API key
+    // Rate-limited per API key (60 req/min). Session auth not rate-limited here.
+    Route::prefix('ext')
+        ->middleware(['auth.api_key_or_session', 'throttle:api_key'])
+        ->group(function () {
+            Route::get('/tasks', [ExternalTaskController::class, 'index'])
+                ->name('api.ext.tasks.index');
+            Route::get('/tasks/{task}', [ExternalTaskController::class, 'show'])
+                ->name('api.ext.tasks.show');
+            Route::get('/metrics/summary', [ExternalMetricsController::class, 'summary'])
+                ->name('api.ext.metrics.summary');
+            Route::get('/activity', [ExternalActivityController::class, 'index'])
+                ->name('api.ext.activity.index');
+            Route::get('/projects', [ExternalProjectController::class, 'index'])
+                ->name('api.ext.projects.index');
+        });
 
 });
