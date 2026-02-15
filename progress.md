@@ -2,10 +2,10 @@
 
 ## Summary
 
-- **Current Milestone:** M4 — Dashboard & Metrics
-- **Tasks Complete:** 87 / 116 (75.0%)
-- **Current Task:** T87 — Engineer feedback — emoji reactions on MR merge
-- **Last Verified:** T86
+- **Current Milestone:** M5 — Admin & Configuration
+- **Tasks Complete:** 88 / 116 (75.9%)
+- **Current Task:** T88 — Admin page — project management
+- **Last Verified:** T87
 
 ---
 
@@ -119,7 +119,7 @@
 
 - [x] T115: Conversation archiving (D141) [Depends: T47]
 
-## M4 — Dashboard & Metrics (14/15)
+## M4 — Dashboard & Metrics (15/15) ✅
 
 - [x] T73: Reverb channel configuration (channel authorization) [Depends: T2, T15]
 - [x] T74: Laravel Echo client [Depends: T61, T73]
@@ -135,11 +135,11 @@
 - [x] T84: Metrics aggregation (every 15 min, materialized views) [Depends: T83, T5]
 - [x] T85: Cost tracking (token × price formula) [Depends: T83, T10]
 - [x] T86: Acceptance tracking (webhook-driven D149) [Depends: T34, T11, T13]
-- [ ] **T87:** Engineer feedback — emoji reactions on MR merge [Depends: T34, T11, T86]
+- [x] T87: Engineer feedback — emoji reactions on MR merge [Depends: T34, T11, T86]
 
 ## M5 — Admin & Configuration (0/18)
 
-- [ ] T88: Admin page — project management (registry D150, label pre-creation) [Depends: T62, T11, T9]
+- [ ] **T88:** Admin page — project management (registry D150, label pre-creation) [Depends: T62, T11, T9]
 - [ ] T89: Admin page — role management [Depends: T62, T9]
 - [ ] T90: Admin page — global settings (API key status D153) [Depends: T62, T10, T9]
 - [ ] T91: Per-project configuration (DB overrides) [Depends: T5, T88]
