@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 67 / 116 (57.8%)
-- **Current Task:** T68 — Chat page — preview cards (action-type-specific)
-- **Last Verified:** T67
+- **Tasks Complete:** 68 / 116 (58.6%)
+- **Current Task:** T69 — Chat page — pinned task bar (runner load awareness D133)
+- **Last Verified:** T68
 
 ---
 
@@ -81,7 +81,7 @@
 - [x] T45: CI pipeline template [Depends: T19]
 - [x] T46: Executor image CI/CD + version alignment [Depends: T19]
 
-## M3 — Path B Functional (20/27)
+## M3 — Path B Functional (21/27)
 
 ### Chat Backend
 
@@ -109,8 +109,8 @@
 - [x] T65: Chat page — message thread + markdown rendering (Shiki D138) [Depends: T63]
 - [x] T66: Chat page — SSE streaming (connection resilience) [Depends: T65, T48]
 - [x] T67: Chat page — tool-use activity indicators [Depends: T66]
-- [ ] **T68:** Chat page — preview cards (action-type-specific) [Depends: T65, T57]
-- [ ] T69: Chat page — pinned task bar (runner load awareness D133) [Depends: T68, T73]
+- [x] T68: Chat page — preview cards (action-type-specific) [Depends: T65, T57]
+- [ ] **T69:** Chat page — pinned task bar (runner load awareness D133) [Depends: T68, T73]
 - [ ] T70: Chat page — result cards (screenshots D131) [Depends: T69, T73]
 - [ ] T71: PRD output template [Depends: T49, T54]
 - [ ] T72: Designer iteration flow [Depends: T55, T44]

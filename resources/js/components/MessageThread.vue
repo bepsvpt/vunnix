@@ -5,6 +5,7 @@ import MessageBubble from './MessageBubble.vue';
 import MessageComposer from './MessageComposer.vue';
 import TypingIndicator from './TypingIndicator.vue';
 import ToolUseIndicators from './ToolUseIndicators.vue';
+import ActionPreviewCard from './ActionPreviewCard.vue';
 import MarkdownContent from './MarkdownContent.vue';
 
 const store = useConversationsStore();
@@ -17,10 +18,11 @@ async function scrollToBottom() {
     }
 }
 
-// Auto-scroll when messages change, streaming content updates, or tool calls change
+// Auto-scroll when messages change, streaming content updates, tool calls change, or action preview appears
 watch(() => store.messages.length, scrollToBottom);
 watch(() => store.streamingContent, scrollToBottom);
 watch(() => store.activeToolCalls.length, scrollToBottom);
+watch(() => store.pendingAction, scrollToBottom);
 
 async function handleSend(content) {
     await store.streamMessage(content);
@@ -80,6 +82,15 @@ async function handleSend(content) {
           :tool-calls="store.activeToolCalls"
         />
 
+        <!-- Action preview card: structured Confirm/Cancel card for action dispatches (T68) -->
+        <div v-if="store.pendingAction" class="flex w-full justify-start">
+          <ActionPreviewCard
+            :action="store.pendingAction"
+            @confirm="store.confirmAction()"
+            @cancel="store.cancelAction()"
+          />
+        </div>
+
         <!-- Streaming bubble: shows partial assistant response during SSE streaming -->
         <div v-if="store.streaming && store.streamingContent" class="flex w-full justify-start">
           <div
@@ -96,6 +107,6 @@ async function handleSend(content) {
     </div>
 
     <!-- Composer -->
-    <MessageComposer :disabled="store.sending || store.streaming" @send="handleSend" />
+    <MessageComposer :disabled="store.sending || store.streaming || !!store.pendingAction" @send="handleSend" />
   </div>
 </template>

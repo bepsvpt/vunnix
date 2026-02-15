@@ -5,6 +5,7 @@ import axios from 'axios';
 import MessageThread from './MessageThread.vue';
 import MessageBubble from './MessageBubble.vue';
 import MessageComposer from './MessageComposer.vue';
+import ActionPreviewCard from './ActionPreviewCard.vue';
 import { useConversationsStore } from '@/stores/conversations';
 
 vi.mock('axios');
@@ -208,6 +209,115 @@ describe('MessageThread', () => {
 
             const wrapper = mountThread();
             expect(wrapper.find('[data-testid="tool-use-indicators"]').exists()).toBe(false);
+        });
+    });
+
+    describe('action preview card (T68)', () => {
+        it('shows ActionPreviewCard when pendingAction is set', () => {
+            const store = useConversationsStore();
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Create an issue', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            store.pendingAction = {
+                id: 'preview-1',
+                action_type: 'create_issue',
+                project_id: 42,
+                title: 'Test Issue',
+                description: 'A test issue description',
+            };
+
+            const wrapper = mountThread();
+            expect(wrapper.findComponent(ActionPreviewCard).exists()).toBe(true);
+            expect(wrapper.find('[data-testid="action-preview-card"]').exists()).toBe(true);
+        });
+
+        it('hides ActionPreviewCard when pendingAction is null', () => {
+            const store = useConversationsStore();
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            store.pendingAction = null;
+
+            const wrapper = mountThread();
+            expect(wrapper.findComponent(ActionPreviewCard).exists()).toBe(false);
+        });
+
+        it('passes action data to ActionPreviewCard', () => {
+            const store = useConversationsStore();
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Implement feature', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            const action = {
+                id: 'preview-1',
+                action_type: 'implement_feature',
+                project_id: 42,
+                title: 'Payment Integration',
+                description: 'Implement Stripe',
+                branch_name: 'ai/payment',
+            };
+            store.pendingAction = action;
+
+            const wrapper = mountThread();
+            const card = wrapper.findComponent(ActionPreviewCard);
+            expect(card.props('action')).toEqual(action);
+        });
+
+        it('disables composer when pendingAction is set', () => {
+            const store = useConversationsStore();
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Hello', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            store.pendingAction = {
+                id: 'preview-1',
+                action_type: 'create_issue',
+                project_id: 42,
+                title: 'Test',
+                description: 'Test',
+            };
+
+            const wrapper = mountThread();
+            const composer = wrapper.findComponent(MessageComposer);
+            expect(composer.props('disabled')).toBe(true);
+        });
+
+        it('calls confirmAction on card confirm event', async () => {
+            const store = useConversationsStore();
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Create issue', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            store.pendingAction = {
+                id: 'preview-1',
+                action_type: 'create_issue',
+                project_id: 42,
+                title: 'Test Issue',
+                description: 'Test',
+            };
+            const confirmSpy = vi.spyOn(store, 'confirmAction').mockResolvedValue();
+
+            const wrapper = mountThread();
+            await wrapper.find('[data-testid="confirm-btn"]').trigger('click');
+
+            expect(confirmSpy).toHaveBeenCalled();
+        });
+
+        it('calls cancelAction on card cancel event', async () => {
+            const store = useConversationsStore();
+            store.messages = [
+                { id: 'msg-1', role: 'user', content: 'Create issue', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            store.pendingAction = {
+                id: 'preview-1',
+                action_type: 'create_issue',
+                project_id: 42,
+                title: 'Test Issue',
+                description: 'Test',
+            };
+            const cancelSpy = vi.spyOn(store, 'cancelAction').mockReturnValue();
+
+            const wrapper = mountThread();
+            await wrapper.find('[data-testid="cancel-btn"]').trigger('click');
+
+            expect(cancelSpy).toHaveBeenCalled();
         });
     });
 });

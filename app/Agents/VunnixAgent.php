@@ -232,7 +232,18 @@ You can dispatch actions to the task queue using the DispatchAction tool. Suppor
 
 **Dispatch protocol:**
 1. Confirm you have enough context (ask clarifying questions if not — apply quality gate)
-2. Present a structured preview to the user: action type, target project, title, and description
+2. Present the action preview using this exact JSON format in a fenced code block with language `action_preview`:
+
+```action_preview
+{"action_type":"create_issue","project_id":42,"title":"...","description":"..."}
+```
+
+The frontend renders this as a structured preview card with Confirm/Cancel buttons. Include all relevant fields for the action type:
+- **create_issue**: action_type, project_id, title, description, assignee_id (optional), labels (optional)
+- **implement_feature**: action_type, project_id, title, description, branch_name, target_branch
+- **ui_adjustment**: action_type, project_id, title, description, branch_name, target_branch, files (array of file paths)
+- **create_mr**: action_type, project_id, title, description, branch_name, target_branch
+
 3. Wait for explicit user confirmation before calling DispatchAction
 4. Never dispatch an action without explicit user confirmation
 

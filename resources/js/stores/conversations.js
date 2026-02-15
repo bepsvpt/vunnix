@@ -29,6 +29,9 @@ export const useConversationsStore = defineStore('conversations', () => {
     const streamingContent = ref('');
     const activeToolCalls = ref([]);
 
+    // Action preview state (T68)
+    const pendingAction = ref(null);
+
     const selected = computed(() =>
         conversations.value.find((c) => c.id === selectedId.value) || null
     );
@@ -201,6 +204,21 @@ export const useConversationsStore = defineStore('conversations', () => {
                     if (event.type === 'text_delta' && event.delta) {
                         accumulated += event.delta;
                         streamingContent.value = accumulated;
+
+                        // T68: Detect action_preview code blocks in streamed text
+                        if (!pendingAction.value) {
+                            const match = accumulated.match(/```action_preview\n([\s\S]*?)```/);
+                            if (match) {
+                                try {
+                                    pendingAction.value = {
+                                        id: `preview-${Date.now()}`,
+                                        ...JSON.parse(match[1].trim()),
+                                    };
+                                } catch {
+                                    // Malformed JSON — user will see raw text
+                                }
+                            }
+                        }
                     }
                     if (event.type === 'tool_call') {
                         activeToolCalls.value.push({
@@ -272,6 +290,27 @@ export const useConversationsStore = defineStore('conversations', () => {
     }
 
     /**
+     * T68: Confirm a pending action preview.
+     * Sends a confirmation message to the AI, which will then call DispatchAction.
+     */
+    async function confirmAction() {
+        if (!pendingAction.value || !selectedId.value) return;
+        const action = pendingAction.value;
+        pendingAction.value = null;
+        await streamMessage(`Confirmed. Go ahead with: ${action.title}`);
+    }
+
+    /**
+     * T68: Cancel a pending action preview.
+     * Sends a cancellation message to the AI.
+     */
+    function cancelAction() {
+        if (!pendingAction.value) return;
+        pendingAction.value = null;
+        streamMessage('Cancel this action, I changed my mind.');
+    }
+
+    /**
      * Add a project to an existing conversation (cross-project D28).
      */
     async function addProjectToConversation(conversationId, projectId) {
@@ -310,6 +349,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         streaming.value = false;
         streamingContent.value = '';
         activeToolCalls.value = [];
+        pendingAction.value = null;
     }
 
     return {
@@ -330,6 +370,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         streaming,
         streamingContent,
         activeToolCalls,
+        pendingAction,
         fetchConversations,
         loadMore,
         toggleArchive,
@@ -340,6 +381,8 @@ export const useConversationsStore = defineStore('conversations', () => {
         fetchMessages,
         sendMessage,
         streamMessage,
+        confirmAction,
+        cancelAction,
         createConversation,
         addProjectToConversation,
         $reset,

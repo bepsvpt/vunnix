@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
+import { flushPromises } from '@vue/test-utils';
 import axios from 'axios';
 import { useConversationsStore } from './conversations';
 
@@ -973,6 +974,185 @@ describe('useConversationsStore', () => {
             expect(axios.get).toHaveBeenCalledWith('/api/v1/conversations/conv-1');
             expect(store.messages).toEqual(recoveredMessages);
             expect(store.streaming).toBe(false);
+        });
+
+        it('detects action_preview block in streamed text and sets pendingAction', async () => {
+            const previewJson = JSON.stringify({
+                action_type: 'create_issue',
+                project_id: 42,
+                title: 'Add authentication',
+                description: 'Implement OAuth login flow',
+            });
+            const events = [
+                { type: 'stream_start' },
+                { type: 'text_start' },
+                { type: 'text_delta', delta: 'I\'ll create an Issue for this.\n\n```action_preview\n' },
+                { type: 'text_delta', delta: previewJson },
+                { type: 'text_delta', delta: '\n```\n\nPlease confirm.' },
+                { type: 'text_end' },
+                { type: 'stream_end' },
+                '[DONE]',
+            ];
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(events)));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Create an auth issue');
+
+            expect(store.pendingAction).not.toBeNull();
+            expect(store.pendingAction.action_type).toBe('create_issue');
+            expect(store.pendingAction.project_id).toBe(42);
+            expect(store.pendingAction.title).toBe('Add authentication');
+        });
+
+        it('does not set pendingAction for malformed JSON in action_preview block', async () => {
+            const events = [
+                { type: 'stream_start' },
+                { type: 'text_start' },
+                { type: 'text_delta', delta: '```action_preview\n{invalid json}\n```' },
+                { type: 'text_end' },
+                { type: 'stream_end' },
+                '[DONE]',
+            ];
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(events)));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Test');
+
+            expect(store.pendingAction).toBeNull();
+        });
+
+        it('does not overwrite pendingAction if one is already set', async () => {
+            const events = [
+                { type: 'stream_start' },
+                { type: 'text_start' },
+                { type: 'text_delta', delta: '```action_preview\n{"action_type":"create_issue","project_id":1,"title":"First","description":"first"}\n```' },
+                { type: 'text_delta', delta: ' ```action_preview\n{"action_type":"create_mr","project_id":2,"title":"Second","description":"second"}\n```' },
+                { type: 'text_end' },
+                { type: 'stream_end' },
+                '[DONE]',
+            ];
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(events)));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Test');
+
+            // First preview should be kept, second ignored
+            expect(store.pendingAction.action_type).toBe('create_issue');
+            expect(store.pendingAction.title).toBe('First');
+        });
+    });
+
+    describe('action preview state (T68)', () => {
+        it('initializes pendingAction as null', () => {
+            const store = useConversationsStore();
+            expect(store.pendingAction).toBeNull();
+        });
+
+        it('clears pendingAction on confirmAction', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.pendingAction = { id: 'p-1', action_type: 'create_issue', title: 'Test', description: 'Test' };
+
+            // Mock streamMessage to prevent actual streaming
+            vi.spyOn(store, 'streamMessage').mockResolvedValue();
+
+            store.confirmAction();
+            expect(store.pendingAction).toBeNull();
+        });
+
+        it('clears pendingAction on cancelAction', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.pendingAction = { id: 'p-1', action_type: 'create_issue', title: 'Test', description: 'Test' };
+
+            // Mock streamMessage to prevent actual streaming
+            vi.spyOn(store, 'streamMessage').mockResolvedValue();
+
+            store.cancelAction();
+            expect(store.pendingAction).toBeNull();
+        });
+
+        it('confirmAction sends confirmation message via fetch', async () => {
+            const fetchMock = vi.fn(() => mockSSEFetch(standardEvents(['OK'])));
+            vi.stubGlobal('fetch', fetchMock);
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.pendingAction = {
+                id: 'p-1',
+                action_type: 'implement_feature',
+                title: 'Payment Feature',
+                description: 'Implement Stripe',
+            };
+
+            await store.confirmAction();
+
+            expect(fetchMock).toHaveBeenCalled();
+            const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+            expect(body.content).toBe('Confirmed. Go ahead with: Payment Feature');
+        });
+
+        it('cancelAction sends cancellation message via fetch', async () => {
+            const fetchMock = vi.fn(() => mockSSEFetch(standardEvents(['OK'])));
+            vi.stubGlobal('fetch', fetchMock);
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.pendingAction = {
+                id: 'p-1',
+                action_type: 'create_issue',
+                title: 'Test Issue',
+                description: 'Test',
+            };
+
+            // cancelAction fires streamMessage but doesn't await it
+            store.cancelAction();
+            await flushPromises();
+
+            expect(fetchMock).toHaveBeenCalled();
+            const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+            expect(body.content).toBe('Cancel this action, I changed my mind.');
+        });
+
+        it('confirmAction does nothing when no pendingAction', () => {
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.pendingAction = null;
+
+            const streamSpy = vi.spyOn(store, 'streamMessage').mockResolvedValue();
+
+            store.confirmAction();
+
+            expect(streamSpy).not.toHaveBeenCalled();
+        });
+
+        it('cancelAction does nothing when no pendingAction', () => {
+            const store = useConversationsStore();
+            store.pendingAction = null;
+
+            const streamSpy = vi.spyOn(store, 'streamMessage').mockResolvedValue();
+
+            store.cancelAction();
+
+            expect(streamSpy).not.toHaveBeenCalled();
+        });
+
+        it('clears pendingAction on $reset', () => {
+            const store = useConversationsStore();
+            store.pendingAction = { id: 'p-1', action_type: 'create_issue', title: 'Test', description: 'Test' };
+
+            store.$reset();
+
+            expect(store.pendingAction).toBeNull();
         });
     });
 });

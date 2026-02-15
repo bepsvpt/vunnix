@@ -2828,6 +2828,285 @@ checker.check(
     ),
 )
 
+# ============================================================
+#  T68: Chat Page — Preview Cards (Action-Type-Specific)
+# ============================================================
+section("T68: Chat Page — Preview Cards (Action-Type-Specific)")
+
+# ActionPreviewCard component
+checker.check(
+    "ActionPreviewCard component exists",
+    file_exists("resources/js/components/ActionPreviewCard.vue"),
+)
+checker.check(
+    "ActionPreviewCard uses script setup",
+    file_contains("resources/js/components/ActionPreviewCard.vue", "<script setup>"),
+)
+checker.check(
+    "ActionPreviewCard has data-testid for card",
+    file_contains(
+        "resources/js/components/ActionPreviewCard.vue",
+        'data-testid="action-preview-card"',
+    ),
+)
+checker.check(
+    "ActionPreviewCard has confirm button with data-testid",
+    file_contains(
+        "resources/js/components/ActionPreviewCard.vue",
+        'data-testid="confirm-btn"',
+    ),
+)
+checker.check(
+    "ActionPreviewCard has cancel button with data-testid",
+    file_contains(
+        "resources/js/components/ActionPreviewCard.vue",
+        'data-testid="cancel-btn"',
+    ),
+)
+checker.check(
+    "ActionPreviewCard has action-type-badge with data-testid",
+    file_contains(
+        "resources/js/components/ActionPreviewCard.vue",
+        'data-testid="action-type-badge"',
+    ),
+)
+checker.check(
+    "ActionPreviewCard has description-preview with data-testid",
+    file_contains(
+        "resources/js/components/ActionPreviewCard.vue",
+        'data-testid="description-preview"',
+    ),
+)
+
+# All 4 action types handled
+checker.check(
+    "ActionPreviewCard handles create_issue type",
+    file_contains("resources/js/components/ActionPreviewCard.vue", "create_issue"),
+)
+checker.check(
+    "ActionPreviewCard handles implement_feature type",
+    file_contains("resources/js/components/ActionPreviewCard.vue", "implement_feature"),
+)
+checker.check(
+    "ActionPreviewCard handles ui_adjustment type",
+    file_contains("resources/js/components/ActionPreviewCard.vue", "ui_adjustment"),
+)
+checker.check(
+    "ActionPreviewCard handles create_mr type",
+    file_contains("resources/js/components/ActionPreviewCard.vue", "create_mr"),
+)
+
+# Action-type-specific fields
+checker.check(
+    "ActionPreviewCard shows assignee for create_issue",
+    file_contains("resources/js/components/ActionPreviewCard.vue", "assignee_id"),
+)
+checker.check(
+    "ActionPreviewCard shows labels for create_issue",
+    file_contains("resources/js/components/ActionPreviewCard.vue", "action.labels"),
+)
+checker.check(
+    "ActionPreviewCard shows branch_name for feature/MR types",
+    file_contains("resources/js/components/ActionPreviewCard.vue", "action.branch_name"),
+)
+checker.check(
+    "ActionPreviewCard shows files list for ui_adjustment",
+    file_contains("resources/js/components/ActionPreviewCard.vue", "action.files"),
+)
+
+# Description truncation
+checker.check(
+    "ActionPreviewCard truncates descriptions with ellipsis",
+    file_contains("resources/js/components/ActionPreviewCard.vue", "…"),
+)
+
+# Emits confirm and cancel events
+checker.check(
+    "ActionPreviewCard emits confirm event",
+    file_contains("resources/js/components/ActionPreviewCard.vue", "emit('confirm')"),
+)
+checker.check(
+    "ActionPreviewCard emits cancel event",
+    file_contains("resources/js/components/ActionPreviewCard.vue", "emit('cancel')"),
+)
+
+# ActionPreviewCard tests
+checker.check(
+    "ActionPreviewCard test file exists",
+    file_exists("resources/js/components/ActionPreviewCard.test.js"),
+)
+checker.check(
+    "ActionPreviewCard tests cover all 4 action types",
+    file_contains("resources/js/components/ActionPreviewCard.test.js", "create_issue")
+    and file_contains("resources/js/components/ActionPreviewCard.test.js", "implement_feature")
+    and file_contains("resources/js/components/ActionPreviewCard.test.js", "ui_adjustment")
+    and file_contains("resources/js/components/ActionPreviewCard.test.js", "create_mr"),
+)
+checker.check(
+    "ActionPreviewCard tests cover description truncation",
+    file_contains("resources/js/components/ActionPreviewCard.test.js", "truncat"),
+)
+checker.check(
+    "ActionPreviewCard tests cover confirm event",
+    file_contains("resources/js/components/ActionPreviewCard.test.js", "emits confirm"),
+)
+checker.check(
+    "ActionPreviewCard tests cover cancel event",
+    file_contains("resources/js/components/ActionPreviewCard.test.js", "emits cancel"),
+)
+
+# MessageThread integration
+checker.check(
+    "MessageThread imports ActionPreviewCard",
+    file_contains("resources/js/components/MessageThread.vue", "import ActionPreviewCard"),
+)
+checker.check(
+    "MessageThread renders ActionPreviewCard conditionally",
+    file_contains("resources/js/components/MessageThread.vue", "store.pendingAction"),
+)
+checker.check(
+    "MessageThread disables composer when pendingAction is set",
+    file_contains("resources/js/components/MessageThread.vue", "store.pendingAction"),
+)
+checker.check(
+    "MessageThread auto-scrolls on pendingAction change",
+    file_contains("resources/js/components/MessageThread.vue", "store.pendingAction"),
+)
+
+# Store: pendingAction state
+checker.check(
+    "Conversations store has pendingAction ref",
+    file_contains("resources/js/stores/conversations.js", "const pendingAction = ref("),
+)
+checker.check(
+    "Conversations store has confirmAction function",
+    file_contains("resources/js/stores/conversations.js", "async function confirmAction"),
+)
+checker.check(
+    "Conversations store has cancelAction function",
+    file_contains("resources/js/stores/conversations.js", "function cancelAction"),
+)
+checker.check(
+    "Conversations store exports pendingAction",
+    file_contains("resources/js/stores/conversations.js", "pendingAction,"),
+)
+checker.check(
+    "Conversations store exports confirmAction",
+    file_contains("resources/js/stores/conversations.js", "confirmAction,"),
+)
+checker.check(
+    "Conversations store exports cancelAction",
+    file_contains("resources/js/stores/conversations.js", "cancelAction,"),
+)
+
+# Store: action_preview detection in stream
+checker.check(
+    "streamMessage detects action_preview code blocks",
+    file_contains("resources/js/stores/conversations.js", "action_preview"),
+)
+checker.check(
+    "Conversations store clears pendingAction in $reset",
+    file_contains("resources/js/stores/conversations.js", "pendingAction.value = null"),
+)
+
+# Store tests for action preview
+checker.check(
+    "Store tests have action preview describe block",
+    file_contains("resources/js/stores/conversations.test.js", "action preview"),
+)
+checker.check(
+    "Store tests cover pendingAction initialization",
+    file_contains("resources/js/stores/conversations.test.js", "initializes pendingAction as null"),
+)
+checker.check(
+    "Store tests cover confirmAction clears pendingAction",
+    file_contains("resources/js/stores/conversations.test.js", "clears pendingAction on confirmAction"),
+)
+checker.check(
+    "Store tests cover cancelAction clears pendingAction",
+    file_contains("resources/js/stores/conversations.test.js", "clears pendingAction on cancelAction"),
+)
+checker.check(
+    "Store tests cover action_preview detection in stream",
+    file_contains(
+        "resources/js/stores/conversations.test.js",
+        "detects action_preview block",
+    ),
+)
+checker.check(
+    "Store tests cover malformed JSON in action_preview",
+    file_contains(
+        "resources/js/stores/conversations.test.js",
+        "malformed JSON",
+    ),
+)
+checker.check(
+    "Store tests cover pendingAction not overwritten",
+    file_contains(
+        "resources/js/stores/conversations.test.js",
+        "does not overwrite pendingAction",
+    ),
+)
+checker.check(
+    "Store tests cover $reset clears pendingAction",
+    file_contains(
+        "resources/js/stores/conversations.test.js",
+        "clears pendingAction on $reset",
+    ),
+)
+
+# MessageThread tests for action preview card
+checker.check(
+    "MessageThread tests have action preview card describe block",
+    file_contains("resources/js/components/MessageThread.test.js", "action preview card"),
+)
+checker.check(
+    "MessageThread tests cover showing ActionPreviewCard",
+    file_contains(
+        "resources/js/components/MessageThread.test.js",
+        "shows ActionPreviewCard when pendingAction is set",
+    ),
+)
+checker.check(
+    "MessageThread tests cover hiding ActionPreviewCard",
+    file_contains(
+        "resources/js/components/MessageThread.test.js",
+        "hides ActionPreviewCard when pendingAction is null",
+    ),
+)
+checker.check(
+    "MessageThread tests cover confirm button interaction",
+    file_contains(
+        "resources/js/components/MessageThread.test.js",
+        "calls confirmAction on card confirm event",
+    ),
+)
+checker.check(
+    "MessageThread tests cover cancel button interaction",
+    file_contains(
+        "resources/js/components/MessageThread.test.js",
+        "calls cancelAction on card cancel event",
+    ),
+)
+checker.check(
+    "MessageThread tests cover composer disabled with pendingAction",
+    file_contains(
+        "resources/js/components/MessageThread.test.js",
+        "disables composer when pendingAction is set",
+    ),
+)
+
+# VunnixAgent system prompt: action_preview format
+checker.check(
+    "VunnixAgent system prompt includes action_preview code block format",
+    file_contains("app/Agents/VunnixAgent.php", "action_preview"),
+)
+checker.check(
+    "VunnixAgent system prompt lists action type fields",
+    file_contains("app/Agents/VunnixAgent.php", "implement_feature")
+    and file_contains("app/Agents/VunnixAgent.php", "ui_adjustment"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()
