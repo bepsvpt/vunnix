@@ -2,6 +2,8 @@
 import { ref } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 
+const emit = defineEmits(['configure']);
+
 const admin = useAdminStore();
 const actionInProgress = ref(null);
 const actionError = ref(null);
@@ -102,7 +104,7 @@ async function handleDisable(projectId) {
             </div>
           </div>
 
-          <div class="ml-4 flex-shrink-0">
+          <div class="ml-4 flex-shrink-0 flex gap-2">
             <button
               v-if="!project.enabled"
               :disabled="actionInProgress === project.id"
@@ -112,15 +114,23 @@ async function handleDisable(projectId) {
             >
               {{ actionInProgress === project.id ? 'Enabling...' : 'Enable' }}
             </button>
-            <button
-              v-else
-              :disabled="actionInProgress === project.id"
-              class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800 disabled:opacity-50"
-              :data-testid="`disable-btn-${project.id}`"
-              @click="handleDisable(project.id)"
-            >
-              {{ actionInProgress === project.id ? 'Disabling...' : 'Disable' }}
-            </button>
+            <template v-else>
+              <button
+                class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                :data-testid="`configure-btn-${project.id}`"
+                @click="emit('configure', { id: project.id, name: project.name })"
+              >
+                Configure
+              </button>
+              <button
+                :disabled="actionInProgress === project.id"
+                class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800 disabled:opacity-50"
+                :data-testid="`disable-btn-${project.id}`"
+                @click="handleDisable(project.id)"
+              >
+                {{ actionInProgress === project.id ? 'Disabling...' : 'Disable' }}
+              </button>
+            </template>
           </div>
         </div>
       </div>

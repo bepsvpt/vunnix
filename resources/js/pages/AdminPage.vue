@@ -5,10 +5,12 @@ import AdminProjectList from '@/components/AdminProjectList.vue';
 import AdminRoleList from '@/components/AdminRoleList.vue';
 import AdminRoleAssignments from '@/components/AdminRoleAssignments.vue';
 import AdminGlobalSettings from '@/components/AdminGlobalSettings.vue';
+import AdminProjectConfig from '@/components/AdminProjectConfig.vue';
 
 const admin = useAdminStore();
 
 const activeTab = ref('projects');
+const configuringProject = ref(null);
 
 const tabs = [
     { key: 'projects', label: 'Projects' },
@@ -43,7 +45,13 @@ onMounted(() => {
     </div>
 
     <!-- Tab content -->
-    <AdminProjectList v-if="activeTab === 'projects'" />
+    <AdminProjectConfig
+      v-if="activeTab === 'projects' && configuringProject"
+      :project-id="configuringProject.id"
+      :project-name="configuringProject.name"
+      @back="configuringProject = null"
+    />
+    <AdminProjectList v-else-if="activeTab === 'projects'" @configure="configuringProject = $event" />
     <AdminRoleList v-else-if="activeTab === 'roles'" />
     <AdminRoleAssignments v-else-if="activeTab === 'assignments'" />
     <AdminGlobalSettings v-else-if="activeTab === 'settings'" />
