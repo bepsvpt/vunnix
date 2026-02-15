@@ -91,6 +91,20 @@ export const useConversationsStore = defineStore('conversations', () => {
     const taskSubscriptions = ref(new Set());
 
     /**
+     * Map human-readable type labels from [System: Task dispatched] messages to internal type keys.
+     */
+    function typeFromLabel(label) {
+        const map = {
+            'Feature implementation': 'feature_dev',
+            'UI adjustment': 'ui_adjustment',
+            'Issue creation': 'prd_creation',
+            'Merge request creation': 'feature_dev',
+            'Deep analysis': 'deep_analysis',
+        };
+        return map[label] || 'feature_dev';
+    }
+
+    /**
      * Subscribe to a task's Reverb channel for real-time status updates.
      * Listens on private channel `task.{id}` for `.task.status.changed` events.
      */
@@ -338,6 +352,23 @@ export const useConversationsStore = defineStore('conversations', () => {
                     messages.value.push(assistantMsg);
                     streamingContent.value = '';
                     activeToolCalls.value = [];
+
+                    // T69: Auto-track dispatched tasks from system messages
+                    const dispatch = parseTaskDispatchMessage(accumulated);
+                    if (dispatch) {
+                        trackTask({
+                            task_id: dispatch.taskId,
+                            status: 'received',
+                            type: typeFromLabel(dispatch.typeLabel),
+                            title: dispatch.title,
+                            project_id: selected.value?.project_id || null,
+                            pipeline_id: null,
+                            pipeline_status: null,
+                            started_at: null,
+                            conversation_id: selectedId.value,
+                        });
+                        subscribeToTask(dispatch.taskId);
+                    }
                 },
                 async onError(err) {
                     messagesError.value = err.message || 'Stream interrupted';

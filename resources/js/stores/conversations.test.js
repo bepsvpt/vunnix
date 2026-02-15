@@ -1070,6 +1070,55 @@ describe('useConversationsStore', () => {
             expect(store.pendingAction.action_type).toBe('create_issue');
             expect(store.pendingAction.title).toBe('First');
         });
+
+        it('auto-tracks task from [System: Task dispatched] in streamed response (T69)', async () => {
+            const dispatchText = 'Alright, I\'ll implement that.\n\n[System: Task dispatched] Feature implementation "Add Stripe" has been dispatched as Task #42. You can track its progress in the pinned task bar.';
+            const events = [
+                { type: 'stream_start' },
+                { type: 'text_start' },
+                { type: 'text_delta', delta: dispatchText },
+                { type: 'text_end' },
+                { type: 'stream_end' },
+                '[DONE]',
+            ];
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(events)));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Implement Stripe');
+
+            // Task should be tracked
+            expect(store.activeTasks.size).toBe(1);
+            expect(store.activeTasks.get(42)).toBeDefined();
+            expect(store.activeTasks.get(42).title).toBe('Add Stripe');
+            expect(store.activeTasks.get(42).type).toBe('feature_dev');
+
+            // Should have subscribed to the task's Reverb channel
+            expect(mockEchoInstance.private).toHaveBeenCalledWith('task.42');
+        });
+
+        it('does not auto-track when no [System: Task dispatched] in response', async () => {
+            const events = [
+                { type: 'stream_start' },
+                { type: 'text_start' },
+                { type: 'text_delta', delta: 'Here is a regular response.' },
+                { type: 'text_end' },
+                { type: 'stream_end' },
+                '[DONE]',
+            ];
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(events)));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Test');
+
+            expect(store.activeTasks.size).toBe(0);
+            expect(mockEchoInstance.private).not.toHaveBeenCalled();
+        });
     });
 
     describe('active task tracking (T69)', () => {
