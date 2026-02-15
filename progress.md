@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M3 — Path B Functional
-- **Tasks Complete:** 64 / 116 (55.2%)
-- **Current Task:** T65 — Chat page — message thread + markdown rendering
-- **Last Verified:** T64
+- **Tasks Complete:** 65 / 116 (56.0%)
+- **Current Task:** T66 — Chat page — SSE streaming (connection resilience)
+- **Last Verified:** T65
 
 ---
 
@@ -81,7 +81,7 @@
 - [x] T45: CI pipeline template [Depends: T19]
 - [x] T46: Executor image CI/CD + version alignment [Depends: T19]
 
-## M3 — Path B Functional (17/27)
+## M3 — Path B Functional (18/27)
 
 ### Chat Backend
 
@@ -106,8 +106,8 @@
 - [x] T62: Auth state management (Pinia) [Depends: T61, T7]
 - [x] T63: Chat page — conversation list [Depends: T62, T47]
 - [x] T64: Chat page — new conversation flow (cross-project warning D128) [Depends: T63]
-- [ ] **T65:** Chat page — message thread + markdown rendering (Shiki D138) [Depends: T63]
-- [ ] T66: Chat page — SSE streaming (connection resilience) [Depends: T65, T48]
+- [x] T65: Chat page — message thread + markdown rendering (Shiki D138) [Depends: T63]
+- [ ] **T66:** Chat page — SSE streaming (connection resilience) [Depends: T65, T48]
 - [ ] T67: Chat page — tool-use activity indicators [Depends: T66]
 - [ ] T68: Chat page — preview cards (action-type-specific) [Depends: T65, T57]
 - [ ] T69: Chat page — pinned task bar (runner load awareness D133) [Depends: T68, T73]
