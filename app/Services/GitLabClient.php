@@ -520,6 +520,95 @@ class GitLabClient
     }
 
     // ------------------------------------------------------------------
+    //  Project Metadata
+    // ------------------------------------------------------------------
+
+    /**
+     * Get the authenticated user (bot account).
+     */
+    public function getCurrentUser(): array
+    {
+        $response = $this->request()->get(
+            $this->url('user'),
+        );
+
+        return $this->handleResponse($response, 'getCurrentUser')->json();
+    }
+
+    /**
+     * Get project details (visibility, name, namespace, etc.).
+     */
+    public function getProject(int $projectId): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}"),
+        );
+
+        return $this->handleResponse($response, "getProject #{$projectId}")->json();
+    }
+
+    /**
+     * Get a specific member of a project (including inherited members).
+     *
+     * Uses the /members/all endpoint which includes inherited members
+     * from parent groups. Returns null if the user is not a member.
+     */
+    public function getProjectMember(int $projectId, int $userId): ?array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/members/all/{$userId}"),
+        );
+
+        if ($response->status() === 404) {
+            return null;
+        }
+
+        return $this->handleResponse($response, "getProjectMember #{$projectId}/#{$userId}")->json();
+    }
+
+    // ------------------------------------------------------------------
+    //  Project Labels
+    // ------------------------------------------------------------------
+
+    /**
+     * Create a project-level label.
+     *
+     * Returns null if the label already exists (409 Conflict) — idempotent.
+     */
+    public function createProjectLabel(int $projectId, string $name, string $color, string $description = ''): ?array
+    {
+        $response = $this->request()->post(
+            $this->url("projects/{$projectId}/labels"),
+            array_filter([
+                'name' => $name,
+                'color' => $color,
+                'description' => $description,
+            ]),
+        );
+
+        if ($response->status() === 409) {
+            return null;
+        }
+
+        return $this->handleResponse($response, "createProjectLabel {$name}")->json();
+    }
+
+    /**
+     * List all labels for a project.
+     *
+     * @return array<int, array{id: int, name: string, color: string, description: string|null}>
+     */
+    public function listProjectLabels(int $projectId): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/labels"),
+            ['per_page' => 100],
+        );
+
+        return $this->handleResponse($response, "listProjectLabels #{$projectId}")->json();
+    }
+
+    // ------------------------------------------------------------------
     //  Pipelines
     // ------------------------------------------------------------------
 
