@@ -1,12 +1,16 @@
 <script setup>
 import { onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useDashboardStore } from '@/stores/dashboard';
 import { useDashboardRealtime } from '@/composables/useDashboardRealtime';
+import ActivityFeed from '@/components/ActivityFeed.vue';
 
 const auth = useAuthStore();
+const dashboard = useDashboardStore();
 const { subscribe, unsubscribe } = useDashboardRealtime();
 
 onMounted(() => {
+    dashboard.fetchActivity();
     subscribe(auth.projects);
 });
 
@@ -17,7 +21,7 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <h1 class="text-2xl font-semibold">Dashboard</h1>
-    <p class="mt-2 text-zinc-500 dark:text-zinc-400">Activity feed and metrics — coming in M4.</p>
+    <h1 class="text-2xl font-semibold mb-6">Dashboard</h1>
+    <ActivityFeed />
   </div>
 </template>
