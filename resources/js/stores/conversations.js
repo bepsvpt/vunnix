@@ -102,6 +102,47 @@ export const useConversationsStore = defineStore('conversations', () => {
         selectedId.value = id;
     }
 
+    /**
+     * Create a new conversation with a primary project.
+     */
+    async function createConversation(projectId) {
+        error.value = null;
+        try {
+            const response = await axios.post('/api/v1/conversations', {
+                project_id: projectId,
+            });
+            const newConversation = response.data.data;
+            conversations.value.unshift(newConversation);
+            selectedId.value = newConversation.id;
+            return newConversation;
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to create conversation';
+            throw err;
+        }
+    }
+
+    /**
+     * Add a project to an existing conversation (cross-project D28).
+     */
+    async function addProjectToConversation(conversationId, projectId) {
+        error.value = null;
+        try {
+            const response = await axios.post(
+                `/api/v1/conversations/${conversationId}/projects`,
+                { project_id: projectId }
+            );
+            // Update conversation in list with new data
+            const idx = conversations.value.findIndex((c) => c.id === conversationId);
+            if (idx !== -1) {
+                conversations.value[idx] = { ...conversations.value[idx], ...response.data.data };
+            }
+            return response.data.data;
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to add project';
+            throw err;
+        }
+    }
+
     function $reset() {
         conversations.value = [];
         loading.value = false;
@@ -132,6 +173,8 @@ export const useConversationsStore = defineStore('conversations', () => {
         setSearchQuery,
         setShowArchived,
         selectConversation,
+        createConversation,
+        addProjectToConversation,
         $reset,
     };
 });
