@@ -599,6 +599,7 @@ class AlertEventService
             'container_health' => 'Container health',
             'cpu_usage' => 'High CPU usage',
             'memory_usage' => 'High memory usage',
+            'bot_pat_rotation' => 'Bot PAT rotation reminder',
         ];
 
         $label = $typeLabels[$alert->alert_type] ?? $alert->alert_type;

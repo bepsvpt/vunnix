@@ -1662,6 +1662,105 @@ checker.check(
 )
 
 # ============================================================
+#  T116: Bot PAT rotation reminder
+# ============================================================
+section("T116: Bot PAT Rotation Reminder")
+
+# Service
+checker.check(
+    "BotPatRotationService exists",
+    file_exists("app/Services/BotPatRotationService.php"),
+)
+checker.check(
+    "BotPatRotationService has evaluate method",
+    file_contains("app/Services/BotPatRotationService.php", "function evaluate"),
+)
+checker.check(
+    "BotPatRotationService has acknowledge method",
+    file_contains("app/Services/BotPatRotationService.php", "function acknowledge"),
+)
+checker.check(
+    "BotPatRotationService uses 5.5 month threshold",
+    file_contains("app/Services/BotPatRotationService.php", "5.5"),
+)
+checker.check(
+    "BotPatRotationService uses 7-day repeat interval",
+    file_contains("app/Services/BotPatRotationService.php", "REPEAT_INTERVAL_DAYS"),
+)
+checker.check(
+    "BotPatRotationService reads bot_pat_created_at from GlobalSetting",
+    file_contains("app/Services/BotPatRotationService.php", "bot_pat_created_at"),
+)
+checker.check(
+    "BotPatRotationService sends team chat notification",
+    file_contains("app/Services/BotPatRotationService.php", "TeamChatNotificationService"),
+)
+
+# Artisan command
+checker.check(
+    "CheckPatRotation command exists",
+    file_exists("app/Console/Commands/CheckPatRotation.php"),
+)
+checker.check(
+    "CheckPatRotation has correct signature",
+    file_contains("app/Console/Commands/CheckPatRotation.php", "security:check-pat-rotation"),
+)
+
+# Schedule entry
+checker.check(
+    "Schedule entry for security:check-pat-rotation",
+    file_contains("routes/console.php", "security:check-pat-rotation"),
+)
+checker.check(
+    "PAT check runs weekly",
+    file_contains("routes/console.php", "weekly"),
+)
+
+# AlertEventService type label
+checker.check(
+    "AlertEventService has bot_pat_rotation type label",
+    file_contains("app/Services/AlertEventService.php", "bot_pat_rotation"),
+)
+
+# Tests
+checker.check(
+    "BotPatRotationService test exists",
+    file_exists("tests/Feature/Services/BotPatRotationServiceTest.php"),
+)
+checker.check(
+    "Test covers 5.5 month trigger",
+    file_contains("tests/Feature/Services/BotPatRotationServiceTest.php", "5.5 months"),
+)
+checker.check(
+    "Test covers 5 month no-trigger",
+    file_contains("tests/Feature/Services/BotPatRotationServiceTest.php", "5 months"),
+)
+checker.check(
+    "Test covers 6 month trigger",
+    file_contains("tests/Feature/Services/BotPatRotationServiceTest.php", "6 months"),
+)
+checker.check(
+    "Test covers acknowledgement stops repeat",
+    file_contains("tests/Feature/Services/BotPatRotationServiceTest.php", "acknowledgement"),
+)
+checker.check(
+    "Test covers re-alert after 7 days",
+    file_contains("tests/Feature/Services/BotPatRotationServiceTest.php", "7 days"),
+)
+checker.check(
+    "CheckPatRotation command test exists",
+    file_exists("tests/Feature/Console/CheckPatRotationTest.php"),
+)
+checker.check(
+    "Command test covers alert creation",
+    file_contains("tests/Feature/Console/CheckPatRotationTest.php", "PAT rotation alert created"),
+)
+checker.check(
+    "Command test covers no alert scenario",
+    file_contains("tests/Feature/Console/CheckPatRotationTest.php", "No PAT rotation alert needed"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()

@@ -26,3 +26,9 @@ Schedule::command('overreliance:evaluate')
 Schedule::command('system-alerts:evaluate')
     ->everyFiveMinutes()
     ->withoutOverlapping();
+
+Schedule::command('security:check-pat-rotation')
+    ->weekly()
+    ->mondays()
+    ->at('10:00')
+    ->withoutOverlapping();
