@@ -6,11 +6,13 @@ import AdminRoleList from '@/components/AdminRoleList.vue';
 import AdminRoleAssignments from '@/components/AdminRoleAssignments.vue';
 import AdminGlobalSettings from '@/components/AdminGlobalSettings.vue';
 import AdminProjectConfig from '@/components/AdminProjectConfig.vue';
+import AdminPrdTemplate from '@/components/AdminPrdTemplate.vue';
 
 const admin = useAdminStore();
 
 const activeTab = ref('projects');
 const configuringProject = ref(null);
+const editingTemplate = ref(null); // { id, name }
 
 const tabs = [
     { key: 'projects', label: 'Projects' },
@@ -45,11 +47,18 @@ onMounted(() => {
     </div>
 
     <!-- Tab content -->
+    <AdminPrdTemplate
+      v-if="activeTab === 'projects' && editingTemplate"
+      :project-id="editingTemplate.id"
+      :project-name="editingTemplate.name"
+      @back="editingTemplate = null"
+    />
     <AdminProjectConfig
-      v-if="activeTab === 'projects' && configuringProject"
+      v-else-if="activeTab === 'projects' && configuringProject"
       :project-id="configuringProject.id"
       :project-name="configuringProject.name"
       @back="configuringProject = null"
+      @edit-template="editingTemplate = configuringProject"
     />
     <AdminProjectList v-else-if="activeTab === 'projects'" @configure="configuringProject = $event" />
     <AdminRoleList v-else-if="activeTab === 'roles'" />

@@ -7,7 +7,7 @@ const props = defineProps({
     projectName: { type: String, required: true },
 });
 
-const emit = defineEmits(['back']);
+const emit = defineEmits(['back', 'edit-template']);
 
 const admin = useAdminStore();
 const saving = ref(false);
@@ -136,6 +136,13 @@ async function handleSave() {
         &larr; Back
       </button>
       <h2 class="text-lg font-medium">{{ projectName }} &mdash; Configuration</h2>
+      <button
+        data-testid="edit-template-btn"
+        class="ml-auto rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+        @click="emit('edit-template')"
+      >
+        PRD Template
+      </button>
     </div>
 
     <!-- Loading state -->
