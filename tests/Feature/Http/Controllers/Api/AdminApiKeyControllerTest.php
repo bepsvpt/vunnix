@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-function createAdminUser(): User
+function createApiKeyAdminUser(): User
 {
     $user = User::factory()->create();
     $project = Project::factory()->create(['enabled' => true]);
@@ -29,7 +29,7 @@ function createAdminUser(): User
 // ─── Index ─────────────────────────────────────────────────────
 
 it('admin can list all API keys', function () {
-    $admin = createAdminUser();
+    $admin = createApiKeyAdminUser();
     ApiKey::factory()->count(5)->create();
 
     $this->actingAs($admin)
@@ -39,7 +39,7 @@ it('admin can list all API keys', function () {
 });
 
 it('admin index includes user info', function () {
-    $admin = createAdminUser();
+    $admin = createApiKeyAdminUser();
     $otherUser = User::factory()->create(['name' => 'John Doe', 'email' => 'john@example.com']);
     ApiKey::factory()->create(['user_id' => $otherUser->id]);
 
@@ -54,7 +54,7 @@ it('admin index includes user info', function () {
 // ─── Destroy ──────────────────────────────────────────────────
 
 it('admin can revoke any user\'s API key', function () {
-    $admin = createAdminUser();
+    $admin = createApiKeyAdminUser();
     $otherKey = ApiKey::factory()->create();
 
     $this->actingAs($admin)
