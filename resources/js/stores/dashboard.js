@@ -7,6 +7,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const metricsUpdates = ref([]);
     const overview = ref(null);
     const overviewLoading = ref(false);
+    const quality = ref(null);
+    const qualityLoading = ref(false);
     const isLoading = ref(false);
     const nextCursor = ref(null);
     const hasMore = computed(() => nextCursor.value !== null);
@@ -103,11 +105,23 @@ export const useDashboardStore = defineStore('dashboard', () => {
         }
     }
 
+    async function fetchQuality() {
+        qualityLoading.value = true;
+        try {
+            const response = await axios.get('/api/v1/dashboard/quality');
+            quality.value = response.data.data;
+        } finally {
+            qualityLoading.value = false;
+        }
+    }
+
     function $reset() {
         activityFeed.value = [];
         metricsUpdates.value = [];
         overview.value = null;
         overviewLoading.value = false;
+        quality.value = null;
+        qualityLoading.value = false;
         activeFilter.value = null;
         projectFilter.value = null;
         isLoading.value = false;
@@ -119,6 +133,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         metricsUpdates,
         overview,
         overviewLoading,
+        quality,
+        qualityLoading,
         activeFilter,
         projectFilter,
         isLoading,
@@ -129,6 +145,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         addMetricsUpdate,
         fetchActivity,
         fetchOverview,
+        fetchQuality,
         loadMore,
         $reset,
     };

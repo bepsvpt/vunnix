@@ -322,6 +322,79 @@ checker.check(
 )
 
 # ============================================================
+#  T77: Dashboard — Quality
+# ============================================================
+section("T77: Dashboard — Quality")
+
+# Backend
+checker.check(
+    "DashboardQualityController exists",
+    file_exists("app/Http/Controllers/Api/DashboardQualityController.php"),
+)
+checker.check(
+    "Quality controller queries code review tasks",
+    file_contains("app/Http/Controllers/Api/DashboardQualityController.php", "CodeReview"),
+)
+checker.check(
+    "Quality controller computes severity distribution",
+    file_contains("app/Http/Controllers/Api/DashboardQualityController.php", "severity_distribution"),
+)
+checker.check(
+    "Quality controller computes avg findings per review",
+    file_contains("app/Http/Controllers/Api/DashboardQualityController.php", "avg_findings_per_review"),
+)
+checker.check(
+    "Quality controller scoped to user projects",
+    file_contains("app/Http/Controllers/Api/DashboardQualityController.php", "projectIds"),
+)
+checker.check(
+    "Dashboard quality route registered",
+    file_contains("routes/api.php", "/dashboard/quality"),
+)
+checker.check(
+    "Dashboard quality API test exists",
+    file_exists("tests/Feature/DashboardQualityApiTest.php"),
+)
+
+# Frontend
+checker.check(
+    "DashboardQuality component exists",
+    file_exists("resources/js/components/DashboardQuality.vue"),
+)
+checker.check(
+    "DashboardQuality has acceptance rate card",
+    file_contains("resources/js/components/DashboardQuality.vue", "acceptance-rate-card"),
+)
+checker.check(
+    "DashboardQuality has severity distribution",
+    file_contains("resources/js/components/DashboardQuality.vue", "severity-distribution"),
+)
+checker.check(
+    "DashboardQuality has avg findings card",
+    file_contains("resources/js/components/DashboardQuality.vue", "avg-findings-card"),
+)
+checker.check(
+    "Dashboard store has fetchQuality action",
+    file_contains("resources/js/stores/dashboard.js", "fetchQuality"),
+)
+checker.check(
+    "Dashboard store has quality state",
+    file_contains("resources/js/stores/dashboard.js", "quality"),
+)
+checker.check(
+    "DashboardPage imports DashboardQuality",
+    file_contains("resources/js/pages/DashboardPage.vue", "DashboardQuality"),
+)
+checker.check(
+    "DashboardPage has quality view tab",
+    file_contains("resources/js/pages/DashboardPage.vue", "'quality'"),
+)
+checker.check(
+    "DashboardQuality test exists",
+    file_exists("resources/js/components/DashboardQuality.test.js"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
