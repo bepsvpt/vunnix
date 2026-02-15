@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M4 — Dashboard & Metrics
-- **Tasks Complete:** 75 / 116 (64.7%)
-- **Current Task:** T75 — Dashboard activity feed
-- **Last Verified:** T74
+- **Tasks Complete:** 76 / 116 (65.5%)
+- **Current Task:** T76 — Dashboard overview
+- **Last Verified:** T75
 
 ---
 
@@ -119,12 +119,12 @@
 
 - [x] T115: Conversation archiving (D141) [Depends: T47]
 
-## M4 — Dashboard & Metrics (2/15)
+## M4 — Dashboard & Metrics (3/15)
 
 - [x] T73: Reverb channel configuration (channel authorization) [Depends: T2, T15]
 - [x] T74: Laravel Echo client [Depends: T61, T73]
-- [ ] **T75:** Dashboard — activity feed (filter tabs, cursor pagination) [Depends: T62, T74, T15]
-- [ ] T76: Dashboard — Overview [Depends: T75]
+- [x] T75: Dashboard — activity feed (filter tabs, cursor pagination) [Depends: T62, T74, T15]
+- [ ] **T76:** Dashboard — Overview [Depends: T75]
 - [ ] T77: Dashboard — Quality [Depends: T75]
 - [ ] T78: Dashboard — PM Activity [Depends: T75]
 - [ ] T79: Dashboard — Designer Activity [Depends: T75]
