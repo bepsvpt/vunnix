@@ -161,3 +161,79 @@ it('removes a project override via set with null', function () {
     // Should fall back to global/default
     expect($service->get($project, 'ai_model'))->toBe('opus');
 });
+
+// ─── T92: File config layer ─────────────────────────────────────
+
+it('uses file config when no project override exists', function () {
+    $project = Project::factory()->create();
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'settings' => [],
+    ]);
+
+    $service = new ProjectConfigService();
+    $result = $service->getWithFileConfig($project, 'ai_model', ['ai_model' => 'sonnet']);
+
+    expect($result)->toBe('sonnet');
+});
+
+it('project DB override takes precedence over file config', function () {
+    $project = Project::factory()->create();
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'settings' => ['ai_model' => 'haiku'],
+    ]);
+
+    $service = new ProjectConfigService();
+    $result = $service->getWithFileConfig($project, 'ai_model', ['ai_model' => 'sonnet']);
+
+    expect($result)->toBe('haiku');
+});
+
+it('file config takes precedence over global setting', function () {
+    $project = Project::factory()->create();
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'settings' => [],
+    ]);
+    GlobalSetting::set('ai_model', 'haiku', 'string');
+
+    $service = new ProjectConfigService();
+    $result = $service->getWithFileConfig($project, 'ai_model', ['ai_model' => 'sonnet']);
+
+    expect($result)->toBe('sonnet');
+});
+
+it('file config for nested key works with dot-notation', function () {
+    $project = Project::factory()->create();
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'settings' => [],
+    ]);
+
+    $service = new ProjectConfigService();
+    $result = $service->getWithFileConfig($project, 'code_review.auto_review', [
+        'code_review.auto_review' => false,
+    ]);
+
+    expect($result)->toBe(false);
+});
+
+it('allEffective includes file source indicator', function () {
+    $project = Project::factory()->create();
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'settings' => ['ai_model' => 'haiku'], // DB override
+    ]);
+
+    $service = new ProjectConfigService();
+    $effective = $service->allEffective($project, [
+        'code_review.auto_review' => false,  // file config (no DB override)
+        'ai_model' => 'sonnet',              // file config (but DB overrides)
+    ]);
+
+    // DB override wins over file
+    expect($effective['ai_model'])->toEqual(['value' => 'haiku', 'source' => 'project']);
+    // File config used (no DB override)
+    expect($effective['code_review.auto_review'])->toEqual(['value' => false, 'source' => 'file']);
+});

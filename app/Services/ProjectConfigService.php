@@ -112,10 +112,42 @@ class ProjectConfigService
     }
 
     /**
-     * Get all effective settings for a project with source indicators.
-     * Returns: ['key' => ['value' => mixed, 'source' => 'project'|'global'|'default']]
+     * Get a resolved config value with file config layer:
+     * project override → file config → global → default.
+     *
+     * @param array<string, mixed> $fileConfig Pre-fetched flat .vunnix.toml settings
      */
-    public function allEffective(Project $project): array
+    public function getWithFileConfig(Project $project, string $key, array $fileConfig, mixed $default = null): mixed
+    {
+        $settings = $this->getProjectSettings($project);
+
+        // 1. Project DB override (highest priority)
+        $value = Arr::get($settings, $key);
+        if ($value !== null) {
+            return $value;
+        }
+
+        // 2. File config (.vunnix.toml)
+        if (array_key_exists($key, $fileConfig)) {
+            return $fileConfig[$key];
+        }
+
+        // 3. Global setting (top-level keys only)
+        $topKey = explode('.', $key)[0];
+        if ($topKey === $key) {
+            return GlobalSetting::get($key, $default);
+        }
+
+        return $default;
+    }
+
+    /**
+     * Get all effective settings for a project with source indicators.
+     * Returns: ['key' => ['value' => mixed, 'source' => 'project'|'file'|'global'|'default']]
+     *
+     * @param array<string, mixed> $fileConfig Pre-fetched flat .vunnix.toml settings
+     */
+    public function allEffective(Project $project, array $fileConfig = []): array
     {
         $projectSettings = $this->getProjectSettings($project);
         $globalDefaults = GlobalSetting::defaults();
@@ -132,6 +164,11 @@ class ProjectConfigService
             if ($globalValue !== ($globalDefaults[$key] ?? null)) {
                 $result[$key] = ['value' => $globalValue, 'source' => 'global'];
             }
+        }
+
+        // Layer file config on top of globals (before project overrides)
+        foreach ($fileConfig as $key => $value) {
+            $result[$key] = ['value' => $value, 'source' => 'file'];
         }
 
         // Layer project overrides on top
