@@ -11,6 +11,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const qualityLoading = ref(false);
     const pmActivity = ref(null);
     const pmActivityLoading = ref(false);
+    const designerActivity = ref(null);
+    const designerActivityLoading = ref(false);
     const isLoading = ref(false);
     const nextCursor = ref(null);
     const hasMore = computed(() => nextCursor.value !== null);
@@ -127,6 +129,16 @@ export const useDashboardStore = defineStore('dashboard', () => {
         }
     }
 
+    async function fetchDesignerActivity() {
+        designerActivityLoading.value = true;
+        try {
+            const response = await axios.get('/api/v1/dashboard/designer-activity');
+            designerActivity.value = response.data.data;
+        } finally {
+            designerActivityLoading.value = false;
+        }
+    }
+
     function $reset() {
         activityFeed.value = [];
         metricsUpdates.value = [];
@@ -136,6 +148,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         qualityLoading.value = false;
         pmActivity.value = null;
         pmActivityLoading.value = false;
+        designerActivity.value = null;
+        designerActivityLoading.value = false;
         activeFilter.value = null;
         projectFilter.value = null;
         isLoading.value = false;
@@ -151,6 +165,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         qualityLoading,
         pmActivity,
         pmActivityLoading,
+        designerActivity,
+        designerActivityLoading,
         activeFilter,
         projectFilter,
         isLoading,
@@ -163,6 +179,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         fetchOverview,
         fetchQuality,
         fetchPMActivity,
+        fetchDesignerActivity,
         loadMore,
         $reset,
     };
