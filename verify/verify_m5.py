@@ -1402,6 +1402,133 @@ checker.check(
 )
 
 # ============================================================
+#  T103: Audit logging
+# ============================================================
+section("T103: Audit Logging")
+
+# Migration
+checker.check(
+    "audit_logs migration exists",
+    file_exists("database/migrations/2024_01_01_000011_create_audit_logs_table.php"),
+)
+
+# Model
+checker.check(
+    "AuditLog model exists",
+    file_exists("app/Models/AuditLog.php"),
+)
+checker.check(
+    "AuditLog has event_type field",
+    file_contains("app/Models/AuditLog.php", "'event_type'"),
+)
+checker.check(
+    "AuditLog has properties cast",
+    file_contains("app/Models/AuditLog.php", "'properties' => 'array'"),
+)
+
+# Factory
+checker.check(
+    "AuditLog factory exists",
+    file_exists("database/factories/AuditLogFactory.php"),
+)
+checker.check(
+    "AuditLog factory has conversationTurn state",
+    file_contains("database/factories/AuditLogFactory.php", "conversationTurn"),
+)
+checker.check(
+    "AuditLog factory has taskExecution state",
+    file_contains("database/factories/AuditLogFactory.php", "taskExecution"),
+)
+
+# Service
+checker.check(
+    "AuditLogService exists",
+    file_exists("app/Services/AuditLogService.php"),
+)
+checker.check(
+    "AuditLogService has logConversationTurn",
+    file_contains("app/Services/AuditLogService.php", "logConversationTurn"),
+)
+checker.check(
+    "AuditLogService has logTaskExecution",
+    file_contains("app/Services/AuditLogService.php", "logTaskExecution"),
+)
+checker.check(
+    "AuditLogService has logConfigurationChange",
+    file_contains("app/Services/AuditLogService.php", "logConfigurationChange"),
+)
+checker.check(
+    "AuditLogService has logWebhookReceived",
+    file_contains("app/Services/AuditLogService.php", "logWebhookReceived"),
+)
+checker.check(
+    "AuditLogService has logAuthEvent",
+    file_contains("app/Services/AuditLogService.php", "logAuthEvent"),
+)
+checker.check(
+    "AuditLogService has logActionDispatch",
+    file_contains("app/Services/AuditLogService.php", "logActionDispatch"),
+)
+
+# Controller
+checker.check(
+    "AuditLogController exists",
+    file_exists("app/Http/Controllers/Api/AuditLogController.php"),
+)
+checker.check(
+    "AuditLogController has index method",
+    file_contains("app/Http/Controllers/Api/AuditLogController.php", "function index"),
+)
+checker.check(
+    "AuditLogController has show method",
+    file_contains("app/Http/Controllers/Api/AuditLogController.php", "function show"),
+)
+checker.check(
+    "AuditLogController has authorizeAdmin",
+    file_contains("app/Http/Controllers/Api/AuditLogController.php", "authorizeAdmin"),
+)
+
+# Resource
+checker.check(
+    "AuditLogResource exists",
+    file_exists("app/Http/Resources/AuditLogResource.php"),
+)
+
+# Routes
+checker.check(
+    "Audit log routes registered",
+    file_contains("routes/api.php", "audit-logs"),
+)
+
+# Integration hooks
+checker.check(
+    "AuthController has audit logging",
+    file_contains("app/Http/Controllers/AuthController.php", "AuditLogService"),
+)
+checker.check(
+    "AdminSettingsController has audit logging",
+    file_contains("app/Http/Controllers/Api/AdminSettingsController.php", "AuditLogService"),
+)
+checker.check(
+    "AdminProjectConfigController has audit logging",
+    file_contains("app/Http/Controllers/Api/AdminProjectConfigController.php", "AuditLogService"),
+)
+checker.check(
+    "WebhookController has audit logging",
+    file_contains("app/Http/Controllers/WebhookController.php", "AuditLogService"),
+)
+
+# Tests
+checker.check(
+    "AuditLogService test exists",
+    file_exists("tests/Feature/Services/AuditLogServiceTest.php"),
+)
+checker.check(
+    "AuditLogController test exists",
+    file_exists("tests/Feature/Http/Controllers/Api/AuditLogControllerTest.php"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()
