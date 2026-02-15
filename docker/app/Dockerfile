@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:latest-php8.4-bookworm
+FROM dunglas/frankenphp:php8.4-bookworm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
