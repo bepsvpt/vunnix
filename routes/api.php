@@ -205,6 +205,8 @@ Route::prefix('v1')->group(function () {
                 ->name('api.ext.tasks.index');
             Route::get('/tasks/{task}', [ExternalTaskController::class, 'show'])
                 ->name('api.ext.tasks.show');
+            Route::post('/tasks/review', [ExternalTaskController::class, 'triggerReview'])
+                ->name('api.ext.tasks.review');
             Route::get('/metrics/summary', [ExternalMetricsController::class, 'summary'])
                 ->name('api.ext.metrics.summary');
             Route::get('/activity', [ExternalActivityController::class, 'index'])

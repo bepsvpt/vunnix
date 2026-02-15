@@ -1245,6 +1245,37 @@ checker.check(
     file_exists("tests/Feature/ExternalApiAuthTest.php"),
 )
 
+# ── T101: Documented external endpoints ──────────────────────
+
+checker.check(
+    "ExternalTaskResource exists",
+    file_exists("app/Http/Resources/ExternalTaskResource.php"),
+)
+checker.check(
+    "ExternalTaskController has filters",
+    file_contains("app/Http/Controllers/Api/ExternalTaskController.php", "date_from"),
+)
+checker.check(
+    "ExternalTaskController has triggerReview",
+    file_contains("app/Http/Controllers/Api/ExternalTaskController.php", "triggerReview"),
+)
+checker.check(
+    "POST /tasks/review route registered",
+    file_contains("routes/api.php", "api.ext.tasks.review"),
+)
+checker.check(
+    "ExternalMetricsController implemented (not stub)",
+    file_contains("app/Http/Controllers/Api/ExternalMetricsController.php", "total_completed"),
+)
+checker.check(
+    "ExternalActivityController implemented (not stub)",
+    file_contains("app/Http/Controllers/Api/ExternalActivityController.php", "ActivityResource"),
+)
+checker.check(
+    "ExternalEndpointsTest exists",
+    file_exists("tests/Feature/Http/Controllers/Api/ExternalEndpointsTest.php"),
+)
+
 # ============================================================
 #  Summary
 # ============================================================

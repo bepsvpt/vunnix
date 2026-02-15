@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M5 — Admin & Configuration
-- **Tasks Complete:** 101 / 116 (87.1%)
-- **Current Task:** T101 — Documented external endpoints
-- **Last Verified:** T100
+- **Tasks Complete:** 102 / 116 (87.9%)
+- **Current Task:** T102 — Prompt versioning
+- **Last Verified:** T101
 
 ---
 
@@ -137,7 +137,7 @@
 - [x] T86: Acceptance tracking (webhook-driven D149) [Depends: T34, T11, T13]
 - [x] T87: Engineer feedback — emoji reactions on MR merge [Depends: T34, T11, T86]
 
-## M5 — Admin & Configuration (13/18)
+## M5 — Admin & Configuration (14/18)
 
 - [x] T88: Admin page — project management (registry D150, label pre-creation) [Depends: T62, T11, T9]
 - [x] T89: Admin page — role management [Depends: T62, T9]
@@ -152,8 +152,8 @@
 - [x] T98: Team chat notifications — webhook integration [Depends: T90]
 - [x] T99: Team chat notifications — event routing [Depends: T98, T94, T15]
 - [x] T100: API versioning + external access (SHA-256 hash D152) [Depends: T9, T5]
-- [ ] **T101:** Documented external endpoints [Depends: T100]
-- [ ] T102: Prompt versioning [Depends: T15, T20, T49]
+- [x] T101: Documented external endpoints [Depends: T100]
+- [ ] **T102:** Prompt versioning [Depends: T15, T20, T49]
 - [ ] T103: Audit logging (full-content, admin API) [Depends: T5, T9]
 - [ ] T104: Infrastructure monitoring alerts [Depends: T6, T98]
 - [ ] T116: Bot PAT rotation reminder (D144) [Depends: T90, T98]

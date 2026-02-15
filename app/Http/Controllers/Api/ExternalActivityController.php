@@ -3,14 +3,45 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
+use App\Http\Resources\ActivityResource;
+use App\Models\Task;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ExternalActivityController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
-        // Stub — full implementation in T101
-        return response()->json(['data' => []]);
+        $request->validate([
+            'type' => ['nullable', 'string', 'in:code_review,feature_dev,ui_adjustment,prd_creation,issue_discussion,security_audit,deep_analysis'],
+            'project_id' => ['nullable', 'integer'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'cursor' => ['nullable', 'string'],
+        ]);
+
+        $accessibleProjectIds = $request->user()->accessibleProjects()->pluck('id');
+
+        $query = Task::with(['project:id,name', 'user:id,name,avatar_url'])
+            ->whereIn('project_id', $accessibleProjectIds)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
+
+        if ($projectId = $request->input('project_id')) {
+            if ($accessibleProjectIds->contains((int) $projectId)) {
+                $query->where('project_id', (int) $projectId);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        if ($type = $request->input('type')) {
+            $query->where('type', $type);
+        }
+
+        $perPage = $request->integer('per_page', 25);
+
+        return ActivityResource::collection(
+            $query->cursorPaginate($perPage)
+        );
     }
 }
