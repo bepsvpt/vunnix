@@ -147,3 +147,36 @@ it('cache is invalidated on config update via API', function () {
     // Cache should be invalidated — should get new value
     expect($service->get($project, 'ai_model'))->toBe('haiku');
 });
+
+// ─── T92: 4-level config hierarchy with file layer ──────────────
+
+it('resolves config with 4-level hierarchy: default → global → file → project DB', function () {
+    $project = Project::factory()->create();
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'settings' => ['ai_model' => 'haiku'], // DB override for ai_model only
+    ]);
+
+    // Global override for ai_language
+    GlobalSetting::set('ai_language', 'ja', 'string');
+
+    // File config provides: ai_model (will be overridden by DB),
+    // code_review.auto_review (no DB override — file wins),
+    // ai_language (has global but no DB — file wins)
+    $fileConfig = [
+        'ai_model' => 'sonnet',                 // overridden by project DB
+        'code_review.auto_review' => false,      // file wins (no DB override)
+        'ai_language' => 'de',                   // file wins over global
+    ];
+
+    $service = app(ProjectConfigService::class);
+
+    // Project DB overrides file → 'haiku'
+    expect($service->getWithFileConfig($project, 'ai_model', $fileConfig))->toBe('haiku');
+    // File config wins (no project DB override) → false
+    expect($service->getWithFileConfig($project, 'code_review.auto_review', $fileConfig))->toBe(false);
+    // File config wins over global → 'de'
+    expect($service->getWithFileConfig($project, 'ai_language', $fileConfig))->toBe('de');
+    // No file config, no DB → falls back to global default → 8192
+    expect($service->getWithFileConfig($project, 'max_tokens', $fileConfig))->toBe(8192);
+});
