@@ -239,6 +239,24 @@ class GitLabClient
     }
 
     /**
+     * Update an existing merge request.
+     *
+     * Used by T72 designer iteration flow to update MR title/description
+     * when pushing corrections to the same branch.
+     *
+     * @param  array<string, mixed>  $data  title, description, etc.
+     */
+    public function updateMergeRequest(int $projectId, int $mrIid, array $data): array
+    {
+        $response = $this->request()->put(
+            $this->url("projects/{$projectId}/merge_requests/{$mrIid}"),
+            $data,
+        );
+
+        return $this->handleResponse($response, "updateMergeRequest !{$mrIid}")->json();
+    }
+
+    /**
      * Find an open merge request for a given source branch.
      *
      * Used by incremental review (T40) to resolve push events to their

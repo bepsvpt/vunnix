@@ -258,6 +258,31 @@ it('creates a merge request', function () {
     });
 });
 
+it('sends PUT request to update merge request', function () {
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/42/merge_requests/123' => Http::response([
+            'iid' => 123,
+            'title' => 'Updated title',
+            'web_url' => 'https://gitlab.example.com/project/-/merge_requests/123',
+        ], 200),
+    ]);
+
+    $client = app(GitLabClient::class);
+    $result = $client->updateMergeRequest(42, 123, [
+        'title' => 'Updated title',
+        'description' => 'Updated description',
+    ]);
+
+    expect($result['iid'])->toBe(123);
+    expect($result['title'])->toBe('Updated title');
+
+    Http::assertSent(function ($request) {
+        return $request->method() === 'PUT'
+            && str_contains($request->url(), 'merge_requests/123')
+            && $request['title'] === 'Updated title';
+    });
+});
+
 it('finds an open merge request for a branch', function () {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests*' => Http::response([
