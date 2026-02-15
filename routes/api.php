@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AdminProjectController;
 use App\Http\Controllers\Api\AdminRoleController;
+use App\Http\Controllers\Api\AdminSettingsController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DashboardOverviewController;
 use App\Http\Controllers\Api\DashboardDesignerActivityController;
@@ -122,6 +123,10 @@ Route::prefix('v1')->group(function () {
             ->name('api.admin.role-assignments.destroy');
         Route::get('/admin/users', [AdminRoleController::class, 'users'])
             ->name('api.admin.users.index');
+
+        // Admin global settings (T90)
+        Route::get('/admin/settings', [AdminSettingsController::class, 'index'])
+            ->name('api.admin.settings.index');
     });
 
 });
