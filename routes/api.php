@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AdminProjectController;
 use App\Http\Controllers\Api\AdminRoleController;
+use App\Http\Controllers\Api\AdminProjectConfigController;
 use App\Http\Controllers\Api\AdminSettingsController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DashboardOverviewController;
@@ -129,6 +130,12 @@ Route::prefix('v1')->group(function () {
             ->name('api.admin.settings.index');
         Route::put('/admin/settings', [AdminSettingsController::class, 'update'])
             ->name('api.admin.settings.update');
+
+        // Admin per-project config (T91)
+        Route::get('/admin/projects/{project}/config', [AdminProjectConfigController::class, 'show'])
+            ->name('api.admin.projects.config.show');
+        Route::put('/admin/projects/{project}/config', [AdminProjectConfigController::class, 'update'])
+            ->name('api.admin.projects.config.update');
     });
 
 });
