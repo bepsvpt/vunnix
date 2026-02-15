@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DashboardOverviewController;
 use App\Http\Controllers\Api\DashboardDesignerActivityController;
+use App\Http\Controllers\Api\DashboardEfficiencyController;
 use App\Http\Controllers\Api\DashboardPMActivityController;
 use App\Http\Controllers\Api\DashboardQualityController;
 use App\Http\Controllers\Api\TaskResultViewController;
@@ -75,6 +76,10 @@ Route::prefix('v1')->group(function () {
         // Dashboard designer activity metrics (T79)
         Route::get('/dashboard/designer-activity', DashboardDesignerActivityController::class)
             ->name('api.dashboard.designer-activity');
+
+        // Dashboard efficiency metrics (T80)
+        Route::get('/dashboard/efficiency', DashboardEfficiencyController::class)
+            ->name('api.dashboard.efficiency');
     });
 
 });
