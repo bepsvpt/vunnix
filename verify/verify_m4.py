@@ -591,6 +591,103 @@ checker.check(
 )
 
 # ============================================================
+#  T87: Engineer feedback — emoji reactions
+# ============================================================
+section("T87: Engineer Feedback — Emoji Reactions")
+
+# EngineerFeedbackService
+checker.check(
+    "EngineerFeedbackService exists",
+    file_exists("app/Services/EngineerFeedbackService.php"),
+)
+checker.check(
+    "EngineerFeedbackService classifies reactions",
+    file_contains("app/Services/EngineerFeedbackService.php", "classifyReactions"),
+)
+checker.check(
+    "EngineerFeedbackService maps thumbsup to positive",
+    file_contains("app/Services/EngineerFeedbackService.php", "thumbsup"),
+)
+checker.check(
+    "EngineerFeedbackService maps thumbsdown to negative",
+    file_contains("app/Services/EngineerFeedbackService.php", "thumbsdown"),
+)
+
+# GitLabClient award emoji
+checker.check(
+    "GitLabClient has listNoteAwardEmoji method",
+    file_contains("app/Services/GitLabClient.php", "listNoteAwardEmoji"),
+)
+checker.check(
+    "GitLabClient award emoji uses correct API path",
+    file_contains("app/Services/GitLabClient.php", "award_emoji"),
+)
+
+# Migration for emoji columns
+checker.check(
+    "Emoji feedback migration exists",
+    file_exists("database/migrations/2026_02_15_050000_add_emoji_feedback_to_finding_acceptances.php"),
+)
+checker.check(
+    "Migration adds emoji_positive_count",
+    file_contains("database/migrations/2026_02_15_050000_add_emoji_feedback_to_finding_acceptances.php", "emoji_positive_count"),
+)
+checker.check(
+    "Migration adds emoji_negative_count",
+    file_contains("database/migrations/2026_02_15_050000_add_emoji_feedback_to_finding_acceptances.php", "emoji_negative_count"),
+)
+checker.check(
+    "Migration adds emoji_sentiment",
+    file_contains("database/migrations/2026_02_15_050000_add_emoji_feedback_to_finding_acceptances.php", "emoji_sentiment"),
+)
+
+# FindingAcceptance model updated
+checker.check(
+    "FindingAcceptance has emoji_positive_count fillable",
+    file_contains("app/Models/FindingAcceptance.php", "emoji_positive_count"),
+)
+checker.check(
+    "FindingAcceptance has emoji_negative_count fillable",
+    file_contains("app/Models/FindingAcceptance.php", "emoji_negative_count"),
+)
+checker.check(
+    "FindingAcceptance has emoji_sentiment fillable",
+    file_contains("app/Models/FindingAcceptance.php", "emoji_sentiment"),
+)
+checker.check(
+    "FindingAcceptance has category fillable",
+    file_contains("app/Models/FindingAcceptance.php", "'category'"),
+)
+
+# ProcessAcceptanceTracking integration
+checker.check(
+    "ProcessAcceptanceTracking uses EngineerFeedbackService",
+    file_contains("app/Jobs/ProcessAcceptanceTracking.php", "EngineerFeedbackService"),
+)
+checker.check(
+    "ProcessAcceptanceTracking collects emoji reactions",
+    file_contains("app/Jobs/ProcessAcceptanceTracking.php", "collectEmojiReactions"),
+)
+checker.check(
+    "ProcessAcceptanceTracking calls listNoteAwardEmoji",
+    file_contains("app/Jobs/ProcessAcceptanceTracking.php", "listNoteAwardEmoji"),
+)
+
+# Tests
+checker.check(
+    "EngineerFeedbackService unit test exists",
+    file_exists("tests/Unit/Services/EngineerFeedbackServiceTest.php"),
+)
+checker.check(
+    "Emoji reactions feature test exists",
+    file_exists("tests/Feature/Jobs/ProcessEmojiReactionsTest.php"),
+)
+checker.check(
+    "GitLabClient award emoji test exists",
+    file_exists("tests/Unit/Services/GitLabClientAwardEmojiTest.php"),
+)
+
+# ============================================================
 #  Summary
 # ============================================================
 checker.summary()

@@ -7,6 +7,7 @@ use App\Enums\TaskType;
 use App\Models\FindingAcceptance;
 use App\Models\Task;
 use App\Services\AcceptanceTrackingService;
+use App\Services\EngineerFeedbackService;
 use App\Services\GitLabClient;
 use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -18,8 +19,10 @@ use Illuminate\Support\Facades\Log;
  *
  * Final classification of all AI discussion threads: resolved → accepted,
  * unresolved → dismissed. Detects bulk resolution for over-reliance signal.
+ * Collects engineer emoji feedback (T87) for quality signal aggregation.
  *
  * @see §16.2 Acceptance Tracking
+ * @see §16.3 Engineer Feedback
  */
 class ProcessAcceptanceTracking implements ShouldQueue
 {
@@ -37,7 +40,8 @@ class ProcessAcceptanceTracking implements ShouldQueue
 
     public function handle(GitLabClient $gitLab): void
     {
-        $service = new AcceptanceTrackingService();
+        $acceptanceService = new AcceptanceTrackingService();
+        $feedbackService = new EngineerFeedbackService();
 
         // Find all completed code review tasks for this MR
         $tasks = Task::where('project_id', $this->projectId)
@@ -74,11 +78,14 @@ class ProcessAcceptanceTracking implements ShouldQueue
         // Filter to AI-created discussions only
         $aiDiscussions = array_filter(
             $discussions,
-            fn (array $d) => $service->isAiCreatedDiscussion($d),
+            fn (array $d) => $acceptanceService->isAiCreatedDiscussion($d),
         );
 
         // Detect bulk resolution across all AI threads
-        $isBulkResolved = $service->detectBulkResolution($aiDiscussions);
+        $isBulkResolved = $acceptanceService->detectBulkResolution($aiDiscussions);
+
+        // T87: Collect emoji reactions for each AI discussion's first note
+        $emojiByDiscussion = $this->collectEmojiReactions($gitLab, $feedbackService, $aiDiscussions);
 
         // Process each task's findings
         foreach ($tasks as $task) {
@@ -90,7 +97,7 @@ class ProcessAcceptanceTracking implements ShouldQueue
                     continue;
                 }
 
-                $discussionId = $service->matchFindingToDiscussion($finding, $aiDiscussions);
+                $discussionId = $acceptanceService->matchFindingToDiscussion($finding, $aiDiscussions);
 
                 // Classify the thread state
                 $status = 'dismissed'; // default if no matching discussion found
@@ -99,9 +106,16 @@ class ProcessAcceptanceTracking implements ShouldQueue
                         ->first(fn (array $d) => ($d['id'] ?? null) === $discussionId);
 
                     if ($matchedDiscussion !== null) {
-                        $status = $service->classifyThreadState($matchedDiscussion);
+                        $status = $acceptanceService->classifyThreadState($matchedDiscussion);
                     }
                 }
+
+                // T87: Get emoji feedback for this discussion
+                $emojiResult = $emojiByDiscussion[$discussionId] ?? [
+                    'positive_count' => 0,
+                    'negative_count' => 0,
+                    'sentiment' => 'neutral',
+                ];
 
                 FindingAcceptance::updateOrCreate(
                     [
@@ -115,9 +129,13 @@ class ProcessAcceptanceTracking implements ShouldQueue
                         'line' => $finding['line'],
                         'severity' => $finding['severity'],
                         'title' => $finding['title'],
+                        'category' => $finding['category'] ?? null,
                         'gitlab_discussion_id' => $discussionId,
                         'status' => $status,
                         'bulk_resolved' => $isBulkResolved,
+                        'emoji_positive_count' => $emojiResult['positive_count'],
+                        'emoji_negative_count' => $emojiResult['negative_count'],
+                        'emoji_sentiment' => $emojiResult['sentiment'],
                     ],
                 );
             }
@@ -133,5 +151,57 @@ class ProcessAcceptanceTracking implements ShouldQueue
             'findings_tracked' => $totalRecords,
             'bulk_resolved' => $isBulkResolved,
         ]);
+    }
+
+    /**
+     * Collect emoji reactions for all AI discussion first notes.
+     *
+     * Returns a map of discussion_id => emoji classification result.
+     * Failures for individual notes are logged and treated as neutral.
+     *
+     * @param  array<int, array>  $aiDiscussions
+     * @return array<string, array{positive_count: int, negative_count: int, sentiment: string}>
+     */
+    private function collectEmojiReactions(
+        GitLabClient $gitLab,
+        EngineerFeedbackService $feedbackService,
+        array $aiDiscussions,
+    ): array {
+        $emojiByDiscussion = [];
+
+        foreach ($aiDiscussions as $discussion) {
+            $discussionId = $discussion['id'] ?? null;
+            $noteId = $discussion['notes'][0]['id'] ?? null;
+
+            if ($discussionId === null || $noteId === null) {
+                continue;
+            }
+
+            try {
+                $emoji = $gitLab->listNoteAwardEmoji(
+                    $this->gitlabProjectId,
+                    $this->mrIid,
+                    $discussionId,
+                    (int) $noteId,
+                );
+
+                $emojiByDiscussion[$discussionId] = $feedbackService->classifyReactions($emoji);
+            } catch (\Throwable $e) {
+                Log::warning('ProcessAcceptanceTracking: failed to fetch emoji for discussion', [
+                    'project_id' => $this->projectId,
+                    'mr_iid' => $this->mrIid,
+                    'discussion_id' => $discussionId,
+                    'error' => $e->getMessage(),
+                ]);
+
+                $emojiByDiscussion[$discussionId] = [
+                    'positive_count' => 0,
+                    'negative_count' => 0,
+                    'sentiment' => 'neutral',
+                ];
+            }
+        }
+
+        return $emojiByDiscussion;
     }
 }
