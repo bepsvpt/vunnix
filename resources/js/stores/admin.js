@@ -179,6 +179,21 @@ export const useAdminStore = defineStore('admin', () => {
         }
     }
 
+    async function testWebhook(webhookUrl, platform) {
+        try {
+            const response = await axios.post('/api/v1/admin/settings/test-webhook', {
+                webhook_url: webhookUrl,
+                platform: platform,
+            });
+            return response.data;
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Failed to test webhook.',
+            };
+        }
+    }
+
     async function updateSettings(settingsList) {
         try {
             const { data } = await axios.put('/api/v1/admin/settings', {
@@ -436,6 +451,7 @@ export const useAdminStore = defineStore('admin', () => {
         apiKeyConfigured,
         settingsDefaults,
         fetchSettings,
+        testWebhook,
         updateSettings,
         // Per-project config (T91)
         projectConfig,

@@ -17,8 +17,17 @@ const form = ref({
     ai_prices_output: 25.0,
     team_chat_webhook_url: '',
     team_chat_platform: 'slack',
+    team_chat_enabled: false,
+    team_chat_categories: {
+        task_completed: true,
+        task_failed: true,
+        alert: true,
+    },
     bot_pat_created_at: '',
 });
+
+const testingWebhook = ref(false);
+const testWebhookResult = ref(null);
 
 const platformOptions = [
     { value: 'slack', label: 'Slack' },
@@ -72,6 +81,8 @@ async function handleSave() {
         { key: 'ai_prices', value: { input: Number(form.value.ai_prices_input), output: Number(form.value.ai_prices_output) }, type: 'json' },
         { key: 'team_chat_webhook_url', value: form.value.team_chat_webhook_url, type: 'string' },
         { key: 'team_chat_platform', value: form.value.team_chat_platform, type: 'string' },
+        { key: 'team_chat_enabled', value: form.value.team_chat_enabled, type: 'boolean' },
+        { key: 'team_chat_categories', value: form.value.team_chat_categories, type: 'json' },
     ];
 
     // Only include bot_pat_created_at if it has a value
@@ -88,6 +99,20 @@ async function handleSave() {
     } else {
         saveError.value = result.error;
     }
+}
+
+async function handleTestWebhook() {
+    testingWebhook.value = true;
+    testWebhookResult.value = null;
+
+    const result = await admin.testWebhook(
+        form.value.team_chat_webhook_url,
+        form.value.team_chat_platform
+    );
+
+    testingWebhook.value = false;
+    testWebhookResult.value = result;
+    setTimeout(() => { testWebhookResult.value = null; }, 5000);
 }
 </script>
 
@@ -175,6 +200,11 @@ async function handleSave() {
       <div class="mb-6 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700" data-testid="section-team-chat">
         <h3 class="text-sm font-medium mb-3">Team Chat Notifications</h3>
         <div class="space-y-3">
+          <!-- Enabled toggle -->
+          <div class="flex items-center gap-2">
+            <input type="checkbox" v-model="form.team_chat_enabled" id="team-chat-enabled" class="rounded border-zinc-300 dark:border-zinc-600" data-testid="setting-team_chat_enabled" />
+            <label for="team-chat-enabled" class="text-xs font-medium text-zinc-600 dark:text-zinc-400">Enable team chat notifications</label>
+          </div>
           <div>
             <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Webhook URL</label>
             <input v-model="form.team_chat_webhook_url" type="url" class="w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800" placeholder="https://hooks.slack.com/services/..." data-testid="setting-team_chat_webhook_url" />
@@ -184,6 +214,35 @@ async function handleSave() {
             <select v-model="form.team_chat_platform" class="w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800" data-testid="setting-team_chat_platform">
               <option v-for="opt in platformOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
+          </div>
+          <!-- Notification categories -->
+          <div>
+            <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Notification Categories</label>
+            <div class="flex flex-wrap gap-3" data-testid="setting-team_chat_categories">
+              <label class="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                <input type="checkbox" v-model="form.team_chat_categories.task_completed" class="rounded border-zinc-300 dark:border-zinc-600" /> Task completed
+              </label>
+              <label class="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                <input type="checkbox" v-model="form.team_chat_categories.task_failed" class="rounded border-zinc-300 dark:border-zinc-600" /> Task failed
+              </label>
+              <label class="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                <input type="checkbox" v-model="form.team_chat_categories.alert" class="rounded border-zinc-300 dark:border-zinc-600" /> Admin alerts
+              </label>
+            </div>
+          </div>
+          <!-- Test webhook button -->
+          <div class="flex items-center gap-2">
+            <button
+              class="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              data-testid="test-webhook-btn"
+              :disabled="testingWebhook || !form.team_chat_webhook_url"
+              @click="handleTestWebhook"
+            >
+              {{ testingWebhook ? 'Testing...' : 'Test Webhook' }}
+            </button>
+            <span v-if="testWebhookResult !== null" class="text-xs" :class="testWebhookResult.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'" data-testid="test-webhook-result">
+              {{ testWebhookResult.message }}
+            </span>
           </div>
         </div>
       </div>

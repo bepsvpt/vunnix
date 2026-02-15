@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\GlobalSettingResource;
 use App\Models\GlobalSetting;
+use App\Services\TeamChat\TeamChatNotificationService;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\Admin\UpdateSettingsRequest;
 use Illuminate\Http\Request;
@@ -49,6 +50,24 @@ class AdminSettingsController extends Controller
         return response()->json([
             'success' => true,
             'data' => GlobalSettingResource::collection($settings),
+        ]);
+    }
+
+    public function testWebhook(Request $request): JsonResponse
+    {
+        $this->authorizeSettingsAdmin($request);
+
+        $request->validate([
+            'webhook_url' => ['required', 'url', 'max:1000'],
+            'platform' => ['required', 'string', 'in:slack,mattermost,google_chat,generic'],
+        ]);
+
+        $service = new TeamChatNotificationService();
+        $success = $service->sendTest($request->input('webhook_url'), $request->input('platform'));
+
+        return response()->json([
+            'success' => $success,
+            'message' => $success ? 'Test notification sent successfully.' : 'Failed to send test notification. Check the webhook URL.',
         ]);
     }
 

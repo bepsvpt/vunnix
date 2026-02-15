@@ -134,6 +134,8 @@ Route::prefix('v1')->group(function () {
             ->name('api.admin.settings.index');
         Route::put('/admin/settings', [AdminSettingsController::class, 'update'])
             ->name('api.admin.settings.update');
+        Route::post('/admin/settings/test-webhook', [AdminSettingsController::class, 'testWebhook'])
+            ->name('api.admin.settings.test-webhook');
 
         // Admin per-project config (T91)
         Route::get('/admin/projects/{project}/config', [AdminProjectConfigController::class, 'show'])

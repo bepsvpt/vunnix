@@ -75,6 +75,14 @@ TEMPLATE;
             'timeout_minutes' => 10,
             'max_tokens' => 8192,
             'ai_prices' => ['input' => 5.0, 'output' => 25.0],
+            'team_chat_enabled' => false,
+            'team_chat_webhook_url' => '',
+            'team_chat_platform' => 'slack',
+            'team_chat_categories' => [
+                'task_completed' => true,
+                'task_failed' => true,
+                'alert' => true,
+            ],
         ];
     }
 
