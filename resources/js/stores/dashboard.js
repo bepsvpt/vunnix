@@ -17,6 +17,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const efficiencyLoading = ref(false);
     const cost = ref(null);
     const costLoading = ref(false);
+    const costAlerts = ref([]);
     const adoption = ref(null);
     const adoptionLoading = ref(false);
     const isLoading = ref(false);
@@ -165,6 +166,15 @@ export const useDashboardStore = defineStore('dashboard', () => {
         }
     }
 
+    async function fetchCostAlerts() {
+        try {
+            const response = await axios.get('/api/v1/dashboard/cost-alerts');
+            costAlerts.value = response.data.data;
+        } catch (e) {
+            // Supplementary — don't block dashboard
+        }
+    }
+
     async function fetchAdoption() {
         adoptionLoading.value = true;
         try {
@@ -190,6 +200,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         efficiencyLoading.value = false;
         cost.value = null;
         costLoading.value = false;
+        costAlerts.value = [];
         adoption.value = null;
         adoptionLoading.value = false;
         activeFilter.value = null;
@@ -213,6 +224,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         efficiencyLoading,
         cost,
         costLoading,
+        costAlerts,
         adoption,
         adoptionLoading,
         activeFilter,
@@ -230,6 +242,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         fetchDesignerActivity,
         fetchEfficiency,
         fetchCost,
+        fetchCostAlerts,
         fetchAdoption,
         loadMore,
         $reset,

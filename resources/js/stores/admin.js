@@ -294,6 +294,34 @@ export const useAdminStore = defineStore('admin', () => {
         }
     }
 
+    // ─── Cost alerts (T94) ─────────────────────────────────────
+    const costAlerts = ref([]);
+    const costAlertsLoading = ref(false);
+    const costAlertsError = ref(null);
+
+    async function fetchCostAlerts() {
+        costAlertsLoading.value = true;
+        costAlertsError.value = null;
+        try {
+            const { data } = await axios.get('/api/v1/dashboard/cost-alerts');
+            costAlerts.value = data.data;
+        } catch (e) {
+            costAlertsError.value = 'Failed to load cost alerts.';
+        } finally {
+            costAlertsLoading.value = false;
+        }
+    }
+
+    async function acknowledgeCostAlert(alertId) {
+        try {
+            await axios.patch(`/api/v1/dashboard/cost-alerts/${alertId}/acknowledge`);
+            costAlerts.value = costAlerts.value.filter((a) => a.id !== alertId);
+            return { success: true };
+        } catch (e) {
+            return { success: false, error: e.response?.data?.error || 'Failed to acknowledge alert.' };
+        }
+    }
+
     return {
         projects,
         loading,
@@ -341,5 +369,11 @@ export const useAdminStore = defineStore('admin', () => {
         updatePrdTemplate,
         fetchGlobalPrdTemplate,
         updateGlobalPrdTemplate,
+        // Cost alerts (T94)
+        costAlerts,
+        costAlertsLoading,
+        costAlertsError,
+        fetchCostAlerts,
+        acknowledgeCostAlert,
     };
 });
