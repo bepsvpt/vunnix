@@ -3318,6 +3318,109 @@ checker.check(
     file_contains("app/Observers/TaskObserver.php", "TaskStatusChanged::dispatch"),
 )
 
+# ============================================================
+#  T70: Chat Page — Result Cards (Screenshots D131)
+# ============================================================
+section("T70: Chat Page — Result Cards (Screenshots D131)")
+
+# ResultCard component
+checker.check(
+    "ResultCard component exists",
+    file_exists("resources/js/components/ResultCard.vue"),
+)
+checker.check(
+    "ResultCard uses script setup",
+    file_contains("resources/js/components/ResultCard.vue", "<script setup>"),
+)
+checker.check(
+    "ResultCard has data-testid for card",
+    file_contains("resources/js/components/ResultCard.vue", 'data-testid="result-card"'),
+)
+checker.check(
+    "ResultCard has data-testid for artifact link",
+    file_contains("resources/js/components/ResultCard.vue", 'data-testid="artifact-link"'),
+)
+checker.check(
+    "ResultCard has data-testid for result summary",
+    file_contains("resources/js/components/ResultCard.vue", 'data-testid="result-summary"'),
+)
+checker.check(
+    "ResultCard has data-testid for error reason",
+    file_contains("resources/js/components/ResultCard.vue", 'data-testid="error-reason"'),
+)
+checker.check(
+    "ResultCard has data-testid for screenshot",
+    file_contains("resources/js/components/ResultCard.vue", 'data-testid="result-screenshot"'),
+)
+checker.check(
+    "ResultCard shows success indicator",
+    file_contains("resources/js/components/ResultCard.vue", "✅"),
+)
+checker.check(
+    "ResultCard shows failure indicator",
+    file_contains("resources/js/components/ResultCard.vue", "❌"),
+)
+checker.check(
+    "ResultCard handles base64 screenshot image",
+    file_contains("resources/js/components/ResultCard.vue", "data:image/png;base64"),
+)
+
+# ResultCard tests
+checker.check(
+    "ResultCard test file exists",
+    file_exists("resources/js/components/ResultCard.test.js"),
+)
+
+# MessageThread integrates ResultCard
+checker.check(
+    "MessageThread imports ResultCard",
+    file_contains("resources/js/components/MessageThread.vue", "ResultCard"),
+)
+
+# Store has result delivery
+checker.check(
+    "Conversations store has deliverTaskResult method",
+    file_contains("resources/js/stores/conversations.js", "deliverTaskResult"),
+)
+checker.check(
+    "Conversations store has completedResults state",
+    file_contains("resources/js/stores/conversations.js", "completedResults"),
+)
+checker.check(
+    "Conversations store has hydrateResultCards method",
+    file_contains("resources/js/stores/conversations.js", "hydrateResultCards"),
+)
+
+# Backend: enhanced broadcast
+checker.check(
+    "TaskStatusChanged broadcasts result_data",
+    file_contains("app/Events/TaskStatusChanged.php", "result_data"),
+)
+checker.check(
+    "TaskStatusChanged broadcasts error_reason",
+    file_contains("app/Events/TaskStatusChanged.php", "error_reason"),
+)
+
+# Backend: task result view endpoint
+checker.check(
+    "TaskResultViewController exists",
+    file_exists("app/Http/Controllers/Api/TaskResultViewController.php"),
+)
+checker.check(
+    "Task result view route registered",
+    file_contains("routes/api.php", "tasks/{task}/view"),
+)
+
+# Backend: system context marker listener
+checker.check(
+    "DeliverTaskResultToConversation listener exists",
+    file_exists("app/Listeners/DeliverTaskResultToConversation.php"),
+)
+checker.check(
+    "Listener inserts system task result message",
+    file_contains("app/Listeners/DeliverTaskResultToConversation.php", "[System: Task result delivered]"),
+)
+
 # ─── Summary ──────────────────────────────────────────────────
 
 checker.summary()
