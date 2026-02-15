@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M5 — Admin & Configuration
-- **Tasks Complete:** 96 / 116 (82.8%)
-- **Current Task:** T96 — Dead letter queue — backend
-- **Last Verified:** T95
+- **Tasks Complete:** 97 / 116 (83.6%)
+- **Current Task:** T97 — Dead letter queue — admin UI
+- **Last Verified:** T96
 
 ---
 
@@ -137,7 +137,7 @@
 - [x] T86: Acceptance tracking (webhook-driven D149) [Depends: T34, T11, T13]
 - [x] T87: Engineer feedback — emoji reactions on MR merge [Depends: T34, T11, T86]
 
-## M5 — Admin & Configuration (8/18)
+## M5 — Admin & Configuration (9/18)
 
 - [x] T88: Admin page — project management (registry D150, label pre-creation) [Depends: T62, T11, T9]
 - [x] T89: Admin page — role management [Depends: T62, T9]
@@ -147,8 +147,8 @@
 - [x] T93: PRD template management [Depends: T91, T9]
 - [x] T94: Cost monitoring — 4 alert rules [Depends: T85, T90]
 - [x] T95: Over-reliance detection (>95% acceptance 2+ weeks) [Depends: T86]
-- [ ] **T96:** Dead letter queue — backend [Depends: T37, T5]
-- [ ] T97: Dead letter queue — admin UI [Depends: T96, T62]
+- [x] T96: Dead letter queue — backend [Depends: T37, T5]
+- [ ] **T97:** Dead letter queue — admin UI [Depends: T96, T62]
 - [ ] T98: Team chat notifications — webhook integration [Depends: T90]
 - [ ] T99: Team chat notifications — event routing [Depends: T98, T94, T15]
 - [ ] T100: API versioning + external access (SHA-256 hash D152) [Depends: T9, T5]
