@@ -52,12 +52,6 @@ class PostFeatureDevResult implements ShouldQueue
             return;
         }
 
-        if ($task->issue_iid === null) {
-            Log::info('PostFeatureDevResult: task has no Issue, skipping', ['task_id' => $this->taskId]);
-
-            return;
-        }
-
         if ($task->result === null) {
             Log::info('PostFeatureDevResult: task has no result, skipping', ['task_id' => $this->taskId]);
 
@@ -67,15 +61,17 @@ class PostFeatureDevResult implements ShouldQueue
         $result = $task->result;
         $gitlabProjectId = $task->project->gitlab_project_id;
 
-        // Step 1: Create merge request
+        // Step 1: Create or update merge request
         $mrIid = $this->createMergeRequest($gitLab, $task, $result, $gitlabProjectId);
 
         if ($mrIid === null) {
             return;
         }
 
-        // Step 2: Post summary on the originating Issue
-        $this->postIssueSummary($gitLab, $task, $result, $gitlabProjectId, $mrIid);
+        // Step 2: Post summary on the originating Issue (if applicable)
+        if ($task->issue_iid !== null) {
+            $this->postIssueSummary($gitLab, $task, $result, $gitlabProjectId, $mrIid);
+        }
     }
 
     private function createMergeRequest(GitLabClient $gitLab, Task $task, array $result, int $gitlabProjectId): ?int

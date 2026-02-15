@@ -53,6 +53,39 @@ it('updates existing MR instead of creating new one when existing_mr_iid is set'
     });
 });
 
+it('skips issue summary when task has no issue_iid (conversation origin)', function () {
+    $task = Task::factory()->running()->create([
+        'type' => 'ui_adjustment',
+        'mr_iid' => null,
+        'issue_iid' => null,
+        'conversation_id' => 'conv-designer-123',
+        'result' => [
+            'branch' => 'ai/fix-padding',
+            'mr_title' => 'Fix card padding',
+            'mr_description' => 'Reduced padding',
+            'files_changed' => [],
+        ],
+    ]);
+
+    Http::fake([
+        '*/merge_requests' => Http::response([
+            'iid' => 789,
+            'title' => 'Fix card padding',
+        ], 201),
+    ]);
+
+    $job = new PostFeatureDevResult($task->id);
+    $job->handle(app(GitLabClient::class));
+
+    $task->refresh();
+    expect($task->mr_iid)->toBe(789);
+
+    // Should NOT call the issue notes endpoint
+    Http::assertNotSent(function ($request) {
+        return str_contains($request->url(), '/notes');
+    });
+});
+
 it('creates new MR when existing_mr_iid is not set', function () {
     $task = Task::factory()->running()->create([
         'type' => 'feature_dev',

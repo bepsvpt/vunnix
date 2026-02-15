@@ -153,15 +153,15 @@ class ProcessTaskResult implements ShouldQueue
     }
 
     /**
-     * T44: Create MR and post summary for feature development tasks.
+     * T44/T72: Create MR and post summary for feature development / UI adjustment tasks.
      *
-     * Fires for FeatureDev tasks with an Issue context (triggered by ai::develop label).
-     * The job creates the MR from the executor's branch and posts a summary on the Issue.
+     * Fires for FeatureDev and UiAdjustment tasks with either an Issue context
+     * (triggered by ai::develop label) or a conversation context (designer iteration).
      */
     private function shouldPostFeatureDevResult(Task $task): bool
     {
-        return $task->issue_iid !== null
-            && $task->type === TaskType::FeatureDev;
+        return in_array($task->type, [TaskType::FeatureDev, TaskType::UiAdjustment], true)
+            && ($task->issue_iid !== null || $task->conversation_id !== null);
     }
 
     /**
