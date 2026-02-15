@@ -157,6 +157,42 @@ export const useAdminStore = defineStore('admin', () => {
         }
     }
 
+    // ─── Global settings state (T90) ─────────────────────────────
+    const settings = ref([]);
+    const settingsLoading = ref(false);
+    const settingsError = ref(null);
+    const apiKeyConfigured = ref(false);
+    const settingsDefaults = ref({});
+
+    async function fetchSettings() {
+        settingsLoading.value = true;
+        settingsError.value = null;
+        try {
+            const { data } = await axios.get('/api/v1/admin/settings');
+            settings.value = data.data;
+            apiKeyConfigured.value = data.api_key_configured;
+            settingsDefaults.value = data.defaults;
+        } catch (e) {
+            settingsError.value = 'Failed to load settings.';
+        } finally {
+            settingsLoading.value = false;
+        }
+    }
+
+    async function updateSettings(settingsList) {
+        try {
+            const { data } = await axios.put('/api/v1/admin/settings', {
+                settings: settingsList,
+            });
+            if (data.success && data.data) {
+                settings.value = data.data;
+            }
+            return { success: true };
+        } catch (e) {
+            return { success: false, error: e.response?.data?.error || 'Failed to update settings.' };
+        }
+    }
+
     return {
         projects,
         loading,
@@ -180,5 +216,13 @@ export const useAdminStore = defineStore('admin', () => {
         assignRole,
         revokeRole,
         fetchUsers,
+        // Global settings (T90)
+        settings,
+        settingsLoading,
+        settingsError,
+        apiKeyConfigured,
+        settingsDefaults,
+        fetchSettings,
+        updateSettings,
     };
 });
