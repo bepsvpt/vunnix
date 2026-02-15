@@ -9,19 +9,31 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (DB::connection()->getDriverName() !== 'pgsql') {
+        if (! Schema::hasTable('dead_letter_queue')) {
             return;
         }
 
-        Schema::table('dead_letter_queue', function (Blueprint $table) {
+        $isPgsql = DB::connection()->getDriverName() === 'pgsql';
+
+        Schema::table('dead_letter_queue', function (Blueprint $table) use ($isPgsql) {
             // Direct FK to the original task for easy lookup
-            $table->foreignId('task_id')->nullable()->after('id')->constrained('tasks')->nullOnDelete();
+            if ($isPgsql) {
+                $table->foreignId('task_id')->nullable()->after('id')->constrained('tasks')->nullOnDelete();
+            } else {
+                $table->unsignedBigInteger('task_id')->nullable();
+            }
 
             // Retry tracking
-            $table->boolean('retried')->default(false)->after('dismissed_by');
-            $table->timestamp('retried_at')->nullable()->after('retried');
-            $table->foreignId('retried_by')->nullable()->after('retried_at')->constrained('users')->nullOnDelete();
-            $table->foreignId('retried_task_id')->nullable()->after('retried_by')->constrained('tasks')->nullOnDelete();
+            $table->boolean('retried')->default(false);
+            $table->timestamp('retried_at')->nullable();
+
+            if ($isPgsql) {
+                $table->foreignId('retried_by')->nullable()->constrained('users')->nullOnDelete();
+                $table->foreignId('retried_task_id')->nullable()->constrained('tasks')->nullOnDelete();
+            } else {
+                $table->unsignedBigInteger('retried_by')->nullable();
+                $table->unsignedBigInteger('retried_task_id')->nullable();
+            }
 
             // Indexes for admin filtering
             $table->index('task_id');
@@ -31,14 +43,18 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (DB::connection()->getDriverName() !== 'pgsql') {
+        if (! Schema::hasTable('dead_letter_queue')) {
             return;
         }
 
-        Schema::table('dead_letter_queue', function (Blueprint $table) {
-            $table->dropForeign(['task_id']);
-            $table->dropForeign(['retried_by']);
-            $table->dropForeign(['retried_task_id']);
+        $isPgsql = DB::connection()->getDriverName() === 'pgsql';
+
+        Schema::table('dead_letter_queue', function (Blueprint $table) use ($isPgsql) {
+            if ($isPgsql) {
+                $table->dropForeign(['task_id']);
+                $table->dropForeign(['retried_by']);
+                $table->dropForeign(['retried_task_id']);
+            }
             $table->dropIndex(['task_id']);
             $table->dropIndex(['retried']);
             $table->dropColumn(['task_id', 'retried', 'retried_at', 'retried_by', 'retried_task_id']);

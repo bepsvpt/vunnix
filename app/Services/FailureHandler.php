@@ -45,6 +45,7 @@ class FailureHandler
 
         // 2. Create DLQ entry
         DeadLetterEntry::create([
+            'task_id' => $task->id,
             'task_record' => $task->toArray(),
             'failure_reason' => $failureReason,
             'error_details' => $errorDetails,
