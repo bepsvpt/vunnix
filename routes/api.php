@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ActivityController;
+use App\Http\Controllers\Api\AdminProjectController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DashboardOverviewController;
 use App\Http\Controllers\Api\DashboardDesignerActivityController;
@@ -90,6 +91,16 @@ Route::prefix('v1')->group(function () {
         // Dashboard adoption metrics (T82)
         Route::get('/dashboard/adoption', DashboardAdoptionController::class)
             ->name('api.dashboard.adoption');
+
+        // Admin project management (T88)
+        Route::get('/admin/projects', [AdminProjectController::class, 'index'])
+            ->name('api.admin.projects.index');
+        Route::get('/admin/projects/{project}', [AdminProjectController::class, 'show'])
+            ->name('api.admin.projects.show');
+        Route::post('/admin/projects/{project}/enable', [AdminProjectController::class, 'enable'])
+            ->name('api.admin.projects.enable');
+        Route::post('/admin/projects/{project}/disable', [AdminProjectController::class, 'disable'])
+            ->name('api.admin.projects.disable');
     });
 
 });
