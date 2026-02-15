@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { createRouter, createMemoryHistory } from 'vue-router';
@@ -7,6 +7,9 @@ import { useAuthStore } from '@/stores/auth';
 import ChatPage from './pages/ChatPage.vue';
 import DashboardPage from './pages/DashboardPage.vue';
 import AdminPage from './pages/AdminPage.vue';
+import axios from 'axios';
+
+vi.mock('axios');
 
 let pinia;
 
@@ -27,6 +30,11 @@ function createTestRouter() {
 beforeEach(() => {
     pinia = createPinia();
     setActivePinia(pinia);
+    vi.clearAllMocks();
+    // DashboardPage calls fetchActivity() on mount, which needs axios mocked
+    axios.get.mockResolvedValue({
+        data: { data: [], meta: { next_cursor: null, per_page: 25 } },
+    });
 });
 
 describe('App', () => {
