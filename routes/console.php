@@ -32,3 +32,9 @@ Schedule::command('security:check-pat-rotation')
     ->mondays()
     ->at('10:00')
     ->withoutOverlapping();
+
+Schedule::command('backup:database')
+    ->dailyAt('02:00')
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->onOneServer();
