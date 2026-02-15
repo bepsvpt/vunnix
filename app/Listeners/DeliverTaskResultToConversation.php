@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\TaskStatusChanged;
 use App\Models\Message;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class DeliverTaskResultToConversation
 {
@@ -14,6 +15,12 @@ class DeliverTaskResultToConversation
 
         // Only for terminal tasks with a conversation
         if (! $task->isTerminal() || $task->conversation_id === null) {
+            return;
+        }
+
+        // Guard against missing table in SQLite test environment
+        // (agent_conversation_messages is created by Laravel AI SDK migration with PostgreSQL features)
+        if (! Schema::hasTable('agent_conversation_messages')) {
             return;
         }
 

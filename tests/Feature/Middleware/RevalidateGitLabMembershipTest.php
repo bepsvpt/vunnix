@@ -11,9 +11,10 @@ use Illuminate\Support\Facades\Route;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    // Register a test route with the middleware
+    // Register test route under /api/ prefix to avoid SPA catch-all route (/{any})
+    // which intercepts all non-excluded GET paths and returns the Vue app shell
     Route::middleware(['web', RevalidateGitLabMembership::class])
-        ->get('/test-revalidate', fn () => response('ok'));
+        ->get('/api/test-revalidate', fn () => response('ok'));
 });
 
 it('revalidates membership on authenticated request when cache is empty', function () {
@@ -35,7 +36,7 @@ it('revalidates membership on authenticated request when cache is empty', functi
         ], 200),
     ]);
 
-    $this->actingAs($user)->get('/test-revalidate');
+    $this->actingAs($user)->get('/api/test-revalidate');
 
     // Membership should be synced
     expect($user->fresh()->projects)->toHaveCount(1);
@@ -55,7 +56,7 @@ it('skips revalidation when cache key exists (within 15 min window)', function (
         '*/api/v4/projects*' => Http::response([], 200),
     ]);
 
-    $this->actingAs($user)->get('/test-revalidate');
+    $this->actingAs($user)->get('/api/test-revalidate');
 
     // API should not have been called
     Http::assertNothingSent();
@@ -81,7 +82,7 @@ it('revalidates again after cache expires', function () {
     ]);
 
     // No cache key = should revalidate
-    $this->actingAs($user)->get('/test-revalidate');
+    $this->actingAs($user)->get('/api/test-revalidate');
 
     Http::assertSentCount(1);
 });
@@ -92,7 +93,7 @@ it('does not revalidate for unauthenticated requests', function () {
     ]);
 
     // Guest request — middleware should not call GitLab
-    $this->get('/test-revalidate');
+    $this->get('/api/test-revalidate');
 
     Http::assertNothingSent();
 });
