@@ -265,6 +265,7 @@ Persistent lessons discovered during development. **Add entries here when you so
 - **Full test suite OOMs in single-process mode — use `--parallel`:** With 900+ tests, `php artisan test` exhausts the 128MB memory limit. Use `php artisan test --parallel` to distribute across worker processes. Individual test files/filters work fine without `--parallel`.
 - **JSON encodes whole-number floats as integers — use `int` in `assertJsonPath`:** PHP's `round(8.0, 1)` returns `8.0` (float), but `json_encode` renders it as `8` (integer). `assertJsonPath('key', 8.0)` fails because `json_decode` returns `8` (int) and strict `===` comparison rejects `8 !== 8.0`. Use the integer value in assertions when the float has no fractional part, or use `assertJsonPath` with an `int` cast.
 - **Page components with `onMounted` API calls cascade into App.test.js:** When a page component (e.g., `DashboardPage`) calls `axios.get()` on mount, `App.test.js` — which renders all routes — will trigger those calls. Add `vi.mock('axios')` and a default `axios.get.mockResolvedValue(...)` in `App.test.js` `beforeEach` to prevent unhandled rejections from cascading page mounts.
+- **Use `strftime` for SQLite, `TO_CHAR` for PostgreSQL in date-grouping queries:** `TO_CHAR(created_at, 'YYYY-MM')` is PostgreSQL-only and fails in SQLite test environments. Check `DB::connection()->getDriverName()` and use `strftime('%Y-%m', created_at)` for SQLite. This applies to any raw SQL date formatting in queries.
 
 ## Key Files
 

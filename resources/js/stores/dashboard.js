@@ -15,6 +15,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const designerActivityLoading = ref(false);
     const efficiency = ref(null);
     const efficiencyLoading = ref(false);
+    const cost = ref(null);
+    const costLoading = ref(false);
     const isLoading = ref(false);
     const nextCursor = ref(null);
     const hasMore = computed(() => nextCursor.value !== null);
@@ -151,6 +153,16 @@ export const useDashboardStore = defineStore('dashboard', () => {
         }
     }
 
+    async function fetchCost() {
+        costLoading.value = true;
+        try {
+            const response = await axios.get('/api/v1/dashboard/cost');
+            cost.value = response.data.data;
+        } finally {
+            costLoading.value = false;
+        }
+    }
+
     function $reset() {
         activityFeed.value = [];
         metricsUpdates.value = [];
@@ -164,6 +176,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         designerActivityLoading.value = false;
         efficiency.value = null;
         efficiencyLoading.value = false;
+        cost.value = null;
+        costLoading.value = false;
         activeFilter.value = null;
         projectFilter.value = null;
         isLoading.value = false;
@@ -183,6 +197,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         designerActivityLoading,
         efficiency,
         efficiencyLoading,
+        cost,
+        costLoading,
         activeFilter,
         projectFilter,
         isLoading,
@@ -197,6 +213,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         fetchPMActivity,
         fetchDesignerActivity,
         fetchEfficiency,
+        fetchCost,
         loadMore,
         $reset,
     };

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useDashboardStore } from '@/stores/dashboard';
 import { useDashboardRealtime } from '@/composables/useDashboardRealtime';
@@ -9,6 +9,7 @@ import DashboardQuality from '@/components/DashboardQuality.vue';
 import DashboardPMActivity from '@/components/DashboardPMActivity.vue';
 import DashboardDesignerActivity from '@/components/DashboardDesignerActivity.vue';
 import DashboardEfficiency from '@/components/DashboardEfficiency.vue';
+import DashboardCost from '@/components/DashboardCost.vue';
 
 const auth = useAuthStore();
 const dashboard = useDashboardStore();
@@ -16,14 +17,23 @@ const { subscribe, unsubscribe } = useDashboardRealtime();
 
 const activeView = ref('overview');
 
-const views = [
+const baseViews = [
     { key: 'overview', label: 'Overview' },
     { key: 'quality', label: 'Quality' },
     { key: 'pm-activity', label: 'PM Activity' },
     { key: 'designer-activity', label: 'Designer Activity' },
     { key: 'efficiency', label: 'Efficiency' },
-    { key: 'activity', label: 'Activity' },
 ];
+
+// Cost tab is admin-only (D29)
+const views = computed(() => {
+    const v = [...baseViews];
+    if (auth.hasPermission('admin.global_config')) {
+        v.push({ key: 'cost', label: 'Cost' });
+    }
+    v.push({ key: 'activity', label: 'Activity' });
+    return v;
+});
 
 onMounted(() => {
     dashboard.fetchOverview();
@@ -67,6 +77,7 @@ watch(() => dashboard.metricsUpdates.length, () => {
     <DashboardPMActivity v-else-if="activeView === 'pm-activity'" />
     <DashboardDesignerActivity v-else-if="activeView === 'designer-activity'" />
     <DashboardEfficiency v-else-if="activeView === 'efficiency'" />
+    <DashboardCost v-else-if="activeView === 'cost'" />
     <ActivityFeed v-else-if="activeView === 'activity'" />
   </div>
 </template>

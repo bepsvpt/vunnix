@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DashboardOverviewController;
 use App\Http\Controllers\Api\DashboardDesignerActivityController;
+use App\Http\Controllers\Api\DashboardCostController;
 use App\Http\Controllers\Api\DashboardEfficiencyController;
 use App\Http\Controllers\Api\DashboardPMActivityController;
 use App\Http\Controllers\Api\DashboardQualityController;
@@ -80,6 +81,10 @@ Route::prefix('v1')->group(function () {
         // Dashboard efficiency metrics (T80)
         Route::get('/dashboard/efficiency', DashboardEfficiencyController::class)
             ->name('api.dashboard.efficiency');
+
+        // Dashboard cost metrics (T81) — admin-only via RBAC (D29)
+        Route::get('/dashboard/cost', DashboardCostController::class)
+            ->name('api.dashboard.cost');
     });
 
 });

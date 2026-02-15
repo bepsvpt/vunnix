@@ -3,9 +3,9 @@
 ## Summary
 
 - **Current Milestone:** M4 — Dashboard & Metrics
-- **Tasks Complete:** 81 / 116 (69.8%)
-- **Current Task:** T81 — Dashboard Cost
-- **Last Verified:** T80
+- **Tasks Complete:** 82 / 116 (70.7%)
+- **Current Task:** T82 — Dashboard Adoption
+- **Last Verified:** T81
 
 ---
 
@@ -119,7 +119,7 @@
 
 - [x] T115: Conversation archiving (D141) [Depends: T47]
 
-## M4 — Dashboard & Metrics (8/15)
+## M4 — Dashboard & Metrics (9/15)
 
 - [x] T73: Reverb channel configuration (channel authorization) [Depends: T2, T15]
 - [x] T74: Laravel Echo client [Depends: T61, T73]
@@ -129,8 +129,8 @@
 - [x] T78: Dashboard — PM Activity [Depends: T75]
 - [x] T79: Dashboard — Designer Activity [Depends: T75]
 - [x] T80: Dashboard — Efficiency [Depends: T75]
-- [ ] **T81:** Dashboard — Cost (admin-only) [Depends: T75, T9]
-- [ ] T82: Dashboard — Adoption [Depends: T75]
+- [x] T81: Dashboard — Cost (admin-only) [Depends: T75, T9]
+- [ ] **T82:** Dashboard — Adoption [Depends: T75]
 - [ ] T83: Metrics collection — model observers [Depends: T15]
 - [ ] T84: Metrics aggregation (every 15 min, materialized views) [Depends: T83, T5]
 - [ ] T85: Cost tracking (token × price formula) [Depends: T83, T10]
