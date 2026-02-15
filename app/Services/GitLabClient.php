@@ -356,6 +356,25 @@ class GitLabClient
         return $this->handleResponse($response, "createMRDiscussion !{$mrIid}")->json();
     }
 
+    /**
+     * List award emoji on a merge request discussion note.
+     *
+     * Used by T87 engineer feedback to read 👍/👎 reactions on AI review comments.
+     *
+     * @see https://docs.gitlab.com/ee/api/award_emoji.html#list-an-awardables-award-emoji
+     *
+     * @return array<int, array{id: int, name: string, user: array}>
+     */
+    public function listNoteAwardEmoji(int $projectId, int $mrIid, string $discussionId, int $noteId): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/merge_requests/{$mrIid}/discussions/{$discussionId}/notes/{$noteId}/award_emoji"),
+            ['per_page' => 100],
+        );
+
+        return $this->handleResponse($response, "listNoteAwardEmoji !{$mrIid} disc:{$discussionId} note:{$noteId}")->json();
+    }
+
     // ------------------------------------------------------------------
     //  Branches
     // ------------------------------------------------------------------
