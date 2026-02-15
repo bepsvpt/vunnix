@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Events\TaskStatusChanged;
 use App\Models\Task;
 use Illuminate\Support\Facades\DB;
 
@@ -24,5 +25,7 @@ class TaskObserver
             'to_status' => $task->status->value,
             'transitioned_at' => now(),
         ]);
+
+        TaskStatusChanged::dispatch($task);
     }
 }
