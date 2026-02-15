@@ -193,6 +193,41 @@ export const useAdminStore = defineStore('admin', () => {
         }
     }
 
+    // ─── Per-project configuration (T91) ────────────────────────
+    const projectConfig = ref(null);
+    const projectConfigLoading = ref(false);
+    const projectConfigError = ref(null);
+
+    async function fetchProjectConfig(projectId) {
+        projectConfigLoading.value = true;
+        projectConfigError.value = null;
+        try {
+            const { data } = await axios.get(`/api/v1/admin/projects/${projectId}/config`);
+            projectConfig.value = data.data;
+        } catch (e) {
+            projectConfigError.value = 'Failed to load project configuration.';
+        } finally {
+            projectConfigLoading.value = false;
+        }
+    }
+
+    async function updateProjectConfig(projectId, settings) {
+        try {
+            const { data } = await axios.put(`/api/v1/admin/projects/${projectId}/config`, {
+                settings,
+            });
+            if (data.success && data.data) {
+                projectConfig.value = data.data;
+            }
+            return { success: true };
+        } catch (e) {
+            return {
+                success: false,
+                error: e.response?.data?.error || 'Failed to update project configuration.',
+            };
+        }
+    }
+
     return {
         projects,
         loading,
@@ -224,5 +259,11 @@ export const useAdminStore = defineStore('admin', () => {
         settingsDefaults,
         fetchSettings,
         updateSettings,
+        // Per-project config (T91)
+        projectConfig,
+        projectConfigLoading,
+        projectConfigError,
+        fetchProjectConfig,
+        updateProjectConfig,
     };
 });
