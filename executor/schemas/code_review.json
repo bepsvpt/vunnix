@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["version", "summary", "findings", "labels", "commit_status"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Schema version - must be 1.0"
+    },
+    "summary": {
+      "type": "object",
+      "required": ["risk_level", "total_findings", "findings_by_severity", "walkthrough"],
+      "properties": {
+        "risk_level": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Overall risk level of the changes"
+        },
+        "total_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of findings across all severities"
+        },
+        "findings_by_severity": {
+          "type": "object",
+          "required": ["critical", "major", "minor"],
+          "properties": {
+            "critical": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of critical findings"
+            },
+            "major": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of major findings"
+            },
+            "minor": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of minor findings"
+            }
+          }
+        },
+        "walkthrough": {
+          "type": "array",
+          "description": "Brief walkthrough of key changes reviewed",
+          "items": {
+            "type": "object",
+            "required": ["file", "change_summary"],
+            "properties": {
+              "file": {
+                "type": "string",
+                "description": "File path"
+              },
+              "change_summary": {
+                "type": "string",
+                "description": "What changed in this file"
+              }
+            }
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "severity", "category", "file", "line", "end_line", "title", "description", "suggestion", "labels"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Sequential finding number (1, 2, 3, ...)"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "major", "minor"],
+            "description": "Severity level of the finding"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["security", "bug", "performance", "style", "convention", "prompt-injection"],
+            "description": "Category of the finding"
+          },
+          "file": {
+            "type": "string",
+            "description": "File path where the issue was found"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Starting line number"
+          },
+          "end_line": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Ending line number (same as line for single-line issues)"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Short title summarizing the issue"
+          },
+          "description": {
+            "type": "string",
+            "description": "What the issue is and why it matters"
+          },
+          "suggestion": {
+            "type": "string",
+            "description": "How to fix it with code examples if applicable"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Additional labels for this finding"
+          }
+        }
+      }
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["ai::approved", "ai::needs-work"]
+      },
+      "description": "GitLab labels to apply to the MR"
+    },
+    "commit_status": {
+      "type": "string",
+      "enum": ["success", "failed"],
+      "description": "Commit status check result"
+    }
+  }
+}

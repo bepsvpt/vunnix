@@ -29,7 +29,7 @@ FORMATTED_RESULT_FILE="/tmp/vunnix-formatted-result.json"
 
 # ── Logging ──────────────────────────────────────────────────────────
 log() {
-    echo "[vunnix-executor] $(date -u '+%Y-%m-%dT%H:%M:%SZ') $*" | tee -a "$LOG_FILE"
+    echo "[vunnix-executor] $(date -u '+%Y-%m-%dT%H:%M:%SZ') $*" | tee -a "$LOG_FILE" >&2
 }
 
 log_error() {
@@ -140,6 +140,35 @@ resolve_skill_flags() {
     echo "${skills_csv}"
 }
 
+# ── Resolve JSON schema for task type ───────────────────────────────
+resolve_schema() {
+    local task_type="$1"
+    local schema_file
+
+    case "$task_type" in
+        code_review|security_audit)
+            schema_file="${EXECUTOR_DIR}/schemas/code_review.json"
+            ;;
+        feature_dev|ui_adjustment)
+            schema_file="${EXECUTOR_DIR}/schemas/feature_dev.json"
+            ;;
+        issue_discussion)
+            schema_file="${EXECUTOR_DIR}/schemas/issue_discussion.json"
+            ;;
+        *)
+            log_error "Unknown task type: $task_type"
+            return 1
+            ;;
+    esac
+
+    if [[ ! -f "$schema_file" ]]; then
+        log_error "Schema file not found: $schema_file"
+        return 1
+    fi
+
+    echo "$schema_file"
+}
+
 # ── Run Claude CLI ───────────────────────────────────────────────────
 run_claude() {
     local skills="$1"
@@ -174,16 +203,36 @@ run_claude() {
         fi
     fi
 
+    # Resolve JSON schema for this task type
+    local schema_file
+    schema_file=$(resolve_schema "$VUNNIX_TASK_TYPE") || {
+        post_failure "invalid_task_type" "Unknown task type: $VUNNIX_TASK_TYPE"
+        return 1
+    }
+    log "Using JSON schema: $schema_file"
+
+    # Read schema file into variable (Claude CLI expects schema as inline string)
+    local schema_json
+    schema_json=$(cat "$schema_file") || {
+        log_error "Failed to read schema file: $schema_file"
+        post_failure "schema_read_error" "Could not read JSON schema file"
+        return 1
+    }
+
+    log "Loaded JSON schema from: $schema_file ($(wc -c < "$schema_file") bytes)"
+    log "Running Claude CLI with --json-schema, max 30 turns, extended thinking enabled"
+
     # Build the Claude CLI prompt based on task type and strategy
     local prompt
     prompt=$(build_prompt)
 
-    # Run Claude CLI in print mode (non-interactive) with JSON output
-    # The --output-format json flag ensures structured output for parsing
+    # Run Claude CLI with --json-schema to get structured output
+    # Claude puts schema-validated JSON in .structured_output field
     cd "$project_dir"
 
     claude --print \
         --output-format json \
+        --json-schema "$schema_json" \
         --max-turns 30 \
         "$prompt" \
         > "$CLAUDE_OUTPUT_FILE" 2>>"$LOG_FILE" || {
@@ -197,26 +246,98 @@ run_claude() {
     local duration=$(( end_time - start_time ))
     log "Claude CLI completed in ${duration}s"
 
+    log "Claude CLI output saved to $CLAUDE_OUTPUT_FILE ($(wc -c < "$CLAUDE_OUTPUT_FILE" 2>/dev/null || echo 0) bytes)"
+
+    # Log structured_output presence for debugging
+    if jq -e '.structured_output' "$CLAUDE_OUTPUT_FILE" >/dev/null 2>&1; then
+        log "✓ Claude CLI populated .structured_output field (schema-validated)"
+    else
+        log "⚠ No .structured_output field - Claude may have returned unstructured response"
+    fi
+
+    # Log usage data
+    local usage_summary=$(jq -r '"\(.usage.input_tokens // 0)in/\(.usage.output_tokens // 0)out/\(.usage.thinking_tokens // 0)think"' "$CLAUDE_OUTPUT_FILE" 2>/dev/null || echo "unknown")
+    log "Token usage: $usage_summary"
+
     echo "$duration"
 }
 
 # ── Build task prompt ────────────────────────────────────────────────
+# Prompts MUST explicitly request JSON-only output. --json-schema validates but doesn't enforce.
 build_prompt() {
     case "$VUNNIX_TASK_TYPE" in
         code_review)
-            echo "Review this merge request. Use the ${VUNNIX_STRATEGY} strategy. Follow the instructions in CLAUDE.md for output format and severity classification. Output your review as structured JSON."
-            ;;
-        feature_dev)
-            echo "Implement the feature described in the task parameters. Follow project conventions from CLAUDE.md. Create clean, tested code. Output your changes as structured JSON."
-            ;;
-        ui_adjustment)
-            echo "Make the UI adjustment described in the task parameters. Use the ${VUNNIX_STRATEGY} strategy. After making changes, capture a screenshot using /vunnix-executor/scripts/capture-screenshot.js. Output your changes as structured JSON."
-            ;;
-        issue_discussion)
-            echo "Answer the question from the issue context. Reference relevant code from the repository. Keep your response concise and actionable. Output as structured JSON."
+            cat <<EOF
+Review the code in this repository using the ${VUNNIX_STRATEGY} strategy.
+
+CRITICAL: Your output MUST be ONLY a valid JSON object matching the provided schema.
+Do NOT include any markdown fencing, explanations, or commentary outside the JSON.
+Output the raw JSON object directly with no wrapper text.
+
+Follow these severity definitions from CLAUDE.md:
+- Critical: Security vulnerabilities, data loss risk, authentication bypass, broken core functionality
+- Major: Bugs affecting functionality, performance issues, missing error handling
+- Minor: Style inconsistencies, naming conventions, documentation gaps
+
+Evaluate risk_level based on findings:
+- "low" if no major/critical findings
+- "medium" if major findings present
+- "high" or "critical" if critical findings present
+
+Set commit_status to "approved" if no major/critical findings, "needs_work" otherwise.
+Set labels to ["ai::approved"] if approved, ["ai::needs-work"] if not.
+
+Remember: Output ONLY the JSON object, nothing else.
+EOF
             ;;
         security_audit)
-            echo "Perform a security audit of this merge request. Check for OWASP Top 10 vulnerabilities, auth/authz bypasses, input validation issues, and secret exposure. All findings start at Major severity minimum. Output as structured JSON."
+            cat <<EOF
+Perform a security audit of the code in this repository.
+
+CRITICAL: Your output MUST be ONLY a valid JSON object matching the provided schema.
+Do NOT include any markdown fencing, explanations, or commentary outside the JSON.
+Output the raw JSON object directly with no wrapper text.
+
+Check for:
+- OWASP Top 10 vulnerabilities
+- Authentication/authorization bypasses
+- Input validation issues
+- Secret exposure (API keys, passwords, tokens)
+
+All security findings start at Major severity minimum (no Minor severity for security issues).
+
+Set risk_level to "low" if no findings, "high" or "critical" if vulnerabilities found.
+Set commit_status to "approved" if no findings, "needs_work" otherwise.
+
+Remember: Output ONLY the JSON object, nothing else.
+EOF
+            ;;
+        feature_dev)
+            cat <<EOF
+Implement the feature described in the task parameters. Follow project conventions from CLAUDE.md. Create clean, tested code.
+
+CRITICAL: Your output MUST be ONLY a valid JSON object matching the provided schema.
+Do NOT include any markdown fencing, explanations, or commentary outside the JSON.
+Output the raw JSON object directly with no wrapper text.
+EOF
+            ;;
+        ui_adjustment)
+            cat <<EOF
+Make the UI adjustment described in the task parameters using the ${VUNNIX_STRATEGY} strategy.
+
+CRITICAL: Your output MUST be ONLY a valid JSON object matching the provided schema.
+Do NOT include any markdown fencing, explanations, or commentary outside the JSON.
+Output the raw JSON object directly with no wrapper text.
+EOF
+            ;;
+        issue_discussion)
+            cat <<EOF
+Answer the question from the issue context. Reference relevant code from the repository with specific file paths and line numbers. Keep your response concise and actionable.
+
+CRITICAL: Your output MUST be ONLY a valid JSON object matching the provided schema.
+Do NOT include any markdown fencing, explanations, or commentary outside the JSON.
+Output the raw JSON object directly with no wrapper text.
+EOF
             ;;
         *)
             echo "Execute the ${VUNNIX_TASK_TYPE} task using the ${VUNNIX_STRATEGY} strategy. Follow CLAUDE.md instructions. Output as structured JSON."
@@ -240,19 +361,20 @@ post_result() {
         --strategy "$VUNNIX_STRATEGY" \
         --executor-version "$VUNNIX_EXECUTOR_VERSION" \
         --duration "$duration" \
-        --output "$FORMATTED_RESULT_FILE" 2>>"$LOG_FILE"; then
-        log "Result formatted successfully"
+        --output "$FORMATTED_RESULT_FILE" 2>&1 | tee -a "$LOG_FILE"; then
+        log "Result formatting completed successfully"
+        log "Formatted result: $(wc -c < "$FORMATTED_RESULT_FILE" 2>/dev/null || echo 0) bytes"
     else
         local format_exit=$?
-        log_error "format-output.sh failed (exit ${format_exit}) — posting raw output as failure"
-        # If formatting fails, the output didn't match the expected schema.
-        # Post a failure so the backend can retry or log for investigation.
-        post_failure "format_error" "Output formatting failed (exit ${format_exit}) — result may not match expected schema"
+        log_error "format-output.sh failed (exit $format_exit)"
+        log_error "See format-output.sh output above for details"
+        post_failure "format_error" "Output formatting failed (exit $format_exit) — result may not match expected schema"
         return 1
     fi
 
     # Step 2: POST the formatted payload to the Runner Result API
-    log "Posting result with post-results.sh..."
+    log "Posting result to ${VUNNIX_API_URL}/api/v1/tasks/${VUNNIX_TASK_ID}/result"
+    log "Payload preview: $(jq -c '{status,tokens,duration_seconds}' "$FORMATTED_RESULT_FILE" 2>/dev/null || echo 'invalid-json')"
 
     if "${SCRIPTS_DIR}/post-results.sh" \
         "$VUNNIX_API_URL" \
@@ -324,6 +446,12 @@ save_debug_artifact() {
 
 # ── Main ─────────────────────────────────────────────────────────────
 main() {
+    # Always save debug artifacts, even if set -e terminates the script early.
+    # Without this trap, any non-zero return from post_result (e.g., format-output.sh
+    # exit 3) causes set -e to kill the script before save_debug_artifact runs,
+    # leaving GitLab CI with no artifacts to upload.
+    trap 'save_debug_artifact; log "Executor finished"' EXIT
+
     log "Vunnix Executor v${VUNNIX_EXECUTOR_VERSION} starting"
 
     # Step 1: Validate environment variables
@@ -341,15 +469,10 @@ main() {
     local duration=0
     if duration=$(run_claude "$skills"); then
         # Step 5: Format output and post result via T28 scripts
-        post_result "$duration"
+        post_result "$duration" || true
     else
         post_failure "claude_cli_error" "Claude CLI failed during execution"
     fi
-
-    # Step 6: Save debug artifacts for GitLab CI collection
-    save_debug_artifact
-
-    log "Executor finished"
 }
 
 main "$@"

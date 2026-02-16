@@ -61,9 +61,16 @@ RUN npx playwright install chromium --with-deps \
 # ── Copy executor files ─────────────────────────────────────────────
 WORKDIR /vunnix-executor
 
+# Cache-busting: Force rebuild of COPY layers when scripts change.
+# Docker caches COPY layers based on file content, but doesn't detect
+# changes in some environments. Use build-time ARG to invalidate cache.
+ARG CACHE_BUST=unknown
+RUN echo "Build cache bust: ${CACHE_BUST}"
+
 # Entrypoint and scripts
 COPY entrypoint.sh /vunnix-executor/entrypoint.sh
 COPY scripts/ /vunnix-executor/scripts/
+COPY schemas/ /vunnix-executor/schemas/
 
 # Claude configuration (CLAUDE.md, skills, settings)
 # T20-T27 will populate .claude/CLAUDE.md and .claude/skills/
@@ -80,6 +87,6 @@ RUN chmod +x /vunnix-executor/entrypoint.sh \
 # ── Runtime configuration ───────────────────────────────────────────
 # GitLab CI job timeout is the hard limit (20 min, D34).
 # The entrypoint validates the task-scoped token TTL (D127) before starting.
-ENV VUNNIX_EXECUTOR_VERSION="1.0.1"
+ENV VUNNIX_EXECUTOR_VERSION="2.0.7"
 
 ENTRYPOINT ["/vunnix-executor/entrypoint.sh"]

@@ -34,6 +34,16 @@ variables:
   # Executor image version — read from Dockerfile at build time
   EXECUTOR_IMAGE: "${CI_REGISTRY_IMAGE}/executor"
 
+# Prevent redundant pipelines when pushing to MR branches.
+# Only Vunnix-triggered pipelines for MRs (prevents duplicates).
+# Push pipelines still allowed for branches without MRs.
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
 # ── Version Alignment Check ─────────────────────────────────────
 # Verifies executor CLAUDE.md and CE Agent class share the same
 # severity definitions, safety rules, and output field names.
@@ -48,27 +58,18 @@ version-alignment:
     - apk add --no-cache bash
     - bash scripts/check-version-alignment.sh
   rules:
-    # Never run on Vunnix-triggered pipelines
-    - if: $VUNNIX_TASK_ID
-      when: never
-    # Main branch — default changes detection (compares against previous commit)
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    # Triggered pipelines — always run (self-healing rebuild)
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+      when: always
+    # Push pipelines — only run if executor/ or app/AI/ changed
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         paths:
           - executor/**/*
           - executor/*
           - app/AI/**/*
       when: always
-    # Feature branches — compare against main to avoid false positives on first push
-    - if: $CI_COMMIT_BRANCH
-      changes:
-        compare_to: refs/heads/main
-        paths:
-          - executor/**/*
-          - executor/*
-          - app/AI/**/*
-      when: always
-    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH
       changes:
         compare_to: refs/heads/main
         paths:
@@ -98,10 +99,20 @@ build-executor:
     - EXECUTOR_VERSION=$(sed -n 's/.*VUNNIX_EXECUTOR_VERSION="\([^"]*\)".*/\1/p' executor/Dockerfile)
     - echo "Building executor image version ${EXECUTOR_VERSION}"
 
-    # Build the image
+    # Build the image (--no-cache in triggered pipelines to force fresh build)
+    - |
+      if [ -n "${VUNNIX_TASK_ID:-}" ]; then
+        CACHE_FLAG="--no-cache"
+        echo "Triggered pipeline detected — building with --no-cache"
+      else
+        CACHE_FLAG=""
+        echo "Regular pipeline — using Docker cache"
+      fi
     - >-
       docker build
       --pull
+      ${CACHE_FLAG}
+      --build-arg CACHE_BUST="${CI_COMMIT_SHORT_SHA}"
       --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
       --label "org.opencontainers.image.revision=${CI_COMMIT_SHA}"
       --label "org.opencontainers.image.version=${EXECUTOR_VERSION}"
@@ -114,7 +125,10 @@ build-executor:
     # Tag and push — always push commit SHA tag
     - docker push "${EXECUTOR_IMAGE}:${CI_COMMIT_SHORT_SHA}"
 
-    # On main branch, also tag with version and 'latest'
+    # Tag and push :latest
+    # On main branch: also tag with version number
+    # In triggered pipelines: tag :latest so vunnix-executor uses the fresh image
+    # On regular feature branches: only SHA tag (don't overwrite production :latest)
     - |
       if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
         docker tag "${EXECUTOR_IMAGE}:${CI_COMMIT_SHORT_SHA}" "${EXECUTOR_IMAGE}:${EXECUTOR_VERSION}"
@@ -122,29 +136,25 @@ build-executor:
         docker push "${EXECUTOR_IMAGE}:${EXECUTOR_VERSION}"
         docker push "${EXECUTOR_IMAGE}:latest"
         echo "Published: ${EXECUTOR_IMAGE}:${EXECUTOR_VERSION} and ${EXECUTOR_IMAGE}:latest"
+      elif [ -n "${VUNNIX_TASK_ID:-}" ]; then
+        docker tag "${EXECUTOR_IMAGE}:${CI_COMMIT_SHORT_SHA}" "${EXECUTOR_IMAGE}:latest"
+        docker push "${EXECUTOR_IMAGE}:latest"
+        echo "Triggered pipeline — pushed :latest for executor job: ${EXECUTOR_IMAGE}:latest"
       else
         echo "Non-default branch — only SHA tag pushed: ${EXECUTOR_IMAGE}:${CI_COMMIT_SHORT_SHA}"
       fi
   rules:
-    # Never run on Vunnix-triggered pipelines
-    - if: $VUNNIX_TASK_ID
-      when: never
-    # Main branch — default changes detection (compares against previous commit)
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    # Triggered pipelines — always rebuild so executor uses fresh image
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+      when: always
+    # Push pipelines — only rebuild if executor/ changed
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         paths:
           - executor/**/*
           - executor/*
       when: always
-    # Feature branches — compare against main to avoid false positives on first push
-    - if: $CI_COMMIT_BRANCH
-      changes:
-        compare_to: refs/heads/main
-        paths:
-          - executor/**/*
-          - executor/*
-      when: always
-    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH
       changes:
         compare_to: refs/heads/main
         paths:
@@ -153,7 +163,7 @@ build-executor:
       when: always
   needs:
     - job: version-alignment
-      optional: false
+      optional: true
 
 # ── Vunnix Task Executor ──────────────────────────────────────
 # Runs AI-powered tasks when triggered by the Vunnix Task Dispatcher
@@ -190,3 +200,9 @@ vunnix-executor:
     # Only run when triggered by Vunnix Task Dispatcher
     - if: $VUNNIX_TASK_ID
       when: always
+  needs:
+    # Wait for build-executor if it ran (rebuilds image with latest code).
+    # Optional: if executor/ didn't change, build-executor is skipped and
+    # vunnix-executor proceeds immediately with the existing :latest image.
+    - job: build-executor
+      optional: true

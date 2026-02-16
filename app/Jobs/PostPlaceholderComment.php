@@ -123,17 +123,19 @@ class PostPlaceholderComment implements ShouldQueue
     }
 
     /**
-     * Find the comment_id from the most recent completed review on the same MR.
+     * Find the comment_id from the most recent review on the same MR.
+     *
+     * Reuses comments from failed/superseded tasks too - we want to update
+     * the same comment instead of cluttering the MR with multiple placeholders.
      */
     private function findPreviousCommentId(Task $task): ?int
     {
         return Task::where('project_id', $task->project_id)
             ->where('mr_iid', $task->mr_iid)
             ->where('type', TaskType::CodeReview)
-            ->where('status', TaskStatus::Completed)
-            ->where('id', '!=', $task->id)
+            ->where('id', '<', $task->id)  // Only earlier tasks
             ->whereNotNull('comment_id')
-            ->orderByDesc('completed_at')
+            ->orderByDesc('id')  // Most recent task by ID
             ->value('comment_id');
     }
 }
