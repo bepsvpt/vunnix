@@ -75,7 +75,7 @@ class CreateGitLabIssue implements ShouldQueue
 
         // Apply labels if provided
         $labels = $result['labels'] ?? null;
-        if (! empty($labels) && is_array($labels)) {
+        if (is_array($labels) && $labels !== []) {
             $issueData['labels'] = implode(',', $labels);
         }
 

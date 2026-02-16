@@ -61,6 +61,9 @@ class DashboardQualityController extends Controller
 
             foreach ($reviewTasks as $task) {
                 $result = $task->result;
+                if (! is_array($result)) {
+                    continue;
+                }
                 $bySeverity = $result['summary']['findings_by_severity'] ?? [];
                 $severityTotals['critical'] += (int) ($bySeverity['critical'] ?? 0);
                 $severityTotals['major'] += (int) ($bySeverity['major'] ?? 0);

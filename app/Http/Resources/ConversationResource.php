@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Str;
 
+/** @mixin \App\Models\Conversation */
 class ConversationResource extends JsonResource
 {
     public function toArray(Request $request): array

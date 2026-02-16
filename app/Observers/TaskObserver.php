@@ -125,7 +125,8 @@ class TaskObserver
             return $defaults;
         }
 
-        $severities = $task->result['summary']['findings_by_severity'] ?? null;
+        $result = $task->result;
+        $severities = is_array($result) ? ($result['summary']['findings_by_severity'] ?? null) : null;
 
         if (! is_array($severities)) {
             return $defaults;
@@ -148,7 +149,9 @@ class TaskObserver
             return 0;
         }
 
-        return (int) ($task->result['summary']['total_findings'] ?? 0);
+        $result = $task->result;
+
+        return is_array($result) ? (int) ($result['summary']['total_findings'] ?? 0) : 0;
     }
 
     /**
