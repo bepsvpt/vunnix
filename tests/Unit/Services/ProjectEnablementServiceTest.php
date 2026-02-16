@@ -12,7 +12,6 @@ beforeEach(function () {
     config(['services.gitlab.host' => 'https://gitlab.example.com']);
     config(['services.gitlab.bot_token' => 'test-bot-token']);
     config(['services.gitlab.bot_account_id' => null]); // not pre-configured
-    config(['services.gitlab.vunnix_project_id' => 100]);
     config(['app.url' => 'https://vunnix.example.com']);
 });
 
@@ -28,11 +27,6 @@ function fakeGitLabForEnable(): void
         'gitlab.example.com/api/v4/projects/42/members/all/99' => Http::response([
             'id' => 99,
             'access_level' => 40,
-        ]),
-        // Vunnix project visibility check
-        'gitlab.example.com/api/v4/projects/100' => Http::response([
-            'id' => 100,
-            'visibility' => 'internal',
         ]),
         // Webhook creation
         'gitlab.example.com/api/v4/projects/42/hooks' => Http::response([
@@ -127,43 +121,6 @@ it('fails to enable when bot has insufficient permissions', function () {
     expect($project->enabled)->toBeFalse();
 });
 
-it('warns when Vunnix project is private (D150)', function () {
-    $project = Project::factory()->create([
-        'gitlab_project_id' => 42,
-        'enabled' => false,
-    ]);
-    ProjectConfig::factory()->create(['project_id' => $project->id]);
-
-    Http::fake([
-        'gitlab.example.com/api/v4/user' => Http::response(['id' => 99]),
-        'gitlab.example.com/api/v4/projects/42/members/all/99' => Http::response([
-            'id' => 99,
-            'access_level' => 40,
-        ]),
-        'gitlab.example.com/api/v4/projects/100' => Http::response([
-            'id' => 100,
-            'visibility' => 'private',
-        ]),
-        'gitlab.example.com/api/v4/projects/42/hooks' => Http::response([
-            'id' => 555,
-        ], 201),
-        'gitlab.example.com/api/v4/projects/42/triggers' => Http::response([
-            'id' => 10,
-            'token' => 'trigger-token-abc123',
-        ], 201),
-        'gitlab.example.com/api/v4/projects/42/labels' => Http::response([
-            'id' => 1,
-        ], 201),
-    ]);
-
-    $service = app(ProjectEnablementService::class);
-    $result = $service->enable($project);
-
-    expect($result['success'])->toBeTrue();
-    expect($result['warnings'])->not->toBeEmpty();
-    expect(collect($result['warnings'])->contains(fn ($w) => str_contains($w, 'private')))->toBeTrue();
-});
-
 it('creates all 6 ai:: labels on enable', function () {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
@@ -198,10 +155,6 @@ it('skips existing labels without error (idempotent)', function () {
         'gitlab.example.com/api/v4/projects/42/members/all/99' => Http::response([
             'id' => 99,
             'access_level' => 40,
-        ]),
-        'gitlab.example.com/api/v4/projects/100' => Http::response([
-            'id' => 100,
-            'visibility' => 'internal',
         ]),
         'gitlab.example.com/api/v4/projects/42/hooks' => Http::response([
             'id' => 555,

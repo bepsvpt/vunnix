@@ -1,0 +1,79 @@
+# Build and publish the Vunnix Executor Docker image to GHCR.
+#
+# Triggers:
+#   - Push to main when executor/ or alignment-checked paths change
+#   - Manual workflow_dispatch for ad-hoc rebuilds
+#
+# Image: ghcr.io/bepsvpt/vunnix/executor
+# Tags:  <sha>, <version>, latest (all on main)
+#
+# @see docs/extensions/ext-001-github-migration.md (D162, D163)
+# @see scripts/check-version-alignment.sh (D126)
+
+name: Build Executor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'executor/**'
+      - 'app/AI/**'
+      - 'scripts/check-version-alignment.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/bepsvpt/vunnix/executor
+
+jobs:
+  version-alignment:
+    name: Version Alignment Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run alignment check
+        run: bash scripts/check-version-alignment.sh
+
+  build-executor:
+    name: Build & Push Executor Image
+    runs-on: ubuntu-latest
+    needs: version-alignment
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from Dockerfile
+        id: version
+        run: |
+          VERSION=$(sed -n 's/.*VUNNIX_EXECUTOR_VERSION="\([^"]*\)".*/\1/p' executor/Dockerfile)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building executor image version $VERSION"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: executor
+          file: executor/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:${{ steps.version.outputs.version }}
+            ${{ env.IMAGE }}:latest
+          labels: |
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.title=Vunnix Executor

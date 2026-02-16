@@ -69,7 +69,7 @@
 | D62 | Conversation title — Auto-generated from first message | vunnix-v1 | Active |
 | D63 | GitLab API client — Raw Laravel HTTP Client (no library) | vunnix-v1 | Active |
 | D64 | ~~Claude API client~~ — Superseded by D73 (Laravel AI SDK) | vunnix-v1 | Superseded |
-| D65 | Executor image registry — GitLab Container Registry | vunnix-v1 | Active |
+| D65 | ~~Executor image registry — GitLab Container Registry~~ — Superseded by D163 | vunnix-v1 | Superseded |
 | D66 | Frontend state management — Pinia | vunnix-v1 | Active |
 | D67 | §6 structure — Grouped subsections (9 with tables) | vunnix-v1 | Active |
 | D68 | Labels format — GitLab `::` scoped labels | vunnix-v1 | Active |
@@ -154,7 +154,7 @@
 | D147 | Periodic membership re-validation — Cached 15 min per request | vunnix-v1 | Active |
 | D148 | Conversation keyword search — PostgreSQL FTS on title + content | vunnix-v1 | Active |
 | D149 | Webhook-driven acceptance tracking — Event-driven, no polling | vunnix-v1 | Active |
-| D150 | Executor image registry access — Vunnix project internal/public | vunnix-v1 | Active |
+| D150 | ~~Executor image registry access — Vunnix project internal/public~~ — Superseded by D163 | vunnix-v1 | Superseded |
 | D151 | GitLab OAuth scopes — read_user + read_api | vunnix-v1 | Active |
 | D152 | API key hashing — SHA-256, shown once at creation | vunnix-v1 | Active |
 | D153 | Anthropic API key storage — .env only, never in database | vunnix-v1 | Active |
@@ -166,3 +166,6 @@
 | D159 | SPA authenticates via session cookies, CSRF excluded for API routes | impl | Active |
 | D160 | Database backup — pg_dump -Z 9, 30-day retention, stored in storage/backups/ | impl | Active |
 | D161 | Executor turn limit — --max-turns 30 per CLI invocation | impl | Active |
+| D162 | Vunnix development hosted on GitHub (public) — unlimited free CI via GitHub Actions | ext-001 | Active |
+| D163 | Executor image registry — public GHCR at `ghcr.io/bepsvpt/vunnix/executor`, no auth needed (supersedes D65, D150) | ext-001 | Active |
+| D164 | CI template distributed via `include: remote:` URL from GitHub raw content | ext-001 | Active |

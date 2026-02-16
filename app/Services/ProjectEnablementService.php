@@ -28,10 +28,9 @@ class ProjectEnablementService
      *
      * Steps:
      * 1. Verify bot has Maintainer role (D129)
-     * 2. Check Vunnix project visibility (D150)
-     * 3. Create webhook with secret token
-     * 4. Create pipeline trigger token for CI execution
-     * 5. Pre-create ai::* labels
+     * 2. Create webhook with secret token
+     * 3. Create pipeline trigger token for CI execution
+     * 4. Pre-create ai::* labels
      *
      * @return array{success: bool, error?: string, warnings: array<string>}
      */
@@ -65,20 +64,7 @@ class ProjectEnablementService
             ];
         }
 
-        // 2. Check Vunnix project visibility (D150)
-        $vunnixProjectId = config('services.gitlab.vunnix_project_id');
-        if ($vunnixProjectId) {
-            try {
-                $vunnixProject = $this->gitLab->getProject((int) $vunnixProjectId);
-                if (($vunnixProject['visibility'] ?? '') === 'private') {
-                    $warnings[] = 'The Vunnix GitLab project has private visibility. CI job tokens from target projects may not be able to pull the executor image. Consider setting it to internal or public (D150).';
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Could not check Vunnix project visibility', ['error' => $e->getMessage()]);
-            }
-        }
-
-        // 3. Create webhook
+        // 2. Create webhook
         $secret = Str::random(40);
         $webhookUrl = rtrim(config('app.url'), '/').'/api/webhook';
 
@@ -97,7 +83,7 @@ class ProjectEnablementService
             ];
         }
 
-        // 4. Create pipeline trigger token for CI-based task execution
+        // 3. Create pipeline trigger token for CI-based task execution
         $triggerToken = null;
         try {
             $trigger = $this->gitLab->createPipelineTrigger(
@@ -113,7 +99,7 @@ class ProjectEnablementService
             ]);
         }
 
-        // 5. Pre-create ai::* labels (idempotent — 409 = already exists)
+        // 4. Pre-create ai::* labels (idempotent — 409 = already exists)
         foreach (self::AI_LABELS as $label) {
             try {
                 $this->gitLab->createProjectLabel(
@@ -130,7 +116,7 @@ class ProjectEnablementService
             }
         }
 
-        // 6. Update project state
+        // 5. Update project state
         $project->update([
             'enabled' => true,
             'webhook_configured' => true,

@@ -9,27 +9,12 @@ Before integrating Vunnix, verify the following:
 | Requirement | Details |
 |---|---|
 | **Vunnix instance** | A running Vunnix server with a configured Anthropic API key |
-| **Vunnix project visibility** | The Vunnix GitLab project must be set to `internal` or `public` visibility so your project's CI runners can pull the executor image from its Container Registry (D150) |
 | **Bot account** | A dedicated Vunnix bot GitLab user with **Maintainer** role on your project |
 | **Bot PAT** | The bot account needs a Personal Access Token with `api` scope, configured in Vunnix's `.env` |
 | **CI pipeline trigger** | A pipeline trigger token for your project, configured in Vunnix admin |
 | **GitLab Runner** | Your project must have a CI runner capable of pulling Docker images |
 
-## Step 1: Verify Registry Access
-
-The Vunnix executor image is stored in the Vunnix project's GitLab Container Registry. Your project's CI runners need to pull this image.
-
-**How it works:** GitLab CI jobs automatically authenticate to the Container Registry using `CI_JOB_TOKEN`. This token can pull images from any `internal` or `public` project on the same GitLab instance.
-
-**Verify Vunnix project visibility:**
-
-1. Navigate to the Vunnix project in GitLab
-2. Go to **Settings > General > Visibility, project features, permissions**
-3. Confirm the project visibility is set to **Internal** (or Public)
-
-If the Vunnix project must remain **Private**, see [Private Registry Fallback](#private-registry-fallback) below.
-
-## Step 2: Add the Bot Account
+## Step 1: Add the Bot Account
 
 The Vunnix bot account needs Maintainer access to post review comments, create labels, set commit statuses, and create merge requests.
 
@@ -37,7 +22,7 @@ The Vunnix bot account needs Maintainer access to post review comments, create l
 2. Go to **Manage > Members**
 3. Invite the Vunnix bot user with **Maintainer** role
 
-## Step 3: Create a Pipeline Trigger Token
+## Step 2: Create a Pipeline Trigger Token
 
 Vunnix uses the Pipeline Triggers API to start executor jobs in your project.
 
@@ -47,18 +32,13 @@ Vunnix uses the Pipeline Triggers API to start executor jobs in your project.
 4. Copy the generated token
 5. In the Vunnix admin panel, add this token to your project configuration
 
-## Step 4: Include the CI Template
+## Step 3: Include the CI Template
 
 Add the Vunnix CI template to your project's `.gitlab-ci.yml`:
 
-### Option A: Project Reference (Recommended)
-
-Use this when the Vunnix project is on the same GitLab instance:
-
 ```yaml
 include:
-  - project: 'your-group/vunnix'
-    file: '/ci-template/vunnix.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/bepsvpt/vunnix/main/ci-template/vunnix.gitlab-ci.yml'
 
 # Your existing CI/CD configuration continues below
 stages:
@@ -69,47 +49,17 @@ stages:
 # ... your other jobs ...
 ```
 
-Replace `your-group/vunnix` with the actual path to the Vunnix project.
+The executor image is hosted on GitHub Container Registry (public) and requires no authentication to pull.
 
-### Option B: Remote URL
-
-Use this if project references are not available:
-
-```yaml
-include:
-  - remote: 'https://gitlab.example.com/your-group/vunnix/-/raw/main/ci-template/vunnix.gitlab-ci.yml'
-```
-
-### Option C: Copy the Template
-
-Copy the contents of `ci-template/vunnix.gitlab-ci.yml` directly into your `.gitlab-ci.yml`. This requires manual updates when the template changes.
-
-## Step 5: Configure the Registry Path
-
-The template needs to know where to pull the executor image from. Set the `VUNNIX_PROJECT_PATH` variable:
-
-1. Navigate to your project in GitLab
-2. Go to **Settings > CI/CD > Variables**
-3. Add a variable:
-   - **Key:** `VUNNIX_PROJECT_PATH`
-   - **Value:** The full path to the Vunnix project (e.g., `your-group/vunnix`)
-   - **Protected:** No (the variable must be available on all branches)
-   - **Masked:** No
-
-The executor image is pulled as:
-```
-registry.gitlab.example.com/your-group/vunnix/vunnix/executor:1.0.0
-```
-
-## Step 6: Enable the Project in Vunnix
+## Step 4: Enable the Project in Vunnix
 
 1. Log in to the Vunnix admin panel
 2. Navigate to **Projects > Add Project**
 3. Enter your GitLab project ID
-4. Configure the pipeline trigger token (from Step 3)
+4. Configure the pipeline trigger token (from Step 2)
 5. Save — Vunnix will automatically create the webhook on your project
 
-## Step 7: Verify the Integration
+## Step 5: Verify the Integration
 
 After setup, verify everything works:
 
@@ -128,8 +78,7 @@ After including the template, you can override any setting:
 
 ```yaml
 include:
-  - project: 'your-group/vunnix'
-    file: '/ci-template/vunnix.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/bepsvpt/vunnix/main/ci-template/vunnix.gitlab-ci.yml'
 
 # Override timeout for large repositories
 vunnix-review:
@@ -138,16 +87,15 @@ vunnix-review:
 
 ### Pin Executor Version
 
-By default, the template uses executor version `1.0.0`. To pin a specific version:
+By default, the template uses the latest executor version. To pin a specific version:
 
 ```yaml
 include:
-  - project: 'your-group/vunnix'
-    file: '/ci-template/vunnix.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/bepsvpt/vunnix/main/ci-template/vunnix.gitlab-ci.yml'
 
 vunnix-review:
   variables:
-    VUNNIX_EXECUTOR_VERSION: "1.2.0"
+    VUNNIX_EXECUTOR_VERSION: "2.0.7"
 ```
 
 ### Add Extra Stages
@@ -160,26 +108,6 @@ stages:
   - test      # Required for vunnix-review job
   - deploy
 ```
-
-## Private Registry Fallback
-
-If the Vunnix project must remain **Private**, CI job tokens from other projects cannot pull the executor image. Use a deploy token instead:
-
-1. In the **Vunnix project**, go to **Settings > Repository > Deploy tokens**
-2. Create a deploy token with `read_registry` scope
-3. In **your project**, go to **Settings > CI/CD > Variables** and add:
-   - `VUNNIX_DEPLOY_USER` = deploy token username
-   - `VUNNIX_DEPLOY_TOKEN` = deploy token value (masked)
-
-Then override the job's `before_script` in your `.gitlab-ci.yml`:
-
-```yaml
-vunnix-review:
-  before_script:
-    - echo "${VUNNIX_DEPLOY_TOKEN}" | docker login "${CI_SERVER_HOST}" -u "${VUNNIX_DEPLOY_USER}" --password-stdin
-```
-
-> **Note:** This approach requires runners configured with Docker-in-Docker or shell executors. The recommended approach is to set the Vunnix project to `internal` visibility.
 
 ## Variable Reference
 
@@ -199,14 +127,6 @@ These variables are set automatically when Vunnix triggers the pipeline. **Do no
 | `VUNNIX_QUESTION` | (Optional) Question text for `@ai ask` commands |
 | `VUNNIX_ISSUE_IID` | (Optional) Issue IID for issue discussion tasks |
 
-### Set by Project (Manual Configuration)
-
-| Variable | Where to Set | Description |
-|---|---|---|
-| `VUNNIX_PROJECT_PATH` | CI/CD Variables | Path to Vunnix project (e.g., `my-group/vunnix`) |
-| `VUNNIX_DEPLOY_USER` | CI/CD Variables | (Private registry only) Deploy token username |
-| `VUNNIX_DEPLOY_TOKEN` | CI/CD Variables | (Private registry only) Deploy token value |
-
 ## Troubleshooting
 
 ### Image Pull Failure
@@ -214,10 +134,8 @@ These variables are set automatically when Vunnix triggers the pipeline. **Do no
 **Symptom:** CI job fails with `image pull failed` or `manifest unknown`.
 
 **Causes:**
-1. **Vunnix project is Private** — Set it to `internal` or configure deploy token (see [Private Registry Fallback](#private-registry-fallback))
-2. **`VUNNIX_PROJECT_PATH` is wrong** — Verify the variable matches the actual Vunnix project path
-3. **Executor image not built** — Verify the executor image exists in the Vunnix project's Container Registry
-4. **Version mismatch** — The pinned `VUNNIX_EXECUTOR_VERSION` may not exist; check available tags
+1. **Runner cannot reach ghcr.io** — Verify your GitLab Runner has outbound network access to `ghcr.io`
+2. **Version mismatch** — The pinned `VUNNIX_EXECUTOR_VERSION` may not exist; check available tags at `ghcr.io/bepsvpt/vunnix/executor`
 
 ### Job Not Triggered
 

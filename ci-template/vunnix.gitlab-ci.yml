@@ -3,21 +3,16 @@
 # Include this template in your project's .gitlab-ci.yml to enable
 # AI-powered code reviews and task execution via Vunnix.
 #
-# Usage (include via project reference):
+# Usage:
 #   include:
-#     - project: 'your-group/vunnix'
-#       file: '/ci-template/vunnix.gitlab-ci.yml'
-#
-# Usage (include via remote URL):
-#   include:
-#     - remote: 'https://gitlab.example.com/your-group/vunnix/-/raw/main/ci-template/vunnix.gitlab-ci.yml'
+#     - remote: 'https://raw.githubusercontent.com/bepsvpt/vunnix/main/ci-template/vunnix.gitlab-ci.yml'
 #
 # Prerequisites:
-#   1. Vunnix project must have 'internal' or 'public' visibility (D150)
-#      so CI job tokens from target projects can pull the executor image
-#   2. Bot account must be a member of this project (Maintainer role)
-#   3. CI pipeline trigger token must be configured in Vunnix admin
+#   1. Bot account must be a member of this project (Maintainer role)
+#   2. CI pipeline trigger token must be configured in Vunnix admin
+#   3. GitLab Runner capable of pulling Docker images from ghcr.io
 #
+# The executor image is hosted on GitHub Container Registry (public, no auth needed).
 # This job only runs when triggered by the Vunnix Task Dispatcher via
 # the Pipeline Triggers API. It will NOT run on regular pushes or MR events.
 #
@@ -25,12 +20,9 @@
 
 .vunnix-executor:
   stage: test
-  image: "${VUNNIX_REGISTRY}/vunnix/executor:${VUNNIX_EXECUTOR_VERSION}"
+  image: "ghcr.io/bepsvpt/vunnix/executor:${VUNNIX_EXECUTOR_VERSION}"
   variables:
-    # Registry configuration — override these if your Vunnix instance
-    # uses a different registry path
-    VUNNIX_REGISTRY: "${CI_SERVER_HOST}:${CI_SERVER_PORT:-443}/${VUNNIX_PROJECT_PATH}"
-    VUNNIX_EXECUTOR_VERSION: "1.0.0"
+    VUNNIX_EXECUTOR_VERSION: "2.0.7"
     # Pipeline variables passed by Vunnix Task Dispatcher (do not set manually):
     #   VUNNIX_TASK_ID    — Task ID in the Vunnix database
     #   VUNNIX_TASK_TYPE  — Task type (code_review, feature_dev, etc.)
