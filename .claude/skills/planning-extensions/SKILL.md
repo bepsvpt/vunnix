@@ -61,12 +61,9 @@ digraph when_to_use {
 
 After saving the plan, offer:
 
-**"Plan saved to `docs/extensions/ext-{NNN}-{name}.md`. Execution options:**
-1. **Subagent-Driven (this session)** — REQUIRED SUB-SKILL: `superpowers:subagent-driven-development`
-2. **Parallel Session** — REQUIRED SUB-SKILL: `superpowers:executing-plans`
-3. **Manual** — Execute in a future session
+**"Plan saved to `docs/extensions/ext-{NNN}-{name}.md`. Ready to implement?"**
 
-**Which approach?"**
+**REQUIRED NEXT SKILL:** Use `implementing-extensions` to execute the plan.
 
 ## Common Mistakes
 
