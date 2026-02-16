@@ -147,3 +147,8 @@ Persistent lessons discovered during development. Write each as an actionable ru
 | `.env.production.example` | Production environment template |
 | `executor/` | Docker image for GitLab Runner |
 | `.env` | Environment configuration (secrets, API keys) |
+| `docs/spec/decisions-index.md` | Decision lookup table — D1–D155 one-line summaries |
+| `docs/assessments/` | Extension assessment artifacts (output of assessing-extensions skill) |
+| `docs/extensions/` | Extension planning documents (output of planning-extensions skill) |
+| `docs/plans/` | Design exploration documents (output of brainstorming) |
+| `docs/spikes/` | Spike research results (from spike-required modifier) |
