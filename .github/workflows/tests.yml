@@ -1,0 +1,92 @@
+# Run PHP and JavaScript test suites.
+#
+# Triggers:
+#   - Pull requests (validate before merge)
+#   - Push to main (validate after merge)
+#   - Callable via workflow_call (reusable by build workflows)
+#
+# PHP tests run against PostgreSQL 18 to match production (D172).
+# phpunit.xml defaults to SQLite but CI env vars override via
+# PHPUnit's <env force="false"> behavior — no config changes needed.
+#
+# @see docs/extensions/ext-004-ci-test-workflows.md (D172, D173)
+
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  php-tests:
+    name: PHP Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18-bookworm
+        env:
+          POSTGRES_DB: vunnix_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_pgsql, pgsql, zip, intl, pcntl, redis
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run PHP tests
+        env:
+          APP_KEY: base64:dGVzdGluZ2tleXRoYXRpczMyYnl0ZXNs
+          DB_CONNECTION: pgsql
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_DATABASE: vunnix_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+        run: php artisan test --parallel
+
+  js-tests:
+    name: JS Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run JS tests
+        run: npm test
