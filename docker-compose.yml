@@ -35,18 +35,18 @@ services:
       start_period: 30s
 
   # ==========================================================================
-  #  PostgreSQL 16 (D72)
+  #  PostgreSQL 18 (D72, D166)
   #  JSONB for structured AI output, materialized views for metrics,
   #  full-text search via tsvector + GIN indexes.
   # ==========================================================================
   postgres:
-    image: postgres:16-bookworm
+    image: postgres:18-bookworm
     container_name: vunnix-postgres
     restart: unless-stopped
     ports:
       - "${DB_FORWARD_PORT:-5432}:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
     environment:
       POSTGRES_DB: ${DB_DATABASE:-vunnix}
       POSTGRES_USER: ${DB_USERNAME:-vunnix}
@@ -67,7 +67,7 @@ services:
   #  key prefixes on DB 2.
   # ==========================================================================
   redis:
-    image: redis:7-bookworm
+    image: redis:8-bookworm
     container_name: vunnix-redis
     restart: unless-stopped
     ports:

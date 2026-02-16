@@ -169,3 +169,8 @@
 | D162 | Vunnix development hosted on GitHub (public) — unlimited free CI via GitHub Actions | ext-001 | Active |
 | D163 | Executor image registry — public GHCR at `ghcr.io/bepsvpt/vunnix/executor`, no auth needed (supersedes D65, D150) | ext-001 | Active |
 | D164 | CI template distributed via `include: remote:` URL from GitHub raw content | ext-001 | Active |
+| D165 | PHP minimum version `^8.5` — targeting PHP 8.5 in Docker + dev | ext-002 | Active |
+| D166 | PostgreSQL 18 for development and production — PG 18.2 with async I/O | ext-002 | Active |
+| D167 | Redis 8 for cache/session/queue — tri-licensed, acceptable for self-hosted | ext-002 | Active |
+| D168 | Node 24 LTS for executor image — Active LTS (EOL Apr 2028) | ext-002 | Active |
+| D169 | Pest 4 + PHPUnit 12 for test suite — enables test sharding, requires PHP 8.3+ | ext-002 | Active |

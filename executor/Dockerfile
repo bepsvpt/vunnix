@@ -15,7 +15,7 @@
 # @see §3.4 Task Dispatcher & Task Executor
 # @see §6.7 Executor Image
 
-FROM node:22-bookworm-slim
+FROM node:24-bookworm-slim
 
 LABEL maintainer="Vunnix <noreply@vunnix.dev>"
 LABEL description="Vunnix AI Task Executor — Claude CLI + Playwright + code quality tools"
@@ -87,6 +87,6 @@ RUN chmod +x /vunnix-executor/entrypoint.sh \
 # ── Runtime configuration ───────────────────────────────────────────
 # GitLab CI job timeout is the hard limit (20 min, D34).
 # The entrypoint validates the task-scoped token TTL (D127) before starting.
-ENV VUNNIX_EXECUTOR_VERSION="2.0.7"
+ENV VUNNIX_EXECUTOR_VERSION="2.1.0"
 
 ENTRYPOINT ["/vunnix-executor/entrypoint.sh"]
