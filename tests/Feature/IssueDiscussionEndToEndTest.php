@@ -98,7 +98,7 @@ it('completes full @ai issue discussion flow with response posted as Issue comme
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Note Hook',
-        'X-Gitlab-Event-UUID' => 'issue-disc-uuid-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-f00000000001',
     ]);
 
     // ── 4. Assert webhook accepted + task created ────────────────
@@ -280,7 +280,7 @@ it('rejects @ai on Issue from user without review.trigger permission', function 
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Note Hook',
-        'X-Gitlab-Event-UUID' => 'issue-disc-perm-denied-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-f00000000002',
     ]);
 
     $response->assertOk()
@@ -324,7 +324,7 @@ it('ignores bot-authored @ai notes on Issues (D154)', function () {
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Note Hook',
-        'X-Gitlab-Event-UUID' => 'issue-disc-bot-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-f00000000003',
     ]);
 
     $response->assertOk()
@@ -364,7 +364,7 @@ it('ignores Issue notes without @ai mention', function () {
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Note Hook',
-        'X-Gitlab-Event-UUID' => 'issue-disc-no-ai-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-f00000000004',
     ]);
 
     $response->assertOk()

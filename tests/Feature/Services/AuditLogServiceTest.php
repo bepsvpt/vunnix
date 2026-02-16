@@ -163,7 +163,7 @@ it('logs a webhook received event', function () {
     expect($log->user_id)->toBeNull(); // webhooks have no user
     expect($log->project_id)->toBe($project->id);
     expect($log->properties['gitlab_event_type'])->toBe('merge_request');
-    expect($log->properties['relevant_ids'])->toBe(['mr_iid' => 42, 'action' => 'open']);
+    expect($log->properties['relevant_ids'])->toEqual(['mr_iid' => 42, 'action' => 'open']);
 });
 
 it('logs an auth event', function () {

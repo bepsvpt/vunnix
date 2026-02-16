@@ -15,6 +15,7 @@ class CostAlertController extends Controller
 
         $alerts = CostAlert::active()
             ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->limit(50)
             ->get();
 

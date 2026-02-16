@@ -311,7 +311,7 @@ it('rejects duplicate webhook by X-Gitlab-Event-UUID', function () {
         ],
     ];
 
-    $uuid = 'duplicate-uuid-1234';
+    $uuid = '00000000-0000-0000-0000-bbb000000001';
 
     // First request — accepted
     postWebhook($this, $token, 'Merge Request Hook', $payload, eventUuid: $uuid)

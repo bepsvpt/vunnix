@@ -209,7 +209,7 @@ it('completes full on-demand review flow from @ai review comment to 3-layer GitL
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Note Hook',
-        'X-Gitlab-Event-UUID' => 'on-demand-uuid-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-e00000000001',
     ]);
 
     // ── 4. Assert webhook accepted + task created ────────────────
@@ -358,7 +358,7 @@ it('rejects @ai review from user without review.trigger permission', function ()
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Note Hook',
-        'X-Gitlab-Event-UUID' => 'perm-denied-uuid-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-e00000000002',
     ]);
 
     $response->assertOk()

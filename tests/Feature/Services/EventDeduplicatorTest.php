@@ -86,7 +86,7 @@ function insertTask(int $projectId, int $userId, array $overrides = []): int
 it('accepts an event with a new UUID', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id);
-    $result = $dedup->process('uuid-1', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000001', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->accepted())->toBeTrue()
         ->and($result->outcome)->toBe(EventDeduplicator::ACCEPT);
@@ -97,10 +97,10 @@ it('rejects an event with a duplicate UUID', function () {
     $event = dedupMrOpenedEvent($this->project->id);
 
     // First call — accept and log the UUID
-    $dedup->process('uuid-1', dedupRouting('auto_review', 'normal', $event));
+    $dedup->process('00000000-0000-0000-0000-000000000001', dedupRouting('auto_review', 'normal', $event));
 
     // Second call — same UUID → reject
-    $result = $dedup->process('uuid-1', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000001', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->rejected())->toBeTrue()
         ->and($result->outcome)->toBe(EventDeduplicator::DUPLICATE_UUID);
@@ -110,8 +110,8 @@ it('accepts events with different UUIDs for the same project', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id);
 
-    $result1 = $dedup->process('uuid-1', dedupRouting('auto_review', 'normal', $event));
-    $result2 = $dedup->process('uuid-2', dedupRouting('auto_review', 'normal', $event));
+    $result1 = $dedup->process('00000000-0000-0000-0000-000000000001', dedupRouting('auto_review', 'normal', $event));
+    $result2 = $dedup->process('00000000-0000-0000-0000-000000000002', dedupRouting('auto_review', 'normal', $event));
 
     expect($result1->accepted())->toBeTrue()
         ->and($result2->accepted())->toBeTrue();
@@ -124,8 +124,8 @@ it('accepts same UUID for different projects', function () {
     $event1 = dedupMrOpenedEvent($this->project->id);
     $event2 = dedupMrOpenedEvent($project2->id);
 
-    $result1 = $dedup->process('uuid-1', dedupRouting('auto_review', 'normal', $event1));
-    $result2 = $dedup->process('uuid-1', dedupRouting('auto_review', 'normal', $event2));
+    $result1 = $dedup->process('00000000-0000-0000-0000-000000000001', dedupRouting('auto_review', 'normal', $event1));
+    $result2 = $dedup->process('00000000-0000-0000-0000-000000000001', dedupRouting('auto_review', 'normal', $event2));
 
     expect($result1->accepted())->toBeTrue()
         ->and($result2->accepted())->toBeTrue();
@@ -143,11 +143,11 @@ it('accepts events when UUID is null (no header sent)', function () {
 it('logs accepted events to the webhook_events table', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id, mrIid: 42, commitSha: 'abc123');
-    $dedup->process('uuid-1', dedupRouting('auto_review', 'normal', $event));
+    $dedup->process('00000000-0000-0000-0000-000000000001', dedupRouting('auto_review', 'normal', $event));
 
     $log = WebhookEventLog::first();
     expect($log)->not->toBeNull()
-        ->and($log->gitlab_event_uuid)->toBe('uuid-1')
+        ->and($log->gitlab_event_uuid)->toBe('00000000-0000-0000-0000-000000000001')
         ->and($log->project_id)->toBe($this->project->id)
         ->and($log->event_type)->toBe('merge_request_opened')
         ->and($log->intent)->toBe('auto_review')
@@ -178,7 +178,7 @@ it('rejects duplicate commit SHA for same MR in active state', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id, mrIid: 42, commitSha: 'abc123');
 
-    $result = $dedup->process('uuid-2', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000002', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->rejected())->toBeTrue()
         ->and($result->outcome)->toBe(EventDeduplicator::DUPLICATE_COMMIT);
@@ -194,7 +194,7 @@ it('rejects duplicate commit SHA in running state', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id, mrIid: 42, commitSha: 'abc123');
 
-    $result = $dedup->process('uuid-2b', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-00000000002b', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->rejected())->toBeTrue()
         ->and($result->outcome)->toBe(EventDeduplicator::DUPLICATE_COMMIT);
@@ -210,7 +210,7 @@ it('allows same commit SHA when previous task is completed', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id, mrIid: 42, commitSha: 'abc123');
 
-    $result = $dedup->process('uuid-3', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000003', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->accepted())->toBeTrue();
 });
@@ -225,7 +225,7 @@ it('allows same commit SHA when previous task is failed', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id, mrIid: 42, commitSha: 'abc123');
 
-    $result = $dedup->process('uuid-4', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000004', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->accepted())->toBeTrue();
 });
@@ -240,7 +240,7 @@ it('allows same commit SHA when previous task was superseded', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id, mrIid: 42, commitSha: 'abc123');
 
-    $result = $dedup->process('uuid-4b', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-00000000004b', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->accepted())->toBeTrue();
 });
@@ -249,7 +249,7 @@ it('skips commit SHA dedup for Note events (no commit SHA)', function () {
     $dedup = new EventDeduplicator;
     $event = dedupNoteOnMrEvent($this->project->id);
 
-    $result = $dedup->process('uuid-5', dedupRouting('on_demand_review', 'high', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000005', dedupRouting('on_demand_review', 'high', $event));
 
     expect($result->accepted())->toBeTrue();
 });
@@ -258,7 +258,7 @@ it('skips commit SHA dedup for Issue events (no commit SHA)', function () {
     $dedup = new EventDeduplicator;
     $event = dedupIssueLabelEvent($this->project->id);
 
-    $result = $dedup->process('uuid-6', dedupRouting('feature_dev', 'low', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000006', dedupRouting('feature_dev', 'low', $event));
 
     expect($result->accepted())->toBeTrue();
 });
@@ -277,7 +277,7 @@ it('supersedes queued tasks when new MR update arrives (D140)', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrUpdatedEvent($this->project->id, mrIid: 42, commitSha: 'new-sha');
 
-    $result = $dedup->process('uuid-7', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000007', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->accepted())->toBeTrue()
         ->and($result->supersededCount)->toBe(1)
@@ -297,7 +297,7 @@ it('supersedes running tasks when new MR update arrives (D140)', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrUpdatedEvent($this->project->id, mrIid: 42, commitSha: 'new-sha');
 
-    $result = $dedup->process('uuid-8', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000008', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->accepted())->toBeTrue()
         ->and($result->supersededCount)->toBe(1);
@@ -316,7 +316,7 @@ it('supersedes queued tasks when new MR opened arrives (D140)', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id, mrIid: 42, commitSha: 'brand-new');
 
-    $result = $dedup->process('uuid-8b', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-00000000008b', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->accepted())->toBeTrue()
         ->and($result->supersededCount)->toBe(1);
@@ -334,7 +334,7 @@ it('supersedes multiple active tasks for same MR (D140)', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id, mrIid: 42, commitSha: 'brand-new');
 
-    $result = $dedup->process('uuid-9', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000009', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->supersededCount)->toBe(2);
 
@@ -357,7 +357,7 @@ it('does not supersede tasks for different MR (D140)', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrUpdatedEvent($this->project->id, mrIid: 42, commitSha: 'new-sha');
 
-    $result = $dedup->process('uuid-10', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000010', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->supersededCount)->toBe(0);
 
@@ -377,7 +377,7 @@ it('does not supersede tasks for different project (D140)', function () {
     $dedup = new EventDeduplicator;
     $event = dedupMrUpdatedEvent($this->project->id, mrIid: 42, commitSha: 'new-sha');
 
-    $result = $dedup->process('uuid-11', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000011', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->supersededCount)->toBe(0);
 });
@@ -394,7 +394,7 @@ it('does not supersede completed, failed, or already superseded tasks (D140)', f
     $dedup = new EventDeduplicator;
     $event = dedupMrUpdatedEvent($this->project->id, mrIid: 42, commitSha: 'new-sha');
 
-    $result = $dedup->process('uuid-12', dedupRouting('auto_review', 'normal', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000012', dedupRouting('auto_review', 'normal', $event));
 
     expect($result->supersededCount)->toBe(0);
 });
@@ -409,7 +409,7 @@ it('does not supersede on Note events (D140 — only push/update trigger)', func
     $dedup = new EventDeduplicator;
     $event = dedupNoteOnMrEvent($this->project->id, mrIid: 42);
 
-    $result = $dedup->process('uuid-13', dedupRouting('on_demand_review', 'high', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000013', dedupRouting('on_demand_review', 'high', $event));
 
     expect($result->supersededCount)->toBe(0);
 
@@ -430,7 +430,7 @@ it('does not supersede on Issue label events (D140)', function () {
     $dedup = new EventDeduplicator;
     $event = dedupIssueLabelEvent($this->project->id);
 
-    $result = $dedup->process('uuid-14', dedupRouting('feature_dev', 'low', $event));
+    $result = $dedup->process('00000000-0000-0000-0000-000000000014', dedupRouting('feature_dev', 'low', $event));
 
     expect($result->supersededCount)->toBe(0);
 });

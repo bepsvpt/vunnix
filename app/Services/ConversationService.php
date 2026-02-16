@@ -37,7 +37,7 @@ class ConversationService
 
         if ($search) {
             // Full-text search on title (LIKE fallback for SQLite in tests)
-            $query->where('title', 'like', "%{$search}%");
+            $query->whereRaw('LOWER(title) LIKE ?', ['%' . strtolower($search) . '%']);
         }
 
         return $query->orderByDesc('updated_at')->cursorPaginate($perPage);

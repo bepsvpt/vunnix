@@ -233,7 +233,7 @@ it('completes full code review flow from webhook to 3-layer GitLab comments', fu
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Merge Request Hook',
-        'X-Gitlab-Event-UUID' => 'e2e-uuid-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-c00000000001',
     ]);
 
     // ── 4. Assert webhook accepted + task created ────────────────

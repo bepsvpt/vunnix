@@ -299,7 +299,7 @@ it('persists all required fields', function () {
         'mr_iid' => 42,
         'issue_iid' => null,
         'comment_id' => 123,
-        'commit_sha' => 'abc1234567890def1234567890abc1234567890de',
+        'commit_sha' => 'abc1234567890def1234567890abc123456789d',
         'conversation_id' => null,
         'prompt' => 'Review this code',
         'response' => null,
@@ -322,7 +322,7 @@ it('persists all required fields', function () {
         ->and($fresh->status)->toBe(TaskStatus::Received)
         ->and($fresh->mr_iid)->toBe(42)
         ->and($fresh->comment_id)->toBe(123)
-        ->and($fresh->commit_sha)->toBe('abc1234567890def1234567890abc1234567890de')
+        ->and($fresh->commit_sha)->toBe('abc1234567890def1234567890abc123456789d')
         ->and($fresh->result)->toBe(['findings' => []])
         ->and($fresh->prompt_version)->toBe(['skill' => 'code-review', 'version' => '1.0'])
         ->and((float) $fresh->cost)->toEqual(0.001234)

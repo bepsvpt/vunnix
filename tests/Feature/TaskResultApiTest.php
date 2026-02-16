@@ -107,7 +107,7 @@ it('accepts a completed result and transitions task to completed via Result Proc
         ->and($task->result['commit_status'])->toBe('success')
         ->and($task->tokens_used)->toBe(185000)
         ->and($task->completed_at)->not->toBeNull()
-        ->and($task->prompt_version)->toBe([
+        ->and($task->prompt_version)->toEqual([
             'skill' => 'frontend-review:1.0',
             'claude_md' => 'executor:1.0',
             'schema' => 'review:1.0',

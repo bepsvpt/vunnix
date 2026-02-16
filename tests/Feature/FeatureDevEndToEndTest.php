@@ -108,7 +108,7 @@ it('completes full feature dev flow: label → task → MR created → issue sum
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Issue Hook',
-        'X-Gitlab-Event-UUID' => 'feature-dev-uuid-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-d00000000001',
     ]);
 
     // ── 4. Assert webhook accepted + task created ────────────────
@@ -305,7 +305,7 @@ it('rejects ai::develop label from user without review.trigger permission', func
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Issue Hook',
-        'X-Gitlab-Event-UUID' => 'feature-dev-perm-denied-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-d00000000002',
     ]);
 
     $response->assertOk()
@@ -347,7 +347,7 @@ it('ignores issue label changes without ai::develop label', function () {
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Issue Hook',
-        'X-Gitlab-Event-UUID' => 'feature-dev-no-label-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-d00000000003',
     ]);
 
     $response->assertOk()
@@ -398,7 +398,7 @@ it('dispatches feature dev tasks with low priority', function () {
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Issue Hook',
-        'X-Gitlab-Event-UUID' => 'feature-dev-low-prio-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-d00000000004',
     ]);
 
     $taskId = $response->json('task_id');

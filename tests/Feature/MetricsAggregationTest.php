@@ -63,6 +63,9 @@ test('byProject aggregates task_metrics by project', function () {
         'duration_seconds' => 30,
     ]);
 
+    // Refresh materialized views so PostgreSQL CI sees the seeded data (D172)
+    $this->artisan('metrics:aggregate');
+
     $service = app(MetricsQueryService::class);
     $result = $service->byProject(collect([$projectA->id, $projectB->id]));
 
@@ -123,6 +126,9 @@ test('byType aggregates task_metrics by project and task type', function () {
         'cost' => 2.000000,
         'duration_seconds' => 180,
     ]);
+
+    // Refresh materialized views so PostgreSQL CI sees the seeded data (D172)
+    $this->artisan('metrics:aggregate');
 
     $service = app(MetricsQueryService::class);
     $result = $service->byType(collect([$project->id]));
@@ -202,6 +208,9 @@ test('byPeriod aggregates task_metrics by project, type, and month', function ()
         'updated_at' => now()->subMonth()->startOfMonth(),
     ]);
 
+    // Refresh materialized views so PostgreSQL CI sees the seeded data (D172)
+    $this->artisan('metrics:aggregate');
+
     $service = app(MetricsQueryService::class);
     $result = $service->byPeriod(collect([$project->id]), 12);
 
@@ -253,6 +262,9 @@ test('byProject only returns data for requested project IDs', function () {
         'output_tokens' => 8000,
         'cost' => 2.000000,
     ]);
+
+    // Refresh materialized views so PostgreSQL CI sees the seeded data (D172)
+    $this->artisan('metrics:aggregate');
 
     $service = app(MetricsQueryService::class);
 
@@ -320,6 +332,9 @@ test('10 tasks with known metrics produce correct aggregation', function () {
     // Verify 10 task_metrics records exist
     expect(TaskMetric::count())->toBe(10);
 
+    // Refresh materialized views so PostgreSQL CI sees the seeded data (D172)
+    $this->artisan('metrics:aggregate');
+
     $service = app(MetricsQueryService::class);
     $projectIds = collect([$projectA->id, $projectB->id]);
 
@@ -380,9 +395,13 @@ test('metrics:aggregate command runs successfully', function () {
         ->assertSuccessful();
 });
 
-test('metrics:aggregate command reports 0 views on SQLite', function () {
+test('metrics:aggregate command reports view count based on driver', function () {
+    $expected = DB::connection()->getDriverName() === 'pgsql'
+        ? '3 views refreshed'
+        : '0 views refreshed';
+
     $this->artisan('metrics:aggregate')
-        ->expectsOutputToContain('0 views refreshed')
+        ->expectsOutputToContain($expected)
         ->assertSuccessful();
 });
 

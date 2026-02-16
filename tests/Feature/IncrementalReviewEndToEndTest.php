@@ -229,7 +229,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Merge Request Hook',
-        'X-Gitlab-Event-UUID' => 'incr-uuid-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-b00000000001',
     ]);
 
     $response1->assertOk()->assertJson(['intent' => 'auto_review']);
@@ -358,7 +358,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Push Hook',
-        'X-Gitlab-Event-UUID' => 'incr-uuid-002',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-b00000000002',
     ]);
 
     $response2->assertOk()->assertJson(['intent' => 'incremental_review']);

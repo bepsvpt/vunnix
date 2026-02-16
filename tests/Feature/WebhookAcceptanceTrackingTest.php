@@ -48,7 +48,7 @@ it('dispatches ProcessAcceptanceTracking job on MR merge webhook', function () {
     $response = $this->postJson('/webhook', $payload, [
         'X-Gitlab-Event' => 'Merge Request Hook',
         'X-Gitlab-Token' => $token,
-        'X-Gitlab-Event-UUID' => 'uuid-merge-1',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-aaa000000001',
     ]);
 
     $response->assertOk();
@@ -79,7 +79,7 @@ it('does not dispatch acceptance tracking for non-merge MR actions', function ()
     $response = $this->postJson('/webhook', $payload, [
         'X-Gitlab-Event' => 'Merge Request Hook',
         'X-Gitlab-Token' => $token,
-        'X-Gitlab-Event-UUID' => 'uuid-open-1',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-aaa000000002',
     ]);
 
     $response->assertOk();
@@ -113,7 +113,7 @@ it('dispatches ProcessCodeChangeCorrelation on push webhook', function () {
     $response = $this->postJson('/webhook', $payload, [
         'X-Gitlab-Event' => 'Push Hook',
         'X-Gitlab-Token' => $token,
-        'X-Gitlab-Event-UUID' => 'uuid-push-1',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-aaa000000003',
     ]);
 
     $response->assertOk();

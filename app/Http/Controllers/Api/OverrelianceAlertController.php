@@ -15,6 +15,7 @@ class OverrelianceAlertController extends Controller
 
         $alerts = OverrelianceAlert::active()
             ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->limit(50)
             ->get();
 

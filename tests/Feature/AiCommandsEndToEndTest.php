@@ -141,7 +141,7 @@ it('completes full @ai improve flow with 3-layer code review output', function (
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Note Hook',
-        'X-Gitlab-Event-UUID' => 'improve-uuid-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-a00000000001',
     ]);
 
     // ── 4. Assert webhook accepted + task created ────────────────
@@ -325,7 +325,7 @@ it('rejects @ai improve from user without review.trigger permission', function (
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Note Hook',
-        'X-Gitlab-Event-UUID' => 'improve-perm-denied-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-a00000000002',
     ]);
 
     $response->assertOk()
@@ -393,7 +393,7 @@ it('completes full @ai ask flow with answer posted as MR comment', function () {
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Note Hook',
-        'X-Gitlab-Event-UUID' => 'ask-uuid-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-a00000000003',
     ]);
 
     // ── 4. Assert webhook accepted + task created ────────────────
@@ -562,7 +562,7 @@ it('extracts question text from @ai ask with surrounding context', function () {
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Note Hook',
-        'X-Gitlab-Event-UUID' => 'ask-context-uuid-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-a00000000004',
     ]);
 
     $response->assertOk()
@@ -604,7 +604,7 @@ it('rejects @ai ask from user without review.trigger permission', function () {
     ], [
         'X-Gitlab-Token' => $webhookSecret,
         'X-Gitlab-Event' => 'Note Hook',
-        'X-Gitlab-Event-UUID' => 'ask-perm-denied-001',
+        'X-Gitlab-Event-UUID' => '00000000-0000-0000-0000-a00000000005',
     ]);
 
     $response->assertOk()
