@@ -1,7 +1,8 @@
 # Build and publish the Vunnix Executor Docker image to GHCR.
 #
 # Triggers:
-#   - Push to main when executor/ or alignment-checked paths change
+#   - Push to main when executor/, agent, or workflow paths change
+#   - Weekly schedule (Monday 6 AM UTC) for dependency freshness
 #   - Manual workflow_dispatch for ad-hoc rebuilds
 #
 # Image: ghcr.io/bepsvpt/vunnix/executor
@@ -17,8 +18,11 @@ on:
     branches: [main]
     paths:
       - 'executor/**'
-      - 'app/AI/**'
+      - 'app/Agents/**'
       - 'scripts/check-version-alignment.sh'
+      - '.github/workflows/build-executor.yml'
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly Monday 6 AM UTC — rebuild for dependency freshness
   workflow_dispatch:
 
 permissions:

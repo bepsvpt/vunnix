@@ -2,7 +2,7 @@
 # Vunnix Version Alignment Check (D126, R8 mitigation)
 #
 # Verifies that shared constants between the Task Executor (executor/.claude/CLAUDE.md)
-# and the Conversation Engine Agent class (app/AI/) are in sync.
+# and the Conversation Engine Agent class (app/Agents/) are in sync.
 #
 # Shared constants checked:
 #   1. Severity definitions (Critical, Major, Minor) — wording and emoji
@@ -29,7 +29,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 EXECUTOR_CLAUDE_MD="$PROJECT_ROOT/executor/.claude/CLAUDE.md"
-CE_AGENT_DIR="$PROJECT_ROOT/app/AI"
+CE_AGENT_DIR="$PROJECT_ROOT/app/Agents"
 
 # Colors for output
 RED='\033[0;31m'
