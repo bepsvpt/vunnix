@@ -7,6 +7,12 @@ export default defineConfig({
         environment: 'jsdom',
         include: ['resources/js/**/*.test.js'],
         globals: true,
+        coverage: {
+            provider: 'v8',
+            reportsDirectory: 'coverage/js',
+            include: ['resources/js/**/*.{js,vue}'],
+            exclude: ['resources/js/**/*.test.js'],
+        },
     },
     resolve: {
         alias: {

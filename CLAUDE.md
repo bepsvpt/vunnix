@@ -22,6 +22,8 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 | `php artisan test --parallel` | Run full PHP suite (required — single-process OOMs at 900+ tests) |
 | `php artisan test --filter=ClassName` | Run a specific test file |
 | `npm test` | Run Vue/JS tests (Vitest) |
+| `composer test:coverage` | PHP tests with coverage (text + HTML report in coverage/php/) |
+| `npm run test:coverage` | JS tests with coverage (text + HTML report in coverage/js/) |
 | `npm run dev` | Vite dev server only (frontend) |
 | `npm run build` | Production frontend build |
 | `./vendor/bin/pint` | Run Laravel Pint (PSR-12 code style) |

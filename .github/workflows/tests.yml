@@ -50,6 +50,7 @@ jobs:
         with:
           php-version: '8.5'
           extensions: pdo_pgsql, pgsql, zip, intl, pcntl, redis
+          coverage: pcov
 
       - name: Cache Composer dependencies
         uses: actions/cache@v4
@@ -61,7 +62,7 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
 
-      - name: Run PHP tests
+      - name: Run PHP tests with coverage
         env:
           APP_KEY: base64:dnVubml4LWNpLXRlc3Qta2V5LTMyLWJ5dGVzLW9rXCE=
           DB_CONNECTION: pgsql
@@ -70,7 +71,14 @@ jobs:
           DB_DATABASE: vunnix_test
           DB_USERNAME: postgres
           DB_PASSWORD: postgres
-        run: php artisan test --parallel
+        run: php artisan test --parallel --coverage --coverage-clover=coverage/php/clover.xml
+
+      - name: Upload PHP coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-coverage
+          path: coverage/php/
 
   js-tests:
     name: JS Tests
@@ -88,5 +96,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run JS tests
-        run: npm test
+      - name: Run JS tests with coverage
+        run: npx vitest run --coverage
+
+      - name: Upload JS coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: js-coverage
+          path: coverage/js/
