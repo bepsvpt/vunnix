@@ -650,6 +650,11 @@ class GitLabClient
      */
     public function triggerPipeline(int $projectId, string $ref, string $triggerToken, array $variables = []): array
     {
+        // GitLab Pipeline Triggers API requires ALL parameters in POST body as multipart form-data
+        // Token, ref, and variables[KEY]=value must ALL be --form fields (NOT query params)
+        // Verified with: curl --form "token=..." --form "ref=..." --form "variables[KEY]=value" <url>
+        $url = $this->url("projects/{$projectId}/trigger/pipeline");
+
         $data = [
             'token' => $triggerToken,
             'ref' => $ref,
@@ -659,11 +664,26 @@ class GitLabClient
             $data["variables[{$key}]"] = $value;
         }
 
-        $response = $this->request()->post(
-            $this->url("projects/{$projectId}/trigger/pipeline"),
-            $data,
-        );
+        // DO NOT use $this->request() - adds PRIVATE-TOKEN header which conflicts with trigger token
+        // Must use asMultipart() - GitLab expects multipart/form-data (curl --form)
+        $response = Http::asMultipart()->post($url, $data);
 
         return $this->handleResponse($response, "triggerPipeline ref={$ref}")->json();
+    }
+
+    /**
+     * Cancel a running or pending GitLab CI pipeline.
+     *
+     * Used when a task is superseded by a newer commit to avoid wasting CI minutes.
+     *
+     * @param  int  $projectId  GitLab project ID
+     * @param  int  $pipelineId  GitLab pipeline ID to cancel
+     * @throws GitLabApiException  If the API request fails
+     */
+    public function cancelPipeline(int $projectId, int $pipelineId): void
+    {
+        $this->request()->post(
+            $this->url("projects/{$projectId}/pipelines/{$pipelineId}/cancel"),
+        );
     }
 }

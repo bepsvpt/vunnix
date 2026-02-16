@@ -76,6 +76,11 @@ class EventDeduplicator
         $commitSha = $this->extractCommitSha($event);
         $mrIid = $this->extractMrIid($event);
 
+        // For push events, resolve the MR IID from the branch name via GitLab API
+        if ($mrIid === null && $event instanceof PushToMRBranch) {
+            $mrIid = $this->resolveMrIidFromBranch($event);
+        }
+
         if ($commitSha !== null && $mrIid !== null) {
             if ($this->isDuplicateCommit($event->projectId, $mrIid, $commitSha)) {
                 Log::info('EventDeduplicator: rejecting duplicate commit SHA', [
@@ -91,7 +96,11 @@ class EventDeduplicator
         // Step 3: Latest-wins superseding (D140) — supersede older tasks for same MR
         $supersededCount = 0;
         if ($mrIid !== null && $this->isSupersedingEvent($event)) {
-            $supersededCount = $this->supersedeActiveTasks($event->projectId, $mrIid);
+            $supersededCount = $this->supersedeActiveTasks(
+                $event->projectId,
+                $event->gitlabProjectId,
+                $mrIid,
+            );
 
             if ($supersededCount > 0) {
                 Log::info('EventDeduplicator: superseded active tasks (D140)', [
@@ -152,15 +161,57 @@ class EventDeduplicator
     /**
      * Mark all queued/running tasks for the same MR as superseded (D140).
      *
+     * Also cancels any running GitLab CI pipelines to avoid wasting CI minutes.
+     *
      * Returns the number of tasks that were superseded.
+     *
+     * @param  int  $projectId  Internal Vunnix project ID
+     * @param  int  $gitlabProjectId  GitLab project ID for API calls
+     * @param  int  $mrIid  Merge request IID
      */
-    private function supersedeActiveTasks(int $projectId, int $mrIid): int
+    private function supersedeActiveTasks(int $projectId, int $gitlabProjectId, int $mrIid): int
     {
-        return DB::table('tasks')
+        // Get pipeline IDs before updating status
+        $pipelineIds = DB::table('tasks')
+            ->where('project_id', $projectId)
+            ->where('mr_iid', $mrIid)
+            ->whereIn('status', ['queued', 'running'])
+            ->whereNotNull('pipeline_id')
+            ->pluck('pipeline_id')
+            ->all();
+
+        $count = DB::table('tasks')
             ->where('project_id', $projectId)
             ->where('mr_iid', $mrIid)
             ->whereIn('status', ['queued', 'running'])
             ->update(['status' => 'superseded']);
+
+        // Cancel the pipelines to stop wasted CI execution
+        if (count($pipelineIds) > 0) {
+            $gitLab = app(GitLabClient::class);
+
+            foreach ($pipelineIds as $pipelineId) {
+                try {
+                    $gitLab->cancelPipeline($gitlabProjectId, $pipelineId);
+
+                    Log::info('EventDeduplicator: canceled superseded pipeline', [
+                        'project_id' => $projectId,
+                        'gitlab_project_id' => $gitlabProjectId,
+                        'pipeline_id' => $pipelineId,
+                    ]);
+                } catch (\Throwable $e) {
+                    // Best-effort: log failure but don't block the superseding
+                    Log::warning('EventDeduplicator: failed to cancel pipeline', [
+                        'project_id' => $projectId,
+                        'gitlab_project_id' => $gitlabProjectId,
+                        'pipeline_id' => $pipelineId,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        return $count;
     }
 
     /**
@@ -221,12 +272,34 @@ class EventDeduplicator
             return $event->mergeRequestIid;
         }
 
-        // Push events don't directly carry MR IID — the mapping from
-        // branch to MR is handled by the TaskDispatcher (T17) which
-        // queries GitLab for the associated MR. For now, push events
-        // skip commit-SHA dedup and MR superseding at this layer.
-        // The TaskDispatcher will handle push-to-MR resolution.
-
         return null;
+    }
+
+    /**
+     * Resolve the MR IID for a push event by querying GitLab API.
+     *
+     * Finds the open MR targeting the pushed branch, enabling superseding
+     * logic to run for rapid successive pushes.
+     */
+    private function resolveMrIidFromBranch(PushToMRBranch $event): ?int
+    {
+        try {
+            $gitLab = app(GitLabClient::class);
+            $mr = $gitLab->findOpenMergeRequestForBranch(
+                $event->gitlabProjectId,
+                $event->branchName(),
+            );
+
+            return $mr ? (int) $mr['iid'] : null;
+        } catch (\Throwable $e) {
+            // Best-effort: log failure but don't block event processing
+            Log::warning('EventDeduplicator: failed to resolve MR IID from branch', [
+                'project_id' => $event->projectId,
+                'branch' => $event->branchName(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 }

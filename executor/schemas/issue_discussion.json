@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["version", "response", "references"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version"
+    },
+    "response": {
+      "type": "string",
+      "description": "Detailed answer to the issue question"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "line", "context"],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "File path"
+          },
+          "line": {
+            "type": "integer",
+            "description": "Line number"
+          },
+          "context": {
+            "type": "string",
+            "description": "Why this file is relevant"
+          }
+        }
+      }
+    }
+  }
+}

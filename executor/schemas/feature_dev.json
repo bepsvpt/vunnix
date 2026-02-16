@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["version", "branch", "mr_title", "mr_description", "files_changed", "tests_added"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version"
+    },
+    "branch": {
+      "type": "string",
+      "description": "Git branch name for the feature"
+    },
+    "mr_title": {
+      "type": "string",
+      "description": "Merge request title"
+    },
+    "mr_description": {
+      "type": "string",
+      "description": "Merge request description"
+    },
+    "files_changed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of files changed"
+    },
+    "tests_added": {
+      "type": "boolean",
+      "description": "Whether tests were added"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional implementation notes"
+    }
+  }
+}

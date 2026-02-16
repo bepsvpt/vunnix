@@ -146,46 +146,50 @@ if ! jq empty "$CLAUDE_OUTPUT_FILE" 2>/dev/null; then
 fi
 
 # ── Extract the AI's structured result ───────────────────────────────
-# Claude CLI --output-format json produces:
+# Claude CLI with --json-schema puts structured output in .structured_output field:
 # {
 #   "type": "result",
-#   "subtype": "success",
-#   "cost_usd": 0.05,
-#   "duration_ms": 15000,
-#   "duration_api_ms": 12000,
-#   "is_error": false,
-#   "num_turns": 5,
-#   "result": "...the AI's text output...",
-#   "session_id": "..."
+#   "result": "...explanatory text...",
+#   "structured_output": {...validated JSON matching schema...}
 # }
-#
-# The AI's output is in the "result" field as a string. Since we instructed
-# the executor CLAUDE.md to output strict JSON (no markdown fencing), we
-# parse the result string as JSON.
 
-CLAUDE_RESULT=$(jq -r '.result // empty' "$CLAUDE_OUTPUT_FILE" 2>/dev/null)
+# Check if .structured_output exists (preferred - schema-validated)
+if jq -e '.structured_output' "$CLAUDE_OUTPUT_FILE" >/dev/null 2>&1; then
+    PARSED_RESULT=$(jq '.structured_output' "$CLAUDE_OUTPUT_FILE" 2>/dev/null)
+    log "Extracted schema-validated JSON from .structured_output field"
+else
+    # Fallback: check if .result is an object or string
+    RESULT_TYPE=$(jq -r '.result | type' "$CLAUDE_OUTPUT_FILE" 2>/dev/null)
 
-if [[ -z "$CLAUDE_RESULT" ]]; then
-    # Fallback: maybe the file IS the raw result (not wrapped by CLI)
-    CLAUDE_RESULT=$(cat "$CLAUDE_OUTPUT_FILE")
-    log "No .result field found — treating entire file as result"
-fi
+    if [[ "$RESULT_TYPE" == "object" ]]; then
+        # Result is already a JSON object
+        PARSED_RESULT=$(jq '.result' "$CLAUDE_OUTPUT_FILE" 2>/dev/null)
+        log "Extracted JSON object from .result field"
+    elif [[ "$RESULT_TYPE" == "string" ]]; then
+        # Result is a string - try to parse as JSON
+        CLAUDE_RESULT=$(jq -r '.result' "$CLAUDE_OUTPUT_FILE" 2>/dev/null)
 
-# Try to parse the result as JSON
-PARSED_RESULT=$(echo "$CLAUDE_RESULT" | jq '.' 2>/dev/null) || {
-    # The result might have markdown fencing despite our instructions — strip it
-    STRIPPED=$(echo "$CLAUDE_RESULT" | sed -n '/^```json/,/^```$/p' | sed '1d;$d')
-    if [[ -n "$STRIPPED" ]]; then
-        PARSED_RESULT=$(echo "$STRIPPED" | jq '.' 2>/dev/null) || {
-            log_error "Result is not valid JSON (even after stripping markdown fencing)"
-            exit 2
+        # Try to parse the string as JSON
+        PARSED_RESULT=$(echo "$CLAUDE_RESULT" | jq '.' 2>/dev/null) || {
+            # Not valid JSON - try stripping markdown fencing
+            STRIPPED=$(echo "$CLAUDE_RESULT" | sed -n '/^```json/,/^```$/p' | sed '1d;$d')
+            if [[ -n "$STRIPPED" ]]; then
+                PARSED_RESULT=$(echo "$STRIPPED" | jq '.' 2>/dev/null) || {
+                    log_error "Result is not valid JSON (even after stripping markdown fencing)"
+                    exit 2
+                }
+                log "Stripped markdown fencing from result string"
+            else
+                log_error "Result string is not valid JSON and has no markdown fencing"
+                exit 2
+            fi
         }
-        log "Stripped markdown fencing from result"
+        log "Parsed JSON from string .result field"
     else
-        log_error "Result string is not valid JSON"
+        log_error "No structured_output and unexpected .result type: $RESULT_TYPE"
         exit 2
     fi
-}
+fi
 
 # ── Extract token usage from Claude CLI output ───────────────────────
 # Claude CLI JSON includes cost_usd but not raw token counts.
@@ -196,104 +200,55 @@ TOKENS_THINKING=$(jq -r '.usage.thinking_tokens // .thinking_tokens // 0' "$CLAU
 COST_USD=$(jq -r '.cost_usd // 0' "$CLAUDE_OUTPUT_FILE" 2>/dev/null || echo "0")
 CLI_DURATION_MS=$(jq -r '.duration_ms // 0' "$CLAUDE_OUTPUT_FILE" 2>/dev/null || echo "0")
 
+# Validate and coerce to integers (prevent --argjson invalid JSON errors)
+log "Raw token values: input=$TOKENS_INPUT output=$TOKENS_OUTPUT thinking=$TOKENS_THINKING"
+
+# Strip non-digits and default to 0 if empty
+TOKENS_INPUT=${TOKENS_INPUT//[^0-9]/}
+TOKENS_INPUT=${TOKENS_INPUT:-0}
+
+TOKENS_OUTPUT=${TOKENS_OUTPUT//[^0-9]/}
+TOKENS_OUTPUT=${TOKENS_OUTPUT:-0}
+
+TOKENS_THINKING=${TOKENS_THINKING//[^0-9]/}
+TOKENS_THINKING=${TOKENS_THINKING:-0}
+
+CLI_DURATION_MS=${CLI_DURATION_MS//[^0-9]/}
+CLI_DURATION_MS=${CLI_DURATION_MS:-0}
+
+log "Validated token values: input=$TOKENS_INPUT output=$TOKENS_OUTPUT thinking=$TOKENS_THINKING"
+log "CLI duration: ${CLI_DURATION_MS}ms"
+
 # Use CLI-reported duration if our duration is 0
 if [[ "$DURATION" == "0" && "$CLI_DURATION_MS" != "0" ]]; then
     DURATION=$(( CLI_DURATION_MS / 1000 ))
 fi
 
-# ── Schema validation ────────────────────────────────────────────────
-# Validate the parsed result has the required fields for the task type.
-# This is a lightweight check — the backend does full schema validation (T30/T31).
-
-validate_code_review() {
-    local has_summary has_findings
-    has_summary=$(echo "$PARSED_RESULT" | jq 'has("summary")' 2>/dev/null)
-    has_findings=$(echo "$PARSED_RESULT" | jq 'has("findings")' 2>/dev/null)
-
-    if [[ "$has_summary" != "true" ]]; then
-        log_error "Code review result missing required field: summary"
-        return 1
-    fi
-    if [[ "$has_findings" != "true" ]]; then
-        log_error "Code review result missing required field: findings"
-        return 1
-    fi
-
-    # Validate summary has required subfields
-    local has_risk_level
-    has_risk_level=$(echo "$PARSED_RESULT" | jq '.summary | has("risk_level")' 2>/dev/null)
-    if [[ "$has_risk_level" != "true" ]]; then
-        log_error "Code review summary missing required field: risk_level"
-        return 1
-    fi
-
-    log "Code review schema validation passed"
-    return 0
-}
-
-validate_feature_dev() {
-    local has_branch has_files_changed
-    has_branch=$(echo "$PARSED_RESULT" | jq 'has("branch")' 2>/dev/null)
-    has_files_changed=$(echo "$PARSED_RESULT" | jq 'has("files_changed")' 2>/dev/null)
-
-    if [[ "$has_branch" != "true" ]]; then
-        log_error "Feature dev result missing required field: branch"
-        return 1
-    fi
-    if [[ "$has_files_changed" != "true" ]]; then
-        log_error "Feature dev result missing required field: files_changed"
-        return 1
-    fi
-
-    log "Feature dev schema validation passed"
-    return 0
-}
-
-validate_issue_discussion() {
-    local has_response
-    has_response=$(echo "$PARSED_RESULT" | jq 'has("response")' 2>/dev/null)
-
-    if [[ "$has_response" != "true" ]]; then
-        log_error "Issue discussion result missing required field: response"
-        return 1
-    fi
-
-    log "Issue discussion schema validation passed"
-    return 0
-}
-
-# Run validation for the task type
+# ── Determine schema name for tracking ──────────────────────────────
 case "$TASK_TYPE" in
     code_review|security_audit)
-        if ! validate_code_review; then
-            exit 3
-        fi
         SCHEMA_NAME="review:${SCHEMA_VERSION}"
         ;;
     feature_dev|ui_adjustment)
-        if ! validate_feature_dev; then
-            exit 3
-        fi
         SCHEMA_NAME="feature:${SCHEMA_VERSION}"
         ;;
     issue_discussion)
-        if ! validate_issue_discussion; then
-            exit 3
-        fi
         SCHEMA_NAME="discussion:${SCHEMA_VERSION}"
         ;;
 esac
 
-# ── Ensure version field ─────────────────────────────────────────────
-# Add version field if the AI didn't include it
-PARSED_RESULT=$(echo "$PARSED_RESULT" | jq --arg v "$SCHEMA_VERSION" '
-    if has("version") then . else { version: $v } + . end
-')
+log "Using schema: $SCHEMA_NAME"
+log "Building API payload with: tokens={in=$TOKENS_INPUT,out=$TOKENS_OUTPUT,think=$TOKENS_THINKING} duration=${DURATION}s"
 
 # ── Build the API payload (§20.4) ────────────────────────────────────
-PAYLOAD=$(jq -n \
-    --arg status "completed" \
-    --argjson result "$PARSED_RESULT" \
+# PARSED_RESULT is clean JSON. Write to file and merge with envelope
+# to avoid bash variable expansion issues.
+RESULT_TEMP=$(mktemp)
+printf '%s\n' "$PARSED_RESULT" > "$RESULT_TEMP"
+
+# Build envelope with error checking
+ENVELOPE_TEMP=$(mktemp)
+if ! jq -n \
     --argjson input_tokens "$TOKENS_INPUT" \
     --argjson output_tokens "$TOKENS_OUTPUT" \
     --argjson thinking_tokens "$TOKENS_THINKING" \
@@ -302,8 +257,7 @@ PAYLOAD=$(jq -n \
     --arg executor_version "$EXECUTOR_VERSION" \
     --arg schema_name "$SCHEMA_NAME" \
     '{
-        status: $status,
-        result: $result,
+        status: "completed",
         tokens: {
             input: $input_tokens,
             output: $output_tokens,
@@ -315,7 +269,25 @@ PAYLOAD=$(jq -n \
             claude_md: ("executor:" + $executor_version),
             schema: $schema_name
         }
-    }')
+    }' > "$ENVELOPE_TEMP" 2>&1; then
+    log_error "jq envelope building failed"
+    log_error "Debug: TOKENS_INPUT='$TOKENS_INPUT' TOKENS_OUTPUT='$TOKENS_OUTPUT' TOKENS_THINKING='$TOKENS_THINKING' DURATION='$DURATION'"
+    exit 2
+fi
+
+log "Envelope built successfully"
+
+# Merge result into envelope
+if ! PAYLOAD=$(jq -s '.[0] + {result: .[1]}' "$ENVELOPE_TEMP" "$RESULT_TEMP" 2>&1); then
+    log_error "jq payload merge failed"
+    exit 2
+fi
+
+log "Payload merged successfully"
+
+rm -f "$RESULT_TEMP" "$ENVELOPE_TEMP"
+
+log "Built API payload successfully"
 
 # ── Output ───────────────────────────────────────────────────────────
 if [[ -n "$OUTPUT_FILE" ]]; then
