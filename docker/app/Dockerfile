@@ -1,5 +1,10 @@
 FROM dunglas/frankenphp:php8.4-bookworm
 
+# Add PostgreSQL 16 apt repo for version-matched pg_dump
+RUN apt-get update && apt-get install -y curl ca-certificates gnupg \
+    && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
@@ -7,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libzip-dev \
     libicu-dev \
+    postgresql-client-16 \
     && docker-php-ext-install \
     pdo_pgsql \
     pgsql \

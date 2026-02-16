@@ -36,7 +36,7 @@ class BackupDatabase extends Command
 
         $result = Process::env(['PGPASSWORD' => $password])
             ->timeout(600)
-            ->run("pg_dump -h {$host} -p {$port} -U {$username} {$database} | gzip > {$filepath}");
+            ->run("pg_dump -h {$host} -p {$port} -U {$username} -Z 9 --file={$filepath} {$database}");
 
         if (! $result->successful()) {
             $this->error("Backup failed: {$result->errorOutput()}");

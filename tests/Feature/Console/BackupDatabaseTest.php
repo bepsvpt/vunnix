@@ -43,12 +43,12 @@ it('runs pg_dump with correct connection parameters', function () {
     Process::assertRan(function ($process) use ($host, $port, $username, $database) {
         $command = $process->command;
 
-        return str_contains($command, "pg_dump -h {$host} -p {$port} -U {$username} {$database}")
-            && str_contains($command, 'gzip');
+        return str_contains($command, "pg_dump -h {$host} -p {$port} -U {$username} -Z 9")
+            && str_contains($command, $database);
     });
 });
 
-it('targets a gzipped backup file via pg_dump pipe', function () {
+it('targets a gzipped backup file via pg_dump --file flag', function () {
     Process::fake([
         '*pg_dump*' => Process::result(output: ''),
     ]);
@@ -57,8 +57,8 @@ it('targets a gzipped backup file via pg_dump pipe', function () {
         ->assertSuccessful();
 
     Process::assertRan(function ($process) {
-        return str_contains($process->command, '.sql.gz')
-            && str_contains($process->command, 'gzip');
+        return str_contains($process->command, '--file=')
+            && str_contains($process->command, '.sql.gz');
     });
 });
 
