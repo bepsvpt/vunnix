@@ -122,7 +122,6 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 
 ### Rules
 
-- Always use `--no-gpg-sign` flag
 - Never commit broken state — every commit should pass verification
 
 ## Key Decisions (Quick Reference)
