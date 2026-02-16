@@ -63,7 +63,7 @@ jobs:
 
       - name: Run PHP tests
         env:
-          APP_KEY: base64:dGVzdGluZ2tleXRoYXRpczMyYnl0ZXNs
+          APP_KEY: base64:dnVubml4LWNpLXRlc3Qta2V5LTMyLWJ5dGVzLW9rXCE=
           DB_CONNECTION: pgsql
           DB_HOST: localhost
           DB_PORT: 5432
