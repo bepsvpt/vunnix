@@ -282,9 +282,9 @@ Follow these severity definitions from CLAUDE.md:
 Evaluate risk_level based on findings:
 - "low" if no major/critical findings
 - "medium" if major findings present
-- "high" or "critical" if critical findings present
+- "high" if critical findings present
 
-Set commit_status to "approved" if no major/critical findings, "needs_work" otherwise.
+Set commit_status to "success" if no major/critical findings, "failed" otherwise.
 Set labels to ["ai::approved"] if approved, ["ai::needs-work"] if not.
 
 Remember: Output ONLY the JSON object, nothing else.
@@ -306,8 +306,8 @@ Check for:
 
 All security findings start at Major severity minimum (no Minor severity for security issues).
 
-Set risk_level to "low" if no findings, "high" or "critical" if vulnerabilities found.
-Set commit_status to "approved" if no findings, "needs_work" otherwise.
+Set risk_level to "low" if no findings, "high" if vulnerabilities found.
+Set commit_status to "success" if no findings, "failed" otherwise.
 
 Remember: Output ONLY the JSON object, nothing else.
 EOF

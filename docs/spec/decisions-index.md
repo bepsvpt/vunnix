@@ -1,8 +1,7 @@
 # Decision Index
 
 > One-line summary of every architectural decision.
-> Source: `vunnix-v1.md` for D1–D155. Extension docs for D156+.
-> Updated whenever new decisions are made via `planning-extensions`.
+> Updated whenever new decisions are made — during planning, implementation, or bug fixing.
 
 | # | Summary | Source | Status |
 |---|---|---|---|
@@ -161,3 +160,9 @@
 | D153 | Anthropic API key storage — .env only, never in database | vunnix-v1 | Active |
 | D154 | Bot event filtering — Bot note events discarded, MR events kept | vunnix-v1 | Active |
 | D155 | @ai command fallback — Help response for unrecognized commands | vunnix-v1 | Active |
+| D156 | Project enablement auto-creates CI trigger token (extends D26) | impl | Active |
+| D157 | Push events ignored when MR exists — MR update event handles review | impl | Active |
+| D158 | Trust all proxies — required for reverse proxy/tunnel deployments | impl | Active |
+| D159 | SPA authenticates via session cookies, CSRF excluded for API routes | impl | Active |
+| D160 | Database backup — pg_dump -Z 9, 30-day retention, stored in storage/backups/ | impl | Active |
+| D161 | Executor turn limit — --max-turns 30 per CLI invocation | impl | Active |
