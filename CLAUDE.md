@@ -12,6 +12,24 @@ Complete specification: **`docs/spec/vunnix-v1.md`** (155 decisions, 116 tasks, 
 
 All task descriptions, dependencies, acceptance criteria, and verification specs are in §21 (Implementation Roadmap). Test strategy is in §22. The Discussion Log contains rationale for all 155 decisions.
 
+## Commands
+
+| Command | Description |
+|---|---|
+| `composer setup` | Full setup: install deps, create .env, generate key, build frontend |
+| `composer dev` | Start dev environment (server + queue + logs + Vite, all concurrent) |
+| `composer test` | Run PHP tests (clears config cache first) |
+| `php artisan test --parallel` | Run full PHP suite (required — single-process OOMs at 900+ tests) |
+| `php artisan test --filter=ClassName` | Run a specific test file |
+| `npm test` | Run Vue/JS tests (Vitest) |
+| `npm run dev` | Vite dev server only (frontend) |
+| `npm run build` | Production frontend build |
+| `./vendor/bin/pint` | Run Laravel Pint (PSR-12 code style) |
+| `docker compose up -d` | Start Docker services (PostgreSQL, Redis) |
+| `docker compose down && docker compose up -d` | Full restart (required after code changes — see Learnings) |
+
+**Prerequisites:** Docker services must be running. See `docs/local-dev-setup.md` for first-time setup.
+
 ## Tech Stack
 
 | Component | Technology |
@@ -27,6 +45,32 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 | **Testing (Vue)** | Vitest + Vue Test Utils |
 | **Testing (E2E)** | Pest Browser Testing (powered by Playwright) |
 | **Markdown** | `markdown-it` + `@shikijs/markdown-it` for syntax highlighting |
+
+## Architecture
+
+```
+app/
+├── Agents/              # AI SDK Agent classes (Conversation Engine)
+│   └── Tools/           # AI SDK Tool classes (GitLab browse, search, etc.)
+├── Http/Controllers/    # API + webhook controllers
+│   └── Api/             # /api/v1/ resource controllers
+├── Http/Requests/       # FormRequest validation classes
+├── Http/Resources/      # Eloquent API Resource transformers
+├── Services/            # Business logic (GitLabClient, EventRouter, CostCalculation, etc.)
+├── Jobs/                # Queue jobs (result posting, label mapping, etc.)
+├── Models/              # Eloquent models
+└── Policies/            # Authorization policies
+resources/js/
+├── components/          # Reusable Vue components
+├── pages/               # Page-level components (Chat, Dashboard, Admin)
+├── stores/              # Pinia stores
+├── router/              # Vue Router config
+├── composables/         # Shared composition functions
+└── lib/                 # Utilities (markdown renderer, axios config)
+tests/
+├── Unit/                # Pure unit tests (Mockery, no Laravel container)
+└── Feature/             # Laravel feature tests (HTTP, DB, queue)
+```
 
 ## Coding Standards
 
@@ -150,5 +194,4 @@ Persistent lessons discovered during development. Write each as an actionable ru
 | `docs/spec/decisions-index.md` | Decision lookup table — D1–D155 one-line summaries |
 | `docs/assessments/` | Extension assessment artifacts (output of assessing-extensions skill) |
 | `docs/extensions/` | Extension planning documents (output of planning-extensions skill) |
-| `docs/plans/` | Design exploration documents (output of brainstorming) |
 | `docs/spikes/` | Spike research results (from spike-required modifier) |

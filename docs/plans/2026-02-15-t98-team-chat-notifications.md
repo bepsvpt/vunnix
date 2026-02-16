@@ -8,7 +8,7 @@
 
 **Tech Stack:** Laravel 11 (HTTP Client, Service classes), Pest (unit + feature tests), Vue 3 + Pinia (admin settings form), verify_m5.py structural checks.
 
-**Spec references:** vunnix.md §18.2, D110, D116, D120. M5 Verification: "Chat formatters" unit test row.
+**Spec references:** docs/spec/vunnix-v1.md §18.2, D110, D116, D120. M5 Verification: "Chat formatters" unit test row.
 
 ---
 
