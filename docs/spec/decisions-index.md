@@ -178,3 +178,6 @@
 | D171 | Multi-stage Docker build for frontend assets — Node 24 build stage, only compiled `public/build/` in final image | ext-003 | Active |
 | D172 | CI tests run against PostgreSQL 18 service container — workflow env vars override phpunit.xml via `<env force="false">` | ext-004 | Active |
 | D173 | Use `shivammathur/setup-php@v2` for PHP 8.5 in CI — confirmed supported since v2.36.0 | ext-004 | Active |
+| D174 | Use Larastan 3.x (not standalone PHPStan) for dev static analysis — Laravel-aware stubs | ext-005 | Active |
+| D175 | Target PHPStan level 8 (not max/10) — levels 9-10 mixed-type strictness excessive for Laravel | ext-005 | Active |
+| D176 | PHPStan CI runs as separate job without database services — static analysis needs no DB | ext-005 | Active |

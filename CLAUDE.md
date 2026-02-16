@@ -26,6 +26,8 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 | `npm run test:coverage` | JS tests with coverage (text + HTML report in coverage/js/) |
 | `npm run dev` | Vite dev server only (frontend) |
 | `npm run build` | Production frontend build |
+| `composer analyse` | Run PHPStan static analysis |
+| `composer analyse:baseline` | Regenerate PHPStan baseline after fixing errors |
 | `./vendor/bin/pint` | Run Laravel Pint (PSR-12 code style) |
 | `docker compose up -d` | Start Docker services (PostgreSQL, Redis) |
 | `docker compose down && docker compose up -d` | Full restart (required after code changes — see Learnings) |
@@ -178,6 +180,7 @@ Persistent lessons discovered during development. Write each as an actionable ru
 - **Every code change must include corresponding test updates:** When modifying application code (services, controllers, jobs), always add or update tests in the same commit. Never commit behavioral changes without test coverage — tests should be treated as a mandatory part of the change, not a follow-up task.
 - **Full Docker restart required after code changes:** `docker compose down && docker compose up -d` is required for code changes to take effect. `php artisan octane:reload` or `docker compose restart` are insufficient because FrankenPHP/Octane caches the application in memory and HTTP client initialization caching can persist. Always restart Docker completely between code changes and testing.
 - **FrankenPHP php8.5 has opcache statically compiled — do not install via docker-php-ext-install:** The `dunglas/frankenphp:php8.5-bookworm` image compiles opcache into PHP statically. Running `docker-php-ext-install opcache` fails with `cp: cannot stat 'modules/*'` because there's no shared module to install. Just omit opcache from the ext-install list — it's already active.
+- **PHPStan 2.x removed `checkMissingIterableValueType` and `checkGenericClassInNonGenericObjectType` parameters:** These were deprecated and are now controlled by the level system. Using them in `phpstan.neon` causes "Unexpected item" errors. Only use `level:` to control strictness.
 - **PostgreSQL 18 Docker mount path changed from `/var/lib/postgresql/data` to `/var/lib/postgresql`:** PG 18 Docker images use version-specific PGDATA subdirectories (e.g., `/var/lib/postgresql/18/docker`). Mount the volume at `/var/lib/postgresql` (not `/data`) so pg_upgrade can work across versions. Mounting at the old path causes PG 18 to refuse to start with an error about "unused mount/volume".
 
 ## Key Files

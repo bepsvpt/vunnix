@@ -34,6 +34,7 @@ Thumbs.db
 .phpunit.result.cache
 .phpunit.cache/
 /coverage/
+phpstan.neon
 
 # Node
 npm-debug.log*

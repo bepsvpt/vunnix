@@ -21,7 +21,7 @@ class AdminSettingsController extends Controller
 
         return response()->json([
             'data' => GlobalSettingResource::collection($settings),
-            'api_key_configured' => ! empty(config('services.anthropic.api_key') ?: env('ANTHROPIC_API_KEY')),
+            'api_key_configured' => ! empty(config('services.anthropic.api_key')),
             'defaults' => GlobalSetting::defaults(),
         ]);
     }
