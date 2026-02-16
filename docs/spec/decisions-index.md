@@ -174,3 +174,5 @@
 | D167 | Redis 8 for cache/session/queue — tri-licensed, acceptable for self-hosted | ext-002 | Active |
 | D168 | Node 24 LTS for executor image — Active LTS (EOL Apr 2028) | ext-002 | Active |
 | D169 | Pest 4 + PHPUnit 12 for test suite — enables test sharding, requires PHP 8.3+ | ext-002 | Active |
+| D170 | App image in public GHCR at `ghcr.io/bepsvpt/vunnix/app` — same registry and auth model as executor (D163) | ext-003 | Active |
+| D171 | Multi-stage Docker build for frontend assets — Node 24 build stage, only compiled `public/build/` in final image | ext-003 | Active |

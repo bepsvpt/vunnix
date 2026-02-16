@@ -1,0 +1,87 @@
+# Build and publish the Vunnix App Docker image to GHCR.
+#
+# Triggers:
+#   - GitHub Release published (version from git tag)
+#   - Manual workflow_dispatch for ad-hoc rebuilds
+#
+# Image: ghcr.io/bepsvpt/vunnix/app (D170)
+# Tags:  <sha>, <version>, latest
+#
+# The image includes compiled frontend assets via multi-stage build (D171).
+# End users pull this image via docker-compose.production.yml.
+#
+# @see docs/extensions/ext-003-github-releases-deployment.md (D170, D171)
+
+name: Build App
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  IMAGE: ghcr.io/bepsvpt/vunnix/app
+
+jobs:
+  build-app:
+    name: Build & Push App Image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Extract version from git tag
+        id: version
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "release" ]; then
+            # Strip 'v' prefix from tag (e.g., v1.0.0 → 1.0.0)
+            VERSION="${TAG_NAME#v}"
+          else
+            # workflow_dispatch — use short SHA as version
+            VERSION="${GITHUB_SHA::7}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building app image version $VERSION"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/app/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:${{ steps.version.outputs.version }}
+            ${{ env.IMAGE }}:latest
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.title=Vunnix App
+
+      - name: Attach deployment files to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          gh release upload "$TAG_NAME" \
+            docker-compose.production.yml \
+            .env.production.example \
+            --clobber

@@ -1,3 +1,27 @@
+# ==========================================================================
+#  Stage 1: Build frontend assets (D171)
+#  Node.js build stage compiles Vue SPA + Tailwind CSS via Vite.
+#  Only public/build/ is carried forward — no Node.js in final image.
+# ==========================================================================
+FROM node:24-bookworm-slim AS frontend
+
+WORKDIR /app
+
+# Copy dependency manifests first for layer caching
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy source files needed for the Vite build
+COPY vite.config.js ./
+COPY resources/ resources/
+
+# Build production assets
+RUN npm run build
+
+# ==========================================================================
+#  Stage 2: PHP application (D69, D165)
+#  FrankenPHP + Laravel Octane — serves API, SSE, and SPA static files.
+# ==========================================================================
 FROM dunglas/frankenphp:php8.5-bookworm
 
 # Add PostgreSQL 18 apt repo for version-matched pg_dump
@@ -38,6 +62,10 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 
 # Copy application code
 COPY . .
+
+# Copy compiled frontend assets from build stage (D171)
+# Positioned after COPY . . to overwrite any stale public/build/ from source context
+COPY --from=frontend /app/public/build public/build
 
 # Run post-install scripts
 RUN composer dump-autoload --optimize \
