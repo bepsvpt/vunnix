@@ -48,6 +48,7 @@ beforeEach(function () {
 
     config(['services.gitlab.host' => 'https://gitlab.example.com']);
     config(['services.gitlab.bot_token' => 'test-bot-token']);
+    config(['services.gitlab.bot_account_id' => 99]);
     config(['services.gitlab.vunnix_project_id' => 100]);
 });
 

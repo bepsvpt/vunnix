@@ -665,8 +665,8 @@ class GitLabClient
         }
 
         // DO NOT use $this->request() - adds PRIVATE-TOKEN header which conflicts with trigger token
-        // Must use asMultipart() - GitLab expects multipart/form-data (curl --form)
-        $response = Http::asMultipart()->post($url, $data);
+        // Use asForm() — GitLab accepts application/x-www-form-urlencoded for trigger API (no file uploads)
+        $response = Http::asForm()->post($url, $data);
 
         return $this->handleResponse($response, "triggerPipeline ref={$ref}")->json();
     }

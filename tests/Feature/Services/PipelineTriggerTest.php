@@ -105,7 +105,7 @@ it('passes correct pipeline variable values', function () {
     });
 });
 
-it('uses commit SHA as pipeline ref', function () {
+it('uses MR source branch as pipeline ref', function () {
     $project = Project::factory()->create(['gitlab_project_id' => 200]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -113,6 +113,10 @@ it('uses commit SHA as pipeline ref', function () {
     ]);
 
     Http::fake([
+        '*/api/v4/projects/200/merge_requests/5' => Http::response([
+            'iid' => 5,
+            'source_branch' => 'feature/my-branch',
+        ]),
         '*/api/v4/projects/200/merge_requests/5/changes' => Http::response([
             'changes' => [['new_path' => 'app/Models/User.php']],
         ]),
@@ -137,7 +141,7 @@ it('uses commit SHA as pipeline ref', function () {
             return false;
         }
 
-        return $request->data()['ref'] === 'deadbeef123456';
+        return $request->data()['ref'] === 'feature/my-branch';
     });
 });
 
