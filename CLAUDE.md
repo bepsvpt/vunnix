@@ -32,6 +32,8 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 | `composer rector` | Run Rector in dry-run mode (preview changes without applying) |
 | `composer rector:fix` | Apply Rector auto-fixes (type declarations, dead code, code quality) |
 | `composer ide-helper:models` | Regenerate Eloquent model PHPDoc annotations (requires DB connection) |
+| `npm run lint` | Run ESLint on frontend (check for violations) |
+| `npm run lint:fix` | Run ESLint with auto-fix on frontend |
 | `composer format` | Run Laravel Pint (auto-fix code style) |
 | `composer format:check` | Check code style without fixing (CI mode) |
 | `docker compose up -d` | Start Docker services (PostgreSQL, Redis) |
@@ -98,7 +100,7 @@ tests/
 
 - **Style:** Composition API with `<script setup>` (no Options API)
 - **State:** Pinia stores
-- **Formatting:** ESLint + Prettier
+- **Formatting:** ESLint (`@antfu/eslint-config` — linting + formatting via ESLint Stylistic, no Prettier)
 - **Routing:** Vue Router with history mode (FrankenPHP serves `index.html` for non-API routes)
 - **Responsive:** Desktop-first with fluid layouts and breakpoints (D135)
 

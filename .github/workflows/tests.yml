@@ -11,6 +11,7 @@
 #
 # @see docs/extensions/ext-004-ci-test-workflows.md (D172, D173)
 # @see docs/extensions/ext-006-pint-integration.md (D177, D178, D179)
+# @see docs/extensions/ext-007-eslint-antfu.md (D180, D181, D182)
 
 name: Tests
 
@@ -49,6 +50,25 @@ jobs:
 
       - name: Check code formatting
         run: ./vendor/bin/pint --test
+
+  eslint:
+    name: ESLint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npx eslint resources/js/
 
   phpstan:
     name: PHPStan

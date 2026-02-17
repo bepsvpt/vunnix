@@ -184,3 +184,6 @@
 | D177 | Laravel Pint `laravel` preset + strict_comparison, void_return, ordered_class_elements, PHPDoc cleanup | ext-006 | Active |
 | D178 | Claude Code PostToolUse hook auto-formats PHP files on Edit/Write via Pint | ext-006 | Active |
 | D179 | Pint CI runs as separate lightweight job using `--test` dry-run mode | ext-006 | Active |
+| D180 | Use @antfu/eslint-config with ESLint Stylistic for JS/Vue linting + formatting (replaces ESLint + Prettier) | ext-007 | Active |
+| D181 | Stylistic overrides: semicolons on, 4-space indent, single quotes — matching existing codebase + .editorconfig | ext-007 | Active |
+| D182 | ESLint CI runs as separate lightweight job — Node.js only, no DB services | ext-007 | Active |
