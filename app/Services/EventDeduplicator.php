@@ -224,18 +224,25 @@ class EventDeduplicator
         ?string $commitSha,
     ): void {
         try {
-            WebhookEventLog::create([
-                'gitlab_event_uuid' => $uuid,
-                'project_id' => $event->projectId,
-                'event_type' => $event->type(),
-                'intent' => $intent,
-                'mr_iid' => $mrIid,
-                'commit_sha' => $commitSha,
-            ]);
+            // Wrap in DB::transaction() to create a savepoint when nested inside
+            // an outer transaction (e.g., RefreshDatabase in tests, or production
+            // request transactions). On PostgreSQL, a failed INSERT aborts the
+            // entire transaction unless protected by a savepoint.
+            DB::transaction(function () use ($uuid, $event, $intent, $mrIid, $commitSha): void {
+                WebhookEventLog::create([
+                    'gitlab_event_uuid' => $uuid,
+                    'project_id' => $event->projectId,
+                    'event_type' => $event->type(),
+                    'intent' => $intent,
+                    'mr_iid' => $mrIid,
+                    'commit_sha' => $commitSha,
+                ]);
+            });
         } catch (QueryException $e) {
             // Race condition: another request inserted the same UUID between
             // our exists() check and this insert. The unique constraint protects
-            // us — log and treat as duplicate.
+            // us — log and treat as duplicate. The savepoint ensures the outer
+            // transaction remains valid on PostgreSQL.
             Log::warning('EventDeduplicator: race condition on UUID insert', [
                 'uuid' => $uuid,
                 'error' => $e->getMessage(),

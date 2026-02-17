@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Log;
 uses(RefreshDatabase::class);
 
 it('returns zero views refreshed on non-pgsql database', function (): void {
+    if (DB::connection()->getDriverName() === 'pgsql') {
+        $this->markTestSkipped('This test verifies SQLite behavior — PostgreSQL refreshes real MVs');
+    }
+
     Event::fake([MetricsUpdated::class]);
 
     $service = app(MetricsAggregationService::class);

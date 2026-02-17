@@ -10,6 +10,20 @@ it('returns healthy when all checks pass', function (): void {
     // Set a fresh queue worker heartbeat
     Cache::put('health:queue_worker:heartbeat', now()->toIso8601String(), 3600);
 
+    // Mock the Redis health check (Redis may not be available in CI)
+    $connectionMock = Mockery::mock();
+    $connectionMock->shouldReceive('ping')->andReturn(true);
+
+    $redisManagerMock = Mockery::mock();
+    $redisManagerMock->shouldReceive('connection')->andReturn($connectionMock);
+
+    $storeMock = Mockery::mock(\Illuminate\Cache\RedisStore::class);
+    $storeMock->shouldReceive('getRedis')->andReturn($redisManagerMock);
+
+    Cache::shouldReceive('store')->with('redis')->andReturn($storeMock);
+    // Allow other Cache calls to pass through for queue worker heartbeat check
+    Cache::shouldReceive('get')->with('health:queue_worker:heartbeat')->andReturn(now()->toIso8601String());
+
     // Fake the Reverb HTTP check to return a successful response
     Http::fake([
         '*' => Http::response('OK', 200),
