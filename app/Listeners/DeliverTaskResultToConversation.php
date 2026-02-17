@@ -24,6 +24,18 @@ class DeliverTaskResultToConversation
             return;
         }
 
+        // Idempotency: skip if a system result message already exists for this task.
+        // This prevents duplicates when TaskStatusChanged re-fires after downstream
+        // jobs update the task (e.g., PostFeatureDevResult saving mr_iid).
+        $alreadyDelivered = Message::where('conversation_id', $task->conversation_id)
+            ->where('role', 'system')
+            ->where('content', 'like', "%Task #{$task->id}%result delivered%")
+            ->exists();
+
+        if ($alreadyDelivered) {
+            return;
+        }
+
         $content = $this->buildResultContent($task);
 
         Message::create([
@@ -58,8 +70,8 @@ class DeliverTaskResultToConversation
     private function buildGenericResultContent(\App\Models\Task $task): string
     {
         $statusText = $task->status->value;
-        $title = $task->result['title'] ?? $task->result['mr_title'] ?? 'Task';
         $result = $task->result ?? [];
+        $title = $result['title'] ?? $result['mr_title'] ?? 'Task';
 
         $parts = ["[System: Task result delivered] Task #{$task->id} \"{$title}\" {$statusText}."];
 

@@ -97,7 +97,21 @@ class ResultProcessor
      */
     private function succeed(Task $task, array $data): array
     {
-        $task->transitionTo(TaskStatus::Completed);
+        try {
+            $task->transitionTo(TaskStatus::Completed);
+        } catch (\App\Exceptions\InvalidTaskTransitionException $e) {
+            Log::info('ResultProcessor: task already transitioned, skipping', [
+                'task_id' => $task->id,
+                'current_status' => $e->from->value,
+                'attempted' => $e->to->value,
+            ]);
+
+            return [
+                'success' => false,
+                'data' => null,
+                'errors' => ['transition' => ["Task already in {$e->from->value} state"]],
+            ];
+        }
 
         Log::info('ResultProcessor: task completed', [
             'task_id' => $task->id,
@@ -124,7 +138,14 @@ class ResultProcessor
             'reason' => $reason,
         ]);
 
-        $task->transitionTo(TaskStatus::Failed, $reason);
+        try {
+            $task->transitionTo(TaskStatus::Failed, $reason);
+        } catch (\App\Exceptions\InvalidTaskTransitionException $e) {
+            Log::info('ResultProcessor: task already transitioned, cannot fail', [
+                'task_id' => $task->id,
+                'current_status' => $e->from->value,
+            ]);
+        }
 
         return [
             'success' => false,

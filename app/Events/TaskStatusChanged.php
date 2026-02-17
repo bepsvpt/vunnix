@@ -33,6 +33,8 @@ class TaskStatusChanged implements ShouldBroadcast
      */
     public function broadcastWith(): array
     {
+        $result = $this->task->result ?? [];
+
         $payload = [
             'task_id' => $this->task->id,
             'status' => $this->task->status->value,
@@ -42,10 +44,10 @@ class TaskStatusChanged implements ShouldBroadcast
             'pipeline_status' => $this->task->pipeline_status,
             'mr_iid' => $this->task->mr_iid,
             'issue_iid' => $this->task->issue_iid,
-            'title' => $this->task->result['title'] ?? $this->task->result['mr_title'] ?? null,
+            'title' => $result['title'] ?? $result['mr_title'] ?? null,
             'started_at' => $this->task->started_at?->toIso8601String(),
             'conversation_id' => $this->task->conversation_id,
-            'result_summary' => $this->task->isTerminal() ? ($this->task->result['summary'] ?? $this->task->result['notes'] ?? null) : null,
+            'result_summary' => $this->task->isTerminal() ? ($result['summary'] ?? $result['notes'] ?? null) : null,
             'error_reason' => $this->task->isTerminal() ? $this->task->error_reason : null,
             'timestamp' => now()->toIso8601String(),
         ];

@@ -73,6 +73,15 @@ class PostFeatureDevResult implements ShouldQueue
         if ($task->issue_iid !== null) {
             $this->postIssueSummary($gitLab, $task, $result, $gitlabProjectId, $mrIid);
         }
+
+        // Step 3: Re-broadcast with updated mr_iid so the frontend gets the MR link.
+        // The initial TaskStatusChanged broadcast fires when ResultProcessor transitions
+        // to Completed — before this job creates the MR. The re-broadcast sends updated
+        // data; DeliverTaskResultToConversation is idempotent and won't duplicate.
+        $freshTask = $task->fresh();
+        if ($freshTask !== null) {
+            \App\Events\TaskStatusChanged::dispatch($freshTask);
+        }
     }
 
     /**
@@ -103,7 +112,7 @@ class PostFeatureDevResult implements ShouldQueue
         try {
             $mr = $gitLab->createMergeRequest($gitlabProjectId, [
                 'source_branch' => $branch,
-                'target_branch' => 'main',
+                'target_branch' => $result['target_branch'] ?? 'main',
                 'title' => $mrTitle,
                 'description' => $mrDescription ?? '',
             ]);

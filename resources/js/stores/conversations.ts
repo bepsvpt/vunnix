@@ -275,9 +275,10 @@ export const useConversationsStore = defineStore('conversations', () => {
             if (tracked && currentStatus !== tracked.status) {
                 updateTaskStatus(taskId, {
                     status: currentStatus,
-                    pipeline_id: data.result?.pipeline_id ?? null,
-                    started_at: null,
-                    result_summary: null,
+                    pipeline_id: data.pipeline_id ?? null,
+                    pipeline_status: data.pipeline_status ?? null,
+                    started_at: data.started_at ?? null,
+                    result_summary: data.result?.summary ?? data.result?.notes ?? null,
                 });
 
                 // Handle terminal status caught by polling
@@ -418,7 +419,7 @@ export const useConversationsStore = defineStore('conversations', () => {
      * restore real-time tracking after a page reload.
      */
     function resubscribeActiveTasks(): void {
-        const dispatchedTaskIds = new Set<number>();
+        const dispatchedTasks = new Map<number, TaskDispatchInfo>();
         const deliveredTaskIds = new Set<number>();
 
         for (const msg of messages.value) {
@@ -429,7 +430,7 @@ export const useConversationsStore = defineStore('conversations', () => {
                     const text = String((tr as Record<string, unknown>).result ?? '');
                     const dispatch = parseTaskDispatchMessage(text);
                     if (dispatch) {
-                        dispatchedTaskIds.add(dispatch.taskId);
+                        dispatchedTasks.set(dispatch.taskId, dispatch);
                     }
                 }
             }
@@ -443,9 +444,20 @@ export const useConversationsStore = defineStore('conversations', () => {
             }
         }
 
-        // Subscribe to tasks that were dispatched but not yet delivered
-        for (const taskId of dispatchedTaskIds) {
+        // Track and subscribe to tasks that were dispatched but not yet delivered
+        for (const [taskId, dispatch] of dispatchedTasks) {
             if (!deliveredTaskIds.has(taskId) && !taskSubscriptions.value.has(taskId)) {
+                trackTask({
+                    task_id: taskId,
+                    status: 'running',
+                    type: typeFromLabel(dispatch.typeLabel),
+                    title: dispatch.title,
+                    project_id: selected.value?.project_id || null,
+                    pipeline_id: null,
+                    pipeline_status: null,
+                    started_at: null,
+                    conversation_id: selectedId.value,
+                });
                 subscribeToTask(taskId);
             }
         }
@@ -496,6 +508,29 @@ export const useConversationsStore = defineStore('conversations', () => {
             try {
                 const response = await axios.get(`/api/v1/tasks/${taskId}/view`);
                 const data = response.data.data;
+                const r = data.result ?? {};
+                const resultData: Record<string, unknown> = {
+                    branch: r.branch || null,
+                    target_branch: r.target_branch || 'main',
+                    files_changed: r.files_changed || null,
+                    notes: r.notes || null,
+                };
+                // Type-specific fields (mirrors TaskStatusChanged::buildResultData)
+                if (data.type === 'ui_adjustment') {
+                    resultData.screenshot = r.screenshot || null;
+                }
+                if (data.type === 'deep_analysis') {
+                    resultData.analysis = r.analysis || null;
+                    resultData.key_findings = r.key_findings || null;
+                    resultData.references = r.references || null;
+                }
+                if (data.type === 'issue_discussion') {
+                    resultData.response = r.response || null;
+                    resultData.references = r.references || null;
+                }
+                if (data.type === 'prd_creation') {
+                    resultData.gitlab_issue_url = r.gitlab_issue_url || null;
+                }
                 completedResults.value.push({
                     task_id: data.task_id,
                     status: data.status,
@@ -503,14 +538,9 @@ export const useConversationsStore = defineStore('conversations', () => {
                     title: data.title,
                     mr_iid: data.mr_iid,
                     issue_iid: data.issue_iid,
-                    result_summary: data.result?.notes || data.result?.summary || null,
+                    result_summary: r.notes || r.summary || null,
                     error_reason: data.error_reason,
-                    result_data: {
-                        branch: data.result?.branch || null,
-                        target_branch: data.result?.target_branch || 'main',
-                        files_changed: data.result?.files_changed || null,
-                        screenshot: data.result?.screenshot || null,
-                    },
+                    result_data: resultData,
                     conversation_id: selectedId.value,
                     project_id: data.project_id,
                     gitlab_url: '',

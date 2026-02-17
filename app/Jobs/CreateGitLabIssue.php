@@ -96,6 +96,14 @@ class CreateGitLabIssue implements ShouldQueue
                 'issue_iid' => $issueIid,
                 'project_id' => $gitlabProjectId,
             ]);
+
+            // Re-broadcast with updated issue_iid and gitlab_issue_url so the
+            // frontend gets the issue link. The initial broadcast fires at Completed
+            // transition — before this job runs. The listener is idempotent.
+            $freshTask = $task->fresh();
+            if ($freshTask !== null) {
+                \App\Events\TaskStatusChanged::dispatch($freshTask);
+            }
         } catch (Throwable $e) {
             Log::warning('CreateGitLabIssue: failed to create issue', [
                 'task_id' => $this->taskId,

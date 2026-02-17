@@ -21,15 +21,21 @@ class TaskResultViewController extends Controller
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
+        $result = $task->result ?? [];
+
         return response()->json([
             'data' => [
                 'task_id' => $task->id,
                 'status' => $task->status->value,
                 'type' => $task->type->value,
-                'title' => $task->result['title'] ?? $task->result['mr_title'] ?? null,
+                'title' => $result['title'] ?? $result['mr_title'] ?? null,
                 'mr_iid' => $task->mr_iid,
                 'issue_iid' => $task->issue_iid,
                 'project_id' => $task->project_id,
+                'pipeline_id' => $task->pipeline_id,
+                'pipeline_status' => $task->pipeline_status,
+                'started_at' => $task->started_at?->toIso8601String(),
+                'conversation_id' => $task->conversation_id,
                 'error_reason' => $task->error_reason,
                 'result' => $task->result,
             ],
