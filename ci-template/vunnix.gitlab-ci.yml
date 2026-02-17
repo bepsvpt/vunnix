@@ -33,6 +33,8 @@
     #   VUNNIX_INTENT     — Task intent (matches type or custom)
     #   VUNNIX_QUESTION   — (optional) Question text for ask commands
     #   VUNNIX_ISSUE_IID  — (optional) Issue IID for issue discussion tasks
+  script:
+    - /vunnix-executor/entrypoint.sh
   rules:
     # Only run when triggered by the Vunnix Task Dispatcher
     - if: $VUNNIX_TASK_ID
