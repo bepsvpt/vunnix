@@ -1,0 +1,13 @@
+# Vunnix dogfooding — AI-powered reviews on this repo's GitLab mirror.
+#
+# Uses include:local since this repo contains the CI template itself.
+# The vunnix-review job only runs when triggered by the Vunnix Task Dispatcher
+# (VUNNIX_TASK_ID is set). Regular pushes and MRs do NOT trigger this job.
+#
+# Full CI (tests, linting, builds) runs on GitHub Actions (.github/workflows/).
+
+include:
+  - local: 'ci-template/vunnix.gitlab-ci.yml'
+
+stages:
+  - test
