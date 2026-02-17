@@ -22,7 +22,7 @@
   stage: test
   image: "ghcr.io/bepsvpt/vunnix/executor:${VUNNIX_EXECUTOR_VERSION}"
   variables:
-    VUNNIX_EXECUTOR_VERSION: "2.0.7"
+    VUNNIX_EXECUTOR_VERSION: "latest"
     # Pipeline variables passed by Vunnix Task Dispatcher (do not set manually):
     #   VUNNIX_TASK_ID    — Task ID in the Vunnix database
     #   VUNNIX_TASK_TYPE  — Task type (code_review, feature_dev, etc.)
