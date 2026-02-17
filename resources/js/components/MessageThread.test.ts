@@ -64,12 +64,36 @@ describe('messageThread', () => {
         expect(wrapper.find('[data-testid="messages-loading"]').exists()).toBe(true);
     });
 
-    it('shows error message when messagesError is set', () => {
+    it('shows retryable error with amber alert and dismiss button', async () => {
         const store = useConversationsStore();
-        store.messagesError = 'Failed to load';
+        store.messagesError = 'The AI service is temporarily busy.';
+        store.streamRetryable = true;
 
         const wrapper = mountThread();
-        expect(wrapper.text()).toContain('Failed to load');
+        const alert = wrapper.find('[data-testid="retryable-error"]');
+        expect(alert.exists()).toBe(true);
+        expect(alert.text()).toContain('The AI service is temporarily busy.');
+        expect(alert.text()).toContain('You can resend your message to try again.');
+
+        await alert.find('button[aria-label="Dismiss"]').trigger('click');
+        expect(store.messagesError).toBeNull();
+        expect(store.streamRetryable).toBe(false);
+    });
+
+    it('shows terminal error with red alert and dismiss button', async () => {
+        const store = useConversationsStore();
+        store.messagesError = 'An error occurred while generating the response.';
+        store.streamRetryable = false;
+
+        const wrapper = mountThread();
+        expect(wrapper.find('[data-testid="retryable-error"]').exists()).toBe(false);
+        const alert = wrapper.find('[data-testid="terminal-error"]');
+        expect(alert.exists()).toBe(true);
+        expect(alert.text()).toContain('An error occurred while generating the response.');
+        expect(alert.text()).toContain('This error cannot be resolved by retrying.');
+
+        await alert.find('button[aria-label="Dismiss"]').trigger('click');
+        expect(store.messagesError).toBeNull();
     });
 
     it('shows empty state when no messages and not loading', () => {

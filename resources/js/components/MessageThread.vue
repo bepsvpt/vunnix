@@ -114,9 +114,33 @@ async function handleSend(content: string) {
                         </svg>
                     </button>
                 </div>
-                <p v-else class="text-sm text-red-500">
-                    {{ store.messagesError }}
-                </p>
+                <div
+                    v-else
+                    data-testid="terminal-error"
+                    class="flex items-center gap-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 dark:border-red-700 dark:bg-red-950"
+                    role="alert"
+                >
+                    <svg class="h-5 w-5 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <p class="text-sm font-medium text-red-800 dark:text-red-200">
+                            {{ store.messagesError }}
+                        </p>
+                        <p class="text-xs text-red-600 dark:text-red-400 mt-0.5">
+                            This error cannot be resolved by retrying.
+                        </p>
+                    </div>
+                    <button
+                        class="ml-auto text-red-400 hover:text-red-600 dark:hover:text-red-300"
+                        aria-label="Dismiss"
+                        @click="store.messagesError = null"
+                    >
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <!-- Empty state (suppressed when streaming) -->
