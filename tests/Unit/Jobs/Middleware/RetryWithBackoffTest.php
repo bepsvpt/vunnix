@@ -3,42 +3,13 @@
 use App\Exceptions\GitLabApiException;
 use App\Jobs\Middleware\RetryWithBackoff;
 use Illuminate\Support\Facades\Log;
+use Tests\Unit\Jobs\Middleware\FakeJob;
 
 uses(Tests\TestCase::class);
 
 beforeEach(function (): void {
     Log::spy();
 });
-
-/**
- * Fake job class to test middleware behavior.
- * Tracks calls to release(), fail(), and the exception thrown from $next.
- */
-class FakeJob
-{
-    public int $attemptCount = 1;
-
-    public ?int $releasedWithDelay = null;
-
-    public ?\Throwable $failedWith = null;
-
-    public ?\Closure $handler = null;
-
-    public function attempts(): int
-    {
-        return $this->attemptCount;
-    }
-
-    public function release(int $delay = 0): void
-    {
-        $this->releasedWithDelay = $delay;
-    }
-
-    public function fail(\Throwable $exception): void
-    {
-        $this->failedWith = $exception;
-    }
-}
 
 function makeGitLabException(int $statusCode): GitLabApiException
 {
