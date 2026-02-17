@@ -9,6 +9,7 @@ use App\Agents\Tools\ReadFile;
 use App\Agents\Tools\ReadIssue;
 use App\Agents\Tools\ReadMergeRequest;
 use App\Agents\Tools\ReadMRDiff;
+use App\Agents\Tools\ResolveGitLabUser;
 use App\Agents\Tools\SearchCode;
 use App\Agents\VunnixAgent;
 use Laravel\Ai\Contracts\Agent;
@@ -70,8 +71,9 @@ it('returns the T55 dispatch action tool', function (): void {
     $agent = new VunnixAgent;
     $tools = iterator_to_array($agent->tools());
 
-    expect($tools)->toHaveCount(9);
+    expect($tools)->toHaveCount(10);
     expect($tools[8])->toBeInstanceOf(DispatchAction::class);
+    expect($tools[9])->toBeInstanceOf(ResolveGitLabUser::class);
 });
 
 it('returns tools that implement the Tool interface', function (): void {

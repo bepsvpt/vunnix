@@ -11,6 +11,7 @@ use App\Agents\Tools\ReadFile;
 use App\Agents\Tools\ReadIssue;
 use App\Agents\Tools\ReadMergeRequest;
 use App\Agents\Tools\ReadMRDiff;
+use App\Agents\Tools\ResolveGitLabUser;
 use App\Agents\Tools\SearchCode;
 use App\Models\GlobalSetting;
 use App\Models\Project;
@@ -124,6 +125,7 @@ class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
      * - T51: ListIssues, ReadIssue
      * - T52: ListMergeRequests, ReadMergeRequest, ReadMRDiff
      * - T55: DispatchAction
+     * - ResolveGitLabUser (assignee resolution)
      *
      * @return array<\Laravel\Ai\Contracts\Tool>
      */
@@ -143,6 +145,8 @@ class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
             app(ReadMRDiff::class),
             // T55: Action dispatch
             app(DispatchAction::class),
+            // User resolution for assignee_id
+            app(ResolveGitLabUser::class),
         ];
     }
 
@@ -375,6 +379,9 @@ The frontend renders this as a structured preview card with Confirm/Cancel butto
 
 3. Wait for explicit user confirmation before calling DispatchAction
 4. Never dispatch an action without explicit user confirmation
+
+**Assignee resolution:**
+When the user wants to assign an issue to someone (e.g., "assign to @john"), use the ResolveGitLabUser tool FIRST to look up the user's GitLab ID from their username or name. Never guess or fabricate an assignee_id — always resolve it via the tool. If no match is found, inform the user and create the issue without an assignee.
 
 **Authentication:**
 The DispatchAction tool automatically resolves the authenticated user and conversation context from the server session. Do NOT pass user_id or conversation_id — both are resolved server-side for security.

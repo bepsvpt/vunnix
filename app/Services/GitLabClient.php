@@ -570,6 +570,25 @@ class GitLabClient
         return $this->handleResponse($response, "getProjectMember #{$projectId}/#{$userId}")->json();
     }
 
+    /**
+     * List members of a project (including inherited members from parent groups).
+     *
+     * Supports search by username/name via the `query` parameter.
+     * Returns an array of member objects with id, username, name, and access_level.
+     *
+     * @param  array<string, mixed>  $params
+     * @return array<int, array<string, mixed>>
+     */
+    public function listProjectMembers(int $projectId, array $params = []): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/members/all"),
+            $params,
+        );
+
+        return $this->handleResponse($response, "listProjectMembers #{$projectId}")->json();
+    }
+
     // ------------------------------------------------------------------
     //  Project Labels
     // ------------------------------------------------------------------
