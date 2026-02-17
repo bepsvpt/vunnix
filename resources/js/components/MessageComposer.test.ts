@@ -60,4 +60,11 @@ describe('messageComposer', () => {
         await wrapper.find('textarea').trigger('keydown', { key: 'Enter', shiftKey: true });
         expect(wrapper.emitted('send')).toBeUndefined();
     });
+
+    it('does not emit send on Enter during IME composition', async () => {
+        const wrapper = mountComposer();
+        await wrapper.find('textarea').setValue('你');
+        await wrapper.find('textarea').trigger('keydown', { key: 'Enter', isComposing: true });
+        expect(wrapper.emitted('send')).toBeUndefined();
+    });
 });
