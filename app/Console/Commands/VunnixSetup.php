@@ -166,7 +166,7 @@ class VunnixSetup extends Command
         $result = $this->enablement->enable($project);
 
         if (! $result['success']) {
-            $this->error("  Failed: {$result['error']}");
+            $this->error('  Failed: '.($result['error'] ?? 'Unknown error'));
 
             return false;
         }

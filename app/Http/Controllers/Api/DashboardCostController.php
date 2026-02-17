@@ -197,7 +197,7 @@ class DashboardCostController extends Controller
 
         return response()->json([
             'data' => [
-                'total_cost' => (float) round($totalCost, 6),
+                'total_cost' => round((float) $totalCost, 6),
                 'total_tokens' => (int) $totalTokens,
                 'token_usage_by_type' => $tokensByType,
                 'cost_per_type' => $costPerType,

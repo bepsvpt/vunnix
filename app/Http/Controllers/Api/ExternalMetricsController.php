@@ -64,7 +64,7 @@ class ExternalMetricsController extends Controller
                 'active_tasks' => $activeCount,
                 'success_rate' => $successRate,
                 'tasks_by_type' => $typeMap,
-                'total_cost' => (float) round($totalCost, 6),
+                'total_cost' => round((float) $totalCost, 6),
                 'acceptance_rate' => $acceptanceRate,
             ],
         ]);

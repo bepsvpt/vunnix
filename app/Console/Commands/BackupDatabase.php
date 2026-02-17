@@ -62,7 +62,7 @@ class BackupDatabase extends Command
         $cutoff = now()->subDays($retentionDays);
         $pruned = 0;
 
-        foreach (glob("{$backupDir}/*.sql.gz") as $file) {
+        foreach (glob("{$backupDir}/*.sql.gz") ?: [] as $file) {
             if (filemtime($file) < $cutoff->timestamp) {
                 unlink($file);
                 $pruned++;

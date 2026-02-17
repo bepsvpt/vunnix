@@ -83,7 +83,7 @@ class AuthController extends Controller
         if ($userId) {
             try {
                 app(AuditLogService::class)->logAuthEvent(
-                    userId: $userId,
+                    userId: (int) $userId,
                     action: 'logout',
                     ipAddress: $request->ip(),
                     userAgent: $request->userAgent(),

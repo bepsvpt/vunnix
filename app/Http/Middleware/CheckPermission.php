@@ -51,7 +51,7 @@ class CheckPermission
         $projectId = $request->route('project') ?? $request->input('project_id');
 
         if ($projectId) {
-            return Project::find($projectId);
+            return Project::where('id', $projectId)->first();
         }
 
         return null;

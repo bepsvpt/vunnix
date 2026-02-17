@@ -44,7 +44,7 @@ class AdminProjectController extends Controller
         if (! $result['success']) {
             return response()->json([
                 'success' => false,
-                'error' => $result['error'],
+                'error' => $result['error'] ?? 'Unknown error',
                 'warnings' => $result['warnings'],
             ], 422);
         }
@@ -65,7 +65,7 @@ class AdminProjectController extends Controller
         if (! $result['success']) {
             return response()->json([
                 'success' => false,
-                'error' => $result['error'],
+                'error' => $result['error'] ?? 'Unknown error',
             ], 422);
         }
 

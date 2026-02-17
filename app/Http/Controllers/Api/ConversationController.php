@@ -54,7 +54,7 @@ class ConversationController extends Controller
     public function store(CreateConversationRequest $request): JsonResponse
     {
         $user = $request->user();
-        $project = Project::findOrFail($request->validated('project_id'));
+        $project = Project::where('id', $request->validated('project_id'))->firstOrFail();
 
         // Verify user has chat.access permission on this project
         if (! $user->hasPermission('chat.access', $project)) {

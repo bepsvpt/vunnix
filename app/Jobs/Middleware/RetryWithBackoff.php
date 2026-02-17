@@ -44,7 +44,7 @@ class RetryWithBackoff
 
     private function handleGitLabException(object $job, GitLabApiException $e): void
     {
-        $attempts = $job->attempts();
+        $attempts = $job->attempts(); // @phpstan-ignore method.notFound (InteractsWithQueue trait — no interface)
 
         Log::warning('RetryWithBackoff: GitLab API error', [
             'job' => $job::class,
@@ -60,7 +60,7 @@ class RetryWithBackoff
                 'context' => $e->context,
                 'message' => $e->getMessage(),
             ]);
-            $job->fail($e);
+            $job->fail($e); // @phpstan-ignore method.notFound
 
             return;
         }
@@ -71,7 +71,7 @@ class RetryWithBackoff
                 'context' => $e->context,
                 'body' => $e->responseBody,
             ]);
-            $job->fail($e);
+            $job->fail($e); // @phpstan-ignore method.notFound
 
             return;
         }
@@ -82,7 +82,7 @@ class RetryWithBackoff
                 'status_code' => $e->statusCode,
                 'context' => $e->context,
             ]);
-            $job->fail($e);
+            $job->fail($e); // @phpstan-ignore method.notFound
 
             return;
         }
@@ -97,7 +97,7 @@ class RetryWithBackoff
                 'max_retries' => self::MAX_RETRIES,
                 'context' => $e->context,
             ]);
-            $job->fail($e);
+            $job->fail($e); // @phpstan-ignore method.notFound
 
             return;
         }
@@ -121,6 +121,6 @@ class RetryWithBackoff
             'context' => $e->context,
         ]);
 
-        $job->release($delay);
+        $job->release($delay); // @phpstan-ignore method.notFound
     }
 }
