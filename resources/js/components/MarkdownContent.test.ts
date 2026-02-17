@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils';
 import MarkdownIt from 'markdown-it';
 import { describe, expect, it, vi } from 'vitest';
+import { applyHiddenFences } from '@/lib/markdown';
 import MarkdownContent from './MarkdownContent.vue';
 
 // Mock the markdown module to avoid async Shiki loading in tests
@@ -17,11 +18,18 @@ testMd.renderer.rules.link_open = function (tokens, idx, options, env, self) {
     return defaultRender(tokens, idx, options, env, self);
 };
 
-vi.mock('@/lib/markdown', () => ({
-    getMarkdownRenderer: () => testMd,
-    isHighlightReady: (): boolean => false,
-    onHighlightLoaded: vi.fn(),
-}));
+// Apply hidden fence rules (same as production)
+applyHiddenFences(testMd);
+
+vi.mock('@/lib/markdown', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('@/lib/markdown')>();
+    return {
+        ...actual,
+        getMarkdownRenderer: () => testMd,
+        isHighlightReady: (): boolean => false,
+        onHighlightLoaded: vi.fn(),
+    };
+});
 
 describe('markdownContent', () => {
     function mountContent(content: string) {
@@ -84,5 +92,33 @@ describe('markdownContent', () => {
     it('applies markdown-content class to wrapper', () => {
         const wrapper = mountContent('hello');
         expect(wrapper.find('.markdown-content').exists()).toBe(true);
+    });
+
+    it('hides action_preview fenced blocks from rendered output', () => {
+        const content = 'Before.\n\n```action_preview\n{"action_type":"create_issue","project_id":42}\n```\n\nAfter.';
+        const wrapper = mountContent(content);
+        const html = wrapper.html();
+        expect(html).toContain('Before.');
+        expect(html).toContain('After.');
+        expect(html).not.toContain('action_preview');
+        expect(html).not.toContain('create_issue');
+        expect(html).not.toContain('project_id');
+    });
+
+    it('hides unclosed action_preview fenced blocks (streaming partial)', () => {
+        const content = 'Before.\n\n```action_preview\n{"action_type":"deep_analysis"';
+        const wrapper = mountContent(content);
+        const html = wrapper.html();
+        expect(html).toContain('Before.');
+        expect(html).not.toContain('deep_analysis');
+    });
+
+    it('renders normal code blocks alongside hidden action_preview', () => {
+        const content = '```js\nconst x = 1;\n```\n\n```action_preview\n{"hidden":true}\n```\n\nText.';
+        const wrapper = mountContent(content);
+        const html = wrapper.html();
+        expect(html).toContain('const x = 1;');
+        expect(html).toContain('Text.');
+        expect(html).not.toContain('"hidden"');
     });
 });

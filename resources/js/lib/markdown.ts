@@ -7,6 +7,35 @@ let shikiPromise: Promise<void> | null = null;
 let onHighlightReady: (() => void) | null = null;
 
 /**
+ * Fence languages that are machine-readable protocol blocks (e.g. action_preview)
+ * and should never be rendered as visible code blocks to the user.
+ * Add new protocol languages here — no other changes needed.
+ */
+export const HIDDEN_FENCE_LANGUAGES: ReadonlySet<string> = new Set([
+    'action_preview',
+]);
+
+/**
+ * Wraps the current `fence` renderer rule so that fenced blocks whose
+ * language is in HIDDEN_FENCE_LANGUAGES render as empty strings.
+ * Safe to call multiple times (e.g. before and after Shiki loads) —
+ * each call captures whatever renderer is currently active.
+ */
+export function applyHiddenFences(instance: MarkdownIt): void {
+    const prevFence: RenderRule | undefined = instance.renderer.rules.fence;
+
+    instance.renderer.rules.fence = function (tokens, idx, options, env, self) {
+        if (HIDDEN_FENCE_LANGUAGES.has(tokens[idx].info.trim())) {
+            return '';
+        }
+        if (prevFence) {
+            return prevFence(tokens, idx, options, env, self);
+        }
+        return self.renderToken(tokens, idx, options);
+    };
+}
+
+/**
  * Creates the base markdown-it instance with link security.
  */
 function createBaseInstance(): MarkdownIt {
@@ -28,6 +57,9 @@ function createBaseInstance(): MarkdownIt {
         return defaultRender(tokens, idx, options, env, self);
     };
 
+    // Hide protocol fence blocks (action_preview, etc.)
+    applyHiddenFences(instance);
+
     return instance;
 }
 
@@ -47,6 +79,7 @@ function initShiki(): Promise<void> {
             },
         });
         md!.use(plugin);
+        applyHiddenFences(md!); // Re-apply after Shiki overwrites the fence rule
         shikiReady = true;
         if (onHighlightReady)
             onHighlightReady();

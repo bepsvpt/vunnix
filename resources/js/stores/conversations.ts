@@ -76,6 +76,9 @@ function getErrorMessage(err: unknown, fallback: string): string {
     return typed?.response?.data?.message || fallback;
 }
 
+/** Regex to detect action_preview fenced blocks in message text. */
+const ACTION_PREVIEW_REGEX = /```action_preview\n([\s\S]*?)```/;
+
 export const useConversationsStore = defineStore('conversations', () => {
     const conversations = ref<Conversation[]>([]);
     const loading = ref(false);
@@ -347,8 +350,32 @@ export const useConversationsStore = defineStore('conversations', () => {
     }
 
     /**
+     * Restore pending action from persisted messages after page reload.
+     * If the last message is an assistant message with an unconfirmed action_preview
+     * block, re-populate pendingAction so the Confirm/Cancel card reappears.
+     */
+    function restoreActionPreview(rawMessages: ChatMessage[]): void {
+        pendingAction.value = null;
+        if (rawMessages.length === 0)
+            return;
+        const lastMsg = rawMessages[rawMessages.length - 1];
+        if (lastMsg.role !== 'assistant')
+            return;
+        const match = lastMsg.content.match(ACTION_PREVIEW_REGEX);
+        if (!match)
+            return;
+        try {
+            pendingAction.value = {
+                id: `preview-${Date.now()}`,
+                ...JSON.parse(match[1].trim()),
+            };
+        } catch { /* malformed JSON — ignore */ }
+    }
+
+    /**
      * Fetch messages for a conversation by loading its detail.
-     * After loading, hydrates result cards from persisted system messages (T70).
+     * After loading, hydrates result cards from persisted system messages (T70)
+     * and restores any unconfirmed action preview (T68).
      */
     async function fetchMessages(conversationId: string): Promise<void> {
         messagesLoading.value = true;
@@ -356,6 +383,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         try {
             const response = await axios.get(`/api/v1/conversations/${conversationId}`);
             messages.value = response.data.data.messages || [];
+            restoreActionPreview(messages.value);
             await hydrateResultCards();
         } catch (err: unknown) {
             messagesError.value = getErrorMessage(err, 'Failed to load messages');
@@ -493,7 +521,7 @@ export const useConversationsStore = defineStore('conversations', () => {
 
                         // T68: Detect action_preview code blocks in streamed text
                         if (!pendingAction.value) {
-                            const match = accumulated.match(/```action_preview\n([\s\S]*?)```/);
+                            const match = accumulated.match(ACTION_PREVIEW_REGEX);
                             if (match) {
                                 try {
                                     pendingAction.value = {

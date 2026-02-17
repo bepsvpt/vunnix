@@ -1085,6 +1085,52 @@ describe('useConversationsStore', () => {
             expect(store.pendingAction.title).toBe('First');
         });
 
+        it('restores pendingAction from last assistant message on fetchMessages', async () => {
+            const previewJson = JSON.stringify({
+                action_type: 'deep_analysis',
+                project_id: 42,
+                title: 'Deep scan',
+                description: 'Full analysis',
+            });
+            const messagesFromApi = [
+                { id: 'msg-1', role: 'user', content: 'Analyze this', created_at: '2026-02-15T12:00:00+00:00' },
+                { id: 'msg-2', role: 'assistant', content: `I'll run an analysis.\n\n\`\`\`action_preview\n${previewJson}\n\`\`\`\n\nPlease confirm.`, created_at: '2026-02-15T12:00:01+00:00' },
+            ];
+            mockedAxios.get.mockResolvedValueOnce({
+                data: { data: { id: 'conv-1', messages: messagesFromApi } },
+            });
+
+            const store = useConversationsStore();
+            await store.fetchMessages('conv-1');
+
+            // pendingAction should be restored from persisted message
+            expect(store.pendingAction).not.toBeNull();
+            expect(store.pendingAction.action_type).toBe('deep_analysis');
+            expect(store.pendingAction.title).toBe('Deep scan');
+        });
+
+        it('does not restore pendingAction when last message is from user (already confirmed)', async () => {
+            const previewJson = JSON.stringify({
+                action_type: 'create_issue',
+                project_id: 42,
+                title: 'Test issue',
+            });
+            const messagesFromApi = [
+                { id: 'msg-1', role: 'user', content: 'Create issue', created_at: '2026-02-15T12:00:00+00:00' },
+                { id: 'msg-2', role: 'assistant', content: `\`\`\`action_preview\n${previewJson}\n\`\`\``, created_at: '2026-02-15T12:00:01+00:00' },
+                { id: 'msg-3', role: 'user', content: 'Confirmed. Go ahead with: Test issue', created_at: '2026-02-15T12:00:02+00:00' },
+            ];
+            mockedAxios.get.mockResolvedValueOnce({
+                data: { data: { id: 'conv-1', messages: messagesFromApi } },
+            });
+
+            const store = useConversationsStore();
+            await store.fetchMessages('conv-1');
+
+            // pendingAction should NOT be restored — user already confirmed
+            expect(store.pendingAction).toBeNull();
+        });
+
         it('auto-tracks task from [System: Task dispatched] in streamed response (T69)', async () => {
             const dispatchText = 'Alright, I\'ll implement that.\n\n[System: Task dispatched] Feature implementation "Add Stripe" has been dispatched as Task #42. You can track its progress in the pinned task bar.';
             const events = [
