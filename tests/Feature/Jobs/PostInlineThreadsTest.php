@@ -131,7 +131,7 @@ it('sends correct position data from MR diff_refs', function (): void {
     $job = new PostInlineThreads($task->id);
     $job->handle(app(GitLabClient::class));
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         if (! str_contains($request->url(), '/discussions')) {
             return false;
         }
@@ -163,7 +163,7 @@ it('sends formatted finding body with severity tag', function (): void {
     $job = new PostInlineThreads($task->id);
     $job->handle(app(GitLabClient::class));
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         if (! str_contains($request->url(), '/discussions')) {
             return false;
         }
@@ -260,7 +260,7 @@ it('does not create duplicate threads for findings that already have unresolved 
     Http::assertSentCount(3);
 
     // Verify the POST was for the second finding (Null pointer), not the first (SQL injection)
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         if ($request->method() !== 'POST' || ! str_contains($request->url(), '/discussions')) {
             return false;
         }
@@ -271,7 +271,7 @@ it('does not create duplicate threads for findings that already have unresolved 
     });
 
     // Verify NO POST was made for the SQL injection finding
-    Http::assertNotSent(function (array $request): bool {
+    Http::assertNotSent(function (\Illuminate\Http\Client\Request $request): bool {
         if ($request->method() !== 'POST' || ! str_contains($request->url(), '/discussions')) {
             return false;
         }

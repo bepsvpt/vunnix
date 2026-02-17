@@ -116,7 +116,7 @@ it('adds risk-high and security labels for critical security findings', function
     $job = new PostLabelsAndStatus($task->id);
     $job->handle(app(GitLabClient::class));
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         if ($request->method() !== 'PUT') {
             return false;
         }
@@ -148,7 +148,7 @@ it('sets commit status to failed when critical findings exist', function (): voi
     $job = new PostLabelsAndStatus($task->id);
     $job->handle(app(GitLabClient::class));
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         if (! str_contains($request->url(), '/statuses/')) {
             return false;
         }
@@ -175,7 +175,7 @@ it('adds risk-low label and success status for clean review', function (): void 
     $job->handle(app(GitLabClient::class));
 
     // Check labels
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         if ($request->method() !== 'PUT') {
             return false;
         }
@@ -188,7 +188,7 @@ it('adds risk-low label and success status for clean review', function (): void 
     });
 
     // Check commit status
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         if (! str_contains($request->url(), '/statuses/')) {
             return false;
         }
@@ -286,7 +286,7 @@ it('removes stale AI risk labels when review risk level changes', function (): v
     $job->handle(app(GitLabClient::class));
 
     // Verify a remove_labels PUT was sent to clear stale risk labels
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         if ($request->method() !== 'PUT') {
             return false;
         }
@@ -318,7 +318,7 @@ it('removes other risk labels even when current risk level is high', function ()
     $job->handle(app(GitLabClient::class));
 
     // Should remove medium and low (the non-active risk labels)
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         if ($request->method() !== 'PUT') {
             return false;
         }
@@ -349,7 +349,7 @@ it('continues adding labels when remove old labels fails', function (): void {
     $job->handle(app(GitLabClient::class));
 
     // Even though remove failed, add_labels should still be sent
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         if ($request->method() !== 'PUT') {
             return false;
         }

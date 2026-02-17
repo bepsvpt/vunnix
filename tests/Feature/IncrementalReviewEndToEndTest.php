@@ -429,7 +429,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
     expect($phase2DiscussionPosts)->toHaveCount(1);
 
     // Verify the POST was for the NEW finding (N+1 query), not the duplicate
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         if ($request->method() !== 'POST' || ! str_contains($request->url(), '/discussions')) {
             return false;
         }
@@ -440,7 +440,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
     });
 
     // Verify NO POST was made for the deduplicated finding
-    Http::assertNotSent(function (array $request): bool {
+    Http::assertNotSent(function (\Illuminate\Http\Client\Request $request): bool {
         if ($request->method() !== 'POST' || ! str_contains($request->url(), '/discussions')) {
             return false;
         }

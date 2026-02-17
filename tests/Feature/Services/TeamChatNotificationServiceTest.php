@@ -48,7 +48,7 @@ it('sends Slack-formatted notification when enabled', function (): void {
     ]);
 
     expect($result)->toBeTrue();
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->url() === 'https://hooks.slack.com/services/T/B/x'
             && $request['text'] === '🤖 Review complete'
             && isset($request['attachments']);
@@ -64,7 +64,7 @@ it('sends Mattermost-formatted notification', function (): void {
     $result = $service->send('alert', 'API outage', ['urgency' => 'high']);
 
     expect($result)->toBeTrue();
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->url() === 'https://mattermost.example.com/hooks/abc'
             && $request['text'] === 'API outage'
             && isset($request['attachments']);
@@ -80,7 +80,7 @@ it('sends Google Chat-formatted notification', function (): void {
     $result = $service->send('task_completed', 'Done');
 
     expect($result)->toBeTrue();
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return str_contains($request->url(), 'chat.googleapis.com')
             && $request['text'] === 'Done'
             && isset($request['cardsV2']);
@@ -96,7 +96,7 @@ it('sends generic plain text notification', function (): void {
     $result = $service->send('task_completed', 'Done');
 
     expect($result)->toBeTrue();
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->url() === 'https://generic.example.com/webhook'
             && $request['text'] === 'Done';
     });
@@ -111,7 +111,7 @@ it('falls back to generic formatter for unknown platform', function (): void {
     $result = $service->send('task_completed', 'Done');
 
     expect($result)->toBeTrue();
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request['text'] === 'Done'
             && ! isset($request['attachments'])
             && ! isset($request['cardsV2']);
@@ -173,7 +173,7 @@ it('sendTest posts to the provided URL without checking GlobalSetting', function
     $result = $service->sendTest('https://hooks.slack.com/test', 'slack');
 
     expect($result)->toBeTrue();
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->url() === 'https://hooks.slack.com/test'
             && str_contains($request['text'], 'Vunnix webhook test');
     });

@@ -345,7 +345,7 @@ it('sends code review completion notification', function (): void {
     $service = app(AlertEventService::class);
     $service->notifyTaskCompletion($task);
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return str_contains($request['text'], 'Review complete on **my-project** MR !123')
             && str_contains($request['text'], 'Medium risk')
             && str_contains($request['text'], '3 findings');
@@ -367,7 +367,7 @@ it('sends feature dev completion notification', function (): void {
     $service = app(AlertEventService::class);
     $service->notifyTaskCompletion($task);
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return str_contains($request['text'], 'Feature branch created for **project-x**')
             && str_contains($request['text'], "MR !456 'Add payment flow' (4 files)");
     });
@@ -387,7 +387,7 @@ it('sends UI adjustment completion notification', function (): void {
     $service = app(AlertEventService::class);
     $service->notifyTaskCompletion($task);
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return str_contains($request['text'], 'UI fix for **project-x**')
             && str_contains($request['text'], "MR !789 'Adjust toolbar padding'");
     });
@@ -408,7 +408,7 @@ it('sends PRD creation notification', function (): void {
     $service = app(AlertEventService::class);
     $service->notifyTaskCompletion($task);
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return str_contains($request['text'], 'PRD created for **project-x**')
             && str_contains($request['text'], "Issue #42 'Payment Feature'");
     });
@@ -426,7 +426,7 @@ it('sends task failed notification with error reason', function (): void {
     $service = app(AlertEventService::class);
     $service->notifyTaskCompletion($task);
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return str_contains($request['text'], '❌')
             && str_contains($request['text'], 'failed for **project-x** MR !123')
             && str_contains($request['text'], 'max retries exceeded');
@@ -592,7 +592,7 @@ it('sends cost alert notification', function (): void {
     $service = app(AlertEventService::class);
     $service->notifyCostAlert($costAlert);
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return str_contains($request['text'], 'Daily spend')
             && str_contains($request['text'], '$50.00');
     });
@@ -647,7 +647,7 @@ it('T104 integration: queue depth alert → dashboard + chat → recovery', func
     expect($remainingActive)->toHaveCount(0);
 
     // Verify exactly 2 notifications sent (alert + recovery)
-    $chatRequests = Http::recorded(function (array $request): bool {
+    $chatRequests = Http::recorded(function (\Illuminate\Http\Client\Request $request): bool {
         $text = $request['text'] ?? '';
 
         return str_contains($text, 'Queue depth') || str_contains($text, 'resolved');

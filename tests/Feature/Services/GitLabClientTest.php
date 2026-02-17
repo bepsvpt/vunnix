@@ -178,7 +178,7 @@ it('creates an issue', function (): void {
 
     expect($result)->toHaveKey('iid', 10);
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->method() === 'POST'
             && $request['title'] === 'New issue';
     });
@@ -251,7 +251,7 @@ it('creates a merge request', function (): void {
 
     expect($result)->toHaveKey('iid', 7);
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->method() === 'POST'
             && $request['source_branch'] === 'feature';
     });
@@ -275,7 +275,7 @@ it('sends PUT request to update merge request', function (): void {
     expect($result['iid'])->toBe(123);
     expect($result['title'])->toBe('Updated title');
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->method() === 'PUT'
             && str_contains($request->url(), 'merge_requests/123')
             && $request['title'] === 'Updated title';
@@ -406,7 +406,7 @@ it('creates a merge request discussion thread', function (): void {
 
     expect($result)->toHaveKey('id', 'abc123');
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->method() === 'POST'
             && isset($request['position']);
     });
@@ -429,7 +429,7 @@ it('creates a branch', function (): void {
 
     expect($result)->toHaveKey('name', 'ai/feature-123');
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->method() === 'POST'
             && $request['branch'] === 'ai/feature-123'
             && $request['ref'] === 'main';
@@ -475,7 +475,7 @@ it('sets merge request labels', function (): void {
 
     expect($result['labels'])->toBe(['ai::reviewed', 'ai::risk-low']);
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->method() === 'PUT'
             && $request['labels'] === 'ai::reviewed,ai::risk-low';
     });
@@ -492,7 +492,7 @@ it('adds merge request labels without removing existing ones', function (): void
     $client = app(GitLabClient::class);
     $result = $client->addMergeRequestLabels(1, 3, ['ai::reviewed']);
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->method() === 'PUT'
             && $request['add_labels'] === 'ai::reviewed';
     });
@@ -511,7 +511,7 @@ it('removes specific labels from a merge request', function (): void {
 
     expect($result['labels'])->toBe(['ai::reviewed']);
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->method() === 'PUT'
             && $request['remove_labels'] === 'ai::risk-high,ai::risk-medium';
     });
@@ -538,7 +538,7 @@ it('sets commit status', function (): void {
 
     expect($result)->toHaveKey('status', 'success');
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->method() === 'POST'
             && $request['state'] === 'success'
             && $request['name'] === 'vunnix/review';
@@ -567,7 +567,7 @@ it('creates a webhook', function (): void {
 
     expect($result)->toHaveKey('id', 50);
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->method() === 'POST'
             && $request['url'] === 'https://vunnix.example.com/webhook'
             && $request['token'] === 'secret123'
@@ -609,7 +609,7 @@ it('triggers a pipeline', function (): void {
     expect($result)->toHaveKey('id', 999)
         ->toHaveKey('status', 'pending');
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return $request->method() === 'POST'
             && $request['token'] === 'trigger-token-123'
             && $request['ref'] === 'main'

@@ -31,7 +31,7 @@ it('posts placeholder comment to GitLab and stores the note ID', function (): vo
     $job = new PostPlaceholderComment($task->id);
     $job->handle(app(GitLabClient::class));
 
-    Http::assertSent(function (array $request): bool {
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
         return str_contains($request->url(), '/notes')
             && $request['body'] === '🤖 AI Review in progress…';
     });

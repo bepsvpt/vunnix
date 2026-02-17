@@ -143,7 +143,7 @@ it('stores neutral sentiment when no emoji reactions exist', function (): void {
 
     $records = FindingAcceptance::all();
     expect($records)->toHaveCount(2);
-    $records->each(fn ($r): \Pest\Mixins\Expectation => expect($r->emoji_sentiment)->toBe('neutral'));
+    $records->each(fn ($r) => expect($r->emoji_sentiment)->toBe('neutral'));
 });
 
 it('continues processing even when emoji API call fails for one note', function (): void {
