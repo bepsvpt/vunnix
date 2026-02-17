@@ -107,12 +107,18 @@ class ConversationService
     {
         $agent = VunnixAgent::make();
 
-        // Inject project context for per-project config (T93: PRD template)
+        // Inject project context for system prompt and per-project config (T93: PRD template)
         if ($conversation->project_id !== null) {
             $project = Project::find($conversation->project_id);
             if ($project !== null) {
                 $agent->setProject($project);
             }
+        }
+
+        // Inject cross-project context (D28)
+        $additionalProjects = $conversation->projects()->get()->all();
+        if ($additionalProjects !== []) {
+            $agent->setAdditionalProjects($additionalProjects);
         }
 
         $agent->continue($conversation->id, $user);

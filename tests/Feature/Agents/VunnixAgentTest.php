@@ -625,6 +625,105 @@ it('project PRD template takes precedence over global', function (): void {
         ->and($instructions)->not->toContain('# Global PRD');
 });
 
+// ─── Project Context in System Prompt ────────────────────────────
+
+it('includes project context section when project is set', function (): void {
+    $project = Project::factory()->create([
+        'name' => 'My App',
+        'gitlab_project_id' => 42,
+    ]);
+
+    $agent = new VunnixAgent;
+    $agent->setProject($project);
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('[Project Context]');
+    expect($instructions)->toContain('My App');
+    expect($instructions)->toContain('42');
+});
+
+it('does not include project context section when no project is set', function (): void {
+    $agent = new VunnixAgent;
+    $instructions = $agent->instructions();
+
+    expect($instructions)->not->toContain('[Project Context]');
+});
+
+it('tells the agent to use gitlab_project_id for tool calls', function (): void {
+    $project = Project::factory()->create([
+        'name' => 'Backend API',
+        'gitlab_project_id' => 99,
+    ]);
+
+    $agent = new VunnixAgent;
+    $agent->setProject($project);
+    $instructions = $agent->instructions();
+
+    // The system prompt should instruct the agent to use project_id=99
+    expect($instructions)->toContain('project_id');
+    expect($instructions)->toContain('99');
+});
+
+it('includes additional cross-project context when set', function (): void {
+    $primary = Project::factory()->create(['name' => 'Frontend App', 'gitlab_project_id' => 10]);
+    $secondary = Project::factory()->create(['name' => 'Backend API', 'gitlab_project_id' => 20]);
+
+    $agent = new VunnixAgent;
+    $agent->setProject($primary);
+    $agent->setAdditionalProjects([$secondary]);
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('[Project Context]');
+    expect($instructions)->toContain('Frontend App');
+    expect($instructions)->toContain('10');
+    expect($instructions)->toContain('Backend API');
+    expect($instructions)->toContain('20');
+});
+
+it('places project context section between identity and capabilities', function (): void {
+    $project = Project::factory()->create(['gitlab_project_id' => 1]);
+
+    $agent = new VunnixAgent;
+    $agent->setProject($project);
+    $instructions = $agent->instructions();
+
+    $identityPos = strpos($instructions, '[Identity]');
+    $projectPos = strpos($instructions, '[Project Context]');
+    $capabilitiesPos = strpos($instructions, '[Capabilities]');
+
+    expect($projectPos)->toBeGreaterThan($identityPos);
+    expect($projectPos)->toBeLessThan($capabilitiesPos);
+});
+
+// ─── ConversationService Cross-Project Wiring ───────────────────
+
+it('ConversationService loads cross-project data for agent context', function (): void {
+    VunnixAgent::fake(['Hello']);
+
+    $primary = Project::factory()->create(['name' => 'Frontend', 'gitlab_project_id' => 10]);
+    $secondary = Project::factory()->create(['name' => 'Backend', 'gitlab_project_id' => 20]);
+
+    $user = agentTestUser($primary);
+    // Also give user access to secondary project
+    $role2 = Role::factory()->create(['project_id' => $secondary->id]);
+    $perm = Permission::firstOrCreate(['name' => 'chat.access']);
+    $role2->permissions()->attach($perm);
+    $user->assignRole($role2, $secondary);
+    $user->projects()->attach($secondary->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+
+    $conversation = Conversation::factory()->forUser($user)->forProject($primary)->create();
+    $conversation->projects()->attach($secondary->id);
+
+    // Stream a message through the controller — this exercises ConversationService::streamResponse()
+    $response = $this->actingAs($user)
+        ->post("/api/v1/conversations/{$conversation->id}/stream", ['content' => 'Show me the API']);
+    $response->assertOk();
+    $response->streamedContent();
+
+    // Verify the agent was prompted (exercises the full pipeline)
+    VunnixAgent::assertPrompted(fn ($prompt): bool => str_contains($prompt->prompt, 'Show me the API'));
+});
+
 // ─── System Prompt Dynamic Behavior ─────────────────────────────
 
 it('generates different instructions based on language config', function (): void {

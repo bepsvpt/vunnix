@@ -71,14 +71,32 @@ class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
     protected ?array $prunedMessages = null;
 
     /**
-     * The project context for per-project config (e.g., PRD template).
+     * The project context for per-project config (e.g., PRD template)
+     * and system prompt injection.
      * Set by ConversationService before streaming.
      */
     protected ?Project $project = null;
 
+    /**
+     * Additional projects in the conversation (D28 cross-project support).
+     *
+     * @var array<int, Project>
+     */
+    protected array $additionalProjects = [];
+
     public function setProject(Project $project): void
     {
         $this->project = $project;
+    }
+
+    /**
+     * Set additional projects for cross-project conversations (D28).
+     *
+     * @param  array<int, Project>  $projects
+     */
+    public function setAdditionalProjects(array $projects): void
+    {
+        $this->additionalProjects = $projects;
     }
 
     public function instructions(): string
@@ -190,6 +208,7 @@ class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
     {
         $sections = [
             $this->identitySection(),
+            $this->projectContextSection(),
             $this->capabilitiesSection(),
             $this->qualityGateSection(),
             $this->prdTemplateSection(),
@@ -198,7 +217,7 @@ class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
             $this->safetySection(),
         ];
 
-        return implode("\n\n", $sections);
+        return implode("\n\n", array_filter($sections, static fn (string $s): bool => $s !== ''));
     }
 
     protected function identitySection(): string
@@ -209,6 +228,38 @@ You are Vunnix, an AI development assistant for self-hosted GitLab.
 You help Product Managers plan features, Designers describe UI changes,
 and answer questions about codebases on GitLab.
 PROMPT;
+    }
+
+    /**
+     * Build project context section for the system prompt.
+     *
+     * Injects the primary project's name and GitLab project ID so the agent
+     * knows which project_id to use in tool calls without asking the user.
+     * Also includes any additional cross-project IDs (D28).
+     *
+     * Returns empty string when no project is set (filtered by buildSystemPrompt).
+     */
+    protected function projectContextSection(): string
+    {
+        if (! $this->project instanceof Project) {
+            return '';
+        }
+
+        $lines = [
+            '[Project Context]',
+            "Primary project: {$this->project->name} (GitLab project ID: {$this->project->gitlab_project_id})",
+            "When the user refers to \"this project\", \"the project\", or \"current project\", use project_id={$this->project->gitlab_project_id} in tool calls.",
+        ];
+
+        if ($this->additionalProjects !== []) {
+            $lines[] = '';
+            $lines[] = 'Additional projects in this conversation:';
+            foreach ($this->additionalProjects as $project) {
+                $lines[] = "- {$project->name} (GitLab project ID: {$project->gitlab_project_id})";
+            }
+        }
+
+        return implode("\n", $lines);
     }
 
     protected function capabilitiesSection(): string
