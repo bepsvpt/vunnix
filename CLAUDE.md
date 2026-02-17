@@ -26,7 +26,11 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 | `npm run test:coverage` | JS tests with coverage (text + HTML report in coverage/js/) |
 | `npm run dev` | Vite dev server only (frontend) |
 | `npm run build` | Production frontend build |
-| `composer analyse` | Run PHPStan static analysis |
+| `composer analyse` | Run PHPStan static analysis (level 8 + strict rules) |
+| `composer audit` | Scan PHP dependencies for known security vulnerabilities (built-in) |
+| `composer audit:all` | Scan both PHP and JS dependencies for known vulnerabilities |
+| `composer rector` | Run Rector in dry-run mode (preview changes without applying) |
+| `composer rector:fix` | Apply Rector auto-fixes (type declarations, dead code, code quality) |
 | `composer ide-helper:models` | Regenerate Eloquent model PHPDoc annotations (requires DB connection) |
 | `composer format` | Run Laravel Pint (auto-fix code style) |
 | `composer format:check` | Check code style without fixing (CI mode) |
@@ -184,6 +188,9 @@ Persistent lessons discovered during development. Write each as an actionable ru
 - **PHPStan 2.x removed `checkMissingIterableValueType` and `checkGenericClassInNonGenericObjectType` parameters:** These were deprecated and are now controlled by the level system. Using them in `phpstan.neon` causes "Unexpected item" errors. Only use `level:` to control strictness.
 - **Larastan 3.x doesn't resolve `casts()` method types — add `@return` array shape PHPDoc:** When models use the `casts()` method (Laravel 11+), Larastan can't infer cast types, breaking enum, Carbon, and relationship resolution. Add `@return array{column: 'cast_type'}` PHPDoc with string literal values (e.g., `'App\Enums\TaskStatus'`, `'datetime'`, `'array'`). Without this, all cast columns appear as `string` at level 2+. See [larastan#2387](https://github.com/larastan/larastan/issues/2387).
 - **Eloquent relationship methods need generic `@return` PHPDoc for PHPStan level 2+:** Without explicit generics, `$model->relation->property` resolves relationship as `Model` instead of the concrete model. Add `/** @return BelongsTo<Project, $this> */` (or `HasOne`, `HasMany`, `BelongsToMany`) above each relationship method. This enables proper type inference when accessing relationship properties across files.
+- **PHPStan `--generate-baseline` does not add the `includes` directive:** Running `phpstan --generate-baseline` creates `phpstan-baseline.neon` but does NOT add `includes: [phpstan-baseline.neon]` to `phpstan.neon.dist`. You must manually add the `includes` section. Without it, the baseline is silently ignored and all baselined errors still appear.
+- **Rector must run before Pint:** Rector's code transformations (type declarations, dead code removal, etc.) may produce formatting that doesn't match Pint's rules. Always run `composer rector:fix` followed by `composer format` to normalize style.
+- **PHPStan strict-rules `staticMethod.dynamicCall` is a Larastan false positive:** Eloquent's `__callStatic` forwarding (`Model::where()`, `Model::pluck()`, etc.) triggers "Dynamic call to static method" errors under strict-rules. Suppress with `identifier: staticMethod.dynamicCall` in `phpstan.neon.dist` — these are valid at runtime.
 - **PostgreSQL 18 Docker mount path changed from `/var/lib/postgresql/data` to `/var/lib/postgresql`:** PG 18 Docker images use version-specific PGDATA subdirectories (e.g., `/var/lib/postgresql/18/docker`). Mount the volume at `/var/lib/postgresql` (not `/data`) so pg_upgrade can work across versions. Mounting at the old path causes PG 18 to refuse to start with an error about "unused mount/volume".
 
 ## Key Files
