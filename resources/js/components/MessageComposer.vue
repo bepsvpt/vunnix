@@ -13,6 +13,7 @@ const emit = defineEmits<{
     send: [content: string];
 }>();
 const input = ref('');
+const composing = ref(false);
 
 function handleSubmit() {
     const trimmed = input.value.trim();
@@ -22,8 +23,21 @@ function handleSubmit() {
     input.value = '';
 }
 
+function handleCompositionStart() {
+    composing.value = true;
+}
+
+function handleCompositionEnd() {
+    // Chrome fires compositionend BEFORE the final keydown Enter,
+    // so isComposing is already false when keydown runs. Delay clearing
+    // the flag past the keydown event to prevent accidental submission.
+    requestAnimationFrame(() => {
+        composing.value = false;
+    });
+}
+
 function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing && !composing.value) {
         event.preventDefault();
         handleSubmit();
     }
@@ -42,6 +56,8 @@ function handleKeydown(event: KeyboardEvent) {
             class="flex-1 resize-none rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-4 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
             placeholder="Type a message…"
             @keydown="handleKeydown"
+            @compositionstart="handleCompositionStart"
+            @compositionend="handleCompositionEnd"
         />
         <button
             type="submit"

@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import MessageComposer from './MessageComposer.vue';
 
 function mountComposer(props: Record<string, unknown> = {}) {
@@ -61,10 +61,37 @@ describe('messageComposer', () => {
         expect(wrapper.emitted('send')).toBeUndefined();
     });
 
-    it('does not emit send on Enter during IME composition', async () => {
+    it('does not emit send on Enter during IME composition (isComposing)', async () => {
         const wrapper = mountComposer();
         await wrapper.find('textarea').setValue('你');
         await wrapper.find('textarea').trigger('keydown', { key: 'Enter', isComposing: true });
         expect(wrapper.emitted('send')).toBeUndefined();
+    });
+
+    it('does not emit send on Enter after compositionend (Chrome event order)', async () => {
+        vi.useFakeTimers();
+        const wrapper = mountComposer();
+        const textarea = wrapper.find('textarea');
+        await textarea.setValue('你好');
+        // Chrome fires: compositionstart → compositionend → keydown (isComposing: false)
+        await textarea.trigger('compositionstart');
+        await textarea.trigger('compositionend');
+        await textarea.trigger('keydown', { key: 'Enter', isComposing: false });
+        expect(wrapper.emitted('send')).toBeUndefined();
+        vi.useRealTimers();
+    });
+
+    it('allows send on Enter after composition fully completes', async () => {
+        vi.useFakeTimers();
+        const wrapper = mountComposer();
+        const textarea = wrapper.find('textarea');
+        await textarea.setValue('你好');
+        await textarea.trigger('compositionstart');
+        await textarea.trigger('compositionend');
+        // Advance past the requestAnimationFrame that clears the composing flag
+        vi.runAllTimers();
+        await textarea.trigger('keydown', { key: 'Enter', isComposing: false });
+        expect(wrapper.emitted('send')).toHaveLength(1);
+        vi.useRealTimers();
     });
 });
