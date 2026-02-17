@@ -8,6 +8,7 @@ use App\Models\Message;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\CursorPaginator;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
 use Laravel\Ai\Responses\StreamableAgentResponse;
 
@@ -121,6 +122,10 @@ class ConversationService
         if ($additionalProjects !== []) {
             $agent->setAdditionalProjects($additionalProjects);
         }
+
+        // Make conversation ID available to tools (e.g., DispatchAction) via Context.
+        // The AI cannot know the real conversation UUID, so we resolve it server-side.
+        Context::add('vunnix_conversation_id', $conversation->id);
 
         $agent->continue($conversation->id, $user);
 

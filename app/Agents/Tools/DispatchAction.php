@@ -12,6 +12,7 @@ use App\Services\ProjectAccessChecker;
 use App\Services\TaskDispatcher;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
@@ -91,10 +92,6 @@ class DispatchAction implements Tool
             'existing_mr_iid' => $schema
                 ->integer()
                 ->description('Existing MR IID to push corrections to (for designer iteration flow). When set, the executor pushes to the same branch and updates the existing MR instead of creating a new one.'),
-            'conversation_id' => $schema
-                ->string()
-                ->description('The conversation ID this action was dispatched from.')
-                ->required(),
         ];
     }
 
@@ -136,7 +133,10 @@ class DispatchAction implements Tool
         // 5. Create the task
         $taskType = self::ACTION_TYPE_MAP[$actionType];
         $title = (string) $request->string('title');
-        $conversationId = (string) $request->string('conversation_id');
+
+        // Resolve conversation ID from server-side Context — never trust the AI's value
+        // (the AI doesn't know the real UUID and fabricates placeholders like "conv_123456")
+        $conversationId = (string) Context::get('vunnix_conversation_id', '');
 
         $taskData = [
             'type' => $taskType,

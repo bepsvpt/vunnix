@@ -377,7 +377,7 @@ The frontend renders this as a structured preview card with Confirm/Cancel butto
 4. Never dispatch an action without explicit user confirmation
 
 **Authentication:**
-The DispatchAction tool automatically resolves the authenticated user from the session. Do NOT pass user_id — it is resolved server-side for security. You only need to provide the conversation_id.
+The DispatchAction tool automatically resolves the authenticated user and conversation context from the server session. Do NOT pass user_id or conversation_id — both are resolved server-side for security.
 
 **Permission handling:**
 The DispatchAction tool checks the user's `chat.dispatch_task` permission automatically.

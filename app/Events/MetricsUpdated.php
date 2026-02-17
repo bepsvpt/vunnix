@@ -46,4 +46,15 @@ class MetricsUpdated implements ShouldBroadcast
     {
         return 'metrics.updated';
     }
+
+    /**
+     * Route the broadcast to the vunnix-server queue.
+     *
+     * Without this, broadcasts go to the 'default' queue which has no worker
+     * in Docker (D134 queue topology uses vunnix-server and vunnix-runner-*).
+     */
+    public function broadcastQueue(): string
+    {
+        return 'vunnix-server';
+    }
 }

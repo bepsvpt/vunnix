@@ -36,11 +36,11 @@ it('defines the expected schema parameters', function (): void {
         'target_branch',
         'assignee_id',
         'labels',
-        'conversation_id',
     ]);
 
-    // user_id was removed — authenticated user is resolved from session
+    // user_id and conversation_id are resolved server-side, not from AI input
     expect($params)->not->toHaveKey('user_id');
+    expect($params)->not->toHaveKey('conversation_id');
 });
 
 // ─── Handle — access denied ────────────────────────────────────

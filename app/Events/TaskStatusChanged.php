@@ -64,6 +64,17 @@ class TaskStatusChanged implements ShouldBroadcast
     }
 
     /**
+     * Route the broadcast to the vunnix-server queue.
+     *
+     * Without this, broadcasts go to the 'default' queue which has no worker
+     * in Docker (D134 queue topology uses vunnix-server and vunnix-runner-*).
+     */
+    public function broadcastQueue(): string
+    {
+        return 'vunnix-server';
+    }
+
+    /**
      * Build result card data from the task result, based on task type.
      *
      * @return array<string, mixed>

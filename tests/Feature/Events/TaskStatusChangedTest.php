@@ -49,6 +49,14 @@ test('TaskStatusChanged event name is task.status.changed', function (): void {
     expect($event->broadcastAs())->toBe('task.status.changed');
 });
 
+test('TaskStatusChanged broadcasts on vunnix-server queue', function (): void {
+    $task = Task::factory()->create();
+
+    $event = new TaskStatusChanged($task);
+
+    expect($event->broadcastQueue())->toBe('vunnix-server');
+});
+
 // -- T70: Result card data in broadcast payload --
 
 test('includes result_data in broadcast payload for completed feature_dev task', function (): void {

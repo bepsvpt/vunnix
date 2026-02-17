@@ -28,3 +28,9 @@ test('MetricsUpdated has the correct broadcast event name', function (): void {
 
     expect($event->broadcastAs())->toBe('metrics.updated');
 });
+
+test('MetricsUpdated broadcasts on vunnix-server queue', function (): void {
+    $event = new MetricsUpdated(projectId: 10, data: []);
+
+    expect($event->broadcastQueue())->toBe('vunnix-server');
+});
