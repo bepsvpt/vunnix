@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { describe, expect, it } from 'vitest';
 import CrossProjectWarningDialog from './CrossProjectWarningDialog.vue';
 
 function mountDialog(props = {}) {
@@ -12,7 +12,7 @@ function mountDialog(props = {}) {
     });
 }
 
-describe('CrossProjectWarningDialog', () => {
+describe('crossProjectWarningDialog', () => {
     it('renders warning title and project names', () => {
         const wrapper = mountDialog();
 
@@ -37,7 +37,7 @@ describe('CrossProjectWarningDialog', () => {
     it('emits confirm event when Continue is clicked', async () => {
         const wrapper = mountDialog();
 
-        const continueBtn = wrapper.findAll('button').find((b) => b.text() === 'Continue');
+        const continueBtn = wrapper.findAll('button').find(b => b.text() === 'Continue');
         await continueBtn.trigger('click');
 
         expect(wrapper.emitted('confirm')).toBeTruthy();
@@ -47,7 +47,7 @@ describe('CrossProjectWarningDialog', () => {
     it('emits cancel event when Cancel is clicked', async () => {
         const wrapper = mountDialog();
 
-        const cancelBtn = wrapper.findAll('button').find((b) => b.text() === 'Cancel');
+        const cancelBtn = wrapper.findAll('button').find(b => b.text() === 'Cancel');
         await cancelBtn.trigger('click');
 
         expect(wrapper.emitted('cancel')).toBeTruthy();
@@ -72,7 +72,7 @@ describe('CrossProjectWarningDialog', () => {
     it('uses Continue button with amber styling (not primary)', () => {
         const wrapper = mountDialog();
 
-        const continueBtn = wrapper.findAll('button').find((b) => b.text() === 'Continue');
+        const continueBtn = wrapper.findAll('button').find(b => b.text() === 'Continue');
         expect(continueBtn.classes()).toContain('bg-amber-600');
     });
 

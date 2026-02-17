@@ -1,6 +1,6 @@
+import axios from 'axios';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import axios from 'axios';
 
 export const useAdminStore = defineStore('admin', () => {
     const projects = ref([]);
@@ -13,7 +13,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.get('/api/v1/admin/projects');
             projects.value = data.data;
-        } catch (e) {
+        } catch {
             error.value = 'Failed to load projects.';
         } finally {
             loading.value = false;
@@ -24,7 +24,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.post(`/api/v1/admin/projects/${projectId}/enable`);
             if (data.success && data.data) {
-                const idx = projects.value.findIndex((p) => p.id === projectId);
+                const idx = projects.value.findIndex(p => p.id === projectId);
                 if (idx !== -1) {
                     projects.value[idx] = data.data;
                 }
@@ -40,7 +40,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.post(`/api/v1/admin/projects/${projectId}/disable`);
             if (data.success && data.data) {
-                const idx = projects.value.findIndex((p) => p.id === projectId);
+                const idx = projects.value.findIndex(p => p.id === projectId);
                 if (idx !== -1) {
                     projects.value[idx] = data.data;
                 }
@@ -67,7 +67,7 @@ export const useAdminStore = defineStore('admin', () => {
             const params = projectId ? { project_id: projectId } : {};
             const { data } = await axios.get('/api/v1/admin/roles', { params });
             roles.value = data.data;
-        } catch (e) {
+        } catch {
             rolesError.value = 'Failed to load roles.';
         } finally {
             rolesLoading.value = false;
@@ -78,7 +78,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.get('/api/v1/admin/permissions');
             permissions.value = data.data;
-        } catch (e) {
+        } catch {
             // Permissions are supplementary — don't block on error
         }
     }
@@ -99,8 +99,9 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.put(`/api/v1/admin/roles/${roleId}`, payload);
             if (data.success) {
-                const idx = roles.value.findIndex((r) => r.id === roleId);
-                if (idx !== -1) roles.value[idx] = data.data;
+                const idx = roles.value.findIndex(r => r.id === roleId);
+                if (idx !== -1)
+                    roles.value[idx] = data.data;
             }
             return { success: true };
         } catch (e) {
@@ -112,7 +113,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.delete(`/api/v1/admin/roles/${roleId}`);
             if (data.success) {
-                roles.value = roles.value.filter((r) => r.id !== roleId);
+                roles.value = roles.value.filter(r => r.id !== roleId);
             }
             return { success: true };
         } catch (e) {
@@ -125,7 +126,7 @@ export const useAdminStore = defineStore('admin', () => {
             const params = projectId ? { project_id: projectId } : {};
             const { data } = await axios.get('/api/v1/admin/role-assignments', { params });
             roleAssignments.value = data.data;
-        } catch (e) {
+        } catch {
             rolesError.value = 'Failed to load role assignments.';
         }
     }
@@ -152,7 +153,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.get('/api/v1/admin/users');
             users.value = data.data;
-        } catch (e) {
+        } catch {
             // Users list is supplementary
         }
     }
@@ -172,7 +173,7 @@ export const useAdminStore = defineStore('admin', () => {
             settings.value = data.data;
             apiKeyConfigured.value = data.api_key_configured;
             settingsDefaults.value = data.defaults;
-        } catch (e) {
+        } catch {
             settingsError.value = 'Failed to load settings.';
         } finally {
             settingsLoading.value = false;
@@ -183,7 +184,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const response = await axios.post('/api/v1/admin/settings/test-webhook', {
                 webhook_url: webhookUrl,
-                platform: platform,
+                platform,
             });
             return response.data;
         } catch (error) {
@@ -219,7 +220,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.get(`/api/v1/admin/projects/${projectId}/config`);
             projectConfig.value = data.data;
-        } catch (e) {
+        } catch {
             projectConfigError.value = 'Failed to load project configuration.';
         } finally {
             projectConfigLoading.value = false;
@@ -256,7 +257,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.get(`/api/v1/admin/projects/${projectId}/prd-template`);
             prdTemplate.value = data.data;
-        } catch (e) {
+        } catch {
             prdTemplateError.value = 'Failed to load PRD template.';
         } finally {
             prdTemplateLoading.value = false;
@@ -285,7 +286,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.get('/api/v1/admin/prd-template');
             globalPrdTemplate.value = data.data;
-        } catch (e) {
+        } catch {
             // Supplementary — don't block
         } finally {
             globalPrdTemplateLoading.value = false;
@@ -320,7 +321,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.get('/api/v1/dashboard/cost-alerts');
             costAlerts.value = data.data;
-        } catch (e) {
+        } catch {
             costAlertsError.value = 'Failed to load cost alerts.';
         } finally {
             costAlertsLoading.value = false;
@@ -330,7 +331,7 @@ export const useAdminStore = defineStore('admin', () => {
     async function acknowledgeCostAlert(alertId) {
         try {
             await axios.patch(`/api/v1/dashboard/cost-alerts/${alertId}/acknowledge`);
-            costAlerts.value = costAlerts.value.filter((a) => a.id !== alertId);
+            costAlerts.value = costAlerts.value.filter(a => a.id !== alertId);
             return { success: true };
         } catch (e) {
             return { success: false, error: e.response?.data?.error || 'Failed to acknowledge alert.' };
@@ -348,7 +349,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.get('/api/v1/dashboard/overreliance-alerts');
             overrelianceAlerts.value = data.data;
-        } catch (e) {
+        } catch {
             overrelianceAlertsError.value = 'Failed to load over-reliance alerts.';
         } finally {
             overrelianceAlertsLoading.value = false;
@@ -358,7 +359,7 @@ export const useAdminStore = defineStore('admin', () => {
     async function acknowledgeOverrelianceAlert(alertId) {
         try {
             await axios.patch(`/api/v1/dashboard/overreliance-alerts/${alertId}/acknowledge`);
-            overrelianceAlerts.value = overrelianceAlerts.value.filter((a) => a.id !== alertId);
+            overrelianceAlerts.value = overrelianceAlerts.value.filter(a => a.id !== alertId);
             return { success: true };
         } catch (e) {
             return { success: false, error: e.response?.data?.error || 'Failed to acknowledge alert.' };
@@ -388,7 +389,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.get('/api/v1/admin/dead-letter', { params: filters });
             deadLetterEntries.value = data.data;
-        } catch (e) {
+        } catch {
             deadLetterError.value = 'Failed to load dead letter queue.';
         } finally {
             deadLetterLoading.value = false;
@@ -400,7 +401,7 @@ export const useAdminStore = defineStore('admin', () => {
         try {
             const { data } = await axios.get(`/api/v1/admin/dead-letter/${entryId}`);
             deadLetterDetail.value = data.data;
-        } catch (e) {
+        } catch {
             deadLetterError.value = 'Failed to load entry details.';
         } finally {
             deadLetterDetailLoading.value = false;

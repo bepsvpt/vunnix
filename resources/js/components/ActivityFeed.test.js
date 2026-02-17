@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
-import ActivityFeed from './ActivityFeed.vue';
-import { useDashboardStore } from '@/stores/dashboard';
 import axios from 'axios';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useDashboardStore } from '@/stores/dashboard';
+import ActivityFeed from './ActivityFeed.vue';
 
 vi.mock('axios');
 
@@ -17,7 +17,7 @@ function mountFeed() {
     });
 }
 
-describe('ActivityFeed', () => {
+describe('activityFeed', () => {
     beforeEach(() => {
         pinia = createPinia();
         setActivePinia(pinia);

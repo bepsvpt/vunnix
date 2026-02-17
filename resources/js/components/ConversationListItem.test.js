@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { describe, expect, it } from 'vitest';
 import ConversationListItem from './ConversationListItem.vue';
 
 function makeConversation(overrides = {}) {
@@ -20,7 +20,7 @@ function makeConversation(overrides = {}) {
     };
 }
 
-describe('ConversationListItem', () => {
+describe('conversationListItem', () => {
     it('renders conversation title', () => {
         const wrapper = mount(ConversationListItem, {
             props: { conversation: makeConversation() },

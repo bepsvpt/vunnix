@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import AdminPage from '@/pages/AdminPage.vue';
 import ChatPage from '@/pages/ChatPage.vue';
 import DashboardPage from '@/pages/DashboardPage.vue';
-import AdminPage from '@/pages/AdminPage.vue';
+import { useAuthStore } from '@/stores/auth';
 
 const routes = [
     { path: '/', redirect: '/chat' },
@@ -19,7 +19,7 @@ const router = createRouter({
 // Auth guard — redirects unauthenticated users to GitLab OAuth.
 // On first navigation, waits for fetchUser() to resolve before deciding.
 // Subsequent navigations use the cached auth state.
-router.beforeEach(async (to) => {
+router.beforeEach(async () => {
     const auth = useAuthStore();
 
     // If auth state is unknown (null), fetch user first

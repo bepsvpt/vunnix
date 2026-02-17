@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { describe, expect, it } from 'vitest';
 import ToolUseIndicators from './ToolUseIndicators.vue';
 
 function mountIndicators(toolCalls = []) {
@@ -8,7 +8,7 @@ function mountIndicators(toolCalls = []) {
     });
 }
 
-describe('ToolUseIndicators', () => {
+describe('toolUseIndicators', () => {
     it('renders nothing when toolCalls is empty', () => {
         const wrapper = mountIndicators([]);
         expect(wrapper.find('[data-testid="tool-use-indicators"]').exists()).toBe(false);

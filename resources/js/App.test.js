@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
+import axios from 'axios';
 import { createPinia, setActivePinia } from 'pinia';
-import { createRouter, createMemoryHistory } from 'vue-router';
-import App from './App.vue';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createMemoryHistory, createRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import App from './App.vue';
+import AdminPage from './pages/AdminPage.vue';
 import ChatPage from './pages/ChatPage.vue';
 import DashboardPage from './pages/DashboardPage.vue';
-import AdminPage from './pages/AdminPage.vue';
-import axios from 'axios';
 
 vi.mock('axios');
 
@@ -44,7 +44,7 @@ beforeEach(() => {
     });
 });
 
-describe('App', () => {
+describe('app', () => {
     it('mounts and renders navigation', async () => {
         const auth = useAuthStore();
         auth.setUser({ id: 1, name: 'Test User', username: 'testuser', avatar_url: null, projects: [] });

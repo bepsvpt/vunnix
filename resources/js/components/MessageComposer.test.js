@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { describe, expect, it } from 'vitest';
 import MessageComposer from './MessageComposer.vue';
 
 function mountComposer(props = {}) {
@@ -8,7 +8,7 @@ function mountComposer(props = {}) {
     });
 }
 
-describe('MessageComposer', () => {
+describe('messageComposer', () => {
     it('renders a textarea', () => {
         const wrapper = mountComposer();
         expect(wrapper.find('textarea').exists()).toBe(true);

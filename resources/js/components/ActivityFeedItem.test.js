@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it } from 'vitest';
 import ActivityFeedItem from './ActivityFeedItem.vue';
 
 function makeItem(overrides = {}) {
@@ -30,7 +30,7 @@ function mountItem(item) {
     });
 }
 
-describe('ActivityFeedItem', () => {
+describe('activityFeedItem', () => {
     beforeEach(() => {
         setActivePinia(createPinia());
     });

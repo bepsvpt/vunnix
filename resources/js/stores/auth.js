@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
 import axios from 'axios';
+import { defineStore } from 'pinia';
+import { computed, ref } from 'vue';
 
 export const useAuthStore = defineStore('auth', () => {
     // null = unknown (not yet checked), object = authenticated, false = not authenticated
@@ -20,7 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             const response = await axios.get('/api/v1/user');
             user.value = response.data.data;
-        } catch (error) {
+        } catch {
             user.value = false;
         } finally {
             loading.value = false;
@@ -52,9 +52,10 @@ export const useAuthStore = defineStore('auth', () => {
      * Check if the user has a specific permission on any of their projects.
      */
     function hasPermission(permissionName) {
-        if (!user.value || !user.value.projects) return false;
+        if (!user.value || !user.value.projects)
+            return false;
         return user.value.projects.some(
-            (project) => project.permissions.includes(permissionName)
+            project => project.permissions.includes(permissionName),
         );
     }
 
@@ -62,8 +63,9 @@ export const useAuthStore = defineStore('auth', () => {
      * Check if the user has a specific permission on a given project (by ID).
      */
     function hasProjectPermission(permissionName, projectId) {
-        if (!user.value || !user.value.projects) return false;
-        const project = user.value.projects.find((p) => p.id === projectId);
+        if (!user.value || !user.value.projects)
+            return false;
+        const project = user.value.projects.find(p => p.id === projectId);
         return project ? project.permissions.includes(permissionName) : false;
     }
 
@@ -71,7 +73,8 @@ export const useAuthStore = defineStore('auth', () => {
      * Get all projects the user has access to.
      */
     const projects = computed(() => {
-        if (!user.value || !user.value.projects) return [];
+        if (!user.value || !user.value.projects)
+            return [];
         return user.value.projects;
     });
 

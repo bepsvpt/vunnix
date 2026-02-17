@@ -21,7 +21,8 @@ export function useDashboardRealtime() {
             unsubscribe();
         }
 
-        if (!projects || projects.length === 0) return;
+        if (!projects || projects.length === 0)
+            return;
 
         const echo = getEcho();
         const store = useDashboardStore();

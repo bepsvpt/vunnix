@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import PinnedTaskBar from './PinnedTaskBar.vue';
 
 // Freeze time for elapsed timer tests
 const NOW = new Date('2026-02-15T12:05:00Z');
 
-describe('PinnedTaskBar', () => {
+describe('pinnedTaskBar', () => {
     beforeEach(() => {
         vi.useFakeTimers();
         vi.setSystemTime(NOW);

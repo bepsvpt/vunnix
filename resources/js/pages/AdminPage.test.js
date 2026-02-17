@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
-import AdminPage from './AdminPage.vue';
-import { useAuthStore } from '@/stores/auth';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAdminStore } from '@/stores/admin';
+import { useAuthStore } from '@/stores/auth';
+import AdminPage from './AdminPage.vue';
 
 vi.mock('axios');
 
-describe('AdminPage', () => {
+describe('adminPage', () => {
     let pinia;
 
     beforeEach(() => {

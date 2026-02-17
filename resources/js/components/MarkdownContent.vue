@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { getMarkdownRenderer, isHighlightReady, onHighlightLoaded } from '@/lib/markdown';
 
 const props = defineProps({
@@ -27,5 +27,5 @@ const rendered = computed(() => {
 </script>
 
 <template>
-  <div class="markdown-content" v-html="rendered" />
+    <div class="markdown-content" v-html="rendered" />
 </template>

@@ -1,12 +1,12 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
-import AdminProjectList from './AdminProjectList.vue';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAdminStore } from '@/stores/admin';
+import AdminProjectList from './AdminProjectList.vue';
 
 vi.mock('axios');
 
-describe('AdminProjectList — Configure button (T91)', () => {
+describe('adminProjectList — Configure button (T91)', () => {
     let pinia;
     let admin;
 

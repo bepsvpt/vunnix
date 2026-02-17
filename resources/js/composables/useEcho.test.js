@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { destroyEcho, getEcho } from './useEcho';
 
 // Use vi.hoisted() so mock variables survive vi.mock() hoisting
-const { MockEcho, mockPrivate, mockLeave } = vi.hoisted(() => {
+const { MockEcho } = vi.hoisted(() => {
     const mockPrivate = vi.fn().mockReturnValue({
         listen: vi.fn().mockReturnThis(),
         stopListening: vi.fn().mockReturnThis(),
@@ -20,8 +22,6 @@ vi.mock('pusher-js', () => {
 });
 
 vi.mock('laravel-echo', () => ({ default: MockEcho }));
-
-import { getEcho, destroyEcho } from './useEcho';
 
 describe('useEcho', () => {
     beforeEach(() => {
@@ -58,7 +58,7 @@ describe('useEcho', () => {
             expect.objectContaining({
                 broadcaster: 'reverb',
                 key: 'test-key',
-            })
+            }),
         );
     });
 

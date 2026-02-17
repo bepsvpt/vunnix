@@ -26,11 +26,12 @@ const indicators = computed(() =>
             emoji: display.emoji,
             text: context ? `${display.verb} ${context}` : `${display.verb}…`,
         };
-    })
+    }),
 );
 
 function formatContext(tool, input) {
-    if (!input) return '';
+    if (!input)
+        return '';
     switch (tool) {
         case 'BrowseRepoTree':
             return input.path ? `${input.path}…` : '';
@@ -53,20 +54,20 @@ function formatContext(tool, input) {
 </script>
 
 <template>
-  <div
-    v-if="indicators.length > 0"
-    data-testid="tool-use-indicators"
-    class="flex w-full justify-start"
-  >
-    <div class="max-w-[80%] space-y-1">
-      <div
-        v-for="indicator in indicators"
-        :key="indicator.id"
-        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 animate-pulse"
-      >
-        <span class="shrink-0">{{ indicator.emoji }}</span>
-        <span class="truncate">{{ indicator.text }}</span>
-      </div>
+    <div
+        v-if="indicators.length > 0"
+        data-testid="tool-use-indicators"
+        class="flex w-full justify-start"
+    >
+        <div class="max-w-[80%] space-y-1">
+            <div
+                v-for="indicator in indicators"
+                :key="indicator.id"
+                class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 animate-pulse"
+            >
+                <span class="shrink-0">{{ indicator.emoji }}</span>
+                <span class="truncate">{{ indicator.text }}</span>
+            </div>
+        </div>
     </div>
-  </div>
 </template>

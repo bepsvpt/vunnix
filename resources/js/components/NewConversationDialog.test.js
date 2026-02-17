@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
-import NewConversationDialog from './NewConversationDialog.vue';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '@/stores/auth';
+import NewConversationDialog from './NewConversationDialog.vue';
 
 let pinia;
 
@@ -25,7 +25,7 @@ function setUserWithProjects(projects) {
     auth.setUser({ id: 1, projects });
 }
 
-describe('NewConversationDialog', () => {
+describe('newConversationDialog', () => {
     it('renders dialog with title and project select', () => {
         setUserWithProjects([
             { id: 1, name: 'Project Alpha', permissions: ['chat.access'] },
@@ -62,7 +62,7 @@ describe('NewConversationDialog', () => {
 
         const wrapper = mountDialog();
 
-        expect(wrapper.text()).toContain("You don't have chat access to any projects.");
+        expect(wrapper.text()).toContain('You don\'t have chat access to any projects.');
     });
 
     it('disables Start Conversation button when no project is selected', () => {
@@ -72,7 +72,7 @@ describe('NewConversationDialog', () => {
 
         const wrapper = mountDialog();
 
-        const startBtn = wrapper.findAll('button').find((b) => b.text().includes('Start Conversation'));
+        const startBtn = wrapper.findAll('button').find(b => b.text().includes('Start Conversation'));
         expect(startBtn.attributes('disabled')).toBeDefined();
     });
 
@@ -85,7 +85,7 @@ describe('NewConversationDialog', () => {
 
         await wrapper.find('select').setValue(1);
 
-        const startBtn = wrapper.findAll('button').find((b) => b.text().includes('Start Conversation'));
+        const startBtn = wrapper.findAll('button').find(b => b.text().includes('Start Conversation'));
         expect(startBtn.attributes('disabled')).toBeUndefined();
     });
 
@@ -97,7 +97,7 @@ describe('NewConversationDialog', () => {
         const wrapper = mountDialog();
 
         await wrapper.find('select').setValue(42);
-        const startBtn = wrapper.findAll('button').find((b) => b.text().includes('Start Conversation'));
+        const startBtn = wrapper.findAll('button').find(b => b.text().includes('Start Conversation'));
         await startBtn.trigger('click');
 
         expect(wrapper.emitted('create')).toBeTruthy();
@@ -111,7 +111,7 @@ describe('NewConversationDialog', () => {
 
         const wrapper = mountDialog();
 
-        const cancelBtn = wrapper.findAll('button').find((b) => b.text() === 'Cancel');
+        const cancelBtn = wrapper.findAll('button').find(b => b.text() === 'Cancel');
         await cancelBtn.trigger('click');
 
         expect(wrapper.emitted('close')).toBeTruthy();
@@ -138,11 +138,11 @@ describe('NewConversationDialog', () => {
         const wrapper = mountDialog();
 
         await wrapper.find('select').setValue(1);
-        const startBtn = wrapper.findAll('button').find((b) => b.text().includes('Start Conversation'));
+        const startBtn = wrapper.findAll('button').find(b => b.text().includes('Start Conversation'));
         await startBtn.trigger('click');
 
         // After clicking, button should show "Creating..." and be disabled
-        const updatedBtn = wrapper.findAll('button').find((b) => b.text().includes('Creating...'));
+        const updatedBtn = wrapper.findAll('button').find(b => b.text().includes('Creating...'));
         expect(updatedBtn).toBeTruthy();
         expect(updatedBtn.attributes('disabled')).toBeDefined();
     });
@@ -155,7 +155,7 @@ describe('NewConversationDialog', () => {
         const wrapper = mountDialog();
 
         // Don't select any project, try to submit via keyboard or direct call
-        const startBtn = wrapper.findAll('button').find((b) => b.text().includes('Start Conversation'));
+        const startBtn = wrapper.findAll('button').find(b => b.text().includes('Start Conversation'));
         await startBtn.trigger('click');
 
         expect(wrapper.emitted('create')).toBeFalsy();

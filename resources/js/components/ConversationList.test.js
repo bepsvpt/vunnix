@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount, flushPromises } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
+import { flushPromises, mount } from '@vue/test-utils';
 import axios from 'axios';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useAuthStore } from '@/stores/auth';
+import { useConversationsStore } from '@/stores/conversations';
 import ConversationList from './ConversationList.vue';
 import ConversationListItem from './ConversationListItem.vue';
-import { useConversationsStore } from '@/stores/conversations';
-import { useAuthStore } from '@/stores/auth';
 
 vi.mock('axios');
 
@@ -47,7 +47,7 @@ function mountList() {
     });
 }
 
-describe('ConversationList', () => {
+describe('conversationList', () => {
     it('calls fetchConversations on mount', async () => {
         mountList();
         await flushPromises();
@@ -213,7 +213,7 @@ describe('ConversationList', () => {
         const wrapper = mountList();
         await flushPromises();
 
-        const archiveBtn = wrapper.findAll('button').find((b) => b.text() === 'Archived');
+        const archiveBtn = wrapper.findAll('button').find(b => b.text() === 'Archived');
         expect(archiveBtn).toBeTruthy();
     });
 });

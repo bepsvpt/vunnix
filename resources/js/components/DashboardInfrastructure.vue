@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted } from 'vue';
-import { useDashboardStore } from '@/stores/dashboard';
 import { useAdminStore } from '@/stores/admin';
+import { useDashboardStore } from '@/stores/dashboard';
 
 const dashboard = useDashboardStore();
 const admin = useAdminStore();
@@ -31,7 +31,7 @@ const infraTypes = ['container_health', 'cpu_usage', 'memory_usage', 'disk_usage
 
 const checkStatuses = computed(() => {
     return infraTypes.map((type) => {
-        const active = alerts.value.find((a) => a.alert_type === type);
+        const active = alerts.value.find(a => a.alert_type === type);
         return {
             type,
             label: typeLabels[type] || type,
@@ -49,103 +49,117 @@ async function handleAcknowledge(alertId) {
 </script>
 
 <template>
-  <div data-testid="dashboard-infrastructure">
-    <!-- Overall status banner -->
-    <div
-      v-if="status"
-      data-testid="infra-status-banner"
-      class="rounded-lg border p-4 mb-6"
-      :class="status.overall_status === 'healthy'
-        ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
-        : 'border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20'"
-    >
-      <div class="flex items-center gap-2">
-        <span
-          class="inline-block w-2.5 h-2.5 rounded-full"
-          :class="status.overall_status === 'healthy' ? 'bg-green-500' : 'bg-orange-500'"
-        />
-        <span class="text-sm font-medium" :class="status.overall_status === 'healthy'
-          ? 'text-green-800 dark:text-green-200'
-          : 'text-orange-800 dark:text-orange-200'"
-        >
-          {{ status.overall_status === 'healthy' ? 'All Systems Healthy' : `${status.active_alerts_count} Active Alert${status.active_alerts_count !== 1 ? 's' : ''}` }}
-        </span>
-      </div>
-    </div>
-
-    <!-- System checks grid -->
-    <div class="mb-6">
-      <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">System Checks</h3>
-      <div class="grid grid-cols-5 gap-3" data-testid="infra-checks-grid">
+    <div data-testid="dashboard-infrastructure">
+        <!-- Overall status banner -->
         <div
-          v-for="check in checkStatuses"
-          :key="check.type"
-          :data-testid="`infra-check-${check.type}`"
-          class="rounded-lg border p-3 text-center"
-          :class="check.status === 'ok'
-            ? 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800'
-            : 'border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20'"
+            v-if="status"
+            data-testid="infra-status-banner"
+            class="rounded-lg border p-4 mb-6"
+            :class="status.overall_status === 'healthy'
+                ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
+                : 'border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20'"
         >
-          <span
-            class="inline-block w-2 h-2 rounded-full mb-2"
-            :class="check.status === 'ok' ? 'bg-green-500' : 'bg-orange-500'"
-          />
-          <p class="text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ check.label }}</p>
-          <p class="text-xs mt-0.5" :class="check.status === 'ok'
-            ? 'text-green-600 dark:text-green-400'
-            : 'text-orange-600 dark:text-orange-400'"
-          >
-            {{ check.status === 'ok' ? 'OK' : 'Alert' }}
-          </p>
+            <div class="flex items-center gap-2">
+                <span
+                    class="inline-block w-2.5 h-2.5 rounded-full"
+                    :class="status.overall_status === 'healthy' ? 'bg-green-500' : 'bg-orange-500'"
+                />
+                <span
+                    class="text-sm font-medium" :class="status.overall_status === 'healthy'
+                        ? 'text-green-800 dark:text-green-200'
+                        : 'text-orange-800 dark:text-orange-200'"
+                >
+                    {{ status.overall_status === 'healthy' ? 'All Systems Healthy' : `${status.active_alerts_count} Active Alert${status.active_alerts_count !== 1 ? 's' : ''}` }}
+                </span>
+            </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Active alerts list -->
-    <div v-if="alerts.length > 0" data-testid="infra-alerts">
-      <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">Active Alerts</h3>
-      <div class="space-y-2">
+        <!-- System checks grid -->
+        <div class="mb-6">
+            <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
+                System Checks
+            </h3>
+            <div class="grid grid-cols-5 gap-3" data-testid="infra-checks-grid">
+                <div
+                    v-for="check in checkStatuses"
+                    :key="check.type"
+                    :data-testid="`infra-check-${check.type}`"
+                    class="rounded-lg border p-3 text-center"
+                    :class="check.status === 'ok'
+                        ? 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800'
+                        : 'border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20'"
+                >
+                    <span
+                        class="inline-block w-2 h-2 rounded-full mb-2"
+                        :class="check.status === 'ok' ? 'bg-green-500' : 'bg-orange-500'"
+                    />
+                    <p class="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ check.label }}
+                    </p>
+                    <p
+                        class="text-xs mt-0.5" :class="check.status === 'ok'
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-orange-600 dark:text-orange-400'"
+                    >
+                        {{ check.status === 'ok' ? 'OK' : 'Alert' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active alerts list -->
+        <div v-if="alerts.length > 0" data-testid="infra-alerts">
+            <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
+                Active Alerts
+            </h3>
+            <div class="space-y-2">
+                <div
+                    v-for="alert in alerts"
+                    :key="alert.id"
+                    :data-testid="`infra-alert-${alert.id}`"
+                    class="rounded-lg border p-3 flex items-start justify-between" :class="[severityColors[alert.severity] || severityColors.warning]"
+                >
+                    <div>
+                        <span class="text-xs font-semibold uppercase">{{ typeLabels[alert.alert_type] || alert.alert_type }}</span>
+                        <p class="text-sm mt-0.5">
+                            {{ alert.message }}
+                        </p>
+                        <p class="text-xs opacity-70 mt-1">
+                            {{ new Date(alert.created_at).toLocaleString() }}
+                        </p>
+                    </div>
+                    <button
+                        data-testid="acknowledge-btn"
+                        class="ml-3 flex-shrink-0 text-xs font-medium underline opacity-70 hover:opacity-100"
+                        @click="handleAcknowledge(alert.id)"
+                    >
+                        Dismiss
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- No alerts state -->
         <div
-          v-for="alert in alerts"
-          :key="alert.id"
-          :data-testid="`infra-alert-${alert.id}`"
-          :class="['rounded-lg border p-3 flex items-start justify-between', severityColors[alert.severity] || severityColors.warning]"
+            v-else-if="status"
+            data-testid="infra-no-alerts"
+            class="text-center text-zinc-400 dark:text-zinc-500 py-8"
         >
-          <div>
-            <span class="text-xs font-semibold uppercase">{{ typeLabels[alert.alert_type] || alert.alert_type }}</span>
-            <p class="text-sm mt-0.5">{{ alert.message }}</p>
-            <p class="text-xs opacity-70 mt-1">{{ new Date(alert.created_at).toLocaleString() }}</p>
-          </div>
-          <button
-            data-testid="acknowledge-btn"
-            class="ml-3 flex-shrink-0 text-xs font-medium underline opacity-70 hover:opacity-100"
-            @click="handleAcknowledge(alert.id)"
-          >
-            Dismiss
-          </button>
+            <p class="text-sm">
+                No active infrastructure alerts.
+            </p>
         </div>
-      </div>
-    </div>
 
-    <!-- No alerts state -->
-    <div
-      v-else-if="status"
-      data-testid="infra-no-alerts"
-      class="text-center text-zinc-400 dark:text-zinc-500 py-8"
-    >
-      <p class="text-sm">No active infrastructure alerts.</p>
+        <!-- Loading state (no status fetched yet) -->
+        <div
+            v-else
+            data-testid="infra-loading"
+            class="flex items-center justify-center py-12"
+        >
+            <svg class="animate-spin h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+        </div>
     </div>
-
-    <!-- Loading state (no status fetched yet) -->
-    <div
-      v-else
-      data-testid="infra-loading"
-      class="flex items-center justify-center py-12"
-    >
-      <svg class="animate-spin h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-      </svg>
-    </div>
-  </div>
 </template>

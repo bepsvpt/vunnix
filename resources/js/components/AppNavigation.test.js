@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
-import { createRouter, createMemoryHistory } from 'vue-router';
-import AppNavigation from './AppNavigation.vue';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { createMemoryHistory, createRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import AppNavigation from './AppNavigation.vue';
 
 let pinia;
 
@@ -32,7 +32,7 @@ beforeEach(() => {
     setActivePinia(pinia);
 });
 
-describe('AppNavigation', () => {
+describe('appNavigation', () => {
     it('renders brand name', async () => {
         const router = createTestRouter();
         router.push('/chat');

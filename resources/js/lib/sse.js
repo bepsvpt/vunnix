@@ -5,7 +5,7 @@
  * with ReadableStream to parse Server-Sent Events from any HTTP method.
  *
  * @param {Response} response - A fetch Response with a readable body stream
- * @param {Object} callbacks
+ * @param {object} callbacks
  * @param {function} callbacks.onEvent - Called with parsed JSON for each data line
  * @param {function} [callbacks.onDone] - Called when [DONE] marker is received
  * @param {function} [callbacks.onError] - Called with Error on failure
@@ -24,7 +24,8 @@ export async function streamSSE(response, { onEvent, onDone, onError }) {
     try {
         while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
+            if (done)
+                break;
 
             buffer += decoder.decode(value, { stream: true });
 
@@ -36,7 +37,8 @@ export async function streamSSE(response, { onEvent, onDone, onError }) {
             for (const part of parts) {
                 const lines = part.split('\n');
                 for (const line of lines) {
-                    if (!line.startsWith('data: ')) continue;
+                    if (!line.startsWith('data: '))
+                        continue;
 
                     const payload = line.slice(6);
 
@@ -59,7 +61,8 @@ export async function streamSSE(response, { onEvent, onDone, onError }) {
         if (buffer.trim()) {
             const lines = buffer.split('\n');
             for (const line of lines) {
-                if (!line.startsWith('data: ')) continue;
+                if (!line.startsWith('data: '))
+                    continue;
 
                 const payload = line.slice(6);
 

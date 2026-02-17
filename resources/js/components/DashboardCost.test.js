@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
-import DashboardCost from './DashboardCost.vue';
-import { useDashboardStore } from '@/stores/dashboard';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAdminStore } from '@/stores/admin';
+import { useDashboardStore } from '@/stores/dashboard';
+import DashboardCost from './DashboardCost.vue';
 
 vi.mock('axios', () => ({
     default: {
@@ -45,7 +45,7 @@ const sampleCost = {
     ],
 };
 
-describe('DashboardCost', () => {
+describe('dashboardCost', () => {
     beforeEach(() => {
         pinia = createPinia();
         setActivePinia(pinia);

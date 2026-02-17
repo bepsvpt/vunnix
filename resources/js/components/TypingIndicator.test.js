@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { describe, expect, it } from 'vitest';
 import TypingIndicator from './TypingIndicator.vue';
 
-describe('TypingIndicator', () => {
+describe('typingIndicator', () => {
     it('renders with data-testid for integration discovery', () => {
         const wrapper = mount(TypingIndicator);
         expect(wrapper.find('[data-testid="typing-indicator"]').exists()).toBe(true);

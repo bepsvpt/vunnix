@@ -1,12 +1,12 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
-import AdminProjectConfig from './AdminProjectConfig.vue';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAdminStore } from '@/stores/admin';
+import AdminProjectConfig from './AdminProjectConfig.vue';
 
 vi.mock('axios');
 
-describe('AdminProjectConfig', () => {
+describe('adminProjectConfig', () => {
     let pinia;
     let admin;
 

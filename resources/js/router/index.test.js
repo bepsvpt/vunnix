@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import router from './index.js';
 
-describe('Router', () => {
+describe('router', () => {
     it('uses history mode (no hash)', () => {
         // createWebHistory stores base as '' (root) — not hash-based
         expect(router.options.history.base).toBe('');

@@ -1,8 +1,8 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
 import axios from 'axios';
-import { streamSSE } from '@/lib/sse';
+import { defineStore } from 'pinia';
+import { computed, ref } from 'vue';
 import { getEcho } from '@/composables/useEcho';
+import { streamSSE } from '@/lib/sse';
 
 export const useConversationsStore = defineStore('conversations', () => {
     const conversations = ref([]);
@@ -40,20 +40,22 @@ export const useConversationsStore = defineStore('conversations', () => {
     const completedResults = ref([]);
 
     const selected = computed(() =>
-        conversations.value.find((c) => c.id === selectedId.value) || null
+        conversations.value.find(c => c.id === selectedId.value) || null,
     );
 
     // T69: Active tasks for the currently selected conversation (excludes terminal statuses)
     const activeTasksForConversation = computed(() => {
-        if (!selectedId.value) return [];
+        if (!selectedId.value)
+            return [];
         return [...activeTasks.value.values()].filter(
-            (t) => t.conversation_id === selectedId.value && !isTerminalStatus(t.status)
+            t => t.conversation_id === selectedId.value && !isTerminalStatus(t.status),
         );
     });
 
     // T70: Completed results for the currently selected conversation
     const completedResultsForConversation = computed(() => {
-        if (!selectedId.value) return [];
+        if (!selectedId.value)
+            return [];
         return completedResults.value.filter(r => r.conversation_id === selectedId.value);
     });
 
@@ -68,7 +70,8 @@ export const useConversationsStore = defineStore('conversations', () => {
     }
 
     function updateTaskStatus(taskId, statusData) {
-        if (!activeTasks.value.has(taskId)) return;
+        if (!activeTasks.value.has(taskId))
+            return;
         const updated = new Map(activeTasks.value);
         updated.set(taskId, { ...updated.get(taskId), ...statusData });
         activeTasks.value = updated;
@@ -116,13 +119,14 @@ export const useConversationsStore = defineStore('conversations', () => {
      */
     function parseTaskDispatchMessage(text) {
         const match = text.match(
-            /\[System: Task dispatched\] (.+?) "(.+?)" has been dispatched as Task #(\d+)/
+            /\[System: Task dispatched\] (.+?) "(.+?)" has been dispatched as Task #(\d+)/,
         );
-        if (!match) return null;
+        if (!match)
+            return null;
         return {
             typeLabel: match[1],
             title: match[2],
-            taskId: parseInt(match[3], 10),
+            taskId: Number.parseInt(match[3], 10),
         };
     }
 
@@ -148,7 +152,8 @@ export const useConversationsStore = defineStore('conversations', () => {
      * Listens on private channel `task.{id}` for `.task.status.changed` events.
      */
     function subscribeToTask(taskId) {
-        if (taskSubscriptions.value.has(taskId)) return;
+        if (taskSubscriptions.value.has(taskId))
+            return;
 
         const echo = getEcho();
         echo.private(`task.${taskId}`).listen('.task.status.changed', (event) => {
@@ -192,9 +197,12 @@ export const useConversationsStore = defineStore('conversations', () => {
         error.value = null;
         try {
             const params = { per_page: 25 };
-            if (projectFilter.value) params.project_id = projectFilter.value;
-            if (searchQuery.value) params.search = searchQuery.value;
-            if (showArchived.value) params.archived = 1;
+            if (projectFilter.value)
+                params.project_id = projectFilter.value;
+            if (searchQuery.value)
+                params.search = searchQuery.value;
+            if (showArchived.value)
+                params.archived = 1;
 
             const response = await axios.get('/api/v1/conversations', { params });
             conversations.value = response.data.data;
@@ -212,13 +220,17 @@ export const useConversationsStore = defineStore('conversations', () => {
      * Load the next page of conversations (append to list).
      */
     async function loadMore() {
-        if (!nextCursor.value || loading.value) return;
+        if (!nextCursor.value || loading.value)
+            return;
         loading.value = true;
         try {
             const params = { cursor: nextCursor.value, per_page: 25 };
-            if (projectFilter.value) params.project_id = projectFilter.value;
-            if (searchQuery.value) params.search = searchQuery.value;
-            if (showArchived.value) params.archived = 1;
+            if (projectFilter.value)
+                params.project_id = projectFilter.value;
+            if (searchQuery.value)
+                params.search = searchQuery.value;
+            if (showArchived.value)
+                params.archived = 1;
 
             const response = await axios.get('/api/v1/conversations', { params });
             conversations.value.push(...response.data.data);
@@ -237,7 +249,7 @@ export const useConversationsStore = defineStore('conversations', () => {
     async function toggleArchive(conversationId) {
         try {
             await axios.patch(`/api/v1/conversations/${conversationId}/archive`);
-            conversations.value = conversations.value.filter((c) => c.id !== conversationId);
+            conversations.value = conversations.value.filter(c => c.id !== conversationId);
             if (selectedId.value === conversationId) {
                 selectedId.value = null;
             }
@@ -286,16 +298,18 @@ export const useConversationsStore = defineStore('conversations', () => {
      */
     async function hydrateResultCards() {
         const systemResultMessages = messages.value.filter(
-            (m) => m.role === 'system' && m.content.includes('[System: Task result delivered]')
+            m => m.role === 'system' && m.content.includes('[System: Task result delivered]'),
         );
 
         for (const msg of systemResultMessages) {
             const match = msg.content.match(/Task #(\d+)/);
-            if (!match) continue;
-            const taskId = parseInt(match[1], 10);
+            if (!match)
+                continue;
+            const taskId = Number.parseInt(match[1], 10);
 
             // Skip if already hydrated
-            if (completedResults.value.some((r) => r.task_id === taskId)) continue;
+            if (completedResults.value.some(r => r.task_id === taskId))
+                continue;
 
             try {
                 const response = await axios.get(`/api/v1/tasks/${taskId}/view`);
@@ -329,13 +343,14 @@ export const useConversationsStore = defineStore('conversations', () => {
      * Send a user message to the selected conversation.
      */
     async function sendMessage(content) {
-        if (!selectedId.value) return;
+        if (!selectedId.value)
+            return;
         sending.value = true;
         messagesError.value = null;
         try {
             const response = await axios.post(
                 `/api/v1/conversations/${selectedId.value}/messages`,
-                { content }
+                { content },
             );
             messages.value.push(response.data.data);
         } catch (err) {
@@ -352,7 +367,8 @@ export const useConversationsStore = defineStore('conversations', () => {
      * connection resilience (the SDK persists the complete response server-side).
      */
     async function streamMessage(content) {
-        if (!selectedId.value) return;
+        if (!selectedId.value)
+            return;
         streaming.value = true;
         streamingContent.value = '';
         activeToolCalls.value = [];
@@ -382,7 +398,7 @@ export const useConversationsStore = defineStore('conversations', () => {
                         ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
                     },
                     body: JSON.stringify({ content }),
-                }
+                },
             );
 
             // Check response status before streaming
@@ -424,7 +440,7 @@ export const useConversationsStore = defineStore('conversations', () => {
                     }
                     if (event.type === 'tool_result') {
                         activeToolCalls.value = activeToolCalls.value.filter(
-                            (tc) => tc.tool !== event.tool
+                            tc => tc.tool !== event.tool,
                         );
                     }
                 },
@@ -506,7 +522,8 @@ export const useConversationsStore = defineStore('conversations', () => {
      * Sends a confirmation message to the AI, which will then call DispatchAction.
      */
     async function confirmAction() {
-        if (!pendingAction.value || !selectedId.value) return;
+        if (!pendingAction.value || !selectedId.value)
+            return;
         const action = pendingAction.value;
         pendingAction.value = null;
         await streamMessage(`Confirmed. Go ahead with: ${action.title}`);
@@ -517,7 +534,8 @@ export const useConversationsStore = defineStore('conversations', () => {
      * Sends a cancellation message to the AI.
      */
     function cancelAction() {
-        if (!pendingAction.value) return;
+        if (!pendingAction.value)
+            return;
         pendingAction.value = null;
         streamMessage('Cancel this action, I changed my mind.');
     }
@@ -530,10 +548,10 @@ export const useConversationsStore = defineStore('conversations', () => {
         try {
             const response = await axios.post(
                 `/api/v1/conversations/${conversationId}/projects`,
-                { project_id: projectId }
+                { project_id: projectId },
             );
             // Update conversation in list with new data
-            const idx = conversations.value.findIndex((c) => c.id === conversationId);
+            const idx = conversations.value.findIndex(c => c.id === conversationId);
             if (idx !== -1) {
                 conversations.value[idx] = { ...conversations.value[idx], ...response.data.data };
             }

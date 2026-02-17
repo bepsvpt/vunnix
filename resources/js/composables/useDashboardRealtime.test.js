@@ -1,8 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { setActivePinia, createPinia } from 'pinia';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { useDashboardStore } from '@/stores/dashboard';
+import { useDashboardRealtime } from './useDashboardRealtime';
 
 // Mock Echo (same pattern as useEcho.test.js)
-const { mockListen, mockStopListening, mockPrivate, mockLeave } = vi.hoisted(() => {
+const { mockListen, mockPrivate, mockLeave } = vi.hoisted(() => {
     const mockListen = vi.fn().mockReturnThis();
     const mockStopListening = vi.fn().mockReturnThis();
     const mockPrivate = vi.fn().mockReturnValue({
@@ -19,9 +22,6 @@ vi.mock('@/composables/useEcho', () => ({
         leave: mockLeave,
     }),
 }));
-
-import { useDashboardRealtime } from './useDashboardRealtime';
-import { useDashboardStore } from '@/stores/dashboard';
 
 describe('useDashboardRealtime', () => {
     beforeEach(() => {
@@ -54,7 +54,7 @@ describe('useDashboardRealtime', () => {
         subscribe([{ id: 10 }]);
 
         const listenCalls = mockListen.mock.calls;
-        const eventNames = listenCalls.map((c) => c[0]);
+        const eventNames = listenCalls.map(c => c[0]);
         expect(eventNames).toContain('.task.status.changed');
         expect(eventNames).toContain('.metrics.updated');
     });
@@ -65,7 +65,7 @@ describe('useDashboardRealtime', () => {
         subscribe([{ id: 10 }]);
 
         // Find the .task.status.changed handler
-        const activityCall = mockListen.mock.calls.find((c) => c[0] === '.task.status.changed');
+        const activityCall = mockListen.mock.calls.find(c => c[0] === '.task.status.changed');
         const handler = activityCall[1];
 
         handler({
@@ -87,7 +87,7 @@ describe('useDashboardRealtime', () => {
         subscribe([{ id: 10 }]);
 
         // Find the .metrics.updated handler
-        const metricsCall = mockListen.mock.calls.find((c) => c[0] === '.metrics.updated');
+        const metricsCall = mockListen.mock.calls.find(c => c[0] === '.metrics.updated');
         const handler = metricsCall[1];
 
         handler({

@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { setActivePinia, createPinia } from 'pinia';
-import { useAdminStore } from '@/stores/admin';
 import axios from 'axios';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useAdminStore } from '@/stores/admin';
 
 vi.mock('axios');
 
-describe('Admin Store — Settings (T90)', () => {
+describe('admin Store — Settings (T90)', () => {
     let store;
 
     beforeEach(() => {
@@ -57,7 +57,9 @@ describe('Admin Store — Settings (T90)', () => {
 
         it('sets settingsLoading during fetch', async () => {
             let resolvePromise;
-            axios.get.mockReturnValue(new Promise((resolve) => { resolvePromise = resolve; }));
+            axios.get.mockReturnValue(new Promise((resolve) => {
+                resolvePromise = resolve;
+            }));
 
             const fetchPromise = store.fetchSettings();
             expect(store.settingsLoading).toBe(true);

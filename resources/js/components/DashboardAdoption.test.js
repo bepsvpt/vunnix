@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
-import DashboardAdoption from './DashboardAdoption.vue';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useDashboardStore } from '@/stores/dashboard';
+import DashboardAdoption from './DashboardAdoption.vue';
 
 vi.mock('axios', () => ({
     default: {
@@ -35,7 +35,7 @@ const sampleAdoption = {
     ],
 };
 
-describe('DashboardAdoption', () => {
+describe('dashboardAdoption', () => {
     beforeEach(() => {
         pinia = createPinia();
         setActivePinia(pinia);

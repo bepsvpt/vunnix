@@ -15,30 +15,32 @@ const formattedTime = computed(() => {
 </script>
 
 <template>
-  <div
-    class="flex w-full"
-    :class="isUser ? 'justify-end' : 'justify-start'"
-  >
     <div
-      class="max-w-[80%] rounded-2xl px-4 py-3"
-      :class="isUser
-        ? 'bg-blue-600 text-white rounded-br-md'
-        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-bl-md'"
-      :data-role="message.role"
+        class="flex w-full"
+        :class="isUser ? 'justify-end' : 'justify-start'"
     >
-      <!-- User messages: plain text -->
-      <p v-if="isUser" class="text-sm whitespace-pre-wrap break-words">{{ message.content }}</p>
+        <div
+            class="max-w-[80%] rounded-2xl px-4 py-3"
+            :class="isUser
+                ? 'bg-blue-600 text-white rounded-br-md'
+                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-bl-md'"
+            :data-role="message.role"
+        >
+            <!-- User messages: plain text -->
+            <p v-if="isUser" class="text-sm whitespace-pre-wrap break-words">
+                {{ message.content }}
+            </p>
 
-      <!-- Assistant messages: rendered markdown -->
-      <MarkdownContent v-else :content="message.content" />
+            <!-- Assistant messages: rendered markdown -->
+            <MarkdownContent v-else :content="message.content" />
 
-      <div
-        data-testid="timestamp"
-        class="mt-1 text-xs opacity-60"
-        :class="isUser ? 'text-right' : 'text-left'"
-      >
-        {{ formattedTime }}
-      </div>
+            <div
+                data-testid="timestamp"
+                class="mt-1 text-xs opacity-60"
+                :class="isUser ? 'text-right' : 'text-left'"
+            >
+                {{ formattedTime }}
+            </div>
+        </div>
     </div>
-  </div>
 </template>

@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it } from 'vitest';
 import ActionPreviewCard from './ActionPreviewCard.vue';
 
 function makeAction(overrides = {}) {
@@ -20,7 +20,7 @@ function mountCard(action) {
     });
 }
 
-describe('ActionPreviewCard', () => {
+describe('actionPreviewCard', () => {
     beforeEach(() => {
         setActivePinia(createPinia());
     });

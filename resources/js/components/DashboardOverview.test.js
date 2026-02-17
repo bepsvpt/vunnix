@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
-import DashboardOverview from './DashboardOverview.vue';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { useDashboardStore } from '@/stores/dashboard';
+import DashboardOverview from './DashboardOverview.vue';
 
 let pinia;
 
@@ -28,7 +28,7 @@ const sampleOverview = {
     recent_activity: new Date().toISOString(),
 };
 
-describe('DashboardOverview', () => {
+describe('dashboardOverview', () => {
     beforeEach(() => {
         pinia = createPinia();
         setActivePinia(pinia);

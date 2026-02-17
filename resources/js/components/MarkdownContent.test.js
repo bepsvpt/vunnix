@@ -1,14 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import MarkdownIt from 'markdown-it';
+import { describe, expect, it, vi } from 'vitest';
 import MarkdownContent from './MarkdownContent.vue';
 
 // Mock the markdown module to avoid async Shiki loading in tests
 const testMd = new MarkdownIt({ html: false, linkify: true, typographer: true });
 
 // Add link security rules (same as production)
-const defaultRender = testMd.renderer.rules.link_open ||
-    function (tokens, idx, options, env, self) {
+const defaultRender = testMd.renderer.rules.link_open
+    || function (tokens, idx, options, env, self) {
         return self.renderToken(tokens, idx, options);
     };
 testMd.renderer.rules.link_open = function (tokens, idx, options, env, self) {
@@ -23,7 +23,7 @@ vi.mock('@/lib/markdown', () => ({
     onHighlightLoaded: vi.fn(),
 }));
 
-describe('MarkdownContent', () => {
+describe('markdownContent', () => {
     function mountContent(content) {
         return mount(MarkdownContent, {
             props: { content },

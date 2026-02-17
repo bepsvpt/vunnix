@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { setActivePinia, createPinia } from 'pinia';
 import axios from 'axios';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAdminStore } from './admin';
 
 vi.mock('axios');
@@ -134,7 +134,9 @@ describe('admin store', () => {
 
         it('sets loading state', async () => {
             let resolvePromise;
-            axios.get.mockReturnValue(new Promise((r) => { resolvePromise = r; }));
+            axios.get.mockReturnValue(new Promise((r) => {
+                resolvePromise = r;
+            }));
 
             const promise = admin.fetchProjectConfig(42);
             expect(admin.projectConfigLoading).toBe(true);

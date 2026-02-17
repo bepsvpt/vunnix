@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
-import DashboardPMActivity from './DashboardPMActivity.vue';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useDashboardStore } from '@/stores/dashboard';
+import DashboardPMActivity from './DashboardPMActivity.vue';
 
 vi.mock('axios', () => ({
     default: {
@@ -27,7 +27,7 @@ const samplePMActivity = {
     avg_turns_per_prd: 7.3,
 };
 
-describe('DashboardPMActivity', () => {
+describe('dashboardPMActivity', () => {
     beforeEach(() => {
         pinia = createPinia();
         setActivePinia(pinia);

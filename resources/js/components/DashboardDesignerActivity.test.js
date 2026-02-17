@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
-import DashboardDesignerActivity from './DashboardDesignerActivity.vue';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useDashboardStore } from '@/stores/dashboard';
+import DashboardDesignerActivity from './DashboardDesignerActivity.vue';
 
 vi.mock('axios', () => ({
     default: {
@@ -27,7 +27,7 @@ const sampleDesignerActivity = {
     first_attempt_success_rate: 73.3,
 };
 
-describe('DashboardDesignerActivity', () => {
+describe('dashboardDesignerActivity', () => {
     beforeEach(() => {
         pinia = createPinia();
         setActivePinia(pinia);

@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { setActivePinia, createPinia } from 'pinia';
-import { useDashboardStore } from './dashboard';
 import axios from 'axios';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useDashboardStore } from './dashboard';
 
 vi.mock('axios');
 
@@ -146,7 +146,9 @@ describe('dashboard store', () => {
 
         it('sets isLoading during fetch', async () => {
             let resolvePromise;
-            axios.get.mockReturnValueOnce(new Promise((resolve) => { resolvePromise = resolve; }));
+            axios.get.mockReturnValueOnce(new Promise((resolve) => {
+                resolvePromise = resolve;
+            }));
 
             const store = useDashboardStore();
             const promise = store.fetchActivity();
@@ -217,7 +219,9 @@ describe('dashboard store', () => {
 
         it('sets pmActivityLoading during fetch', async () => {
             let resolvePromise;
-            axios.get.mockReturnValueOnce(new Promise((resolve) => { resolvePromise = resolve; }));
+            axios.get.mockReturnValueOnce(new Promise((resolve) => {
+                resolvePromise = resolve;
+            }));
 
             const store = useDashboardStore();
             const promise = store.fetchPMActivity();

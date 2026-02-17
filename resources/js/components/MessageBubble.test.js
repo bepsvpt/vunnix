@@ -1,11 +1,11 @@
-import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { describe, expect, it, vi } from 'vitest';
 import MessageBubble from './MessageBubble.vue';
 
 // Mock MarkdownContent since it's tested separately
 vi.mock('@/lib/markdown', () => ({
     getMarkdownRenderer: () => ({
-        render: (content) => `<p>${content}</p>`,
+        render: content => `<p>${content}</p>`,
     }),
     isHighlightReady: () => false,
     onHighlightLoaded: vi.fn(),
@@ -28,7 +28,7 @@ function mountBubble(message, props = {}) {
     });
 }
 
-describe('MessageBubble', () => {
+describe('messageBubble', () => {
     it('renders user message with user styling', () => {
         const wrapper = mountBubble(makeMessage({ role: 'user' }));
         expect(wrapper.find('[data-role="user"]').exists()).toBe(true);

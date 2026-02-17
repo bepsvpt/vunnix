@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
-import AdminDeadLetterQueue from './AdminDeadLetterQueue.vue';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAdminStore } from '@/stores/admin';
+import AdminDeadLetterQueue from './AdminDeadLetterQueue.vue';
 
 vi.mock('axios');
 
@@ -22,7 +22,7 @@ function makeEntry(overrides = {}) {
     };
 }
 
-describe('AdminDeadLetterQueue (T97)', () => {
+describe('adminDeadLetterQueue (T97)', () => {
     let pinia;
     let admin;
 

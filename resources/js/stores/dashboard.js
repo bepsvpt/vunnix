@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
 import axios from 'axios';
+import { defineStore } from 'pinia';
+import { computed, ref } from 'vue';
 
 export const useDashboardStore = defineStore('dashboard', () => {
     const activityFeed = ref([]);
@@ -41,7 +41,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
      * Prepends new items (most recent first). Caps at FEED_CAP.
      */
     function addActivityItem(item) {
-        const idx = activityFeed.value.findIndex((a) => a.task_id === item.task_id);
+        const idx = activityFeed.value.findIndex(a => a.task_id === item.task_id);
         if (idx !== -1) {
             activityFeed.value.splice(idx, 1);
         }
@@ -56,7 +56,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
      * Keeps one entry per project_id (latest wins).
      */
     function addMetricsUpdate(update) {
-        const idx = metricsUpdates.value.findIndex((m) => m.project_id === update.project_id);
+        const idx = metricsUpdates.value.findIndex(m => m.project_id === update.project_id);
         if (idx !== -1) {
             metricsUpdates.value.splice(idx, 1, update);
         } else {
@@ -70,10 +70,10 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const filteredFeed = computed(() => {
         let items = activityFeed.value;
         if (activeFilter.value) {
-            items = items.filter((i) => i.type === activeFilter.value);
+            items = items.filter(i => i.type === activeFilter.value);
         }
         if (projectFilter.value) {
-            items = items.filter((i) => i.project_id === projectFilter.value);
+            items = items.filter(i => i.project_id === projectFilter.value);
         }
         return items;
     });
@@ -85,7 +85,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
         try {
             const params = { per_page: 25 };
-            if (filter) params.type = filter;
+            if (filter)
+                params.type = filter;
 
             const response = await axios.get('/api/v1/activity', { params });
             activityFeed.value = response.data.data;
@@ -96,12 +97,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
     }
 
     async function loadMore() {
-        if (!nextCursor.value || isLoading.value) return;
+        if (!nextCursor.value || isLoading.value)
+            return;
         isLoading.value = true;
 
         try {
             const params = { per_page: 25, cursor: nextCursor.value };
-            if (activeFilter.value) params.type = activeFilter.value;
+            if (activeFilter.value)
+                params.type = activeFilter.value;
 
             const response = await axios.get('/api/v1/activity', { params });
             activityFeed.value.push(...response.data.data);
@@ -179,7 +182,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         try {
             const response = await axios.get('/api/v1/dashboard/cost-alerts');
             costAlerts.value = response.data.data;
-        } catch (e) {
+        } catch {
             // Supplementary — don't block dashboard
         }
     }
@@ -188,7 +191,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         try {
             const response = await axios.get('/api/v1/prompt-versions');
             promptVersions.value = response.data.data;
-        } catch (e) {
+        } catch {
             // Supplementary — don't block dashboard
         }
     }
@@ -202,7 +205,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
                 overall_status: infrastructureAlerts.value.length > 0 ? 'degraded' : 'healthy',
                 active_alerts_count: infrastructureAlerts.value.length,
             };
-        } catch (e) {
+        } catch {
             // Supplementary — don't block dashboard
         }
     }
@@ -211,7 +214,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         try {
             const response = await axios.get('/api/v1/dashboard/overreliance-alerts');
             overrelianceAlerts.value = response.data.data;
-        } catch (e) {
+        } catch {
             // Supplementary — don't block dashboard
         }
     }

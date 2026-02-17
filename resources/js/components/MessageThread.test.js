@@ -1,21 +1,21 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mount, flushPromises } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
+import { flushPromises, mount } from '@vue/test-utils';
 import axios from 'axios';
-import MessageThread from './MessageThread.vue';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useConversationsStore } from '@/stores/conversations';
+import ActionPreviewCard from './ActionPreviewCard.vue';
 import MessageBubble from './MessageBubble.vue';
 import MessageComposer from './MessageComposer.vue';
-import ActionPreviewCard from './ActionPreviewCard.vue';
+import MessageThread from './MessageThread.vue';
 import PinnedTaskBar from './PinnedTaskBar.vue';
 import ResultCard from './ResultCard.vue';
-import { useConversationsStore } from '@/stores/conversations';
 
 vi.mock('axios');
 
 // Mock markdown module to avoid Shiki async loading
 vi.mock('@/lib/markdown', () => ({
     getMarkdownRenderer: () => ({
-        render: (content) => `<p>${content}</p>`,
+        render: content => `<p>${content}</p>`,
     }),
     isHighlightReady: () => false,
     onHighlightLoaded: vi.fn(),
@@ -38,7 +38,7 @@ function mountThread() {
     });
 }
 
-describe('MessageThread', () => {
+describe('messageThread', () => {
     it('renders MessageBubble for each message', async () => {
         const store = useConversationsStore();
         store.messages = [

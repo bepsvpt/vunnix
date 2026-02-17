@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
-import DashboardEfficiency from './DashboardEfficiency.vue';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useDashboardStore } from '@/stores/dashboard';
+import DashboardEfficiency from './DashboardEfficiency.vue';
 
 vi.mock('axios', () => ({
     default: {
@@ -30,7 +30,7 @@ const sampleEfficiency = {
     },
 };
 
-describe('DashboardEfficiency', () => {
+describe('dashboardEfficiency', () => {
     beforeEach(() => {
         pinia = createPinia();
         setActivePinia(pinia);

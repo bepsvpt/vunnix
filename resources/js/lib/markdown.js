@@ -16,8 +16,8 @@ function createBaseInstance() {
     });
 
     // Open links in new tab with security attributes
-    const defaultRender = instance.renderer.rules.link_open ||
-        function (tokens, idx, options, env, self) {
+    const defaultRender = instance.renderer.rules.link_open
+        || function (tokens, idx, options, env, self) {
             return self.renderToken(tokens, idx, options);
         };
 
@@ -35,7 +35,8 @@ function createBaseInstance() {
  * Returns a promise that resolves when highlighting is ready.
  */
 function initShiki() {
-    if (shikiPromise) return shikiPromise;
+    if (shikiPromise)
+        return shikiPromise;
 
     shikiPromise = import('@shikijs/markdown-it').then(async ({ default: markdownItShiki }) => {
         const plugin = await markdownItShiki({
@@ -46,7 +47,8 @@ function initShiki() {
         });
         md.use(plugin);
         shikiReady = true;
-        if (onHighlightReady) onHighlightReady();
+        if (onHighlightReady)
+            onHighlightReady();
     }).catch(() => {
         // Shiki failed to load — code blocks stay as plain <pre><code>
     });

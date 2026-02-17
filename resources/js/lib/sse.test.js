@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { streamSSE } from './sse';
 
 /**
@@ -6,7 +6,7 @@ import { streamSSE } from './sse';
  * that emits the given SSE lines.
  */
 function mockSSEResponse(lines) {
-    const text = lines.join('\n') + '\n';
+    const text = `${lines.join('\n')}\n`;
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
         start(controller) {
@@ -62,7 +62,7 @@ describe('streamSSE', () => {
             '',
         ]);
 
-        await streamSSE(response, { onEvent: (event) => events.push(event) });
+        await streamSSE(response, { onEvent: event => events.push(event) });
 
         expect(events).toEqual([
             { type: 'stream_start' },
@@ -96,7 +96,7 @@ describe('streamSSE', () => {
             'data: [DONE]\n\n',
         ]);
 
-        await streamSSE(response, { onEvent: (event) => events.push(event) });
+        await streamSSE(response, { onEvent: event => events.push(event) });
 
         expect(events).toHaveLength(3);
         expect(events[0]).toEqual({ type: 'stream_start' });
@@ -146,7 +146,7 @@ describe('streamSSE', () => {
             '',
         ]);
 
-        await streamSSE(response, { onEvent: (event) => events.push(event) });
+        await streamSSE(response, { onEvent: event => events.push(event) });
 
         expect(events).toEqual([{ type: 'stream_start' }]);
     });
@@ -166,7 +166,7 @@ describe('streamSSE', () => {
         ]);
 
         await streamSSE(response, {
-            onEvent: (event) => events.push(event),
+            onEvent: event => events.push(event),
             onError,
         });
 

@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { setActivePinia, createPinia } from 'pinia';
-import DashboardQuality from './DashboardQuality.vue';
-import { useDashboardStore } from '@/stores/dashboard';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAdminStore } from '@/stores/admin';
+import { useDashboardStore } from '@/stores/dashboard';
+import DashboardQuality from './DashboardQuality.vue';
 
 vi.mock('axios', () => ({
     default: {
@@ -34,7 +34,7 @@ const sampleQuality = {
     avg_findings_per_review: 4.0,
 };
 
-describe('DashboardQuality', () => {
+describe('dashboardQuality', () => {
     beforeEach(() => {
         pinia = createPinia();
         setActivePinia(pinia);

@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { setActivePinia, createPinia } from 'pinia';
 import { flushPromises } from '@vue/test-utils';
 import axios from 'axios';
+import { createPinia, setActivePinia } from 'pinia';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useConversationsStore } from './conversations';
 
 vi.mock('axios');
@@ -201,7 +201,7 @@ describe('useConversationsStore', () => {
 
             axios.get.mockResolvedValue(makeApiResponse(
                 [makeConversation({ id: 'conv-2' })],
-                'cursor-def'
+                'cursor-def',
             ));
 
             await store.loadMore();
@@ -472,7 +472,7 @@ describe('useConversationsStore', () => {
 
             expect(axios.post).toHaveBeenCalledWith(
                 '/api/v1/conversations/conv-1/projects',
-                { project_id: 2 }
+                { project_id: 2 },
             );
             expect(store.conversations[0].additional_projects).toEqual([
                 { id: 2, name: 'New Project' },
@@ -489,7 +489,7 @@ describe('useConversationsStore', () => {
             store.conversations = [makeConversation({ id: 'conv-1' })];
 
             await expect(
-                store.addProjectToConversation('conv-1', 2)
+                store.addProjectToConversation('conv-1', 2),
             ).rejects.toBeTruthy();
             expect(store.error).toBe('Cross-project not allowed');
         });
@@ -501,7 +501,7 @@ describe('useConversationsStore', () => {
             store.conversations = [makeConversation({ id: 'conv-1' })];
 
             await expect(
-                store.addProjectToConversation('conv-1', 2)
+                store.addProjectToConversation('conv-1', 2),
             ).rejects.toBeTruthy();
             expect(store.error).toBe('Failed to add project');
         });
@@ -575,7 +575,9 @@ describe('useConversationsStore', () => {
 
         it('fetchMessages sets messagesLoading while fetching', async () => {
             let resolve;
-            axios.get.mockReturnValueOnce(new Promise((r) => { resolve = r; }));
+            axios.get.mockReturnValueOnce(new Promise((r) => {
+                resolve = r;
+            }));
 
             const store = useConversationsStore();
             const promise = store.fetchMessages(1);
@@ -626,7 +628,9 @@ describe('useConversationsStore', () => {
 
         it('sendMessage sets sending flag', async () => {
             let resolve;
-            axios.post.mockReturnValueOnce(new Promise((r) => { resolve = r; }));
+            axios.post.mockReturnValueOnce(new Promise((r) => {
+                resolve = r;
+            }));
 
             const store = useConversationsStore();
             store.selectedId = 1;
@@ -654,35 +658,35 @@ describe('useConversationsStore', () => {
         });
     });
 
+    function mockSSEFetch(events) {
+        const lines = events.map(e =>
+            typeof e === 'string' ? `data: ${e}\n\n` : `data: ${JSON.stringify(e)}\n\n`,
+        ).join('');
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+            start(controller) {
+                controller.enqueue(encoder.encode(lines));
+                controller.close();
+            },
+        });
+        return Promise.resolve(new Response(stream, {
+            status: 200,
+            headers: { 'Content-Type': 'text/event-stream' },
+        }));
+    }
+
+    function standardEvents(deltas = ['Hello', ' world']) {
+        return [
+            { type: 'stream_start' },
+            { type: 'text_start' },
+            ...deltas.map(d => ({ type: 'text_delta', delta: d })),
+            { type: 'text_end' },
+            { type: 'stream_end' },
+            '[DONE]',
+        ];
+    }
+
     describe('streamMessage', () => {
-        function mockSSEFetch(events) {
-            const lines = events.map((e) =>
-                typeof e === 'string' ? `data: ${e}\n\n` : `data: ${JSON.stringify(e)}\n\n`
-            ).join('');
-            const encoder = new TextEncoder();
-            const stream = new ReadableStream({
-                start(controller) {
-                    controller.enqueue(encoder.encode(lines));
-                    controller.close();
-                },
-            });
-            return Promise.resolve(new Response(stream, {
-                status: 200,
-                headers: { 'Content-Type': 'text/event-stream' },
-            }));
-        }
-
-        function standardEvents(deltas = ['Hello', ' world']) {
-            return [
-                { type: 'stream_start' },
-                { type: 'text_start' },
-                ...deltas.map((d) => ({ type: 'text_delta', delta: d })),
-                { type: 'text_end' },
-                { type: 'stream_end' },
-                '[DONE]',
-            ];
-        }
-
         beforeEach(() => {
             // Set up CSRF meta tag for fetch using safe DOM methods
             const meta = document.createElement('meta');
@@ -693,7 +697,8 @@ describe('useConversationsStore', () => {
 
         afterEach(() => {
             const meta = document.querySelector('meta[name="csrf-token"]');
-            if (meta) meta.remove();
+            if (meta)
+                meta.remove();
             vi.unstubAllGlobals();
         });
 
@@ -721,14 +726,16 @@ describe('useConversationsStore', () => {
             await store.streamMessage('Tell me something');
 
             // Last message should be the accumulated assistant response
-            const assistantMsg = store.messages.find((m) => m.role === 'assistant');
+            const assistantMsg = store.messages.find(m => m.role === 'assistant');
             expect(assistantMsg).toBeDefined();
             expect(assistantMsg.content).toBe('Hello world!');
         });
 
         it('sets streaming flag during SSE connection', async () => {
             let resolveStream;
-            vi.stubGlobal('fetch', vi.fn(() => new Promise((resolve) => { resolveStream = resolve; })));
+            vi.stubGlobal('fetch', vi.fn(() => new Promise((resolve) => {
+                resolveStream = resolve;
+            })));
 
             const store = useConversationsStore();
             store.selectedId = 'conv-1';
@@ -761,7 +768,9 @@ describe('useConversationsStore', () => {
             // Use chunked delivery to observe intermediate state
             let controller;
             const stream = new ReadableStream({
-                start(c) { controller = c; },
+                start(c) {
+                    controller = c;
+                },
             });
             const encoder = new TextEncoder();
 
@@ -769,7 +778,7 @@ describe('useConversationsStore', () => {
                 new Response(stream, {
                     status: 200,
                     headers: { 'Content-Type': 'text/event-stream' },
-                })
+                }),
             )));
 
             const store = useConversationsStore();
@@ -821,7 +830,7 @@ describe('useConversationsStore', () => {
                         'X-Requested-With': 'XMLHttpRequest',
                     }),
                     body: JSON.stringify({ content: 'Test message' }),
-                })
+                }),
             );
         });
 
@@ -852,7 +861,7 @@ describe('useConversationsStore', () => {
 
         it('sets messagesError on non-ok response', async () => {
             vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(
-                new Response('Forbidden', { status: 403 })
+                new Response('Forbidden', { status: 403 }),
             )));
 
             const store = useConversationsStore();
@@ -874,7 +883,7 @@ describe('useConversationsStore', () => {
 
             await store.streamMessage('Test');
 
-            const assistantMsg = store.messages.find((m) => m.role === 'assistant');
+            const assistantMsg = store.messages.find(m => m.role === 'assistant');
             expect(assistantMsg.content).toBe('Response text');
             // Should have an id (even if temporary) and created_at
             expect(assistantMsg.id).toBeDefined();
@@ -907,7 +916,9 @@ describe('useConversationsStore', () => {
         it('adds tool_call to activeToolCalls during streaming', async () => {
             let controller;
             const stream = new ReadableStream({
-                start(c) { controller = c; },
+                start(c) {
+                    controller = c;
+                },
             });
             const encoder = new TextEncoder();
 
@@ -915,7 +926,7 @@ describe('useConversationsStore', () => {
                 new Response(stream, {
                     status: 200,
                     headers: { 'Content-Type': 'text/event-stream' },
-                })
+                }),
             )));
 
             const store = useConversationsStore();
@@ -973,7 +984,7 @@ describe('useConversationsStore', () => {
                 new Response(failStream, {
                     status: 200,
                     headers: { 'Content-Type': 'text/event-stream' },
-                })
+                }),
             )));
 
             // Mock axios.get for the recovery re-fetch
@@ -1274,7 +1285,7 @@ describe('useConversationsStore', () => {
         });
     });
 
-    describe('Reverb channel subscription (T69)', () => {
+    describe('reverb channel subscription (T69)', () => {
         it('subscribeToTask subscribes to task.{id} channel', () => {
             const store = useConversationsStore();
             store.subscribeToTask(42);
@@ -1286,7 +1297,7 @@ describe('useConversationsStore', () => {
             store.subscribeToTask(42);
             expect(mockListenFn).toHaveBeenCalledWith(
                 '.task.status.changed',
-                expect.any(Function)
+                expect.any(Function),
             );
         });
 
