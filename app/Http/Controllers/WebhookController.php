@@ -129,21 +129,6 @@ class WebhookController extends Controller
             'object_kind' => $payload['object_kind'] ?? null,
         ]);
 
-        // Filter: Ignore push events for branches with open MRs.
-        // GitLab sends both push + MR update events when pushing to an MR branch.
-        // We only process the MR update event (auto_review), not the push (incremental_review).
-        if ($eventType === 'push' && $this->branchHasOpenMR($eventContext, $project)) {
-            Log::info('Webhook: ignoring push event for branch with open MR', [
-                'project_id' => $project->id,
-                'ref' => $eventContext['ref'] ?? 'unknown',
-            ]);
-
-            return response()->json([
-                'status' => 'ignored',
-                'reason' => 'Push event for branch with open MR (will be processed via MR update event)',
-            ]);
-        }
-
         $routingResult = $eventRouter->route($eventContext);
 
         // If the event was not routable (filtered, unsupported), return early
@@ -463,48 +448,6 @@ class WebhookController extends Controller
                 'project_id' => $project->id,
                 'error' => $e->getMessage(),
             ]);
-        }
-    }
-
-    /**
-     * Check if a push event's branch has an open merge request.
-     *
-     * Used to filter duplicate webhook events: GitLab sends both push + MR update
-     * when pushing to an MR branch. We ignore the push event since the MR update
-     * event provides better context (auto_review vs incremental_review).
-     *
-     * @param  array<string, mixed>  $eventContext
-     */
-    private function branchHasOpenMR(array $eventContext, Project $project): bool
-    {
-        $ref = $eventContext['ref'] ?? '';
-
-        // ref format: "refs/heads/branch-name"
-        if (! str_starts_with($ref, 'refs/heads/')) {
-            return false;
-        }
-
-        $branchName = substr($ref, 11); // Strip "refs/heads/"
-
-        // Check via GitLab API for open MRs on this branch
-        try {
-            $gitLabClient = app(GitLabClient::class);
-            $mrs = $gitLabClient->get("/projects/{$project->gitlab_project_id}/merge_requests", [ // @phpstan-ignore method.notFound (latent bug — get() doesn't exist, fails open via try/catch)
-                'source_branch' => $branchName,
-                'state' => 'opened',
-                'per_page' => 1,
-            ]);
-
-            return ! empty($mrs);
-        } catch (Throwable $e) {
-            Log::warning('Failed to check if branch has open MR via GitLab API', [
-                'project_id' => $project->id,
-                'branch' => $branchName,
-                'error' => $e->getMessage(),
-            ]);
-
-            // If API check fails, allow the push event through (fail open)
-            return false;
         }
     }
 }

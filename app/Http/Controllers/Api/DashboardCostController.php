@@ -131,34 +131,39 @@ class DashboardCostController extends Controller
             ->mapWithKeys(fn ($tokens, $type) => [$type => (int) $tokens])
             ->all();
 
-        $costPerType = Task::whereIn('project_id', $projectIds)
+        /** @var \Illuminate\Support\Collection<int, object{type: \App\Enums\TaskType, avg_cost: float, total_cost: float, task_count: int}> $costPerTypeResults */
+        $costPerTypeResults = Task::whereIn('project_id', $projectIds)
             ->where('status', TaskStatus::Completed)
             ->whereNotNull('cost')
             ->select('type', DB::raw('AVG(cost) as avg_cost'), DB::raw('SUM(cost) as total_cost'), DB::raw('COUNT(*) as task_count'))
             ->groupBy('type')
-            ->get()
+            ->get();
+
+        $costPerType = $costPerTypeResults
             ->mapWithKeys(fn ($row) => [
                 $row->type->value => [
-                    'avg_cost' => (float) round($row->avg_cost, 6), // @phpstan-ignore property.notFound (selectRaw virtual column)
-                    'total_cost' => (float) round($row->total_cost, 6), // @phpstan-ignore property.notFound
-                    'task_count' => (int) $row->task_count, // @phpstan-ignore property.notFound
+                    'avg_cost' => (float) round($row->avg_cost, 6),
+                    'total_cost' => (float) round($row->total_cost, 6),
+                    'task_count' => (int) $row->task_count,
                 ],
             ])
             ->all();
 
-        // @phpstan-ignore method.unresolvableReturnType, method.unresolvableReturnType, method.unresolvableReturnType
-        $costPerProject = Task::whereIn('project_id', $projectIds)
+        /** @var \Illuminate\Support\Collection<int, object{project_id: int, project_name: string, total_cost: float, task_count: int}> $costPerProjectResults */
+        $costPerProjectResults = Task::whereIn('project_id', $projectIds)
             ->where('status', TaskStatus::Completed)
             ->whereNotNull('cost')
             ->join('projects', 'tasks.project_id', '=', 'projects.id')
             ->select('projects.id as project_id', 'projects.name as project_name', DB::raw('SUM(tasks.cost) as total_cost'), DB::raw('COUNT(*) as task_count'))
             ->groupBy('projects.id', 'projects.name')
-            ->get()
-            ->map(fn ($row) => [ // @phpstan-ignore argument.unresolvableType (selectRaw virtual columns)
+            ->get();
+
+        $costPerProject = $costPerProjectResults
+            ->map(fn ($row) => [
                 'project_id' => (int) $row->project_id,
-                'project_name' => $row->project_name, // @phpstan-ignore property.notFound (join + selectRaw virtual column)
-                'total_cost' => (float) round($row->total_cost, 6), // @phpstan-ignore property.notFound
-                'task_count' => (int) $row->task_count, // @phpstan-ignore property.notFound
+                'project_name' => $row->project_name,
+                'total_cost' => (float) round($row->total_cost, 6),
+                'task_count' => (int) $row->task_count,
             ])
             ->values()
             ->all();
@@ -168,8 +173,8 @@ class DashboardCostController extends Controller
             ? "strftime('%Y-%m', created_at)"
             : "TO_CHAR(created_at, 'YYYY-MM')";
 
-        // @phpstan-ignore method.unresolvableReturnType, method.unresolvableReturnType, method.unresolvableReturnType
-        $monthlyTrend = Task::whereIn('project_id', $projectIds)
+        /** @var \Illuminate\Support\Collection<int, object{month: string, total_cost: float|null, total_tokens: int|null, task_count: int}> $monthlyResults */
+        $monthlyResults = Task::whereIn('project_id', $projectIds)
             ->whereIn('status', [TaskStatus::Completed, TaskStatus::Failed])
             ->where('created_at', '>=', now()->subMonths(12)->startOfMonth())
             ->select(
@@ -180,12 +185,14 @@ class DashboardCostController extends Controller
             )
             ->groupBy(DB::raw($monthExpr))
             ->orderBy('month')
-            ->get()
-            ->map(fn ($row) => [ // @phpstan-ignore argument.unresolvableType (selectRaw virtual columns)
-                'month' => $row->month, // @phpstan-ignore property.notFound (selectRaw virtual column)
+            ->get();
+
+        $monthlyTrend = $monthlyResults
+            ->map(fn ($row) => [
+                'month' => $row->month,
                 'total_cost' => (float) round($row->total_cost ?? 0, 6),
                 'total_tokens' => (int) ($row->total_tokens ?? 0),
-                'task_count' => (int) $row->task_count, // @phpstan-ignore property.notFound
+                'task_count' => (int) $row->task_count,
             ])
             ->values()
             ->all();

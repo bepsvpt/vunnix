@@ -26,27 +26,28 @@ class PromptVersionController extends Controller
 
         // Extract distinct prompt_version->skill values from completed tasks
         if ($driver === 'pgsql') {
-            $versions = Task::whereIn('project_id', $projectIds)
+            $query = Task::whereIn('project_id', $projectIds)
                 ->where('status', TaskStatus::Completed)
                 ->whereNotNull('prompt_version')
                 ->selectRaw("DISTINCT prompt_version->>'skill' as skill, prompt_version->>'claude_md' as claude_md, prompt_version->>'schema' as schema")
-                ->orderByRaw("prompt_version->>'skill'")
-                ->get();
+                ->orderByRaw("prompt_version->>'skill'");
         } else {
             // SQLite fallback for tests
-            $versions = Task::whereIn('project_id', $projectIds)
+            $query = Task::whereIn('project_id', $projectIds)
                 ->where('status', TaskStatus::Completed)
                 ->whereNotNull('prompt_version')
                 ->selectRaw("DISTINCT json_extract(prompt_version, '$.skill') as skill, json_extract(prompt_version, '$.claude_md') as claude_md, json_extract(prompt_version, '$.schema') as schema")
-                ->orderByRaw("json_extract(prompt_version, '$.skill')")
-                ->get();
+                ->orderByRaw("json_extract(prompt_version, '$.skill')");
         }
 
+        /** @var \Illuminate\Support\Collection<int, object{skill: string|null, claude_md: string|null, schema: string|null}> $versions */
+        $versions = $query->get();
+
         return response()->json([
-            'data' => $versions->map(fn ($v) => [ // @phpstan-ignore method.unresolvableReturnType, method.unresolvableReturnType, argument.unresolvableType
-                'skill' => $v->skill, // @phpstan-ignore property.notFound (selectRaw/json_extract virtual column)
-                'claude_md' => $v->claude_md, // @phpstan-ignore property.notFound
-                'schema' => $v->schema, // @phpstan-ignore property.notFound
+            'data' => $versions->map(fn ($v) => [
+                'skill' => $v->skill,
+                'claude_md' => $v->claude_md,
+                'schema' => $v->schema,
             ])->values(),
         ]);
     }

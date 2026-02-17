@@ -54,7 +54,8 @@ class DashboardAdoptionController extends Controller
             ? "strftime('%Y-%m', created_at)"
             : "TO_CHAR(created_at, 'YYYY-MM')";
 
-        $tasksByTypeOverTime = Task::whereIn('project_id', $projectIds)
+        /** @var \Illuminate\Support\Collection<int, object{month: string, type: TaskType, count: int}> $taskResults */
+        $taskResults = Task::whereIn('project_id', $projectIds)
             ->whereIn('status', [TaskStatus::Completed, TaskStatus::Failed])
             ->where('created_at', '>=', now()->subMonths(12)->startOfMonth())
             ->select(
@@ -64,10 +65,12 @@ class DashboardAdoptionController extends Controller
             )
             ->groupBy(DB::raw($monthExpr), 'type')
             ->orderBy('month')
-            ->get()
+            ->get();
+
+        $tasksByTypeOverTime = $taskResults
             ->groupBy('month')
             ->map(fn ($rows) => $rows->mapWithKeys(fn ($row) => [
-                $row->type->value => (int) $row->count, // @phpstan-ignore property.notFound (selectRaw virtual column)
+                $row->type->value => (int) $row->count,
             ])->all())
             ->all();
 
@@ -76,8 +79,8 @@ class DashboardAdoptionController extends Controller
             ? "strftime('%Y-W%W', created_at)"
             : "TO_CHAR(created_at, 'IYYY-\"W\"IW')";
 
-        // @phpstan-ignore method.unresolvableReturnType, method.unresolvableReturnType, method.unresolvableReturnType
-        $aiMentionsPerWeek = Task::whereIn('project_id', $projectIds)
+        /** @var \Illuminate\Support\Collection<int, object{week: string, count: int}> $mentionResults */
+        $mentionResults = Task::whereIn('project_id', $projectIds)
             ->where('origin', TaskOrigin::Webhook)
             ->where('created_at', '>=', now()->subWeeks(12)->startOfWeek())
             ->select(
@@ -86,10 +89,12 @@ class DashboardAdoptionController extends Controller
             )
             ->groupBy(DB::raw($weekExpr))
             ->orderBy('week')
-            ->get()
-            ->map(fn ($row) => [ // @phpstan-ignore argument.unresolvableType (selectRaw virtual columns)
-                'week' => $row->week, // @phpstan-ignore property.notFound (selectRaw virtual column)
-                'count' => (int) $row->count, // @phpstan-ignore property.notFound
+            ->get();
+
+        $aiMentionsPerWeek = $mentionResults
+            ->map(fn ($row) => [
+                'week' => $row->week,
+                'count' => (int) $row->count,
             ])
             ->values()
             ->all();

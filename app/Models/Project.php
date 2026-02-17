@@ -49,10 +49,11 @@ class Project extends Model
         'webhook_id',
     ];
 
-    /** @return BelongsToMany<User, $this> */
+    /** @return BelongsToMany<User, $this, ProjectUserPivot> */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
+            ->using(ProjectUserPivot::class)
             ->withPivot('gitlab_access_level', 'synced_at')
             ->withTimestamps();
     }
