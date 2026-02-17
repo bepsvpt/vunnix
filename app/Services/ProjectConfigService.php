@@ -189,7 +189,7 @@ class ProjectConfigService
             self::CACHE_PREFIX.$project->id,
             now()->addMinutes(self::CACHE_TTL_MINUTES),
             function () use ($project) {
-                return $project->projectConfig?->settings ?? [];
+                return $project->projectConfig->settings ?? [];
             }
         );
     }

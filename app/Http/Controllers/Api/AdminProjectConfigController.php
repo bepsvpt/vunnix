@@ -37,7 +37,7 @@ class AdminProjectConfigController extends Controller
     {
         $this->authorizeAdmin($request);
 
-        $oldSettings = $project->projectConfig?->settings ?? [];
+        $oldSettings = $project->projectConfig->settings ?? [];
         $overrides = $request->validated()['settings'];
 
         $this->configService->bulkSet($project, $overrides);

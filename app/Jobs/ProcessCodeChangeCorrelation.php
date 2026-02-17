@@ -65,7 +65,7 @@ class ProcessCodeChangeCorrelation implements ShouldQueue
             throw $e;
         }
 
-        $diffs = $compare['diffs'] ?? [];
+        $diffs = $compare['diffs'];
         $service = new AcceptanceTrackingService;
 
         foreach ($acceptances as $acceptance) {

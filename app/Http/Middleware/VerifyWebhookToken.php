@@ -40,7 +40,7 @@ class VerifyWebhookToken
 
         $project = $projectConfig->project;
 
-        if (! $project || ! $project->enabled) {
+        if (! $project->enabled) {
             Log::warning('Webhook received for disabled project', [
                 'project_id' => $projectConfig->project_id,
             ]);

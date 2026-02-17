@@ -596,7 +596,7 @@ class AlertEventService
     public function notifyTaskCompletion(\App\Models\Task $task): void
     {
         $project = $task->project;
-        $projectName = $project?->name ?? 'unknown';
+        $projectName = $project->name;
 
         $message = $this->buildTaskCompletionMessage($task, $projectName);
         $category = $task->status === \App\Enums\TaskStatus::Failed ? 'task_failed' : 'task_completed';

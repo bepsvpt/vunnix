@@ -66,9 +66,9 @@ class SearchCode implements Tool
 
         $lines = [];
         foreach ($results as $result) {
-            $path = $result['path'] ?? $result['filename'] ?? 'unknown';
-            $startLine = $result['startline'] ?? 0;
-            $data = $result['data'] ?? '';
+            $path = $result['path'];
+            $startLine = $result['startline'];
+            $data = $result['data'];
 
             // Trim excessive whitespace from snippets
             $snippet = trim($data);

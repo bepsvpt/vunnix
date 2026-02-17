@@ -13,7 +13,7 @@ class AdminRoleResource extends JsonResource
         return [
             'id' => $this->id,
             'project_id' => $this->project_id,
-            'project_name' => $this->project?->name,
+            'project_name' => $this->project->name,
             'name' => $this->name,
             'description' => $this->description,
             'is_default' => $this->is_default,

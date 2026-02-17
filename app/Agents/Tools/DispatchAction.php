@@ -235,6 +235,7 @@ class DispatchAction implements Tool
             'ui_adjustment' => 'UI adjustment',
             'create_mr' => 'Merge request creation',
             'deep_analysis' => 'Deep analysis',
+            default => ucfirst(str_replace('_', ' ', $actionType)),
         };
 
         $message = "[System: Task dispatched] {$typeLabel} \"{$title}\" has been dispatched as Task #{$task->id}.";

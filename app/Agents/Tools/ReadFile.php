@@ -72,13 +72,13 @@ class ReadFile implements Tool
             return "Error reading file: {$e->getMessage()}";
         }
 
-        $content = base64_decode($fileData['content'] ?? '', true);
+        $content = base64_decode($fileData['content'], true);
 
         if ($content === false) {
             return 'Error: Unable to decode file content (binary file or invalid encoding).';
         }
 
-        $fileName = $fileData['file_name'] ?? $request->string('file_path');
+        $fileName = $fileData['file_name'];
 
         if (strlen($content) > self::MAX_FILE_SIZE) {
             $truncated = substr($content, 0, self::MAX_FILE_SIZE);

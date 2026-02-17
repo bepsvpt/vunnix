@@ -97,14 +97,14 @@ class AcceptanceTrackingService
     {
         $targetFile = $finding['file'];
         $targetStart = $finding['line'] - self::CORRELATION_LINE_PADDING;
-        $targetEnd = ($finding['end_line'] ?? $finding['line']) + self::CORRELATION_LINE_PADDING;
+        $targetEnd = $finding['end_line'] + self::CORRELATION_LINE_PADDING;
 
         foreach ($diffs as $diff) {
-            if (($diff['new_path'] ?? '') !== $targetFile) {
+            if ($diff['new_path'] !== $targetFile) {
                 continue;
             }
 
-            $modifiedRanges = $this->parseHunkRanges($diff['diff'] ?? '');
+            $modifiedRanges = $this->parseHunkRanges($diff['diff']);
 
             foreach ($modifiedRanges as [$hunkStart, $hunkEnd]) {
                 if ($hunkStart <= $targetEnd && $hunkEnd >= $targetStart) {

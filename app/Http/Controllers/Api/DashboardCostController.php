@@ -71,7 +71,7 @@ class DashboardCostController extends Controller
 
                 return [
                     'project_id' => (int) $row->project_id,
-                    'project_name' => $project?->name ?? 'Unknown',
+                    'project_name' => $project->name ?? 'Unknown',
                     'total_cost' => (float) round($row->total_cost, 6),
                     'task_count' => (int) $row->task_count,
                 ];

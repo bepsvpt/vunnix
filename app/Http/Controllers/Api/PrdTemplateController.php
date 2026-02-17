@@ -101,7 +101,7 @@ class PrdTemplateController extends Controller
     private function resolveTemplate(Project $project): array
     {
         // Check project-level override directly (don't use cascading get())
-        $projectSettings = $project->projectConfig?->settings ?? [];
+        $projectSettings = $project->projectConfig->settings ?? [];
         $projectTemplate = Arr::get($projectSettings, 'prd_template');
         if ($projectTemplate !== null) {
             return ['template' => $projectTemplate, 'source' => 'project'];

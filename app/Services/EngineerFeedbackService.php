@@ -22,7 +22,7 @@ class EngineerFeedbackService
         $negative = 0;
 
         foreach ($emoji as $reaction) {
-            match ($reaction['name'] ?? '') {
+            match ($reaction['name']) {
                 'thumbsup' => $positive++,
                 'thumbsdown' => $negative++,
                 default => null,

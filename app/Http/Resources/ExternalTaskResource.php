@@ -16,7 +16,7 @@ class ExternalTaskResource extends JsonResource
             'status' => $this->status->value,
             'priority' => $this->priority->value,
             'project_id' => $this->project_id,
-            'project_name' => $this->project?->name,
+            'project_name' => $this->project->name,
             'user_name' => $this->user?->name,
             'mr_iid' => $this->mr_iid,
             'issue_iid' => $this->issue_iid,

@@ -15,7 +15,7 @@ class ActivityResource extends JsonResource
             'type' => $this->type->value,
             'status' => $this->status->value,
             'project_id' => $this->project_id,
-            'project_name' => $this->project?->name,
+            'project_name' => $this->project->name,
             'summary' => $this->result['title'] ?? $this->result['mr_title'] ?? $this->result['summary'] ?? null,
             'user_name' => $this->user?->name,
             'user_avatar' => $this->user?->avatar_url,
