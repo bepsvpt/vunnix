@@ -172,7 +172,10 @@ class DispatchAction implements Tool
             'conversation_id' => $conversationId,
         ]);
 
-        // 6. Dispatch the task
+        // 6. Transition to Queued (required before TaskDispatcher can move to Running)
+        $task->transitionTo(TaskStatus::Queued);
+
+        // 7. Dispatch the task
         try {
             $this->taskDispatcher->dispatch($task);
         } catch (Throwable $e) {
