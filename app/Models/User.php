@@ -218,7 +218,7 @@ class User extends Authenticatable
         $gitlabProjects = $service->getUserProjects($this->oauth_token);
 
         // On API failure, don't wipe existing memberships
-        if (empty($gitlabProjects)) {
+        if ($gitlabProjects === []) {
             return;
         }
 

@@ -88,7 +88,7 @@ class TaskObserver
                     );
 
                     // Route single-task cost alert to team chat (T99)
-                    if ($costAlert) {
+                    if ($costAlert !== null) {
                         app(AlertEventService::class)->notifyCostAlert($costAlert);
                     }
                 } catch (Throwable $e) {
@@ -167,7 +167,7 @@ class TaskObserver
             return $task->duration_seconds;
         }
 
-        if ($task->started_at && $task->completed_at) {
+        if ($task->started_at !== null && $task->completed_at !== null) {
             return (int) $task->started_at->diffInSeconds($task->completed_at);
         }
 

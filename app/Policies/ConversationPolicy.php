@@ -16,7 +16,7 @@ class ConversationPolicy
         $userProjectIds = $user->projects()->pluck('projects.id')->toArray();
 
         // Check primary project
-        if (in_array($conversation->project_id, $userProjectIds)) {
+        if (in_array($conversation->project_id, $userProjectIds, true)) {
             return true;
         }
 

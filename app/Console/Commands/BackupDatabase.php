@@ -15,7 +15,7 @@ class BackupDatabase extends Command
 
     public function handle(): int
     {
-        $backupDir = $this->option('path') ?: storage_path('backups');
+        $backupDir = $this->option('path') ?? storage_path('backups');
 
         if (! is_dir($backupDir)) {
             mkdir($backupDir, 0755, true);
@@ -50,6 +50,9 @@ class BackupDatabase extends Command
         }
 
         $size = file_exists($filepath) ? filesize($filepath) : 0;
+        if ($size === false) {
+            $size = 0;
+        }
         $this->info("Backup completed: {$filename} (".number_format($size / 1024).' KB)');
 
         $this->pruneOldBackups($backupDir, (int) $this->option('retention'));
@@ -62,7 +65,8 @@ class BackupDatabase extends Command
         $cutoff = now()->subDays($retentionDays);
         $pruned = 0;
 
-        foreach (glob("{$backupDir}/*.sql.gz") ?: [] as $file) {
+        $files = glob("{$backupDir}/*.sql.gz");
+        foreach ($files !== false ? $files : [] as $file) {
             if (filemtime($file) < $cutoff->timestamp) {
                 unlink($file);
                 $pruned++;

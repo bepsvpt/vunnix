@@ -59,7 +59,7 @@ class Message extends Model
     protected static function booted(): void
     {
         static::creating(function (Message $message): void {
-            if (! $message->id) {
+            if ($message->id === null || $message->id === '') { // @phpstan-ignore identical.alwaysFalse
                 $message->id = (string) Str::uuid7();
             }
         });

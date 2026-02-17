@@ -61,7 +61,7 @@ class VunnixSetup extends Command
         $this->createDefaultRoles($project);
 
         // 7. Assign admin (optional)
-        if ($this->option('admin-email') && ! $this->assignAdmin($project)) {
+        if ($this->option('admin-email') !== null && ! $this->assignAdmin($project)) {
             return self::FAILURE;
         }
 
@@ -77,13 +77,13 @@ class VunnixSetup extends Command
         $botToken = config('services.gitlab.bot_token');
         $appUrl = config('app.url');
 
-        if (empty($botToken)) {
+        if ($botToken === null || $botToken === '') {
             $this->error('GITLAB_BOT_TOKEN is not set in .env');
 
             return false;
         }
 
-        if (empty($appUrl) || $appUrl === 'http://localhost') {
+        if ($appUrl === null || $appUrl === '' || $appUrl === 'http://localhost') {
             $this->error('APP_URL is not configured. Set it to your public URL (e.g. https://your-tunnel.trycloudflare.com)');
 
             return false;
@@ -191,7 +191,7 @@ class VunnixSetup extends Command
         $email = $this->option('admin-email');
         $user = User::where('email', $email)->first();
 
-        if (! $user) {
+        if ($user === null) {
             $this->error("  User with email '{$email}' not found. They must log in via GitLab OAuth first.");
 
             return false;
@@ -208,7 +208,7 @@ class VunnixSetup extends Command
         // Assign admin role
         $adminRole = $project->roles()->where('name', 'admin')->first();
 
-        if (! $adminRole) {
+        if ($adminRole === null) {
             $this->error('  Admin role not found — roles may not have been created correctly.');
 
             return false;

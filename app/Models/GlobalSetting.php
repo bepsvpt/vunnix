@@ -109,7 +109,7 @@ TEMPLATE;
             function () use ($key): ?array {
                 $setting = static::where('key', $key)->first();
 
-                if (! $setting) {
+                if ($setting === null) {
                     return null;
                 }
 

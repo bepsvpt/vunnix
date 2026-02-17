@@ -24,12 +24,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(TaskTokenService::class, function (array $app): \App\Services\TaskTokenService {
+        $this->app->singleton(TaskTokenService::class, function (\Illuminate\Foundation\Application $app): \App\Services\TaskTokenService {
             $appKey = $app['config']['app.key'];
 
             // Strip the base64: prefix if present
             if (str_starts_with($appKey, 'base64:')) {
-                $appKey = base64_decode(substr($appKey, 7));
+                $appKey = base64_decode(substr($appKey, 7), true);
             }
 
             return new TaskTokenService(
@@ -59,7 +59,7 @@ class AppServiceProvider extends ServiceProvider
     {
         RateLimiter::for('api_key', function (\Illuminate\Http\Request $request) {
             $bearer = $request->bearerToken();
-            $keyHash = $bearer ? hash('sha256', $bearer) : $request->ip();
+            $keyHash = $bearer !== null ? hash('sha256', $bearer) : $request->ip();
 
             return Limit::perMinute(60)->by('api_key:'.$keyHash);
         });

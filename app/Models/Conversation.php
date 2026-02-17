@@ -60,7 +60,7 @@ class Conversation extends Model
     protected static function booted(): void
     {
         static::creating(function (Conversation $conversation): void {
-            if (! $conversation->id) {
+            if ($conversation->id === null || $conversation->id === '') { // @phpstan-ignore identical.alwaysFalse
                 $conversation->id = (string) Str::uuid7();
             }
         });
@@ -105,7 +105,7 @@ class Conversation extends Model
     public function allProjectIds(): array
     {
         $ids = $this->projects()->pluck('projects.id')->toArray();
-        if ($this->project_id && ! in_array($this->project_id, $ids)) {
+        if ($this->project_id !== null && ! in_array($this->project_id, $ids, true)) {
             $ids[] = $this->project_id;
         }
 
