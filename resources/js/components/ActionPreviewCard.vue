@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import MarkdownContent from './MarkdownContent.vue';
 
 interface ActionPreview {
     action_type: string;
@@ -84,12 +85,11 @@ const isMr = computed(() => props.action.action_type === 'create_mr');
             </h4>
 
             <!-- Description -->
-            <p
+            <MarkdownContent
                 data-testid="description-preview"
+                :content="descriptionPreview"
                 class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed"
-            >
-                {{ descriptionPreview }}
-            </p>
+            />
 
             <!-- Action-type-specific fields -->
             <div class="text-xs space-y-1 text-zinc-500 dark:text-zinc-400">

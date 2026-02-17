@@ -1,7 +1,17 @@
 import { mount } from '@vue/test-utils';
+import MarkdownIt from 'markdown-it';
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ActionPreviewCard from './ActionPreviewCard.vue';
+
+// Mock the markdown module to avoid async Shiki loading in tests
+const testMd = new MarkdownIt({ html: false, linkify: true, typographer: true });
+
+vi.mock('@/lib/markdown', () => ({
+    getMarkdownRenderer: () => testMd,
+    isHighlightReady: (): boolean => false,
+    onHighlightLoaded: vi.fn(),
+}));
 
 function makeAction(overrides: Record<string, unknown> = {}) {
     return {
