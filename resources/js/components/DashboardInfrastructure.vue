@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 import { useDashboardStore } from '@/stores/dashboard';
@@ -13,13 +13,13 @@ onMounted(() => {
 const alerts = computed(() => dashboard.infrastructureAlerts);
 const status = computed(() => dashboard.infrastructureStatus);
 
-const severityColors = {
+const severityColors: Record<string, string> = {
     critical: 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200',
     high: 'bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-200',
     warning: 'bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200',
 };
 
-const typeLabels = {
+const typeLabels: Record<string, string> = {
     container_health: 'Container Health',
     cpu_usage: 'CPU Usage',
     memory_usage: 'Memory Usage',
@@ -42,7 +42,7 @@ const checkStatuses = computed(() => {
     });
 });
 
-async function handleAcknowledge(alertId) {
+async function handleAcknowledge(alertId: number) {
     await admin.acknowledgeInfrastructureAlert(alertId);
     dashboard.fetchInfrastructureAlerts();
 }

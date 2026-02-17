@@ -1,25 +1,28 @@
-<script setup>
+<script setup lang="ts">
+import type { Activity } from '@/types';
 import { computed } from 'vue';
 
-const props = defineProps({
-    item: { type: Object, required: true },
-});
+interface Props {
+    item: Activity;
+}
 
-const typeIcons = {
+const props = defineProps<Props>();
+
+const typeIcons: Record<string, string> = {
     code_review: '\uD83D\uDD0D',
     feature_dev: '\u2699\uFE0F',
     ui_adjustment: '\uD83C\uDFA8',
     prd_creation: '\uD83D\uDCCB',
 };
 
-const typeLabels = {
+const typeLabels: Record<string, string> = {
     code_review: 'Code Review',
     feature_dev: 'Feature Dev',
     ui_adjustment: 'UI Adjustment',
     prd_creation: 'PRD',
 };
 
-const statusConfig = {
+const statusConfig: Record<string, { icon: string; classes: string }> = {
     queued: { icon: '\u23F3', classes: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
     running: { icon: '\u23F3', classes: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
     completed: { icon: '\u2705', classes: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
@@ -31,9 +34,9 @@ const typeLabel = computed(() => typeLabels[props.item.type] || props.item.type)
 const status = computed(() => statusConfig[props.item.status] || statusConfig.queued);
 
 const relativeTime = computed(() => {
-    const date = new Date(props.item.created_at);
+    const date = new Date(props.item.created_at ?? '');
     const now = new Date();
-    const diffMs = now - date;
+    const diffMs = now.getTime() - date.getTime();
     const diffMin = Math.floor(diffMs / 60000);
     const diffHr = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHr / 24);

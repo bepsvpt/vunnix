@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { useDashboardStore } from '@/stores/dashboard';
 
@@ -22,7 +22,7 @@ const reviewTurnaroundDisplay = computed(() => {
     return `${efficiency.value.review_turnaround} min`;
 });
 
-const typeLabels = {
+const typeLabels: Record<string, string> = {
     code_review: 'Code Review',
     issue_discussion: 'Issue Discussion',
     feature_dev: 'Feature Dev',
@@ -35,7 +35,7 @@ const typeLabels = {
 const completionRateEntries = computed(() => {
     if (!efficiency.value?.completion_rate_by_type)
         return [];
-    return Object.entries(efficiency.value.completion_rate_by_type).map(([key, rate]) => ({
+    return Object.entries(efficiency.value.completion_rate_by_type as Record<string, number>).map(([key, rate]) => ({
         key,
         label: typeLabels[key] || key,
         rate,

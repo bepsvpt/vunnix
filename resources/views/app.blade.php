@@ -15,7 +15,7 @@
             scheme: @json(config('broadcasting.connections.reverb.options.scheme')),
         };
     </script>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.ts'])
 </head>
 <body class="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased">
     <div id="app"></div>

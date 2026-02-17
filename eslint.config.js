@@ -2,7 +2,7 @@ import antfu from '@antfu/eslint-config';
 
 export default antfu({
     vue: true,
-    typescript: false,
+    typescript: true,
 
     stylistic: {
         indent: 4,
@@ -13,5 +13,6 @@ export default antfu({
     rules: {
         'style/brace-style': ['error', '1tbs'],
         'no-alert': 'off',
+        'ts/no-explicit-any': 'error',
     },
 });

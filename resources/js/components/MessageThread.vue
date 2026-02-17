@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { nextTick, ref, watch } from 'vue';
 import { useConversationsStore } from '@/stores/conversations';
 import ActionPreviewCard from './ActionPreviewCard.vue';
@@ -10,7 +10,22 @@ import ResultCard from './ResultCard.vue';
 import ToolUseIndicators from './ToolUseIndicators.vue';
 import TypingIndicator from './TypingIndicator.vue';
 
-function buildResultCardProps(result) {
+interface CompletedResult {
+    task_id: number;
+    status: string;
+    type: string;
+    title: string;
+    mr_iid: number | null;
+    issue_iid: number | null;
+    result_summary: string | null;
+    error_reason: string | null;
+    result_data: Record<string, unknown>;
+    conversation_id: string | null;
+    project_id: number;
+    gitlab_url: string;
+}
+
+function buildResultCardProps(result: CompletedResult) {
     return {
         task_id: result.task_id,
         status: result.status,
@@ -18,19 +33,19 @@ function buildResultCardProps(result) {
         title: result.title,
         mr_iid: result.mr_iid,
         issue_iid: result.issue_iid,
-        branch: result.result_data?.branch || null,
-        target_branch: result.result_data?.target_branch || 'main',
-        files_changed: result.result_data?.files_changed || null,
+        branch: (result.result_data?.branch as string) || null,
+        target_branch: (result.result_data?.target_branch as string) || 'main',
+        files_changed: (result.result_data?.files_changed as string[]) || null,
         result_summary: result.result_summary,
         error_reason: result.error_reason,
-        screenshot: result.result_data?.screenshot || null,
+        screenshot: (result.result_data?.screenshot as string) || null,
         project_id: result.project_id,
         gitlab_url: result.gitlab_url || '',
     };
 }
 
 const store = useConversationsStore();
-const scrollContainer = ref(null);
+const scrollContainer = ref<HTMLElement | null>(null);
 
 async function scrollToBottom() {
     await nextTick();
@@ -45,7 +60,7 @@ watch(() => store.streamingContent, scrollToBottom);
 watch(() => store.activeToolCalls.length, scrollToBottom);
 watch(() => store.pendingAction, scrollToBottom);
 
-async function handleSend(content) {
+async function handleSend(content: string) {
     await store.streamMessage(content);
     scrollToBottom();
 }

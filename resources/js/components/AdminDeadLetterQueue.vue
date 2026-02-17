@@ -1,11 +1,21 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 
+interface DeadLetterEntry {
+    id: number;
+    failure_reason: string;
+    dead_lettered_at: string;
+    attempt_count?: number;
+    error_details?: string;
+    task_record?: Record<string, unknown>;
+    [key: string]: unknown;
+}
+
 const admin = useAdminStore();
-const actionInProgress = ref(null);
-const actionError = ref(null);
-const selectedEntry = ref(null);
+const actionInProgress = ref<number | null>(null);
+const actionError = ref<string | null>(null);
+const selectedEntry = ref<DeadLetterEntry | null>(null);
 
 // Filters
 const filterReason = ref('');
@@ -21,7 +31,7 @@ const reasonOptions = [
     { value: 'scheduling_timeout', label: 'Scheduling timeout' },
 ];
 
-const reasonBadgeClass = {
+const reasonBadgeClass: Record<string, string> = {
     max_retries_exceeded: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
     expired: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
     invalid_request: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
@@ -29,8 +39,8 @@ const reasonBadgeClass = {
     scheduling_timeout: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
 };
 
-function buildFilters() {
-    const filters = {};
+function buildFilters(): Record<string, string> {
+    const filters: Record<string, string> = {};
     if (filterReason.value)
         filters.reason = filterReason.value;
     if (filterDateFrom.value)
@@ -44,7 +54,7 @@ function applyFilters() {
     admin.fetchDeadLetterEntries(buildFilters());
 }
 
-async function selectEntry(entry) {
+async function selectEntry(entry: DeadLetterEntry) {
     selectedEntry.value = entry;
     await admin.fetchDeadLetterDetail(entry.id);
 }
@@ -54,7 +64,7 @@ function backToList() {
     admin.deadLetterDetail = null;
 }
 
-async function handleRetry(entryId) {
+async function handleRetry(entryId: number) {
     if (!confirm('Retry this failed task? A new task will be created and queued.'))
         return;
 
@@ -62,14 +72,14 @@ async function handleRetry(entryId) {
     actionError.value = null;
     const result = await admin.retryDeadLetterEntry(entryId);
     if (!result.success) {
-        actionError.value = result.error;
+        actionError.value = result.error ?? null;
     } else {
         selectedEntry.value = null;
     }
     actionInProgress.value = null;
 }
 
-async function handleDismiss(entryId) {
+async function handleDismiss(entryId: number) {
     if (!confirm('Dismiss this entry? It will be marked as acknowledged and hidden from the active list.'))
         return;
 
@@ -77,27 +87,27 @@ async function handleDismiss(entryId) {
     actionError.value = null;
     const result = await admin.dismissDeadLetterEntry(entryId);
     if (!result.success) {
-        actionError.value = result.error;
+        actionError.value = result.error ?? null;
     } else {
         selectedEntry.value = null;
     }
     actionInProgress.value = null;
 }
 
-function formatDate(dateStr) {
+function formatDate(dateStr: string | null | undefined): string {
     if (!dateStr)
-        return '—';
+        return '\u2014';
     return new Date(dateStr).toLocaleString();
 }
 
-function formatReason(reason) {
+function formatReason(reason: string | null | undefined): string {
     return (reason || '').replace(/_/g, ' ');
 }
 
-function truncate(str, len = 120) {
+function truncate(str: string | null | undefined, len = 120): string {
     if (!str)
-        return '—';
-    return str.length > len ? `${str.slice(0, len)}…` : str;
+        return '\u2014';
+    return str.length > len ? `${str.slice(0, len)}\u2026` : str;
 }
 
 onMounted(() => {

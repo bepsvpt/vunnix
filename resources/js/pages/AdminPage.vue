@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import AdminDeadLetterQueue from '@/components/AdminDeadLetterQueue.vue';
 import AdminGlobalSettings from '@/components/AdminGlobalSettings.vue';
@@ -9,11 +9,16 @@ import AdminRoleAssignments from '@/components/AdminRoleAssignments.vue';
 import AdminRoleList from '@/components/AdminRoleList.vue';
 import { useAdminStore } from '@/stores/admin';
 
+interface ProjectRef {
+    id: number;
+    name: string;
+}
+
 const admin = useAdminStore();
 
 const activeTab = ref('projects');
-const configuringProject = ref(null);
-const editingTemplate = ref(null); // { id, name }
+const configuringProject = ref<ProjectRef | null>(null);
+const editingTemplate = ref<ProjectRef | null>(null);
 
 const tabs = [
     { key: 'projects', label: 'Projects' },

@@ -1,14 +1,39 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useAdminStore } from '@/stores/admin';
+
+interface FormState {
+    ai_model: string;
+    ai_language: string;
+    timeout_minutes: number;
+    max_tokens: number;
+    ai_prices_input: number;
+    ai_prices_output: number;
+    team_chat_webhook_url: string;
+    team_chat_platform: string;
+    team_chat_enabled: boolean;
+    team_chat_categories: {
+        task_completed: boolean;
+        task_failed: boolean;
+        alert: boolean;
+    };
+    bot_pat_created_at: string;
+    [key: string]: unknown;
+}
+
+interface WebhookResult {
+    success: boolean;
+    message?: string;
+    error?: string;
+}
 
 const admin = useAdminStore();
 const saving = ref(false);
 const saveSuccess = ref(false);
-const saveError = ref(null);
+const saveError = ref<string | null>(null);
 
 // Local form state — initialized from store settings or defaults
-const form = ref({
+const form = ref<FormState>({
     ai_model: 'opus',
     ai_language: 'en',
     timeout_minutes: 10,
@@ -27,7 +52,7 @@ const form = ref({
 });
 
 const testingWebhook = ref(false);
-const testWebhookResult = ref(null);
+const testWebhookResult = ref<WebhookResult | null>(null);
 
 const platformOptions = [
     { value: 'slack', label: 'Slack' },
@@ -44,10 +69,11 @@ onMounted(() => {
 watch(() => admin.settings, (newSettings) => {
     for (const s of newSettings) {
         if (s.key === 'ai_prices' && typeof s.value === 'object') {
-            form.value.ai_prices_input = s.value.input ?? 5.0;
-            form.value.ai_prices_output = s.value.output ?? 25.0;
+            const prices = s.value as Record<string, number>;
+            form.value.ai_prices_input = prices.input ?? 5.0;
+            form.value.ai_prices_output = prices.output ?? 25.0;
         } else if (s.key in form.value) {
-            form.value[s.key] = s.value;
+            (form.value as Record<string, unknown>)[s.key] = s.value;
         }
     }
 }, { immediate: true });
@@ -58,11 +84,12 @@ watch(() => admin.settingsDefaults, (defaults) => {
         for (const [key, value] of Object.entries(defaults)) {
             if (key === 'ai_prices' && typeof value === 'object') {
                 if (!admin.settings.find(s => s.key === 'ai_prices')) {
-                    form.value.ai_prices_input = value.input ?? 5.0;
-                    form.value.ai_prices_output = value.output ?? 25.0;
+                    const prices = value as Record<string, number>;
+                    form.value.ai_prices_input = prices.input ?? 5.0;
+                    form.value.ai_prices_output = prices.output ?? 25.0;
                 }
             } else if (key in form.value && !admin.settings.find(s => s.key === key)) {
-                form.value[key] = value;
+                (form.value as Record<string, unknown>)[key] = value;
             }
         }
     }
@@ -73,7 +100,7 @@ async function handleSave() {
     saveSuccess.value = false;
     saveError.value = null;
 
-    const settingsList = [
+    const settingsList: Array<{ key: string; value: unknown; type?: string }> = [
         { key: 'ai_model', value: form.value.ai_model, type: 'string' },
         { key: 'ai_language', value: form.value.ai_language, type: 'string' },
         { key: 'timeout_minutes', value: Number(form.value.timeout_minutes), type: 'integer' },
@@ -99,7 +126,7 @@ async function handleSave() {
             saveSuccess.value = false;
         }, 3000);
     } else {
-        saveError.value = result.error;
+        saveError.value = result.error ?? null;
     }
 }
 
@@ -113,7 +140,7 @@ async function handleTestWebhook() {
     );
 
     testingWebhook.value = false;
-    testWebhookResult.value = result;
+    testWebhookResult.value = result as WebhookResult;
     setTimeout(() => {
         testWebhookResult.value = null;
     }, 5000);

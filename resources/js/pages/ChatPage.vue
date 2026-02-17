@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import ConversationList from '@/components/ConversationList.vue';
 import MessageThread from '@/components/MessageThread.vue';
 import { useConversationsStore } from '@/stores/conversations';

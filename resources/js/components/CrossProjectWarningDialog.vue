@@ -1,10 +1,15 @@
-<script setup>
-defineProps({
-    existingProjectName: { type: String, required: true },
-    newProjectName: { type: String, required: true },
-});
+<script setup lang="ts">
+interface Props {
+    existingProjectName: string;
+    newProjectName: string;
+}
 
-const emit = defineEmits(['confirm', 'cancel']);
+defineProps<Props>();
+
+const emit = defineEmits<{
+    confirm: [];
+    cancel: [];
+}>();
 </script>
 
 <template>

@@ -1,11 +1,35 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue';
 
-const props = defineProps({
-    result: { type: Object, required: true },
-});
+interface TaskResult {
+    task_id: number;
+    status: string;
+    type: string;
+    title: string;
+    mr_iid: number | null;
+    issue_iid: number | null;
+    branch: string | null;
+    target_branch: string;
+    files_changed: string[] | null;
+    result_summary: string | null;
+    error_reason: string | null;
+    screenshot: string | null;
+    project_id: number;
+    gitlab_url: string;
+}
 
-const TYPE_DISPLAY = {
+interface Props {
+    result: TaskResult;
+}
+
+const props = defineProps<Props>();
+
+interface TypeDisplayInfo {
+    label: string;
+    emoji: string;
+}
+
+const TYPE_DISPLAY: Record<string, TypeDisplayInfo> = {
     code_review: { label: 'Code Review', emoji: '🔍' },
     feature_dev: { label: 'Feature Dev', emoji: '🚀' },
     ui_adjustment: { label: 'UI Adjustment', emoji: '🎨' },

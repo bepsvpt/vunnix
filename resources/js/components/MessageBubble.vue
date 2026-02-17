@@ -1,10 +1,13 @@
-<script setup>
+<script setup lang="ts">
+import type { Message } from '@/types';
 import { computed } from 'vue';
 import MarkdownContent from './MarkdownContent.vue';
 
-const props = defineProps({
-    message: { type: Object, required: true },
-});
+interface Props {
+    message: Message;
+}
+
+const props = defineProps<Props>();
 
 const isUser = computed(() => props.message.role === 'user');
 

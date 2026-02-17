@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue';
 import { useDashboardStore } from '@/stores/dashboard';
 
@@ -22,9 +22,9 @@ const successRateDisplay = computed(() => {
 const recentActivityDisplay = computed(() => {
     if (!overview.value?.recent_activity)
         return 'No activity';
-    const date = new Date(overview.value.recent_activity);
+    const date = new Date(overview.value.recent_activity as string);
     const now = new Date();
-    const diffMs = now - date;
+    const diffMs = now.getTime() - date.getTime();
     const diffMin = Math.floor(diffMs / 60000);
     const diffHr = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHr / 24);

@@ -1,9 +1,13 @@
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { getMarkdownRenderer, isHighlightReady, onHighlightLoaded } from '@/lib/markdown';
 
-const props = defineProps({
-    content: { type: String, default: '' },
+interface Props {
+    content?: string;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    content: '',
 });
 
 const highlightVersion = ref(0);

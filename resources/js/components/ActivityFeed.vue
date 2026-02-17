@@ -1,10 +1,10 @@
-<script setup>
+<script setup lang="ts">
 import ActivityFeedItem from '@/components/ActivityFeedItem.vue';
 import { useDashboardStore } from '@/stores/dashboard';
 
 const dashboard = useDashboardStore();
 
-const tabs = [
+const tabs: Array<{ label: string; value: string | null }> = [
     { label: 'All', value: null },
     { label: 'Reviews', value: 'code_review' },
     { label: 'Feature Dev', value: 'feature_dev' },
@@ -12,7 +12,7 @@ const tabs = [
     { label: 'PRDs', value: 'prd_creation' },
 ];
 
-function selectTab(value) {
+function selectTab(value: string | null) {
     dashboard.fetchActivity(value);
 }
 </script>

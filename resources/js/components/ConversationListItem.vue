@@ -1,18 +1,27 @@
-<script setup>
+<script setup lang="ts">
+import type { Conversation } from '@/types';
 import { computed } from 'vue';
 
-const props = defineProps({
-    conversation: { type: Object, required: true },
-    projectName: { type: String, default: '' },
-    isSelected: { type: Boolean, default: false },
+interface Props {
+    conversation: Conversation;
+    projectName?: string;
+    isSelected?: boolean;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    projectName: '',
+    isSelected: false,
 });
 
-const emit = defineEmits(['select', 'archive']);
+const emit = defineEmits<{
+    select: [id: string];
+    archive: [id: string];
+}>();
 
 const relativeTime = computed(() => {
-    const date = new Date(props.conversation.updated_at);
+    const date = new Date(props.conversation.updated_at!);
     const now = new Date();
-    const diffMs = now - date;
+    const diffMs = now.getTime() - date.getTime();
     const diffMin = Math.floor(diffMs / 60000);
     const diffHr = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHr / 24);

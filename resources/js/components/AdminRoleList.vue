@@ -1,23 +1,43 @@
-<script setup>
+<script setup lang="ts">
+import type { AdminRole } from '@/types';
 import { computed, onMounted, ref } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 
+interface Permission {
+    name: string;
+    description?: string;
+    group?: string;
+}
+
+interface NewRoleForm {
+    project_id: number | null;
+    name: string;
+    description: string;
+    permissions: string[];
+}
+
+interface EditRoleForm {
+    name: string;
+    description: string;
+    permissions: string[];
+}
+
 const admin = useAdminStore();
-const actionError = ref(null);
+const actionError = ref<string | null>(null);
 const showCreateForm = ref(false);
 
 // Create form state
-const newRole = ref({ project_id: null, name: '', description: '', permissions: [] });
+const newRole = ref<NewRoleForm>({ project_id: null, name: '', description: '', permissions: [] });
 
 // Edit state
-const editingRole = ref(null);
-const editForm = ref({ name: '', description: '', permissions: [] });
+const editingRole = ref<number | null>(null);
+const editForm = ref<EditRoleForm>({ name: '', description: '', permissions: [] });
 
 const projectOptions = computed(() => admin.projects);
 
 const permissionsByGroup = computed(() => {
-    const groups = {};
-    for (const p of admin.permissions) {
+    const groups: Record<string, Permission[]> = {};
+    for (const p of admin.permissions as Permission[]) {
         const group = p.group || 'other';
         if (!groups[group])
             groups[group] = [];
@@ -41,15 +61,15 @@ function startCreate() {
 
 async function submitCreate() {
     actionError.value = null;
-    const result = await admin.createRole(newRole.value);
+    const result = await admin.createRole(newRole.value as { name: string; project_id: number; description?: string; permissions?: string[] });
     if (!result.success) {
-        actionError.value = result.error;
+        actionError.value = result.error ?? null;
         return;
     }
     showCreateForm.value = false;
 }
 
-function startEdit(role) {
+function startEdit(role: AdminRole) {
     editingRole.value = role.id;
     editForm.value = {
         name: role.name,
@@ -59,11 +79,11 @@ function startEdit(role) {
     actionError.value = null;
 }
 
-async function submitEdit(roleId) {
+async function submitEdit(roleId: number) {
     actionError.value = null;
     const result = await admin.updateRole(roleId, editForm.value);
     if (!result.success) {
-        actionError.value = result.error;
+        actionError.value = result.error ?? null;
         return;
     }
     editingRole.value = null;
@@ -73,17 +93,17 @@ function cancelEdit() {
     editingRole.value = null;
 }
 
-async function handleDelete(role) {
+async function handleDelete(role: AdminRole) {
     if (!confirm(`Delete role "${role.name}"? This cannot be undone.`))
         return;
     actionError.value = null;
     const result = await admin.deleteRole(role.id);
     if (!result.success) {
-        actionError.value = result.error;
+        actionError.value = result.error ?? null;
     }
 }
 
-function togglePermission(list, permName) {
+function togglePermission(list: string[], permName: string) {
     const idx = list.indexOf(permName);
     if (idx === -1) {
         list.push(permName);

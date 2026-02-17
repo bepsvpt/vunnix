@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import AppNavigation from '@/components/AppNavigation.vue';
 import { useAuthStore } from '@/stores/auth';
 

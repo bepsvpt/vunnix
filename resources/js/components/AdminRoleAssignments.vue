@@ -1,14 +1,31 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 
+interface AssignForm {
+    user_id: number | null;
+    role_id: number | null;
+    project_id: number | null;
+}
+
+interface Assignment {
+    user_id: number;
+    role_id: number;
+    project_id: number;
+    user_name: string;
+    username: string;
+    role_name: string;
+    project_name: string;
+    [key: string]: unknown;
+}
+
 const admin = useAdminStore();
-const actionError = ref(null);
+const actionError = ref<string | null>(null);
 const showAssignForm = ref(false);
 
-const assignForm = ref({ user_id: null, role_id: null, project_id: null });
+const assignForm = ref<AssignForm>({ user_id: null, role_id: null, project_id: null });
 
-const filterProjectId = ref(null);
+const filterProjectId = ref<number | null>(null);
 
 onMounted(() => {
     admin.fetchAssignments();
@@ -19,14 +36,14 @@ onMounted(() => {
         admin.fetchProjects();
 });
 
-function rolesForProject(projectId) {
+function rolesForProject(projectId: number | null | undefined) {
     return admin.roles.filter(r => r.project_id === projectId);
 }
 
 function startAssign() {
     const firstProject = admin.projects[0];
     assignForm.value = {
-        user_id: admin.users[0]?.id || null,
+        user_id: (admin.users[0]?.id as number) || null,
         role_id: rolesForProject(firstProject?.id)?.[0]?.id || null,
         project_id: firstProject?.id || null,
     };
@@ -41,9 +58,9 @@ function onProjectChange() {
 
 async function submitAssign() {
     actionError.value = null;
-    const result = await admin.assignRole(assignForm.value);
+    const result = await admin.assignRole(assignForm.value as { user_id: number; role_id: number });
     if (!result.success) {
-        actionError.value = result.error;
+        actionError.value = result.error ?? null;
         return;
     }
     showAssignForm.value = false;
@@ -51,17 +68,16 @@ async function submitAssign() {
     admin.fetchRoles(); // Refresh user counts
 }
 
-async function handleRevoke(assignment) {
+async function handleRevoke(assignment: Assignment) {
     if (!confirm(`Revoke role "${assignment.role_name}" from ${assignment.user_name} on ${assignment.project_name}?`))
         return;
     actionError.value = null;
     const result = await admin.revokeRole({
         user_id: assignment.user_id,
         role_id: assignment.role_id,
-        project_id: assignment.project_id,
     });
     if (!result.success) {
-        actionError.value = result.error;
+        actionError.value = result.error ?? null;
         return;
     }
     admin.fetchAssignments(filterProjectId.value);

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import ActivityFeed from '@/components/ActivityFeed.vue';
 import DashboardAdoption from '@/components/DashboardAdoption.vue';
@@ -19,7 +19,7 @@ const { subscribe, unsubscribe } = useDashboardRealtime();
 
 const activeView = ref('overview');
 
-const baseViews = [
+const baseViews: Array<{ key: string; label: string }> = [
     { key: 'overview', label: 'Overview' },
     { key: 'quality', label: 'Quality' },
     { key: 'pm-activity', label: 'PM Activity' },

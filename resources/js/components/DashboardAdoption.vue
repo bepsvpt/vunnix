@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { useDashboardStore } from '@/stores/dashboard';
 
@@ -10,7 +10,7 @@ onMounted(() => {
 
 const adoption = computed(() => dashboard.adoption);
 
-const typeLabels = {
+const typeLabels: Record<string, string> = {
     code_review: 'Code Review',
     issue_discussion: 'Issue Discussion',
     feature_dev: 'Feature Dev',
@@ -35,13 +35,13 @@ const mrCountDisplay = computed(() => {
 const activeUsersDisplay = computed(() => {
     if (!adoption.value)
         return '—';
-    return adoption.value.chat_active_users.toLocaleString();
+    return (adoption.value.chat_active_users as number).toLocaleString();
 });
 
 const tasksByTypeMonths = computed(() => {
     if (!adoption.value?.tasks_by_type_over_time)
         return [];
-    return Object.entries(adoption.value.tasks_by_type_over_time).map(([month, types]) => ({
+    return Object.entries(adoption.value.tasks_by_type_over_time as Record<string, Record<string, number>>).map(([month, types]) => ({
         month,
         types,
     }));
@@ -50,8 +50,8 @@ const tasksByTypeMonths = computed(() => {
 const allTypeKeys = computed(() => {
     if (!adoption.value?.tasks_by_type_over_time)
         return [];
-    const keys = new Set();
-    Object.values(adoption.value.tasks_by_type_over_time).forEach((types) => {
+    const keys = new Set<string>();
+    Object.values(adoption.value.tasks_by_type_over_time as Record<string, Record<string, number>>).forEach((types) => {
         Object.keys(types).forEach(k => keys.add(k));
     });
     return [...keys];
@@ -60,7 +60,7 @@ const allTypeKeys = computed(() => {
 const aiMentions = computed(() => {
     if (!adoption.value?.ai_mentions_per_week)
         return [];
-    return adoption.value.ai_mentions_per_week;
+    return adoption.value.ai_mentions_per_week as Array<{ week: string; count: number }>;
 });
 </script>
 

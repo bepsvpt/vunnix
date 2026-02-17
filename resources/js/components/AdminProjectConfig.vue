@@ -1,43 +1,58 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 
-const props = defineProps({
-    projectId: { type: Number, required: true },
-    projectName: { type: String, required: true },
-});
+interface Props {
+    projectId: number;
+    projectName: string;
+}
 
-const emit = defineEmits(['back', 'editTemplate']);
+const props = defineProps<Props>();
+
+const emit = defineEmits<{
+    back: [];
+    editTemplate: [];
+}>();
 
 const admin = useAdminStore();
 const saving = ref(false);
 const saveSuccess = ref(false);
-const saveError = ref(null);
+const saveError = ref<string | null>(null);
+
+interface SettingDef {
+    key: string;
+    label: string;
+    type: string;
+    options?: string[];
+    placeholder?: string;
+    min?: number;
+    max?: number;
+}
 
 // Local form state: key → value (only overridden values)
-const form = ref({});
+const form = ref<Record<string, unknown>>({});
 
 // Top-level setting groups to render in the UI
-const topLevelSettings = [
+const topLevelSettings: SettingDef[] = [
     { key: 'ai_model', label: 'AI Model', type: 'select', options: ['opus', 'sonnet', 'haiku'] },
     { key: 'ai_language', label: 'AI Response Language', type: 'text', placeholder: 'en' },
     { key: 'timeout_minutes', label: 'Task Timeout (minutes)', type: 'number', min: 1, max: 60 },
     { key: 'max_tokens', label: 'Max Tokens', type: 'number', min: 1024, max: 200000 },
 ];
 
-const codeReviewSettings = [
+const codeReviewSettings: SettingDef[] = [
     { key: 'code_review.auto_review', label: 'Auto-review on MR', type: 'checkbox' },
     { key: 'code_review.auto_review_on_push', label: 'Auto-review on push', type: 'checkbox' },
     { key: 'code_review.severity_threshold', label: 'Severity threshold', type: 'select', options: ['info', 'minor', 'major', 'critical'] },
 ];
 
-const featureDevSettings = [
+const featureDevSettings: SettingDef[] = [
     { key: 'feature_dev.enabled', label: 'Feature dev enabled', type: 'checkbox' },
     { key: 'feature_dev.branch_prefix', label: 'Branch prefix', type: 'text', placeholder: 'ai/' },
     { key: 'feature_dev.auto_create_mr', label: 'Auto-create MR', type: 'checkbox' },
 ];
 
-const conversationSettings = [
+const conversationSettings: SettingDef[] = [
     { key: 'conversation.enabled', label: 'Conversation enabled', type: 'checkbox' },
     { key: 'conversation.max_history_messages', label: 'Max history messages', type: 'number', min: 10, max: 500 },
     { key: 'conversation.tool_use_gitlab', label: 'GitLab tool use', type: 'checkbox' },
@@ -58,10 +73,10 @@ onMounted(() => {
 watch(() => admin.projectConfig, (config) => {
     if (!config)
         return;
-    const newForm = {};
+    const newForm: Record<string, unknown> = {};
     for (const group of allSettingGroups) {
         for (const setting of group.settings) {
-            const effective = config.effective?.[setting.key];
+            const effective = (config.effective as Record<string, Record<string, unknown>>)?.[setting.key];
             if (effective) {
                 newForm[setting.key] = effective.value;
             }
@@ -70,15 +85,16 @@ watch(() => admin.projectConfig, (config) => {
     form.value = newForm;
 }, { immediate: true });
 
-function getSource(key) {
-    return admin.projectConfig?.effective?.[key]?.source ?? 'default';
+function getSource(key: string): string {
+    const effective = (admin.projectConfig?.effective as Record<string, Record<string, unknown>>)?.[key];
+    return (effective?.source as string) ?? 'default';
 }
 
-function isOverridden(key) {
+function isOverridden(key: string): boolean {
     return getSource(key) === 'project';
 }
 
-function sourceLabel(key) {
+function sourceLabel(key: string): string {
     const source = getSource(key);
     if (source === 'project')
         return 'Project';
@@ -93,18 +109,18 @@ async function handleSave() {
     saveError.value = null;
 
     // Build settings object: include all form values
-    const settings = {};
+    const settings: Record<string, unknown> = {};
     for (const group of allSettingGroups) {
         for (const setting of group.settings) {
             const formValue = form.value[setting.key];
-            const effective = admin.projectConfig?.effective?.[setting.key];
+            const effective = (admin.projectConfig?.effective as Record<string, Record<string, unknown>>)?.[setting.key];
 
             if (formValue === null || formValue === undefined) {
                 if (effective?.source === 'project') {
                     settings[setting.key] = null;
                 }
             } else {
-                let castValue = formValue;
+                let castValue: unknown = formValue;
                 if (setting.type === 'number') {
                     castValue = Number(formValue);
                 } else if (setting.type === 'checkbox') {
@@ -124,7 +140,7 @@ async function handleSave() {
             saveSuccess.value = false;
         }, 3000);
     } else {
-        saveError.value = result.error;
+        saveError.value = result.error ?? null;
     }
 }
 </script>

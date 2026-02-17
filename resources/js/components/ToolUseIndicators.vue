@@ -1,11 +1,24 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue';
 
-const props = defineProps({
-    toolCalls: { type: Array, required: true },
-});
+interface ToolCall {
+    id: string;
+    tool: string;
+    input: Record<string, unknown>;
+}
 
-const TOOL_DISPLAY = {
+interface Props {
+    toolCalls: ToolCall[];
+}
+
+const props = defineProps<Props>();
+
+interface ToolDisplayInfo {
+    emoji: string;
+    verb: string;
+}
+
+const TOOL_DISPLAY: Record<string, ToolDisplayInfo> = {
     BrowseRepoTree: { emoji: '🔍', verb: 'Browsing' },
     ReadFile: { emoji: '📄', verb: 'Reading' },
     SearchCode: { emoji: '🔎', verb: 'Searching for' },
@@ -29,7 +42,7 @@ const indicators = computed(() =>
     }),
 );
 
-function formatContext(tool, input) {
+function formatContext(tool: string, input: Record<string, unknown> | undefined): string {
     if (!input)
         return '';
     switch (tool) {

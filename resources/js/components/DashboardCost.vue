@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 import { useDashboardStore } from '@/stores/dashboard';
@@ -14,24 +14,24 @@ onMounted(() => {
 const cost = computed(() => dashboard.cost);
 const costAlerts = computed(() => dashboard.costAlerts);
 
-const severityColors = {
+const severityColors: Record<string, string> = {
     critical: 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-800 dark:text-red-200',
     warning: 'bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200',
 };
 
-const ruleLabels = {
+const ruleLabels: Record<string, string> = {
     monthly_anomaly: 'Monthly Anomaly',
     daily_spike: 'Daily Spike',
     single_task_outlier: 'Single Task Outlier',
     approaching_projection: 'Approaching Projection',
 };
 
-async function handleAcknowledge(alertId) {
+async function handleAcknowledge(alertId: number) {
     await admin.acknowledgeCostAlert(alertId);
     dashboard.fetchCostAlerts();
 }
 
-const typeLabels = {
+const typeLabels: Record<string, string> = {
     code_review: 'Code Review',
     issue_discussion: 'Issue Discussion',
     feature_dev: 'Feature Dev',
@@ -44,19 +44,19 @@ const typeLabels = {
 const totalCostDisplay = computed(() => {
     if (!cost.value)
         return '—';
-    return `$${cost.value.total_cost.toFixed(2)}`;
+    return `$${(cost.value.total_cost as number).toFixed(2)}`;
 });
 
 const totalTokensDisplay = computed(() => {
     if (!cost.value)
         return '—';
-    return cost.value.total_tokens.toLocaleString();
+    return (cost.value.total_tokens as number).toLocaleString();
 });
 
 const tokenUsageEntries = computed(() => {
     if (!cost.value?.token_usage_by_type)
         return [];
-    return Object.entries(cost.value.token_usage_by_type).map(([key, tokens]) => ({
+    return Object.entries(cost.value.token_usage_by_type as Record<string, number>).map(([key, tokens]) => ({
         key,
         label: typeLabels[key] || key,
         tokens,
@@ -66,7 +66,7 @@ const tokenUsageEntries = computed(() => {
 const costPerTypeEntries = computed(() => {
     if (!cost.value?.cost_per_type)
         return [];
-    return Object.entries(cost.value.cost_per_type).map(([key, data]) => ({
+    return Object.entries(cost.value.cost_per_type as Record<string, { avg_cost: number; total_cost: number; task_count: number }>).map(([key, data]) => ({
         key,
         label: typeLabels[key] || key,
         avgCost: data.avg_cost,
@@ -78,13 +78,13 @@ const costPerTypeEntries = computed(() => {
 const costPerProject = computed(() => {
     if (!cost.value?.cost_per_project)
         return [];
-    return cost.value.cost_per_project;
+    return cost.value.cost_per_project as Array<{ project_id: number; project_name: string; total_cost: number; task_count: number }>;
 });
 
 const monthlyTrend = computed(() => {
     if (!cost.value?.monthly_trend)
         return [];
-    return cost.value.monthly_trend;
+    return cost.value.monthly_trend as Array<{ month: string; total_cost: number; total_tokens: number; task_count: number }>;
 });
 </script>
 

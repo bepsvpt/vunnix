@@ -187,3 +187,7 @@
 | D180 | Use @antfu/eslint-config with ESLint Stylistic for JS/Vue linting + formatting (replaces ESLint + Prettier) | ext-007 | Active |
 | D181 | Stylistic overrides: semicolons on, 4-space indent, single quotes — matching existing codebase + .editorconfig | ext-007 | Active |
 | D182 | ESLint CI runs as separate lightweight job — Node.js only, no DB services | ext-007 | Active |
+| D183 | TypeScript strict mode for Vue 3 frontend — `strict: true` from day one, all new frontend code fully typed | ext-008 | Active |
+| D184 | Zod schemas as single source of truth for API response types — `z.infer<>` for static types, `.parse()` for runtime validation | ext-008 | Active |
+| D185 | Ban `any` via ESLint `ts/no-explicit-any: error` — forces `unknown` + type guards, no escape hatches | ext-008 | Active |
+| D186 | `vue-tsc` type checking in CI — separate lightweight job (Node.js only, no DB services), consistent with D176/D182 | ext-008 | Active |

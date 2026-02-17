@@ -1,13 +1,16 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 
-const emit = defineEmits(['create', 'close']);
+const emit = defineEmits<{
+    create: [projectId: number];
+    close: [];
+}>();
 const auth = useAuthStore();
 
-const selectedProjectId = ref(null);
+const selectedProjectId = ref<number | null>(null);
 const creating = ref(false);
-const error = ref(null);
+const error = ref<string | null>(null);
 
 const chatProjects = computed(() =>
     auth.projects.filter(p => p.permissions.includes('chat.access')),

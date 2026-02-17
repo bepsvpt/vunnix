@@ -1,13 +1,37 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue';
 
-const props = defineProps({
-    action: { type: Object, required: true },
-});
+interface ActionPreview {
+    action_type: string;
+    title: string;
+    description?: string;
+    project_id: number;
+    assignee_id?: number;
+    labels?: string[];
+    branch_name?: string;
+    target_branch?: string;
+    files?: string[];
+    [key: string]: unknown;
+}
 
-const emit = defineEmits(['confirm', 'cancel']);
+interface Props {
+    action: ActionPreview;
+}
 
-const ACTION_DISPLAY = {
+const props = defineProps<Props>();
+
+const emit = defineEmits<{
+    confirm: [];
+    cancel: [];
+}>();
+
+interface ActionDisplayInfo {
+    label: string;
+    emoji: string;
+    color: string;
+}
+
+const ACTION_DISPLAY: Record<string, ActionDisplayInfo> = {
     create_issue: { label: 'Create Issue', emoji: '📋', color: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30' },
     implement_feature: { label: 'Implement Feature', emoji: '🚀', color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' },
     ui_adjustment: { label: 'UI Adjustment', emoji: '🎨', color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30' },

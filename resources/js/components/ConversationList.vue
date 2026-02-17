@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useConversationsStore } from '@/stores/conversations';
@@ -10,18 +10,21 @@ const auth = useAuthStore();
 
 const showNewDialog = ref(false);
 
-let searchTimeout = null;
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
-function onSearchInput(event) {
-    const query = event.target.value;
-    clearTimeout(searchTimeout);
+function onSearchInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const query = target.value;
+    if (searchTimeout)
+        clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
         store.setSearchQuery(query);
     }, 300);
 }
 
-function onProjectFilter(event) {
-    const value = event.target.value;
+function onProjectFilter(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    const value = target.value;
     store.setProjectFilter(value ? Number(value) : null);
 }
 
@@ -29,20 +32,20 @@ function onArchiveToggle() {
     store.setShowArchived(!store.showArchived);
 }
 
-function onSelect(id) {
+function onSelect(id: string) {
     store.selectConversation(id);
 }
 
-function onArchive(id) {
+function onArchive(id: string) {
     store.toggleArchive(id);
 }
 
-function projectNameForId(projectId) {
+function projectNameForId(projectId: number): string {
     const project = auth.projects.find(p => p.id === projectId);
     return project ? project.name : '';
 }
 
-async function onCreateConversation(projectId) {
+async function onCreateConversation(projectId: number) {
     try {
         await store.createConversation(projectId);
         showNewDialog.value = false;

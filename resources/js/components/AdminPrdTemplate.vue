@@ -1,18 +1,22 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 
-const props = defineProps({
-    projectId: { type: Number, required: true },
-    projectName: { type: String, required: true },
-});
+interface Props {
+    projectId: number;
+    projectName: string;
+}
 
-const emit = defineEmits(['back']);
+const props = defineProps<Props>();
+
+const emit = defineEmits<{
+    back: [];
+}>();
 
 const admin = useAdminStore();
 const saving = ref(false);
 const saveSuccess = ref(false);
-const saveError = ref(null);
+const saveError = ref<string | null>(null);
 const templateContent = ref('');
 const resetToDefault = ref(false);
 
@@ -24,10 +28,10 @@ onMounted(() => {
 watch(() => admin.prdTemplate, (data) => {
     if (!data)
         return;
-    templateContent.value = data.template || '';
+    templateContent.value = (data.template as string) || '';
 }, { immediate: true });
 
-function sourceLabel() {
+function sourceLabel(): string {
     const source = admin.prdTemplate?.source ?? 'default';
     if (source === 'project')
         return 'Project';
@@ -36,7 +40,7 @@ function sourceLabel() {
     return 'Default';
 }
 
-function isOverridden() {
+function isOverridden(): boolean {
     return admin.prdTemplate?.source === 'project';
 }
 
@@ -46,7 +50,7 @@ async function handleSave() {
     saveError.value = null;
 
     const template = resetToDefault.value ? null : templateContent.value;
-    const result = await admin.updatePrdTemplate(props.projectId, template);
+    const result = await admin.updatePrdTemplate(props.projectId, template as string);
     saving.value = false;
 
     if (result.success) {
@@ -54,13 +58,13 @@ async function handleSave() {
         resetToDefault.value = false;
         // Update local state from store
         if (admin.prdTemplate) {
-            templateContent.value = admin.prdTemplate.template || '';
+            templateContent.value = (admin.prdTemplate.template as string) || '';
         }
         setTimeout(() => {
             saveSuccess.value = false;
         }, 3000);
     } else {
-        saveError.value = result.error;
+        saveError.value = result.error ?? null;
     }
 }
 </script>

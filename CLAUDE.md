@@ -32,6 +32,7 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 | `composer rector` | Run Rector in dry-run mode (preview changes without applying) |
 | `composer rector:fix` | Apply Rector auto-fixes (type declarations, dead code, code quality) |
 | `composer ide-helper:models` | Regenerate Eloquent model PHPDoc annotations (requires DB connection) |
+| `npm run typecheck` | Run vue-tsc type checking on frontend (strict mode) |
 | `npm run lint` | Run ESLint on frontend (check for violations) |
 | `npm run lint:fix` | Run ESLint with auto-fix on frontend |
 | `composer format` | Run Laravel Pint (auto-fix code style) |
@@ -46,7 +47,7 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 | Component | Technology |
 |---|---|
 | **Backend** | Laravel 11 + Octane (FrankenPHP driver) |
-| **Frontend** | Vue 3 SPA (Composition API, `<script setup>`) + Vite + Pinia + Vue Router |
+| **Frontend** | Vue 3 SPA (Composition API, `<script setup lang="ts">`) + TypeScript (strict) + Vite + Pinia + Vue Router + Zod |
 | **Database** | PostgreSQL 16 (JSONB, materialized views, full-text search via tsvector + GIN) |
 | **Cache / Queue** | Redis (separate DBs for cache, session, queue) |
 | **Real-time** | Laravel Reverb (WebSocket) + SSE (chat streaming) |
@@ -77,7 +78,8 @@ resources/js/
 ├── stores/              # Pinia stores
 ├── router/              # Vue Router config
 ├── composables/         # Shared composition functions
-└── lib/                 # Utilities (markdown renderer, axios config)
+├── lib/                 # Utilities (markdown renderer, axios config)
+└── types/               # TypeScript types — Zod schemas (api.ts), enums (enums.ts), barrel (index.ts)
 tests/
 ├── Unit/                # Pure unit tests (Mockery, no Laravel container)
 └── Feature/             # Laravel feature tests (HTTP, DB, queue)
@@ -96,10 +98,14 @@ tests/
 - **No raw SQL** — use Eloquent / Query Builder
 - **Naming:** PascalCase for classes, camelCase for methods/variables, snake_case for DB columns
 
-### Vue 3
+### Vue 3 + TypeScript
 
-- **Style:** Composition API with `<script setup>` (no Options API)
-- **State:** Pinia stores
+- **Style:** Composition API with `<script setup lang="ts">` (no Options API)
+- **TypeScript:** Strict mode (`strict: true`), `verbatimModuleSyntax: true`, `vue-tsc` for type checking
+- **Types:** Zod schemas in `resources/js/types/api.ts` as single source of truth for API response types — provides both compile-time types (`z.infer<>`) and runtime validation (`.parse()`)
+- **No `any`:** Banned via ESLint rule `ts/no-explicit-any: error` — use `unknown` + type guards
+- **Props:** Use type-based `defineProps<T>()` (not runtime `defineProps({})`)
+- **State:** Pinia stores (typed)
 - **Formatting:** ESLint (`@antfu/eslint-config` — linting + formatting via ESLint Stylistic, no Prettier)
 - **Routing:** Vue Router with history mode (FrankenPHP serves `index.html` for non-API routes)
 - **Responsive:** Desktop-first with fluid layouts and breakpoints (D135)

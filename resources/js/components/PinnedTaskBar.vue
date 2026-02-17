@@ -1,11 +1,28 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
 
-defineProps({
-    tasks: { type: Array, required: true },
-});
+interface PinnedTask {
+    task_id: number;
+    status: string;
+    type: string;
+    title: string;
+    pipeline_id: number | null;
+    pipeline_status: string | null;
+    started_at: string | null;
+}
 
-const TASK_TYPE_DISPLAY = {
+interface Props {
+    tasks: PinnedTask[];
+}
+
+defineProps<Props>();
+
+interface TypeDisplayInfo {
+    label: string;
+    emoji: string;
+}
+
+const TASK_TYPE_DISPLAY: Record<string, TypeDisplayInfo> = {
     code_review: { label: 'Code Review', emoji: '🔍' },
     feature_dev: { label: 'Feature Dev', emoji: '🚀' },
     ui_adjustment: { label: 'UI Adjustment', emoji: '🎨' },
@@ -15,13 +32,13 @@ const TASK_TYPE_DISPLAY = {
     issue_discussion: { label: 'Issue Discussion', emoji: '💬' },
 };
 
-function typeDisplay(type) {
+function typeDisplay(type: string): TypeDisplayInfo {
     return TASK_TYPE_DISPLAY[type] || { label: type, emoji: '⚙️' };
 }
 
 // Reactive tick for elapsed time updates
 const tick = ref(Date.now());
-let intervalId = null;
+let intervalId: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
     intervalId = setInterval(() => {
@@ -34,7 +51,7 @@ onUnmounted(() => {
         clearInterval(intervalId);
 });
 
-function formatElapsed(startedAt) {
+function formatElapsed(startedAt: string | null): string | null {
     if (!startedAt)
         return null;
     const start = new Date(startedAt).getTime();
@@ -45,7 +62,7 @@ function formatElapsed(startedAt) {
     return `${minutes}m ${seconds}s`;
 }
 
-function isPipelinePending(task) {
+function isPipelinePending(task: PinnedTask): boolean {
     return task.pipeline_status === 'pending';
 }
 </script>

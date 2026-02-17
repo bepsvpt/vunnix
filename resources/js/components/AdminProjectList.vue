@@ -1,15 +1,17 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 
-const emit = defineEmits(['configure']);
+const emit = defineEmits<{
+    configure: [payload: { id: number; name: string }];
+}>();
 
 const admin = useAdminStore();
-const actionInProgress = ref(null);
-const actionError = ref(null);
-const actionWarnings = ref([]);
+const actionInProgress = ref<number | null>(null);
+const actionError = ref<string | null>(null);
+const actionWarnings = ref<string[]>([]);
 
-async function handleEnable(projectId) {
+async function handleEnable(projectId: number) {
     actionInProgress.value = projectId;
     actionError.value = null;
     actionWarnings.value = [];
@@ -17,7 +19,7 @@ async function handleEnable(projectId) {
     const result = await admin.enableProject(projectId);
 
     if (!result.success) {
-        actionError.value = result.error;
+        actionError.value = result.error ?? null;
     } else if (result.warnings?.length) {
         actionWarnings.value = result.warnings;
     }
@@ -25,7 +27,7 @@ async function handleEnable(projectId) {
     actionInProgress.value = null;
 }
 
-async function handleDisable(projectId) {
+async function handleDisable(projectId: number) {
     if (!confirm('Disable this project? The webhook will be removed, but all data will be preserved.')) {
         return;
     }
@@ -37,7 +39,7 @@ async function handleDisable(projectId) {
     const result = await admin.disableProject(projectId);
 
     if (!result.success) {
-        actionError.value = result.error;
+        actionError.value = result.error ?? null;
     }
 
     actionInProgress.value = null;

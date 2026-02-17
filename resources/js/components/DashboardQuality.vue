@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, watch } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 import { useDashboardStore } from '@/stores/dashboard';
@@ -20,19 +20,19 @@ watch(() => dashboard.promptVersionFilter, () => {
 const quality = computed(() => dashboard.quality);
 const overrelianceAlerts = computed(() => dashboard.overrelianceAlerts);
 
-const overrelianceRuleLabels = {
+const overrelianceRuleLabels: Record<string, string> = {
     high_acceptance_rate: 'High Acceptance Rate',
     critical_acceptance_rate: 'Critical Finding Acceptance',
     bulk_resolution: 'Bulk Resolution Pattern',
     zero_reactions: 'Zero Negative Reactions',
 };
 
-const overrelianceSeverityColors = {
+const overrelianceSeverityColors: Record<string, string> = {
     warning: 'bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200',
     info: 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200',
 };
 
-async function handleOverrelianceAcknowledge(alertId) {
+async function handleOverrelianceAcknowledge(alertId: number) {
     await admin.acknowledgeOverrelianceAlert(alertId);
     dashboard.fetchOverrelianceAlerts();
 }
@@ -52,11 +52,11 @@ const avgFindingsDisplay = computed(() => {
 const severityTotal = computed(() => {
     if (!quality.value?.severity_distribution)
         return 0;
-    const d = quality.value.severity_distribution;
+    const d = quality.value.severity_distribution as { critical: number; major: number; minor: number };
     return d.critical + d.major + d.minor;
 });
 
-function severityPercent(count) {
+function severityPercent(count: number) {
     if (severityTotal.value === 0)
         return 0;
     return Math.round((count / severityTotal.value) * 100);
