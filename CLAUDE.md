@@ -29,7 +29,8 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 | `composer analyse` | Run PHPStan static analysis |
 | `composer analyse:baseline` | Regenerate PHPStan baseline after fixing errors |
 | `composer ide-helper:models` | Regenerate Eloquent model PHPDoc annotations (requires DB connection) |
-| `./vendor/bin/pint` | Run Laravel Pint (PSR-12 code style) |
+| `composer format` | Run Laravel Pint (auto-fix code style) |
+| `composer format:check` | Check code style without fixing (CI mode) |
 | `docker compose up -d` | Start Docker services (PostgreSQL, Redis) |
 | `docker compose down && docker compose up -d` | Full restart (required after code changes — see Learnings) |
 
@@ -81,7 +82,7 @@ tests/
 
 ### PHP (Laravel)
 
-- **Style:** PSR-12, enforce with Laravel Pint
+- **Style:** PSR-12, enforce with Laravel Pint (auto-formatted via Claude Code hook + CI)
 - **Static analysis:** PHPStan
 - **Validation:** Always use FormRequest classes for HTTP input validation
 - **Services:** Business logic in Service classes, not controllers

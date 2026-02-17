@@ -181,3 +181,6 @@
 | D174 | Use Larastan 3.x (not standalone PHPStan) for dev static analysis — Laravel-aware stubs | ext-005 | Active |
 | D175 | Target PHPStan level 8 (not max/10) — levels 9-10 mixed-type strictness excessive for Laravel | ext-005 | Active |
 | D176 | PHPStan CI runs as separate job without database services — static analysis needs no DB | ext-005 | Active |
+| D177 | Laravel Pint `laravel` preset + strict_comparison, void_return, ordered_class_elements, PHPDoc cleanup | ext-006 | Active |
+| D178 | Claude Code PostToolUse hook auto-formats PHP files on Edit/Write via Pint | ext-006 | Active |
+| D179 | Pint CI runs as separate lightweight job using `--test` dry-run mode | ext-006 | Active |
