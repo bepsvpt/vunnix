@@ -166,6 +166,40 @@ test('includes result summary and files count in system message', function (): v
     expect($systemMsg->content)->toContain('2 files changed');
 });
 
+test('includes full analysis content in system message for deep_analysis tasks', function (): void {
+    $conversation = Conversation::factory()->create();
+    $task = Task::factory()->create([
+        'conversation_id' => $conversation->id,
+        'type' => 'deep_analysis',
+        'status' => 'completed',
+        'result' => [
+            'title' => 'Security analysis of auth module',
+            'analysis' => '## Authentication\nThe auth module uses JWT tokens with 24h expiry.',
+            'key_findings' => [
+                ['title' => 'Token expiry too long', 'description' => '24h is excessive for admin tokens', 'severity' => 'warning'],
+                ['title' => 'No refresh token rotation', 'description' => 'Refresh tokens are reused', 'severity' => 'critical'],
+            ],
+            'references' => [
+                ['file' => 'app/Auth.php', 'line' => 42, 'context' => 'JWT config'],
+            ],
+        ],
+    ]);
+
+    $listener = new DeliverTaskResultToConversation;
+    $listener->handle(new TaskStatusChanged($task));
+
+    $systemMsg = Message::where('conversation_id', $conversation->id)
+        ->where('role', 'system')
+        ->first();
+
+    expect($systemMsg->content)->toContain('[System: Task result delivered]');
+    expect($systemMsg->content)->toContain('JWT tokens with 24h expiry');
+    expect($systemMsg->content)->toContain('Token expiry too long');
+    expect($systemMsg->content)->toContain('No refresh token rotation');
+    expect($systemMsg->content)->toContain('[warning]');
+    expect($systemMsg->content)->toContain('[critical]');
+});
+
 test('includes task title in system message for failed tasks', function (): void {
     $conversation = Conversation::factory()->create();
     $task = Task::factory()->create([

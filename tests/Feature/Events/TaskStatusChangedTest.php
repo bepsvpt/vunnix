@@ -126,6 +126,31 @@ test('includes error_reason in broadcast payload for failed task', function (): 
     expect($payload)->toHaveKey('error_reason', 'Schema validation failed');
 });
 
+test('includes analysis content in broadcast payload for completed deep_analysis task', function (): void {
+    $task = Task::factory()->create([
+        'type' => 'deep_analysis',
+        'status' => 'completed',
+        'result' => [
+            'title' => 'Security analysis',
+            'analysis' => '## Authentication\nThe auth module uses JWT tokens...',
+            'key_findings' => [
+                ['title' => 'Token expiry too long', 'description' => '24h is too long', 'severity' => 'warning'],
+            ],
+            'references' => [
+                ['file' => 'app/Auth.php', 'line' => 42, 'context' => 'JWT config'],
+            ],
+        ],
+    ]);
+
+    $event = new TaskStatusChanged($task);
+    $payload = $event->broadcastWith();
+
+    expect($payload['result_data'])->toHaveKey('analysis');
+    expect($payload['result_data']['analysis'])->toContain('JWT tokens');
+    expect($payload['result_data']['key_findings'])->toHaveCount(1);
+    expect($payload['result_data']['references'])->toHaveCount(1);
+});
+
 test('omits result_data for non-terminal tasks', function (): void {
     $task = Task::factory()->create([
         'type' => 'feature_dev',

@@ -145,9 +145,11 @@ class TaskDispatcher
                 'VUNNIX_API_URL' => config('vunnix.api_url'),
             ];
 
-            // Pass the question text for ask_command tasks
+            // Pass the question/description text for tasks that need it
             if (isset($task->result['question']) && $task->result['question'] !== '') {
                 $variables['VUNNIX_QUESTION'] = $task->result['question'];
+            } elseif (isset($task->result['description']) && $task->result['description'] !== '') {
+                $variables['VUNNIX_QUESTION'] = $task->result['description'];
             }
 
             // T43: Pass Issue IID for issue_discussion tasks

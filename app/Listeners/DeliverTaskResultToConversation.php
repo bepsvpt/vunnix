@@ -47,6 +47,16 @@ class DeliverTaskResultToConversation
 
     private function buildResultContent(\App\Models\Task $task): string
     {
+        // Deep analysis: include full analysis text for the AI to reference
+        if ($task->type === \App\Enums\TaskType::DeepAnalysis) {
+            return $this->buildDeepAnalysisContent($task);
+        }
+
+        return $this->buildGenericResultContent($task);
+    }
+
+    private function buildGenericResultContent(\App\Models\Task $task): string
+    {
         $statusText = $task->status->value;
         $title = $task->result['title'] ?? $task->result['mr_title'] ?? 'Task';
         $result = $task->result ?? [];
@@ -73,5 +83,35 @@ class DeliverTaskResultToConversation
         }
 
         return implode(' | ', $parts);
+    }
+
+    private function buildDeepAnalysisContent(\App\Models\Task $task): string
+    {
+        $result = $task->result ?? [];
+        $title = $result['title'] ?? 'Deep Analysis';
+        $statusText = $task->status->value;
+
+        $parts = ["[System: Task result delivered] Task #{$task->id} \"{$title}\" {$statusText}."];
+
+        // Include the full analysis markdown for the AI to reference in conversation
+        $analysis = $result['analysis'] ?? null;
+        if (is_string($analysis) && $analysis !== '') {
+            $parts[] = "\n\n## Analysis Result\n\n{$analysis}";
+        }
+
+        // Include key findings as a structured summary
+        $findings = $result['key_findings'] ?? [];
+        if (is_array($findings) && $findings !== []) {
+            $findingLines = ["\n\n## Key Findings"];
+            foreach ($findings as $finding) {
+                $severity = $finding['severity'] ?? 'info';
+                $findingTitle = $finding['title'] ?? 'Finding';
+                $description = $finding['description'] ?? '';
+                $findingLines[] = "- **[{$severity}] {$findingTitle}**: {$description}";
+            }
+            $parts[] = implode("\n", $findingLines);
+        }
+
+        return implode('', $parts);
     }
 }

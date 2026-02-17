@@ -97,6 +97,19 @@ class TaskStatusChanged implements ShouldBroadcast
             $data['screenshot'] = $result['screenshot'] ?? null;
         }
 
+        // Deep analysis: include analysis content and key findings
+        if ($this->task->type === \App\Enums\TaskType::DeepAnalysis) {
+            if (isset($result['analysis'])) {
+                $data['analysis'] = $result['analysis'];
+            }
+            if (isset($result['key_findings'])) {
+                $data['key_findings'] = $result['key_findings'];
+            }
+            if (isset($result['references'])) {
+                $data['references'] = $result['references'];
+            }
+        }
+
         return $data;
     }
 }
