@@ -1133,6 +1133,79 @@ describe('useConversationsStore', () => {
             expect(store.activeTasks.size).toBe(0);
             expect(mockEchoInstance.private).not.toHaveBeenCalled();
         });
+
+        // ─── D187/D188: Structured SSE error handling ───────────
+
+        it('handles retryable stream error and sets streamRetryable', async () => {
+            // Stream with error event (emitted by ResilientStreamResponse)
+            const events = [
+                { type: 'stream_start' },
+                { type: 'text_delta', delta: 'partial response' },
+                { type: 'error', error: { message: 'AI service busy', code: 'rate_limited', retryable: true } },
+                '[DONE]',
+            ];
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(events)));
+
+            // Mock recovery re-fetch
+            const recoveredMessages = [
+                { id: 'msg-1', role: 'user', content: 'Test', created_at: '2026-02-15T12:00:00+00:00' },
+            ];
+            mockedAxios.get.mockResolvedValueOnce({
+                data: { data: { id: 'conv-1', messages: recoveredMessages } },
+            });
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Test');
+
+            expect(store.streamRetryable).toBe(true);
+            expect(store.messagesError).toBe('AI service busy');
+            expect(store.streaming).toBe(false);
+            expect(store.streamingContent).toBe('');
+            expect(store.activeToolCalls).toEqual([]);
+            // Should re-fetch persisted messages
+            expect(mockedAxios.get).toHaveBeenCalledWith('/api/v1/conversations/conv-1');
+        });
+
+        it('handles non-retryable stream error and does not set streamRetryable', async () => {
+            const events = [
+                { type: 'stream_start' },
+                { type: 'error', error: { message: 'Generic AI error', code: 'ai_error', retryable: false } },
+                '[DONE]',
+            ];
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(events)));
+
+            mockedAxios.get.mockResolvedValueOnce({
+                data: { data: { id: 'conv-1', messages: [] } },
+            });
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Test');
+
+            expect(store.streamRetryable).toBe(false);
+            expect(store.messagesError).toBe('Generic AI error');
+            expect(store.streaming).toBe(false);
+        });
+
+        it('resets streamRetryable on new stream attempt', async () => {
+            const events = standardEvents();
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(events)));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+            store.streamRetryable = true; // From previous error
+
+            await store.streamMessage('Test');
+
+            expect(store.streamRetryable).toBe(false);
+            expect(store.messagesError).toBeNull();
+        });
     });
 
     describe('active task tracking (T69)', () => {

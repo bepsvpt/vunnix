@@ -1,3 +1,4 @@
+import type { StreamError } from '@/lib/sse';
 import type { Conversation } from '@/types';
 import axios from 'axios';
 import { defineStore } from 'pinia';
@@ -100,6 +101,7 @@ export const useConversationsStore = defineStore('conversations', () => {
     const streaming = ref(false);
     const streamingContent = ref('');
     const activeToolCalls = ref<ToolCall[]>([]);
+    const streamRetryable = ref(false);
 
     // Action preview state (T68)
     const pendingAction = ref<ActionPreview | null>(null);
@@ -444,6 +446,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         streamingContent.value = '';
         activeToolCalls.value = [];
         messagesError.value = null;
+        streamRetryable.value = false;
 
         // Optimistic user message
         const userMsg: ChatMessage = {
@@ -544,6 +547,17 @@ export const useConversationsStore = defineStore('conversations', () => {
                         });
                         subscribeToTask(dispatch.taskId);
                     }
+                },
+                async onStreamError(error: StreamError) {
+                    // D188: Structured error recovery for AI provider failures
+                    streaming.value = false;
+                    streamingContent.value = '';
+                    activeToolCalls.value = [];
+                    // Re-fetch persisted messages — RemembersConversations saves server-side
+                    // (fetchMessages clears messagesError, so set it AFTER)
+                    await fetchMessages(selectedId.value!);
+                    streamRetryable.value = error.retryable;
+                    messagesError.value = error.message;
                 },
                 async onError(err: unknown) {
                     messagesError.value = (err as Error).message || 'Stream interrupted';
@@ -675,6 +689,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         streaming,
         streamingContent,
         activeToolCalls,
+        streamRetryable,
         pendingAction,
         activeTasks,
         activeTasksForConversation,

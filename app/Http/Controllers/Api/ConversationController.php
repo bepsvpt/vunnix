@@ -9,13 +9,14 @@ use App\Http\Requests\SendMessageRequest;
 use App\Http\Resources\ConversationDetailResource;
 use App\Http\Resources\ConversationResource;
 use App\Http\Resources\MessageResource;
+use App\Http\Responses\ResilientStreamResponse;
 use App\Models\Conversation;
 use App\Models\Project;
 use App\Services\ConversationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Laravel\Ai\Responses\StreamableAgentResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ConversationController extends Controller
 {
@@ -124,8 +125,11 @@ class ConversationController extends Controller
      * Returns a text/event-stream response with AI SDK stream events:
      * stream_start, text_start, text_delta, text_end, tool_call,
      * tool_result, stream_end, followed by [DONE].
+     *
+     * Wrapped in ResilientStreamResponse to catch AI provider exceptions
+     * (rate limits, overloaded) and emit structured SSE error events (D187).
      */
-    public function stream(SendMessageRequest $request, Conversation $conversation): StreamableAgentResponse
+    public function stream(SendMessageRequest $request, Conversation $conversation): StreamedResponse
     {
         $this->authorize('stream', $conversation);
 
@@ -134,10 +138,12 @@ class ConversationController extends Controller
             abort(401);
         }
 
-        return $this->conversationService->streamResponse(
-            conversation: $conversation,
-            user: $user,
-            content: $request->validated('content'),
+        return ResilientStreamResponse::from(
+            $this->conversationService->streamResponse(
+                conversation: $conversation,
+                user: $user,
+                content: $request->validated('content'),
+            ),
         );
     }
 

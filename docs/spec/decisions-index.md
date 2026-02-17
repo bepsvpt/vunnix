@@ -191,3 +191,5 @@
 | D184 | Zod schemas as single source of truth for API response types — `z.infer<>` for static types, `.parse()` for runtime validation | ext-008 | Active |
 | D185 | Ban `any` via ESLint `ts/no-explicit-any: error` — forces `unknown` + type guards, no escape hatches | ext-008 | Active |
 | D186 | `vue-tsc` type checking in CI — separate lightweight job (Node.js only, no DB services), consistent with D176/D182 | ext-008 | Active |
+| D187 | Structured SSE error event for AI provider failures during streaming — emits `{"type":"error","error":{...}}` when rate limited or overloaded mid-stream | ext-009 | Active |
+| D188 | Client-side recovery for streaming errors — frontend shows retryable/terminal error banners, refetches persisted messages via REST API | ext-009 | Active |

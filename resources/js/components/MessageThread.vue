@@ -82,12 +82,39 @@ async function handleSend(content: string) {
                 </svg>
             </div>
 
-            <!-- Error -->
+            <!-- Error: retryable (amber) vs terminal (red) — D187/D188 -->
             <div
                 v-else-if="store.messagesError"
                 class="flex items-center justify-center h-full"
             >
-                <p class="text-sm text-red-500">
+                <div
+                    v-if="store.streamRetryable"
+                    data-testid="retryable-error"
+                    class="flex items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700 dark:bg-amber-950"
+                    role="alert"
+                >
+                    <svg class="h-5 w-5 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <div>
+                        <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
+                            {{ store.messagesError }}
+                        </p>
+                        <p class="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                            You can resend your message to try again.
+                        </p>
+                    </div>
+                    <button
+                        class="ml-auto text-amber-400 hover:text-amber-600 dark:hover:text-amber-300"
+                        aria-label="Dismiss"
+                        @click="store.messagesError = null; store.streamRetryable = false"
+                    >
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <p v-else class="text-sm text-red-500">
                     {{ store.messagesError }}
                 </p>
             </div>

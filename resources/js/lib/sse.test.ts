@@ -175,4 +175,111 @@ describe('streamSSE', () => {
         expect(events[0]).toEqual({ type: 'stream_start' });
         expect(events[1]).toEqual({ type: 'text_delta', delta: 'ok' });
     });
+
+    // ─── D187: SSE error event parsing ───────────────────────────
+
+    it('calls onStreamError for error type events instead of onEvent', async () => {
+        const events: unknown[] = [];
+        const onStreamError = vi.fn();
+        const response = mockSSEResponse([
+            'data: {"type":"stream_start"}',
+            '',
+            'data: {"type":"text_delta","delta":"partial"}',
+            '',
+            'data: {"type":"error","error":{"message":"AI service busy","code":"rate_limited","retryable":true}}',
+            '',
+            'data: [DONE]',
+            '',
+        ]);
+
+        await streamSSE(response, {
+            onEvent: event => events.push(event),
+            onStreamError,
+        });
+
+        // Normal events should still be received
+        expect(events).toHaveLength(2);
+        expect(events[0]).toEqual({ type: 'stream_start' });
+        expect(events[1]).toEqual({ type: 'text_delta', delta: 'partial' });
+
+        // Error event should be routed to onStreamError
+        expect(onStreamError).toHaveBeenCalledOnce();
+        expect(onStreamError).toHaveBeenCalledWith({
+            message: 'AI service busy',
+            code: 'rate_limited',
+            retryable: true,
+        });
+    });
+
+    it('falls through to onEvent when onStreamError is not provided', async () => {
+        const events: unknown[] = [];
+        const response = mockSSEResponse([
+            'data: {"type":"error","error":{"message":"test","code":"ai_error","retryable":false}}',
+            '',
+            'data: [DONE]',
+            '',
+        ]);
+
+        await streamSSE(response, {
+            onEvent: event => events.push(event),
+        });
+
+        // Without onStreamError, error event should go to onEvent for backward compat
+        expect(events).toHaveLength(1);
+        expect(events[0]).toEqual({
+            type: 'error',
+            error: { message: 'test', code: 'ai_error', retryable: false },
+        });
+    });
+
+    it('handles non-retryable error events', async () => {
+        const onStreamError = vi.fn();
+        const response = mockSSEResponse([
+            'data: {"type":"error","error":{"message":"Generic AI error","code":"ai_error","retryable":false}}',
+            '',
+            'data: [DONE]',
+            '',
+        ]);
+
+        await streamSSE(response, {
+            onEvent: () => {},
+            onStreamError,
+        });
+
+        expect(onStreamError).toHaveBeenCalledWith({
+            message: 'Generic AI error',
+            code: 'ai_error',
+            retryable: false,
+        });
+    });
+
+    it('handles error events in remaining buffer content', async () => {
+        const onStreamError = vi.fn();
+        // Single chunk without trailing double-newline — goes through buffer processing
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+            start(controller) {
+                controller.enqueue(encoder.encode(
+                    'data: {"type":"error","error":{"message":"busy","code":"overloaded","retryable":true}}\n\ndata: [DONE]\n\n',
+                ));
+                controller.close();
+            },
+        });
+        const response = new Response(stream, {
+            status: 200,
+            headers: { 'Content-Type': 'text/event-stream' },
+        });
+
+        await streamSSE(response, {
+            onEvent: () => {},
+            onStreamError,
+        });
+
+        expect(onStreamError).toHaveBeenCalledOnce();
+        expect(onStreamError).toHaveBeenCalledWith({
+            message: 'busy',
+            code: 'overloaded',
+            retryable: true,
+        });
+    });
 });
