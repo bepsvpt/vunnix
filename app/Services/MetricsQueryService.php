@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use stdClass;
 
 class MetricsQueryService
 {
@@ -11,7 +12,7 @@ class MetricsQueryService
      * Query aggregated metrics by project, filtering to allowed project IDs.
      *
      * @param  Collection<int, int>  $projectIds
-     * @return Collection<int, object>
+     * @return Collection<int, stdClass>
      */
     public function byProject(Collection $projectIds): Collection
     {
@@ -50,7 +51,7 @@ class MetricsQueryService
      * Query aggregated metrics by task type, filtered to allowed projects.
      *
      * @param  Collection<int, int>  $projectIds
-     * @return Collection<int, object>
+     * @return Collection<int, stdClass>
      */
     public function byType(Collection $projectIds): Collection
     {
@@ -91,7 +92,7 @@ class MetricsQueryService
      *
      * @param  Collection<int, int>  $projectIds
      * @param  int  $months  Number of months to look back
-     * @return Collection<int, object>
+     * @return Collection<int, stdClass>
      */
     public function byPeriod(Collection $projectIds, int $months = 12): Collection
     {

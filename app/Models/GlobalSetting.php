@@ -132,7 +132,7 @@ TEMPLATE;
      * Set a setting value, creating or updating as needed.
      * Invalidates the cache for this key.
      */
-    public static function set(string $key, mixed $value, string $type = 'string', ?string $description = null): static
+    public static function set(string $key, mixed $value, string $type = 'string', ?string $description = null): self
     {
         Cache::forget(self::CACHE_PREFIX.$key);
 
