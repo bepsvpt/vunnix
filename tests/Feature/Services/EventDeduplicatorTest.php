@@ -14,6 +14,8 @@ use App\Services\EventDeduplicator;
 use App\Services\RoutingResult;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
 
@@ -460,4 +462,165 @@ it('reports superseding correctly', function (): void {
     expect($result->accepted())->toBeTrue()
         ->and($result->didSupersede())->toBeTrue()
         ->and($result->supersededCount)->toBe(3);
+});
+
+// ------------------------------------------------------------------
+//  Pipeline cancellation during superseding (lines 189-210)
+// ------------------------------------------------------------------
+
+it('cancels CI pipelines when superseding tasks with pipeline_id', function (): void {
+    // Create tasks with pipeline_id set
+    insertTask($this->project->id, $this->user->id, [
+        'mr_iid' => 42,
+        'commit_sha' => 'old-sha-1',
+        'status' => 'running',
+        'pipeline_id' => 1001,
+    ]);
+    insertTask($this->project->id, $this->user->id, [
+        'mr_iid' => 42,
+        'commit_sha' => 'old-sha-2',
+        'status' => 'queued',
+        'pipeline_id' => 1002,
+    ]);
+
+    // Use Http::fake to intercept GitLabClient's cancelPipeline HTTP calls
+    Http::fake([
+        '*/pipelines/*/cancel' => Http::response([], 200),
+    ]);
+
+    $dedup = new EventDeduplicator;
+    $event = dedupMrOpenedEvent($this->project->id, mrIid: 42, commitSha: 'brand-new');
+
+    $result = $dedup->process('00000000-0000-0000-0000-000000000020', dedupRouting('auto_review', 'normal', $event));
+
+    expect($result->accepted())->toBeTrue()
+        ->and($result->supersededCount)->toBe(2);
+
+    // Verify both pipelines were cancelled via HTTP
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+        return str_contains($request->url(), '/pipelines/1001/cancel');
+    });
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+        return str_contains($request->url(), '/pipelines/1002/cancel');
+    });
+});
+
+it('logs warning but continues when pipeline cancellation fails', function (): void {
+    // Create two tasks with pipeline_id — first cancellation will fail, second should still run
+    insertTask($this->project->id, $this->user->id, [
+        'mr_iid' => 42,
+        'commit_sha' => 'old-sha-a',
+        'status' => 'running',
+        'pipeline_id' => 2001,
+    ]);
+    insertTask($this->project->id, $this->user->id, [
+        'mr_iid' => 42,
+        'commit_sha' => 'old-sha-b',
+        'status' => 'running',
+        'pipeline_id' => 2002,
+    ]);
+
+    // Use Http::fake — pipeline 2001 cancel will throw (connection refused),
+    // pipeline 2002 cancel will succeed. The GitLabClient.cancelPipeline uses
+    // Http::post() which Http::fake() intercepts.
+    // To make one call throw, we use a callback that throws for the first URL.
+    Http::fake(function (\Illuminate\Http\Client\Request $request) {
+        if (str_contains($request->url(), '/pipelines/2001/cancel')) {
+            throw new \Illuminate\Http\Client\ConnectionException('Connection refused');
+        }
+
+        return Http::response([], 200);
+    });
+
+    $dedup = new EventDeduplicator;
+    $event = dedupMrOpenedEvent($this->project->id, mrIid: 42, commitSha: 'brand-new');
+
+    $result = $dedup->process('00000000-0000-0000-0000-000000000021', dedupRouting('auto_review', 'normal', $event));
+
+    // Both tasks should still be superseded even though one pipeline cancel failed
+    expect($result->accepted())->toBeTrue()
+        ->and($result->supersededCount)->toBe(2);
+
+    // The second pipeline cancel was still attempted (best-effort behavior)
+    Http::assertSent(fn (\Illuminate\Http\Client\Request $r): bool => str_contains($r->url(), '/pipelines/2002/cancel'));
+
+    $tasks = DB::table('tasks')
+        ->where('project_id', $this->project->id)
+        ->where('mr_iid', 42)
+        ->get();
+    expect($tasks->every(fn ($t) => $t->status === 'superseded'))->toBeTrue();
+});
+
+it('does not attempt pipeline cancellation when tasks have no pipeline_id', function (): void {
+    // Create tasks without pipeline_id
+    insertTask($this->project->id, $this->user->id, [
+        'mr_iid' => 42,
+        'commit_sha' => 'old-sha',
+        'status' => 'running',
+        'pipeline_id' => null,
+    ]);
+
+    // Should NOT call cancelPipeline — verify by not mocking GitLabClient
+    // If it tried to call cancelPipeline, it would fail because no mock is set up
+
+    $dedup = new EventDeduplicator;
+    $event = dedupMrOpenedEvent($this->project->id, mrIid: 42, commitSha: 'brand-new');
+
+    $result = $dedup->process('00000000-0000-0000-0000-000000000022', dedupRouting('auto_review', 'normal', $event));
+
+    expect($result->supersededCount)->toBe(1);
+});
+
+// ------------------------------------------------------------------
+//  UUID insert race condition (lines 235-243)
+// ------------------------------------------------------------------
+
+it('handles race condition on UUID insert gracefully', function (): void {
+    // First, insert the UUID directly so the unique constraint will be violated
+    WebhookEventLog::create([
+        'gitlab_event_uuid' => '00000000-0000-0000-0000-000000000030',
+        'project_id' => $this->project->id,
+        'event_type' => 'merge_request_opened',
+        'intent' => 'auto_review',
+        'mr_iid' => 42,
+        'commit_sha' => 'abc123',
+    ]);
+
+    // Now simulate the race condition: the deduplicator's isDuplicateUuid()
+    // check passes (returns false) but the insert hits the unique constraint.
+    // We do this by mocking the exists() check to return false while the row exists.
+
+    Log::shouldReceive('warning')
+        ->with('EventDeduplicator: race condition on UUID insert', Mockery::on(fn ($ctx) => $ctx['uuid'] === '00000000-0000-0000-0000-000000000030'))
+        ->once();
+    Log::shouldReceive('info')->withAnyArgs();
+
+    // Use a partial mock of EventDeduplicator to bypass the isDuplicateUuid check
+    // so logEvent() encounters the race condition
+    $dedup = Mockery::mock(EventDeduplicator::class)->makePartial();
+
+    // Directly invoke process — we need the logEvent to encounter the constraint violation.
+    // The isDuplicateUuid will find the existing row and return DUPLICATE_UUID.
+    // So we need a different approach: insert after the check but before the log.
+
+    // Better approach: use a fresh UUID but manually insert the same UUID before the
+    // logEvent call completes. Since we can't inject mid-flow, we'll use a DB trigger
+    // approach or simply test logEvent indirectly by triggering the constraint.
+
+    // Simplest approach: The unique constraint is on (project_id, gitlab_event_uuid).
+    // We can use reflection to call logEvent directly with a UUID that already exists.
+    $event = dedupMrOpenedEvent($this->project->id, mrIid: 42, commitSha: 'abc123');
+
+    $reflection = new ReflectionMethod(EventDeduplicator::class, 'logEvent');
+    $reflection->setAccessible(true);
+
+    $realDedup = new EventDeduplicator;
+    // This should catch the QueryException and log a warning
+    $reflection->invoke($realDedup, '00000000-0000-0000-0000-000000000030', $event, 'auto_review', 42, 'abc123');
+
+    // Verify only 1 row exists (the original one, not a duplicate)
+    $count = WebhookEventLog::where('gitlab_event_uuid', '00000000-0000-0000-0000-000000000030')
+        ->where('project_id', $this->project->id)
+        ->count();
+    expect($count)->toBe(1);
 });

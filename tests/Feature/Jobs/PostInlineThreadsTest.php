@@ -7,6 +7,7 @@ use App\Models\Task;
 use App\Services\GitLabClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
 
@@ -344,4 +345,67 @@ it('does not create threads when only minor findings exist', function (): void {
     $job->handle(app(GitLabClient::class));
 
     Http::assertNothingSent();
+});
+
+// ─── Exception: getMergeRequest fails → logs warning, rethrows ──
+
+it('logs warning and rethrows when getMergeRequest fails', function (): void {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/42' => Http::response('Internal Server Error', 500),
+    ]);
+
+    Log::shouldReceive('warning')
+        ->once()
+        ->withArgs(function (string $message, array $context): bool {
+            return str_contains($message, 'PostInlineThreads: failed to fetch MR')
+                && $context['task_id'] > 0;
+        });
+
+    // Allow GitLabClient's own warning log
+    Log::shouldReceive('warning')
+        ->withArgs(function (string $message): bool {
+            return str_contains($message, 'GitLab API error');
+        })
+        ->zeroOrMoreTimes();
+
+    $task = taskWithFindings();
+    $job = new PostInlineThreads($task->id);
+
+    expect(fn () => $job->handle(app(GitLabClient::class)))
+        ->toThrow(\App\Exceptions\GitLabApiException::class);
+});
+
+// ─── Exception: createMergeRequestDiscussion fails → logs warning, rethrows ──
+
+it('logs warning and rethrows when createMergeRequestDiscussion fails', function (): void {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::sequence()
+            ->push([], 200)          // GET existing discussions (T40 dedup)
+            ->push(null, 500),       // POST first discussion — fails
+        '*/api/v4/projects/*/merge_requests/42' => Http::response(fakeMrResponse(), 200),
+    ]);
+
+    Log::shouldReceive('warning')
+        ->once()
+        ->withArgs(function (string $message, array $context): bool {
+            return str_contains($message, 'PostInlineThreads: failed to create thread')
+                && $context['task_id'] > 0
+                && $context['finding_id'] === 1;
+        });
+
+    // Allow GitLabClient's own warning log
+    Log::shouldReceive('warning')
+        ->withArgs(function (string $message): bool {
+            return str_contains($message, 'GitLab API error');
+        })
+        ->zeroOrMoreTimes();
+
+    // Allow info log calls
+    Log::shouldReceive('info')->zeroOrMoreTimes();
+
+    $task = taskWithFindings();
+    $job = new PostInlineThreads($task->id);
+
+    expect(fn () => $job->handle(app(GitLabClient::class)))
+        ->toThrow(\App\Exceptions\GitLabApiException::class);
 });

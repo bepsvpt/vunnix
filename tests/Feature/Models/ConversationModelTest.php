@@ -163,6 +163,61 @@ it('forProject scope filters by project', function (): void {
     expect($results)->toHaveCount(2);
 });
 
+// ─── allProjectIds ──────────────────────────────────────────────
+
+it('allProjectIds includes primary project not in pivot', function (): void {
+    $primaryProject = Project::factory()->create();
+    $pivotProject = Project::factory()->create();
+
+    $conversation = Conversation::factory()->forProject($primaryProject)->create();
+    $conversation->projects()->attach($pivotProject->id);
+
+    $ids = $conversation->allProjectIds();
+
+    expect($ids)->toContain($primaryProject->id);
+    expect($ids)->toContain($pivotProject->id);
+    expect($ids)->toHaveCount(2);
+});
+
+it('allProjectIds returns no duplicates when primary project is also in pivot', function (): void {
+    $project = Project::factory()->create();
+    $anotherProject = Project::factory()->create();
+
+    $conversation = Conversation::factory()->forProject($project)->create();
+    // Add the primary project AND another project to the pivot
+    $conversation->projects()->attach([$project->id, $anotherProject->id]);
+
+    $ids = $conversation->allProjectIds();
+
+    // Should contain both projects but no duplicates of the primary
+    expect($ids)->toContain($project->id);
+    expect($ids)->toContain($anotherProject->id);
+    expect($ids)->toHaveCount(2);
+});
+
+it('allProjectIds returns only pivot projects when no primary project', function (): void {
+    $pivotProjectA = Project::factory()->create();
+    $pivotProjectB = Project::factory()->create();
+
+    $conversation = Conversation::factory()->create(['project_id' => null]);
+    $conversation->projects()->attach([$pivotProjectA->id, $pivotProjectB->id]);
+
+    $ids = $conversation->allProjectIds();
+
+    expect($ids)->toContain($pivotProjectA->id);
+    expect($ids)->toContain($pivotProjectB->id);
+    expect($ids)->toHaveCount(2);
+});
+
+it('allProjectIds returns empty array when no projects at all', function (): void {
+    $conversation = Conversation::factory()->create(['project_id' => null]);
+
+    $ids = $conversation->allProjectIds();
+
+    expect($ids)->toBeArray();
+    expect($ids)->toBeEmpty();
+});
+
 // ─── Archive ───────────────────────────────────────────────────
 
 it('isArchived returns true when archived_at is set', function (): void {

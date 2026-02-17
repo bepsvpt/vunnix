@@ -109,3 +109,32 @@ it('returns 403 when no project context is provided', function (): void {
         ->getJson('/api/test-permission-param')
         ->assertForbidden();
 });
+
+it('returns 401 when request reaches CheckPermission without auth middleware', function (): void {
+    // Register a route with permission middleware but WITHOUT auth middleware.
+    // This tests line 27 of CheckPermission where $request->user() returns null.
+    Route::middleware(['permission:some.perm'])->get(
+        '/api/test-permission-no-auth',
+        fn () => response()->json(['ok' => true])
+    );
+
+    $this->getJson('/api/test-permission-no-auth')
+        ->assertUnauthorized();
+});
+
+it('resolves project via route model binding and returns it', function (): void {
+    // This explicitly tests line 46-47 of resolveProject where
+    // $request->route('project') instanceof Project is true
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $role = Role::factory()->create(['project_id' => $project->id]);
+    $perm = Permission::factory()->create(['name' => 'review.view']);
+    $role->permissions()->attach($perm);
+    $user->assignRole($role, $project);
+
+    // The /api/test-permission/{project} route uses model binding
+    // so $request->route('project') returns a Project instance
+    $this->actingAs($user)
+        ->getJson("/api/test-permission/{$project->id}")
+        ->assertOk();
+});

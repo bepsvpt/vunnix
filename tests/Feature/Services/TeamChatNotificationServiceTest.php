@@ -189,3 +189,49 @@ it('sendTest returns false on failure', function (): void {
 
     expect($result)->toBeFalse();
 });
+
+it('send catches connection exception and logs warning', function (): void {
+    Http::fake([
+        'unreachable.example.com/*' => function (): never {
+            throw new \Illuminate\Http\Client\ConnectionException('Connection timed out');
+        },
+    ]);
+
+    GlobalSetting::set('team_chat_enabled', true, 'boolean');
+    GlobalSetting::set('team_chat_webhook_url', 'https://unreachable.example.com/hook', 'string');
+    GlobalSetting::set('team_chat_platform', 'generic', 'string');
+
+    \Illuminate\Support\Facades\Log::shouldReceive('warning')
+        ->once()
+        ->withArgs(function (string $message, array $context): bool {
+            return $message === 'Team chat notification error'
+                && str_contains($context['error'], 'Connection timed out')
+                && $context['type'] === 'alert'
+                && $context['platform'] === 'generic';
+        });
+
+    $service = new TeamChatNotificationService;
+    $result = $service->send('alert', 'Test alert');
+
+    expect($result)->toBeFalse();
+});
+
+it('sendTest returns false on connection exception', function (): void {
+    Http::fake([
+        'unreachable-test.example.com/*' => function (): never {
+            throw new \Illuminate\Http\Client\ConnectionException('DNS resolution failed');
+        },
+    ]);
+
+    $service = new TeamChatNotificationService;
+    $result = $service->sendTest('https://unreachable-test.example.com/hook', 'slack');
+
+    expect($result)->toBeFalse();
+});
+
+it('isCategoryEnabled returns true when categories is explicitly empty array', function (): void {
+    GlobalSetting::set('team_chat_categories', [], 'json');
+
+    $service = new TeamChatNotificationService;
+    expect($service->isCategoryEnabled('any_category'))->toBeTrue();
+});

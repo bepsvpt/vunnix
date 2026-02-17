@@ -7,6 +7,7 @@ use App\Models\Task;
 use App\Services\GitLabClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
 
@@ -359,4 +360,69 @@ it('continues adding labels when remove old labels fails', function (): void {
         return str_contains($addLabels, 'ai::reviewed')
             && str_contains($addLabels, 'ai::risk-low');
     });
+});
+
+// ─── Exception: addMergeRequestLabels fails → logs warning, rethrows ──
+
+it('logs warning and rethrows when addMergeRequestLabels fails', function (): void {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
+            ->push(fakeMrForLabels(), 200)    // getMergeRequest (GET)
+            ->push(['iid' => 42], 200)        // removeMergeRequestLabels (PUT)
+            ->push(null, 500),                // addMergeRequestLabels (PUT) — fails
+    ]);
+
+    Log::shouldReceive('warning')
+        ->once()
+        ->withArgs(function (string $message, array $context): bool {
+            return str_contains($message, 'PostLabelsAndStatus: failed to apply labels')
+                && $context['task_id'] > 0;
+        });
+
+    // Allow other log calls (info from label removal, GitLabClient warning)
+    Log::shouldReceive('info')->zeroOrMoreTimes();
+    Log::shouldReceive('warning')
+        ->withArgs(function (string $message): bool {
+            return str_contains($message, 'GitLab API error');
+        })
+        ->zeroOrMoreTimes();
+
+    $task = labelsTaskNoFindings();
+    $job = new PostLabelsAndStatus($task->id);
+
+    expect(fn () => $job->handle(app(GitLabClient::class)))
+        ->toThrow(\App\Exceptions\GitLabApiException::class);
+});
+
+// ─── Exception: setCommitStatus fails → logs warning, rethrows ──
+
+it('logs warning and rethrows when setCommitStatus fails', function (): void {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
+            ->push(fakeMrForLabels(), 200)    // getMergeRequest (GET)
+            ->push(['iid' => 42], 200)        // removeMergeRequestLabels (PUT)
+            ->push(['iid' => 42], 200),       // addMergeRequestLabels (PUT) — succeeds
+        '*/api/v4/projects/*/statuses/*' => Http::response('Internal Server Error', 500),
+    ]);
+
+    Log::shouldReceive('warning')
+        ->once()
+        ->withArgs(function (string $message, array $context): bool {
+            return str_contains($message, 'PostLabelsAndStatus: failed to set commit status')
+                && $context['task_id'] > 0;
+        });
+
+    // Allow other log calls (info from label operations, GitLabClient warning)
+    Log::shouldReceive('info')->zeroOrMoreTimes();
+    Log::shouldReceive('warning')
+        ->withArgs(function (string $message): bool {
+            return str_contains($message, 'GitLab API error');
+        })
+        ->zeroOrMoreTimes();
+
+    $task = labelsTaskNoFindings();
+    $job = new PostLabelsAndStatus($task->id);
+
+    expect(fn () => $job->handle(app(GitLabClient::class)))
+        ->toThrow(\App\Exceptions\GitLabApiException::class);
 });
