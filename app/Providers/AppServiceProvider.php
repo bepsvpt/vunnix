@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(TaskTokenService::class, function ($app) {
+        $this->app->singleton(TaskTokenService::class, function (array $app): \App\Services\TaskTokenService {
             $appKey = $app['config']['app.key'];
 
             // Strip the base64: prefix if present
@@ -85,7 +85,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         foreach ($permissions as $permission) {
-            Gate::define($permission->name, function (User $user, Project $project) use ($permission) {
+            Gate::define($permission->name, function (User $user, Project $project) use ($permission): bool {
                 return $user->hasPermission($permission->name, $project);
             });
         }

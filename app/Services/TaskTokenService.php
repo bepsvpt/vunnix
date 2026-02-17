@@ -91,8 +91,6 @@ class TaskTokenService
      */
     private function base64UrlDecode(string $data): string|false
     {
-        $decoded = base64_decode(strtr($data, '-_', '+/'), strict: true);
-
-        return $decoded;
+        return base64_decode(strtr($data, '-_', '+/'), strict: true);
     }
 }

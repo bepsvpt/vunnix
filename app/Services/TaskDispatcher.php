@@ -107,7 +107,7 @@ class TaskDispatcher
             $task->commit_sha ?? 'main',
         );
 
-        if (! empty($fileConfig)) {
+        if ($fileConfig !== []) {
             $task->result = array_merge($task->result ?? [], [
                 'file_config' => $fileConfig,
             ]);

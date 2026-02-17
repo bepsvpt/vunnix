@@ -50,7 +50,7 @@ class SummaryCommentFormatter
         $lines[] = '';
 
         // T40: Incremental review timestamp
-        if ($updatedAt !== null) {
+        if ($updatedAt instanceof DateTimeInterface) {
             $lines[] = '📝 Updated: '.$updatedAt->format('Y-m-d H:i').' — re-reviewed after new commits';
             $lines[] = '';
         }

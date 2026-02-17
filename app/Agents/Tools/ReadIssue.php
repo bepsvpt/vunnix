@@ -71,12 +71,12 @@ class ReadIssue implements Tool
         $updatedAt = $issue['updated_at'] ?? '';
         $description = $issue['description'] ?? '';
 
-        $labels = ! empty($issue['labels']) ? implode(', ', $issue['labels']) : 'none';
+        $labels = empty($issue['labels']) ? 'none' : implode(', ', $issue['labels']);
 
         $assignees = 'none';
         if (! empty($issue['assignees'])) {
             $assignees = implode(', ', array_map(
-                fn (array $a) => '@'.($a['username'] ?? 'unknown'),
+                fn (array $a): string => '@'.($a['username'] ?? 'unknown'),
                 $issue['assignees'],
             ));
         }

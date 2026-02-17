@@ -73,7 +73,7 @@ class TaskDispatchService
 
         // Build initial result metadata from routing context
         $resultMeta = [];
-        if (! empty($routingResult->metadata)) {
+        if ($routingResult->metadata !== []) {
             $resultMeta = $routingResult->metadata;
         }
         $resultMeta['intent'] = $routingResult->intent;

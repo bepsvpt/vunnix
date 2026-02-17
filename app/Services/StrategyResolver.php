@@ -57,7 +57,7 @@ class StrategyResolver
      */
     public function resolve(array $filePaths): ReviewStrategy
     {
-        if (empty($filePaths)) {
+        if ($filePaths === []) {
             return ReviewStrategy::BackendReview;
         }
 

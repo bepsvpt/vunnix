@@ -21,7 +21,7 @@ class AdminApiKeyController extends Controller
         $keys = ApiKey::with('user:id,name,email')
             ->orderByDesc('created_at')
             ->get()
-            ->map(fn (ApiKey $key) => [
+            ->map(fn (ApiKey $key): array => [
                 'id' => $key->id,
                 'user' => [
                     'id' => $key->user->id,

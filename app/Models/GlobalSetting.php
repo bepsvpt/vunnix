@@ -106,7 +106,7 @@ TEMPLATE;
         $value = Cache::remember(
             self::CACHE_PREFIX.$key,
             now()->addMinutes(self::CACHE_TTL_MINUTES),
-            function () use ($key) {
+            function () use ($key): ?array {
                 $setting = static::where('key', $key)->first();
 
                 if (! $setting) {

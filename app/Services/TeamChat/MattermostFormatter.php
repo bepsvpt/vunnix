@@ -36,7 +36,7 @@ class MattermostFormatter implements ChatFormatterInterface
 
         // Add action links as text footer
         if (! empty($context['links'])) {
-            $linkTexts = array_map(fn ($l) => "[{$l['label']}]({$l['url']})", $context['links']);
+            $linkTexts = array_map(fn (array $l): string => "[{$l['label']}]({$l['url']})", $context['links']);
             $attachment['text'] .= "\n\n".implode(' | ', $linkTexts);
         }
 

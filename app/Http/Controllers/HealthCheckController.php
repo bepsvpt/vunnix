@@ -20,7 +20,7 @@ class HealthCheckController extends Controller
             'disk' => $this->checkDisk(),
         ];
 
-        $healthy = collect($checks)->every(fn (array $check) => $check['status'] === 'ok');
+        $healthy = collect($checks)->every(fn (array $check): bool => $check['status'] === 'ok');
 
         return response()->json([
             'status' => $healthy ? 'healthy' : 'unhealthy',

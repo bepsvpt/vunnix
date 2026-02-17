@@ -34,8 +34,8 @@ class DashboardDesignerActivityController extends Controller
         // Avg iterations per adjustment — retry_count + 1 = total attempts
         $avgIterations = null;
         if ($uiAdjustmentsDispatched > 0) {
-            $avgIterations = (float) round(
-                $completedUiTasks->avg(fn ($task) => $task->retry_count + 1) ?? 0,
+            $avgIterations = round(
+                $completedUiTasks->avg(fn ($task): int|float => $task->retry_count + 1) ?? 0,
                 1
             );
         }
@@ -50,7 +50,7 @@ class DashboardDesignerActivityController extends Controller
         $firstAttemptSuccessRate = null;
         if ($uiAdjustmentsDispatched > 0) {
             $firstAttemptCount = $completedUiTasks->where('retry_count', 0)->count();
-            $firstAttemptSuccessRate = (float) round(
+            $firstAttemptSuccessRate = round(
                 ($firstAttemptCount / $uiAdjustmentsDispatched) * 100,
                 1
             );

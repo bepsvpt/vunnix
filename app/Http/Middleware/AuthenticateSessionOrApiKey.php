@@ -31,11 +31,11 @@ class AuthenticateSessionOrApiKey
 
         $user = $this->apiKeyService->resolveUser($bearerToken, $request->ip());
 
-        if (! $user) {
+        if (! $user instanceof \App\Models\User) {
             return response()->json(['error' => 'Invalid or expired API key.'], 401);
         }
 
-        $request->setUserResolver(fn () => $user);
+        $request->setUserResolver(fn (): \App\Models\User => $user);
         $request->attributes->set('auth_via', 'api_key');
 
         return $next($request);

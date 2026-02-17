@@ -21,7 +21,7 @@ class ConversationDetailResource extends JsonResource
             'updated_at' => $this->updated_at?->toIso8601String(),
             'messages' => MessageResource::collection($this->whenLoaded('messages')),
             'projects' => $this->whenLoaded('projects', function () {
-                return $this->projects->map(fn ($p) => [
+                return $this->projects->map(fn ($p): array => [
                     'id' => $p->id,
                     'name' => $p->name,
                 ]);

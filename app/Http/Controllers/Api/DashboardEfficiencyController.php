@@ -34,14 +34,14 @@ class DashboardEfficiencyController extends Controller
         $reviewTurnaround = null;
 
         if ($completedReviews->isNotEmpty()) {
-            $timeToFirstReview = (float) round(
-                ($completedReviews->avg(fn ($task) => abs($task->started_at?->diffInSeconds($task->created_at) ?? 0)) ?? 0) / 60,
+            $timeToFirstReview = round(
+                ($completedReviews->avg(fn ($task): float|int => abs($task->started_at?->diffInSeconds($task->created_at) ?? 0)) ?? 0) / 60,
                 1
             );
 
             // Review turnaround — avg minutes from created_at to completed_at
-            $reviewTurnaround = (float) round(
-                ($completedReviews->avg(fn ($task) => abs($task->completed_at?->diffInSeconds($task->created_at) ?? 0)) ?? 0) / 60,
+            $reviewTurnaround = round(
+                ($completedReviews->avg(fn ($task): float|int => abs($task->completed_at?->diffInSeconds($task->created_at) ?? 0)) ?? 0) / 60,
                 1
             );
         }
@@ -57,7 +57,7 @@ class DashboardEfficiencyController extends Controller
             $total = $ofType->count();
             if ($total > 0) {
                 $completed = $ofType->where('status', TaskStatus::Completed)->count();
-                $completionRateByType[$type->value] = (float) round(($completed / $total) * 100, 1);
+                $completionRateByType[$type->value] = round(($completed / $total) * 100, 1);
             }
         }
 

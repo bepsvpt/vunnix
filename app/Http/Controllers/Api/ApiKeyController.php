@@ -27,7 +27,7 @@ class ApiKeyController extends Controller
             ->apiKeys()
             ->orderByDesc('created_at')
             ->get()
-            ->map(fn (ApiKey $key) => [
+            ->map(fn (ApiKey $key): array => [
                 'id' => $key->id,
                 'name' => $key->name,
                 'last_used_at' => $key->last_used_at?->toISOString(),

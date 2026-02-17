@@ -82,16 +82,14 @@ class EventDeduplicator
             $mrIid = $this->resolveMrIidFromBranch($event);
         }
 
-        if ($commitSha !== null && $mrIid !== null) {
-            if ($this->isDuplicateCommit($event->projectId, $mrIid, $commitSha)) {
-                Log::info('EventDeduplicator: rejecting duplicate commit SHA', [
-                    'commit_sha' => $commitSha,
-                    'project_id' => $event->projectId,
-                    'mr_iid' => $mrIid,
-                ]);
+        if ($commitSha !== null && $mrIid !== null && $this->isDuplicateCommit($event->projectId, $mrIid, $commitSha)) {
+            Log::info('EventDeduplicator: rejecting duplicate commit SHA', [
+                'commit_sha' => $commitSha,
+                'project_id' => $event->projectId,
+                'mr_iid' => $mrIid,
+            ]);
 
-                return new DeduplicationResult(self::DUPLICATE_COMMIT, supersededCount: 0);
-            }
+            return new DeduplicationResult(self::DUPLICATE_COMMIT, supersededCount: 0);
         }
 
         // Step 3: Latest-wins superseding (D140) — supersede older tasks for same MR

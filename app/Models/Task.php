@@ -178,7 +178,7 @@ class Task extends Model
 
         // Increment retry count when retrying (failed → queued)
         if ($currentStatus === TaskStatus::Failed && $newStatus === TaskStatus::Queued) {
-            $this->retry_count = $this->retry_count + 1;
+            $this->retry_count += 1;
         }
 
         $this->save();

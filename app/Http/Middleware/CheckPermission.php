@@ -29,7 +29,7 @@ class CheckPermission
 
         $project = $this->resolveProject($request);
 
-        if (! $project) {
+        if (! $project instanceof \App\Models\Project) {
             abort(403, 'No project context provided.');
         }
 

@@ -33,7 +33,7 @@ class BotPatRotationService
 
         $patCreatedAt = $this->getPatCreatedAt();
 
-        if (! $patCreatedAt) {
+        if (! $patCreatedAt instanceof \Carbon\Carbon) {
             // No PAT creation date configured — nothing to check
             return null;
         }

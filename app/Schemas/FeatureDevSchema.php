@@ -56,7 +56,7 @@ class FeatureDevSchema
         if (isset($result['files_changed']) && is_array($result['files_changed'])) {
             $fileKeys = ['path', 'action', 'summary'];
             $result['files_changed'] = array_map(
-                fn (array $entry) => array_intersect_key($entry, array_flip($fileKeys)),
+                fn (array $entry): array => array_intersect_key($entry, array_flip($fileKeys)),
                 $result['files_changed'],
             );
         }

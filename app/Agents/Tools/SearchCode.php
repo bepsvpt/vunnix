@@ -63,7 +63,7 @@ class SearchCode implements Tool
             return "Error searching code: {$e->getMessage()}";
         }
 
-        if (empty($results)) {
+        if ($results === []) {
             return 'No code matches found for this search query.';
         }
 

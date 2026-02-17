@@ -44,7 +44,7 @@ class PromptVersionController extends Controller
         $versions = $query->get();
 
         return response()->json([
-            'data' => $versions->map(fn ($v) => [
+            'data' => $versions->map(fn ($v): array => [
                 'skill' => $v->skill,
                 'claude_md' => $v->claude_md,
                 'schema' => $v->schema,

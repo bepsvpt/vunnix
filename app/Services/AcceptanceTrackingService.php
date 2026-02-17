@@ -59,7 +59,7 @@ class AcceptanceTrackingService
     {
         $resolvedDiscussions = array_filter(
             $discussions,
-            fn (array $d) => ($d['notes'][0]['resolved'] ?? false) === true,
+            fn (array $d): bool => ($d['notes'][0]['resolved'] ?? false) === true,
         );
 
         if (count($resolvedDiscussions) < self::BULK_RESOLUTION_MIN_THREADS) {

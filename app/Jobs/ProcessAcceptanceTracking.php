@@ -79,7 +79,7 @@ class ProcessAcceptanceTracking implements ShouldQueue
         // Filter to AI-created discussions only
         $aiDiscussions = array_filter(
             $discussions,
-            fn (array $d) => $acceptanceService->isAiCreatedDiscussion($d),
+            fn (array $d): bool => $acceptanceService->isAiCreatedDiscussion($d),
         );
 
         // Detect bulk resolution across all AI threads
@@ -104,7 +104,7 @@ class ProcessAcceptanceTracking implements ShouldQueue
                 $status = 'dismissed'; // default if no matching discussion found
                 if ($discussionId !== null) {
                     $matchedDiscussion = collect($aiDiscussions)
-                        ->first(fn (array $d) => ($d['id'] ?? null) === $discussionId);
+                        ->first(fn (array $d): bool => ($d['id'] ?? null) === $discussionId);
 
                     if ($matchedDiscussion !== null) {
                         $status = $acceptanceService->classifyThreadState($matchedDiscussion);

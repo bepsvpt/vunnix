@@ -88,7 +88,7 @@ class PostLabelsAndStatus implements ShouldQueue
         $allRiskLabels = ['ai::risk-high', 'ai::risk-medium', 'ai::risk-low'];
         $labelsToRemove = array_values(array_diff($allRiskLabels, $labels));
 
-        if (! empty($labelsToRemove)) {
+        if ($labelsToRemove !== []) {
             try {
                 $gitLab->removeMergeRequestLabels($projectId, $task->mr_iid, $labelsToRemove);
 

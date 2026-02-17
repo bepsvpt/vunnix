@@ -58,7 +58,7 @@ class EventRouter
     {
         $event = $this->parseEvent($context);
 
-        if ($event === null) {
+        if (! $event instanceof \App\Events\Webhook\WebhookEvent) {
             Log::debug('EventRouter: could not parse event', [
                 'event_type' => $context['event_type'] ?? 'unknown',
             ]);

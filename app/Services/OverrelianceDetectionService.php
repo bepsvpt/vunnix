@@ -30,16 +30,16 @@ class OverrelianceDetectionService
         $now ??= now();
         $alerts = [];
 
-        if ($alert = $this->evaluateHighAcceptanceRate($now)) {
+        if (($alert = $this->evaluateHighAcceptanceRate($now)) instanceof \App\Models\OverrelianceAlert) {
             $alerts[] = $alert;
         }
-        if ($alert = $this->evaluateCriticalAcceptanceRate($now)) {
+        if (($alert = $this->evaluateCriticalAcceptanceRate($now)) instanceof \App\Models\OverrelianceAlert) {
             $alerts[] = $alert;
         }
-        if ($alert = $this->evaluateBulkResolution($now)) {
+        if (($alert = $this->evaluateBulkResolution($now)) instanceof \App\Models\OverrelianceAlert) {
             $alerts[] = $alert;
         }
-        if ($alert = $this->evaluateZeroReactions($now)) {
+        if (($alert = $this->evaluateZeroReactions($now)) instanceof \App\Models\OverrelianceAlert) {
             $alerts[] = $alert;
         }
 

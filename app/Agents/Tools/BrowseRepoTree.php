@@ -70,7 +70,7 @@ class BrowseRepoTree implements Tool
             return "Error browsing repository: {$e->getMessage()}";
         }
 
-        if (empty($items)) {
+        if ($items === []) {
             return 'No files or directories found at this path.';
         }
 

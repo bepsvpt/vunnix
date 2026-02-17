@@ -65,7 +65,7 @@ class PostInlineThreads implements ShouldQueue
         $formatter = new InlineThreadFormatter;
         $findings = $formatter->filterHighMedium($task->result['findings'] ?? []);
 
-        if (empty($findings)) {
+        if ($findings === []) {
             Log::info('PostInlineThreads: no high/medium findings, skipping', ['task_id' => $this->taskId]);
 
             return;

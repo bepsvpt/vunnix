@@ -19,13 +19,13 @@ class CostAlertService
         $now ??= now();
         $alerts = [];
 
-        if ($alert = $this->evaluateMonthlyAnomaly($now)) {
+        if (($alert = $this->evaluateMonthlyAnomaly($now)) instanceof \App\Models\CostAlert) {
             $alerts[] = $alert;
         }
-        if ($alert = $this->evaluateDailySpike($now)) {
+        if (($alert = $this->evaluateDailySpike($now)) instanceof \App\Models\CostAlert) {
             $alerts[] = $alert;
         }
-        if ($alert = $this->evaluateApproachingProjection($now)) {
+        if (($alert = $this->evaluateApproachingProjection($now)) instanceof \App\Models\CostAlert) {
             $alerts[] = $alert;
         }
 

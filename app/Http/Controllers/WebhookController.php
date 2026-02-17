@@ -132,7 +132,7 @@ class WebhookController extends Controller
         $routingResult = $eventRouter->route($eventContext);
 
         // If the event was not routable (filtered, unsupported), return early
-        if ($routingResult === null) {
+        if (! $routingResult instanceof \App\Services\RoutingResult) {
             return response()->json([
                 'status' => 'accepted',
                 'event_type' => $eventType,

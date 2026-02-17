@@ -59,7 +59,7 @@ class DashboardPMActivityController extends Controller
                 ->pluck('turn_count');
 
             if ($turnCounts->isNotEmpty()) {
-                $avgTurnsPerPrd = (float) round($turnCounts->avg() ?? 0, 1);
+                $avgTurnsPerPrd = round($turnCounts->avg() ?? 0, 1);
             }
         }
 

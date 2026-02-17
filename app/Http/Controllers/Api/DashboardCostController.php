@@ -54,17 +54,17 @@ class DashboardCostController extends Controller
      * @param  \Illuminate\Support\Collection<int, int>  $projectIds
      * @param  \Illuminate\Support\Collection<int, stdClass>  $byType
      */
-    private function fromMaterializedViews($projectIds, $byType): JsonResponse
+    private function fromMaterializedViews(\Illuminate\Support\Collection $projectIds, \Illuminate\Support\Collection $byType): JsonResponse
     {
         $tokensByType = $byType
-            ->mapWithKeys(fn ($row) => [$row->task_type => (int) $row->total_tokens])
+            ->mapWithKeys(fn ($row): array => [$row->task_type => (int) $row->total_tokens])
             ->all();
 
         $costPerType = $byType
-            ->mapWithKeys(fn ($row) => [
+            ->mapWithKeys(fn ($row): array => [
                 $row->task_type => [
-                    'avg_cost' => (float) round($row->avg_cost, 6),
-                    'total_cost' => (float) round($row->total_cost, 6),
+                    'avg_cost' => round($row->avg_cost, 6),
+                    'total_cost' => round($row->total_cost, 6),
                     'task_count' => (int) $row->task_count,
                 ],
             ])
@@ -73,13 +73,13 @@ class DashboardCostController extends Controller
         $byProject = $this->metricsQuery->byProject($projectIds);
 
         $costPerProject = $byProject
-            ->map(function ($row) {
+            ->map(function ($row): array {
                 $project = DB::table('projects')->where('id', $row->project_id)->first(['name']);
 
                 return [
                     'project_id' => (int) $row->project_id,
                     'project_name' => $project->name ?? 'Unknown',
-                    'total_cost' => (float) round($row->total_cost, 6),
+                    'total_cost' => round($row->total_cost, 6),
                     'task_count' => (int) $row->task_count,
                 ];
             })
@@ -90,9 +90,9 @@ class DashboardCostController extends Controller
 
         $monthlyTrend = $byPeriod
             ->groupBy('period_month')
-            ->map(fn ($rows, $month) => [
+            ->map(fn ($rows, $month): array => [
                 'month' => $month,
-                'total_cost' => (float) round($rows->sum('total_cost'), 6),
+                'total_cost' => round($rows->sum('total_cost'), 6),
                 'total_tokens' => (int) $rows->sum('total_tokens'),
                 'task_count' => (int) $rows->sum('task_count'),
             ])
@@ -105,7 +105,7 @@ class DashboardCostController extends Controller
 
         return response()->json([
             'data' => [
-                'total_cost' => (float) round($totalCost, 6),
+                'total_cost' => round($totalCost, 6),
                 'total_tokens' => (int) $totalTokens,
                 'token_usage_by_type' => $tokensByType,
                 'cost_per_type' => $costPerType,
@@ -128,7 +128,7 @@ class DashboardCostController extends Controller
             ->select('type', DB::raw('SUM(tokens_used) as total_tokens'))
             ->groupBy('type')
             ->pluck('total_tokens', 'type')
-            ->mapWithKeys(fn ($tokens, $type) => [$type => (int) $tokens])
+            ->mapWithKeys(fn ($tokens, $type): array => [$type => (int) $tokens])
             ->all();
 
         /** @var \Illuminate\Support\Collection<int, object{type: \App\Enums\TaskType, avg_cost: float, total_cost: float, task_count: int}> $costPerTypeResults */
@@ -140,10 +140,10 @@ class DashboardCostController extends Controller
             ->get();
 
         $costPerType = $costPerTypeResults
-            ->mapWithKeys(fn ($row) => [
+            ->mapWithKeys(fn ($row): array => [
                 $row->type->value => [
-                    'avg_cost' => (float) round($row->avg_cost, 6),
-                    'total_cost' => (float) round($row->total_cost, 6),
+                    'avg_cost' => round($row->avg_cost, 6),
+                    'total_cost' => round($row->total_cost, 6),
                     'task_count' => (int) $row->task_count,
                 ],
             ])
@@ -159,10 +159,10 @@ class DashboardCostController extends Controller
             ->get();
 
         $costPerProject = $costPerProjectResults
-            ->map(fn ($row) => [
+            ->map(fn ($row): array => [
                 'project_id' => (int) $row->project_id,
                 'project_name' => $row->project_name,
-                'total_cost' => (float) round($row->total_cost, 6),
+                'total_cost' => round($row->total_cost, 6),
                 'task_count' => (int) $row->task_count,
             ])
             ->values()
@@ -188,9 +188,9 @@ class DashboardCostController extends Controller
             ->get();
 
         $monthlyTrend = $monthlyResults
-            ->map(fn ($row) => [
+            ->map(fn ($row): array => [
                 'month' => $row->month,
-                'total_cost' => (float) round($row->total_cost ?? 0, 6),
+                'total_cost' => round($row->total_cost ?? 0, 6),
                 'total_tokens' => (int) ($row->total_tokens ?? 0),
                 'task_count' => (int) $row->task_count,
             ])

@@ -30,7 +30,7 @@ class VerifyWebhookToken
 
         $projectConfig = $this->findProjectConfigByToken($token);
 
-        if (! $projectConfig) {
+        if (! $projectConfig instanceof \App\Models\ProjectConfig) {
             Log::warning('Webhook request with invalid X-Gitlab-Token', [
                 'ip' => $request->ip(),
             ]);
@@ -67,6 +67,6 @@ class VerifyWebhookToken
             ->where('webhook_token_validation', true)
             ->with('project')
             ->get()
-            ->first(fn (ProjectConfig $config) => $config->webhook_secret === $token);
+            ->first(fn (ProjectConfig $config): bool => $config->webhook_secret === $token);
     }
 }

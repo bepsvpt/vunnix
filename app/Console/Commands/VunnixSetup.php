@@ -61,10 +61,8 @@ class VunnixSetup extends Command
         $this->createDefaultRoles($project);
 
         // 7. Assign admin (optional)
-        if ($this->option('admin-email')) {
-            if (! $this->assignAdmin($project)) {
-                return self::FAILURE;
-            }
+        if ($this->option('admin-email') && ! $this->assignAdmin($project)) {
+            return self::FAILURE;
         }
 
         $this->info('');

@@ -57,7 +57,7 @@ class InlineThreadFormatter
     {
         return array_values(array_filter(
             $findings,
-            fn (array $finding) => in_array($finding['severity'], self::INLINE_SEVERITIES, true),
+            fn (array $finding): bool => in_array($finding['severity'], self::INLINE_SEVERITIES, true),
         ));
     }
 }

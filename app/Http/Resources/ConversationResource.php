@@ -20,7 +20,7 @@ class ConversationResource extends JsonResource
             'archived_at' => $this->archived_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
-            'last_message' => $this->whenLoaded('latestMessage', function () {
+            'last_message' => $this->whenLoaded('latestMessage', function (): ?array {
                 $msg = $this->latestMessage;
                 if (! $msg) {
                     return null;
@@ -33,7 +33,7 @@ class ConversationResource extends JsonResource
                 ];
             }),
             'projects' => $this->whenLoaded('projects', function () {
-                return $this->projects->map(fn ($p) => [
+                return $this->projects->map(fn ($p): array => [
                     'id' => $p->id,
                     'name' => $p->name,
                 ]);

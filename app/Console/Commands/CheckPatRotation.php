@@ -15,7 +15,7 @@ class CheckPatRotation extends Command
     {
         $alert = $service->evaluate();
 
-        if ($alert) {
+        if ($alert instanceof \App\Models\AlertEvent) {
             $this->info("PAT rotation alert created: {$alert->message}");
         } else {
             $this->info('No PAT rotation alert needed.');

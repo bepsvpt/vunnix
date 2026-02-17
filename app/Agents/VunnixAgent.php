@@ -279,7 +279,7 @@ PROMPT;
      */
     protected function resolveTemplate(): string
     {
-        if ($this->project) {
+        if ($this->project instanceof \App\Models\Project) {
             $configService = app(ProjectConfigService::class);
             $projectTemplate = $configService->get($this->project, 'prd_template');
             if ($projectTemplate !== null) {

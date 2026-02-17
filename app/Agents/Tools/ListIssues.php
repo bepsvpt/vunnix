@@ -93,7 +93,7 @@ class ListIssues implements Tool
             return "Error listing issues: {$e->getMessage()}";
         }
 
-        if (empty($issues)) {
+        if ($issues === []) {
             return 'No issues found matching the given filters.';
         }
 
@@ -102,7 +102,7 @@ class ListIssues implements Tool
             $state = $issue['state'] ?? 'unknown';
             $iid = $issue['iid'] ?? '?';
             $title = $issue['title'] ?? 'Untitled';
-            $labels = ! empty($issue['labels']) ? ' ['.implode(', ', $issue['labels']).']' : '';
+            $labels = empty($issue['labels']) ? '' : ' ['.implode(', ', $issue['labels']).']';
             $assignee = isset($issue['assignee']['username']) ? " (@{$issue['assignee']['username']})" : '';
 
             $lines[] = "#{$iid} [{$state}] {$title}{$labels}{$assignee}";

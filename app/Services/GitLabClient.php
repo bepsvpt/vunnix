@@ -316,7 +316,7 @@ class GitLabClient
     {
         $data = ['body' => $body];
 
-        if (! empty($position)) {
+        if ($position !== []) {
             $data['position'] = $position;
         }
 

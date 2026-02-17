@@ -58,7 +58,7 @@ class LabelMapper
     private function hasSecurityFinding(array $findings): bool
     {
         return collect($findings)
-            ->contains(fn (array $f) => ($f['category'] ?? '') === 'security');
+            ->contains(fn (array $f): bool => ($f['category'] ?? '') === 'security');
     }
 
     /**
@@ -67,6 +67,6 @@ class LabelMapper
     private function hasCriticalFinding(array $findings): bool
     {
         return collect($findings)
-            ->contains(fn (array $f) => ($f['severity'] ?? '') === 'critical');
+            ->contains(fn (array $f): bool => ($f['severity'] ?? '') === 'critical');
     }
 }

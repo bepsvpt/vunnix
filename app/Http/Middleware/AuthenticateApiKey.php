@@ -24,7 +24,7 @@ class AuthenticateApiKey
 
         $user = $this->apiKeyService->resolveUser($bearerToken, $request->ip());
 
-        if (! $user) {
+        if (! $user instanceof \App\Models\User) {
             Log::warning('API key authentication failed', [
                 'ip' => $request->ip(),
             ]);
@@ -33,7 +33,7 @@ class AuthenticateApiKey
         }
 
         // Set the authenticated user on the request
-        $request->setUserResolver(fn () => $user);
+        $request->setUserResolver(fn (): \App\Models\User => $user);
         $request->attributes->set('auth_via', 'api_key');
 
         return $next($request);

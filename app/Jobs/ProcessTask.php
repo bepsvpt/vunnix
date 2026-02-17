@@ -123,10 +123,8 @@ class ProcessTask implements ShouldQueue
 
     private function classifyFailureReason(?Throwable $exception): string
     {
-        if ($exception instanceof GitLabApiException) {
-            if ($exception->isInvalidRequest()) {
-                return 'invalid_request';
-            }
+        if ($exception instanceof GitLabApiException && $exception->isInvalidRequest()) {
+            return 'invalid_request';
         }
 
         return 'max_retries_exceeded';

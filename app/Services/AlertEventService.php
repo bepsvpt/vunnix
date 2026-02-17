@@ -29,19 +29,19 @@ class AlertEventService
         $events = [];
 
         $checks = [
-            'api_outage' => fn () => $this->evaluateApiOutage($now),
-            'high_failure_rate' => fn () => $this->evaluateHighFailureRate($now),
-            'queue_depth' => fn () => $this->evaluateQueueDepth($now),
-            'auth_failure' => fn () => $this->evaluateAuthFailure($now),
-            'disk_usage' => fn () => $this->evaluateDiskUsage($now),
-            'container_health' => fn () => $this->evaluateContainerHealth($now),
-            'cpu_usage' => fn () => $this->evaluateCpuUsage($now),
-            'memory_usage' => fn () => $this->evaluateMemoryUsage($now),
+            'api_outage' => fn (): ?\App\Models\AlertEvent => $this->evaluateApiOutage($now),
+            'high_failure_rate' => fn (): ?\App\Models\AlertEvent => $this->evaluateHighFailureRate($now),
+            'queue_depth' => fn (): ?\App\Models\AlertEvent => $this->evaluateQueueDepth($now),
+            'auth_failure' => fn (): ?\App\Models\AlertEvent => $this->evaluateAuthFailure($now),
+            'disk_usage' => fn (): ?\App\Models\AlertEvent => $this->evaluateDiskUsage($now),
+            'container_health' => fn (): ?\App\Models\AlertEvent => $this->evaluateContainerHealth($now),
+            'cpu_usage' => fn (): ?\App\Models\AlertEvent => $this->evaluateCpuUsage($now),
+            'memory_usage' => fn (): ?\App\Models\AlertEvent => $this->evaluateMemoryUsage($now),
         ];
 
         foreach ($checks as $check) {
             try {
-                if ($event = $check()) {
+                if (($event = $check()) instanceof \App\Models\AlertEvent) {
                     $events[] = $event;
                 }
             } catch (Throwable $e) {

@@ -27,7 +27,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'username' => $this->username,
             'avatar_url' => $this->avatar_url,
-            'projects' => $projects->map(function (Project $project) {
+            'projects' => $projects->map(function (Project $project): array {
                 $roles = $this->rolesForProject($project);
                 $permissions = $this->permissionsForProject($project);
 

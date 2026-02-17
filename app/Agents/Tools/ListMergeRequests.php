@@ -93,7 +93,7 @@ class ListMergeRequests implements Tool
             return "Error listing merge requests: {$e->getMessage()}";
         }
 
-        if (empty($mergeRequests)) {
+        if ($mergeRequests === []) {
             return 'No merge requests found matching the given filters.';
         }
 
@@ -104,7 +104,7 @@ class ListMergeRequests implements Tool
             $title = $mr['title'] ?? 'Untitled';
             $sourceBranch = $mr['source_branch'] ?? '?';
             $targetBranch = $mr['target_branch'] ?? '?';
-            $labels = ! empty($mr['labels']) ? ' ['.implode(', ', $mr['labels']).']' : '';
+            $labels = empty($mr['labels']) ? '' : ' ['.implode(', ', $mr['labels']).']';
             $author = isset($mr['author']['username']) ? " (@{$mr['author']['username']})" : '';
 
             $lines[] = "!{$iid} [{$state}] {$title} ({$sourceBranch} → {$targetBranch}){$labels}{$author}";

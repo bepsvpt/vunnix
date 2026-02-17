@@ -76,7 +76,7 @@ class CodeReviewSchema
             if (isset($result['summary']['walkthrough']) && is_array($result['summary']['walkthrough'])) {
                 $walkthroughKeys = ['file', 'change_summary'];
                 $result['summary']['walkthrough'] = array_map(
-                    fn (array $entry) => array_intersect_key($entry, array_flip($walkthroughKeys)),
+                    fn (array $entry): array => array_intersect_key($entry, array_flip($walkthroughKeys)),
                     $result['summary']['walkthrough'],
                 );
             }
@@ -89,7 +89,7 @@ class CodeReviewSchema
                 'end_line', 'title', 'description', 'suggestion', 'labels',
             ];
             $result['findings'] = array_map(
-                fn (array $finding) => array_intersect_key($finding, array_flip($findingKeys)),
+                fn (array $finding): array => array_intersect_key($finding, array_flip($findingKeys)),
                 $result['findings'],
             );
         }

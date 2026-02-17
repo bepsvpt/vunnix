@@ -40,7 +40,7 @@ class DashboardAdoptionController extends Controller
             ->value('cnt');
 
         $aiReviewedMrPercent = $totalMrCount > 0
-            ? (float) round(($reviewedMrCount / $totalMrCount) * 100, 1)
+            ? round(($reviewedMrCount / $totalMrCount) * 100, 1)
             : null;
 
         // Chat active users — distinct users with conversations in enabled projects
@@ -69,7 +69,7 @@ class DashboardAdoptionController extends Controller
 
         $tasksByTypeOverTime = $taskResults
             ->groupBy('month')
-            ->map(fn ($rows) => $rows->mapWithKeys(fn ($row) => [
+            ->map(fn ($rows) => $rows->mapWithKeys(fn ($row): array => [
                 $row->type->value => (int) $row->count,
             ])->all())
             ->all();
@@ -92,7 +92,7 @@ class DashboardAdoptionController extends Controller
             ->get();
 
         $aiMentionsPerWeek = $mentionResults
-            ->map(fn ($row) => [
+            ->map(fn ($row): array => [
                 'week' => $row->week,
                 'count' => (int) $row->count,
             ])

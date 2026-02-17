@@ -41,7 +41,7 @@ class AdminRoleController extends Controller
         $permissions = Permission::orderBy('group')->orderBy('name')->get();
 
         return response()->json([
-            'data' => $permissions->map(fn ($p) => [
+            'data' => $permissions->map(fn ($p): array => [
                 'name' => $p->name,
                 'description' => $p->description,
                 'group' => $p->group,
