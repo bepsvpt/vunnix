@@ -10,7 +10,12 @@ class ExternalProjectController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $projects = $request->user()->accessibleProjects();
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $projects = $user->accessibleProjects();
 
         return response()->json(['data' => $projects]);
     }

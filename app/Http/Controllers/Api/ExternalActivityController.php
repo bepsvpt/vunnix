@@ -19,7 +19,12 @@ class ExternalActivityController extends Controller
             'cursor' => ['nullable', 'string'],
         ]);
 
-        $accessibleProjectIds = $request->user()->accessibleProjects()->pluck('id');
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $accessibleProjectIds = $user->accessibleProjects()->pluck('id');
 
         $query = Task::with(['project:id,name', 'user:id,name,avatar_url'])
             ->whereIn('project_id', $accessibleProjectIds)

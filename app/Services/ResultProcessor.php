@@ -72,10 +72,11 @@ class ResultProcessor
         }
 
         // Store the sanitized (stripped) result back on the task
-        $task->result = $validation['data'];
+        $sanitizedData = $validation['data'] ?? [];
+        $task->result = $sanitizedData;
         $task->save();
 
-        return $this->succeed($task, $validation['data']);
+        return $this->succeed($task, $sanitizedData);
     }
 
     /**

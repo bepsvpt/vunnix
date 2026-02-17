@@ -209,6 +209,10 @@ class User extends Authenticatable
 
     public function syncMemberships(): void
     {
+        if ($this->oauth_token === null) {
+            return;
+        }
+
         $service = app(GitLabService::class);
         $gitlabProjects = $service->getUserProjects($this->oauth_token);
 

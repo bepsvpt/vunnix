@@ -15,7 +15,12 @@ class ExternalMetricsController extends Controller
 {
     public function summary(Request $request): JsonResponse
     {
-        $projectIds = $request->user()->accessibleProjects()->pluck('id');
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $projectIds = $user->accessibleProjects()->pluck('id');
 
         $completedCount = Task::whereIn('project_id', $projectIds)
             ->where('status', TaskStatus::Completed)

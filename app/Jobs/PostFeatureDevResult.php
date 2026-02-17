@@ -146,6 +146,9 @@ class PostFeatureDevResult implements ShouldQueue
     ): int {
         $mrIid = $task->mr_iid;
 
+        // This method is only called when mr_iid is non-null (guarded by caller)
+        assert($mrIid !== null);
+
         try {
             $gitLab->updateMergeRequest($gitlabProjectId, $mrIid, array_filter([
                 'title' => $mrTitle,
@@ -176,10 +179,14 @@ class PostFeatureDevResult implements ShouldQueue
     {
         $markdown = $this->formatSummary($result, $mrIid);
 
+        // This method is only called when issue_iid is non-null (guarded by caller)
+        $issueIid = $task->issue_iid;
+        assert($issueIid !== null);
+
         try {
             $note = $gitLab->createIssueNote(
                 $gitlabProjectId,
-                $task->issue_iid,
+                $issueIid,
                 $markdown,
             );
 

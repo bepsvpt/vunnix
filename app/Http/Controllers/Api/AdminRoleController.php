@@ -223,6 +223,9 @@ class AdminRoleController extends Controller
     private function authorizeRoleAdmin(Request $request): void
     {
         $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
 
         $hasRoleAdmin = $user->projects()
             ->get()

@@ -94,7 +94,7 @@ class BotPatRotationService
             'resolved_at' => now(),
         ]);
 
-        return $alert->fresh();
+        return $alert->fresh() ?? $alert;
     }
 
     /**

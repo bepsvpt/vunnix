@@ -13,8 +13,12 @@ class DashboardEfficiencyController extends Controller
 {
     public function __invoke(Request $request): JsonResponse
     {
-        $projectIds = $request->user()
-            ->projects()
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $projectIds = $user->projects()
             ->where('enabled', true)
             ->pluck('projects.id');
 
@@ -31,13 +35,13 @@ class DashboardEfficiencyController extends Controller
 
         if ($completedReviews->isNotEmpty()) {
             $timeToFirstReview = (float) round(
-                $completedReviews->avg(fn ($task) => $task->created_at->diffInSeconds($task->started_at) / 60),
+                ($completedReviews->avg(fn ($task) => abs($task->started_at?->diffInSeconds($task->created_at) ?? 0)) ?? 0) / 60,
                 1
             );
 
             // Review turnaround — avg minutes from created_at to completed_at
             $reviewTurnaround = (float) round(
-                $completedReviews->avg(fn ($task) => $task->created_at->diffInSeconds($task->completed_at) / 60),
+                ($completedReviews->avg(fn ($task) => abs($task->completed_at?->diffInSeconds($task->created_at) ?? 0)) ?? 0) / 60,
                 1
             );
         }

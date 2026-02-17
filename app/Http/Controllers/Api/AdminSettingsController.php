@@ -31,6 +31,11 @@ class AdminSettingsController extends Controller
     {
         $this->authorizeSettingsAdmin($request);
 
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
         foreach ($request->validated()['settings'] as $item) {
             $key = $item['key'];
             $value = $item['value'];
@@ -51,7 +56,7 @@ class AdminSettingsController extends Controller
             if ($oldValue !== $value) {
                 try {
                     app(AuditLogService::class)->logConfigurationChange(
-                        userId: $request->user()->id,
+                        userId: $user->id,
                         key: $key,
                         oldValue: $oldValue,
                         newValue: $value,
@@ -91,6 +96,9 @@ class AdminSettingsController extends Controller
     private function authorizeSettingsAdmin(Request $request): void
     {
         $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
 
         $hasAdmin = $user->projects()
             ->get()

@@ -11,8 +11,13 @@ class TaskResultViewController extends Controller
 {
     public function __invoke(Request $request, Task $task): JsonResponse
     {
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
         // Authorization: user must have access to the task's project
-        if (! $request->user()->projects()->where('projects.id', $task->project_id)->exists()) {
+        if (! $user->projects()->where('projects.id', $task->project_id)->exists()) {
             return response()->json(['error' => 'Forbidden'], 403);
         }
 

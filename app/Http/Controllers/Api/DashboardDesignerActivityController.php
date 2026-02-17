@@ -14,8 +14,12 @@ class DashboardDesignerActivityController extends Controller
 {
     public function __invoke(Request $request): JsonResponse
     {
-        $projectIds = $request->user()
-            ->projects()
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $projectIds = $user->projects()
             ->where('enabled', true)
             ->pluck('projects.id');
 
@@ -31,7 +35,7 @@ class DashboardDesignerActivityController extends Controller
         $avgIterations = null;
         if ($uiAdjustmentsDispatched > 0) {
             $avgIterations = (float) round(
-                $completedUiTasks->avg(fn ($task) => $task->retry_count + 1),
+                $completedUiTasks->avg(fn ($task) => $task->retry_count + 1) ?? 0,
                 1
             );
         }

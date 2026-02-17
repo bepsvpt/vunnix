@@ -72,17 +72,21 @@ class PostFailureComment implements ShouldQueue
     private function postToMergeRequest(GitLabClient $gitLab, Task $task, string $body): void
     {
         $projectId = $task->project->gitlab_project_id;
+        $mrIid = $task->mr_iid;
+
+        // This method is only called when mr_iid is non-null (guarded by caller)
+        assert($mrIid !== null);
 
         if ($task->comment_id !== null) {
             // Update placeholder in-place
-            $gitLab->updateMergeRequestNote($projectId, $task->mr_iid, $task->comment_id, $body);
+            $gitLab->updateMergeRequestNote($projectId, $mrIid, $task->comment_id, $body);
 
             Log::info('PostFailureComment: updated placeholder with failure', [
                 'task_id' => $this->taskId,
                 'note_id' => $task->comment_id,
             ]);
         } else {
-            $note = $gitLab->createMergeRequestNote($projectId, $task->mr_iid, $body);
+            $note = $gitLab->createMergeRequestNote($projectId, $mrIid, $body);
 
             Log::info('PostFailureComment: posted failure comment on MR', [
                 'task_id' => $this->taskId,
@@ -94,8 +98,12 @@ class PostFailureComment implements ShouldQueue
     private function postToIssue(GitLabClient $gitLab, Task $task, string $body): void
     {
         $projectId = $task->project->gitlab_project_id;
+        $issueIid = $task->issue_iid;
 
-        $gitLab->createIssueNote($projectId, $task->issue_iid, $body);
+        // This method is only called when issue_iid is non-null (guarded by caller)
+        assert($issueIid !== null);
+
+        $gitLab->createIssueNote($projectId, $issueIid, $body);
 
         Log::info('PostFailureComment: posted failure comment on Issue', [
             'task_id' => $this->taskId,

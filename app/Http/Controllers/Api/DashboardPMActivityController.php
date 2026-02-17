@@ -16,8 +16,12 @@ class DashboardPMActivityController extends Controller
 {
     public function __invoke(Request $request): JsonResponse
     {
-        $projectIds = $request->user()
-            ->projects()
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $projectIds = $user->projects()
             ->where('enabled', true)
             ->pluck('projects.id');
 
@@ -55,7 +59,7 @@ class DashboardPMActivityController extends Controller
                 ->pluck('turn_count');
 
             if ($turnCounts->isNotEmpty()) {
-                $avgTurnsPerPrd = (float) round($turnCounts->avg(), 1);
+                $avgTurnsPerPrd = (float) round($turnCounts->avg() ?? 0, 1);
             }
         }
 

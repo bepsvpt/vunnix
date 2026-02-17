@@ -36,8 +36,13 @@ class ConversationController extends Controller
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
         $conversations = $this->conversationService->listForUser(
-            user: $request->user(),
+            user: $user,
             projectId: $request->integer('project_id') ?: null,
             search: $request->input('search'),
             archived: $request->boolean('archived'),
@@ -54,6 +59,9 @@ class ConversationController extends Controller
     public function store(CreateConversationRequest $request): JsonResponse
     {
         $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
         $project = Project::where('id', $request->validated('project_id'))->firstOrFail();
 
         // Verify user has chat.access permission on this project
@@ -93,9 +101,14 @@ class ConversationController extends Controller
     {
         $this->authorize('sendMessage', $conversation);
 
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
         $message = $this->conversationService->addUserMessage(
             conversation: $conversation,
-            user: $request->user(),
+            user: $user,
             content: $request->validated('content'),
         );
 
@@ -116,9 +129,14 @@ class ConversationController extends Controller
     {
         $this->authorize('stream', $conversation);
 
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
         return $this->conversationService->streamResponse(
             conversation: $conversation,
-            user: $request->user(),
+            user: $user,
             content: $request->validated('content'),
         );
     }
@@ -132,9 +150,14 @@ class ConversationController extends Controller
     {
         $this->authorize('addProject', $conversation);
 
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
         $this->conversationService->addProject(
             conversation: $conversation,
-            user: $request->user(),
+            user: $user,
             projectId: $request->validated('project_id'),
         );
 

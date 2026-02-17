@@ -124,6 +124,9 @@ class PrdTemplateController extends Controller
     private function authorizeConfigManage(Request $request, Project $project): void
     {
         $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
 
         if (! $user->hasPermission('config.manage', $project)) {
             abort(403, 'You need the config.manage permission to manage PRD templates.');
@@ -136,6 +139,9 @@ class PrdTemplateController extends Controller
     private function authorizeAdmin(Request $request): void
     {
         $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
 
         $hasAdmin = $user->projects()
             ->get()

@@ -18,7 +18,12 @@ class ActivityController extends Controller
             'cursor' => ['nullable', 'string'],
         ]);
 
-        $projectIds = $request->user()
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $projectIds = $user
             ->projects()
             ->where('enabled', true)
             ->pluck('projects.id');

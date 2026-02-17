@@ -112,7 +112,7 @@ class ProcessAcceptanceTracking implements ShouldQueue
                 }
 
                 // T87: Get emoji feedback for this discussion
-                $emojiResult = $emojiByDiscussion[$discussionId] ?? [
+                $emojiResult = ($discussionId !== null ? ($emojiByDiscussion[$discussionId] ?? null) : null) ?? [
                     'positive_count' => 0,
                     'negative_count' => 0,
                     'sentiment' => 'neutral',

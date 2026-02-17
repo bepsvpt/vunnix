@@ -20,6 +20,9 @@ class DashboardCostController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
 
         // Admin-only: user must have admin.global_config on at least one project (D29)
         $hasAdmin = $user->projects()

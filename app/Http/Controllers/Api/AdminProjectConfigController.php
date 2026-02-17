@@ -42,12 +42,18 @@ class AdminProjectConfigController extends Controller
 
         $this->configService->bulkSet($project, $overrides);
 
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
         foreach ($overrides as $key => $value) {
             $oldValue = Arr::get($oldSettings, $key);
+
             if ($oldValue !== $value) {
                 try {
                     app(AuditLogService::class)->logConfigurationChange(
-                        userId: $request->user()->id,
+                        userId: $user->id,
                         key: $key,
                         oldValue: $oldValue,
                         newValue: $value,
@@ -71,6 +77,9 @@ class AdminProjectConfigController extends Controller
     private function authorizeAdmin(Request $request): void
     {
         $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
 
         $hasAdmin = $user->projects()
             ->get()

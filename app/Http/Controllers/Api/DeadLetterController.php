@@ -53,7 +53,11 @@ class DeadLetterController extends Controller
         $this->authorizeAdmin($request);
 
         try {
-            $newTask = $this->service->retry($deadLetterEntry, $request->user());
+            $user = $request->user();
+            if (! $user) {
+                abort(401);
+            }
+            $newTask = $this->service->retry($deadLetterEntry, $user);
 
             return response()->json(['success' => true, 'data' => $newTask]);
         } catch (LogicException $e) {
@@ -66,7 +70,11 @@ class DeadLetterController extends Controller
         $this->authorizeAdmin($request);
 
         try {
-            $this->service->dismiss($deadLetterEntry, $request->user());
+            $user = $request->user();
+            if (! $user) {
+                abort(401);
+            }
+            $this->service->dismiss($deadLetterEntry, $user);
 
             return response()->json(['success' => true]);
         } catch (LogicException $e) {
@@ -77,6 +85,9 @@ class DeadLetterController extends Controller
     private function authorizeAdmin(Request $request): void
     {
         $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
 
         $hasAdmin = $user->projects()
             ->where('enabled', true)

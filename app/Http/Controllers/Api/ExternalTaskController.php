@@ -29,7 +29,12 @@ class ExternalTaskController extends Controller
             'cursor' => ['nullable', 'string'],
         ]);
 
-        $accessibleProjectIds = $request->user()->accessibleProjects()->pluck('id');
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $accessibleProjectIds = $user->accessibleProjects()->pluck('id');
 
         $query = Task::with(['project:id,name', 'user:id,name'])
             ->whereIn('project_id', $accessibleProjectIds)
@@ -73,7 +78,12 @@ class ExternalTaskController extends Controller
 
     public function show(Request $request, Task $task): ExternalTaskResource
     {
-        if (! $request->user()->accessibleProjects()->pluck('id')->contains($task->project_id)) {
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        if (! $user->accessibleProjects()->pluck('id')->contains($task->project_id)) {
             abort(403, 'You do not have access to this task.');
         }
 
@@ -89,7 +99,12 @@ class ExternalTaskController extends Controller
             'mr_iid' => ['required', 'integer'],
         ]);
 
-        $accessibleProjectIds = $request->user()->accessibleProjects()->pluck('id');
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $accessibleProjectIds = $user->accessibleProjects()->pluck('id');
 
         if (! $accessibleProjectIds->contains((int) $validated['project_id'])) {
             abort(403, 'You do not have access to this project.');
@@ -98,7 +113,7 @@ class ExternalTaskController extends Controller
         $task = Task::create([
             'type' => TaskType::CodeReview,
             'origin' => TaskOrigin::Webhook,
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
             'project_id' => (int) $validated['project_id'],
             'priority' => TaskPriority::Normal,
             'status' => TaskStatus::Received,

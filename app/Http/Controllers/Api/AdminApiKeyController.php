@@ -33,7 +33,7 @@ class AdminApiKeyController extends Controller
                 'last_ip' => $key->last_ip,
                 'expires_at' => $key->expires_at?->toISOString(),
                 'revoked' => $key->revoked,
-                'created_at' => $key->created_at->toISOString(),
+                'created_at' => $key->created_at?->toISOString(),
             ]);
 
         return response()->json(['data' => $keys]);
@@ -52,6 +52,9 @@ class AdminApiKeyController extends Controller
     private function authorizeAdmin(Request $request): void
     {
         $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
         $hasAdminPerm = $user->roles()
             ->whereHas('permissions', fn ($q) => $q->where('name', 'admin.global_config'))
             ->exists();

@@ -18,13 +18,18 @@ class ConversationResource extends JsonResource
             'project_id' => $this->project_id,
             'user_id' => $this->user_id,
             'archived_at' => $this->archived_at?->toIso8601String(),
-            'created_at' => $this->created_at->toIso8601String(),
-            'updated_at' => $this->updated_at->toIso8601String(),
+            'created_at' => $this->created_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
             'last_message' => $this->whenLoaded('latestMessage', function () {
+                $msg = $this->latestMessage;
+                if (! $msg) {
+                    return null;
+                }
+
                 return [
-                    'content' => Str::limit($this->latestMessage->content, 150),
-                    'role' => $this->latestMessage->role,
-                    'created_at' => $this->latestMessage->created_at->toIso8601String(),
+                    'content' => Str::limit($msg->content, 150),
+                    'role' => $msg->role,
+                    'created_at' => $msg->created_at?->toIso8601String(),
                 ];
             }),
             'projects' => $this->whenLoaded('projects', function () {

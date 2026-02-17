@@ -32,6 +32,6 @@ class PushToMRBranch extends WebhookEvent
      */
     public function branchName(): string
     {
-        return preg_replace('#^refs/heads/#', '', $this->ref);
+        return (string) preg_replace('#^refs/heads/#', '', $this->ref);
     }
 }

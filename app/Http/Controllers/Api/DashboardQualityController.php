@@ -24,8 +24,12 @@ class DashboardQualityController extends Controller
 
         $promptVersion = $request->input('prompt_version');
 
-        $projectIds = $request->user()
-            ->projects()
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $projectIds = $user->projects()
             ->where('enabled', true)
             ->pluck('projects.id');
 

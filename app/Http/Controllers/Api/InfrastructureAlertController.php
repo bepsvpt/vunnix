@@ -36,6 +36,9 @@ class InfrastructureAlertController extends Controller
     private function authorizeAdmin(Request $request): void
     {
         $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
 
         $hasAdmin = $user->projects()
             ->where('enabled', true)

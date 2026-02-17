@@ -19,8 +19,8 @@ class MessageResource extends JsonResource
             'content' => $this->content,
             'tool_calls' => json_decode($this->tool_calls, true),
             'tool_results' => json_decode($this->tool_results, true),
-            'created_at' => $this->created_at->toIso8601String(),
-            'updated_at' => $this->updated_at->toIso8601String(),
+            'created_at' => $this->created_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
         ];
     }
 }

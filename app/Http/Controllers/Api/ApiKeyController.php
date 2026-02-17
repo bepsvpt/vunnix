@@ -18,7 +18,12 @@ class ApiKeyController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $keys = $request->user()
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $keys = $user
             ->apiKeys()
             ->orderByDesc('created_at')
             ->get()
@@ -29,7 +34,7 @@ class ApiKeyController extends Controller
                 'last_ip' => $key->last_ip,
                 'expires_at' => $key->expires_at?->toISOString(),
                 'revoked' => $key->revoked,
-                'created_at' => $key->created_at->toISOString(),
+                'created_at' => $key->created_at?->toISOString(),
             ]);
 
         return response()->json(['data' => $keys]);
@@ -37,12 +42,17 @@ class ApiKeyController extends Controller
 
     public function store(CreateApiKeyRequest $request): JsonResponse
     {
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
         $expiresAt = $request->validated('expires_at')
             ? Carbon::parse($request->validated('expires_at'))
             : null;
 
         $result = $this->apiKeyService->generate(
-            $request->user(),
+            $user,
             $request->validated('name'),
             $expiresAt,
         );
@@ -59,9 +69,14 @@ class ApiKeyController extends Controller
 
     public function destroy(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
+
         $apiKey = ApiKey::findOrFail($id);
 
-        if ($apiKey->user_id !== $request->user()->id) {
+        if ($apiKey->user_id !== $user->id) {
             abort(403, 'You can only revoke your own API keys.');
         }
 

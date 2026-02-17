@@ -220,7 +220,7 @@ class TaskDispatcher
 
         // Code review tasks: analyze changed files from the MR diff
         if ($task->type === TaskType::CodeReview && $task->mr_iid !== null) {
-            return $this->resolveFromMergeRequest($task);
+            return $this->resolveFromMergeRequest($task, $task->mr_iid);
         }
 
         // Default strategies for non-review task types
@@ -236,12 +236,12 @@ class TaskDispatcher
     /**
      * Fetch MR changed files from GitLab and resolve strategy.
      */
-    private function resolveFromMergeRequest(Task $task): ReviewStrategy
+    private function resolveFromMergeRequest(Task $task, int $mrIid): ReviewStrategy
     {
         try {
             $changes = $this->gitLabClient->getMergeRequestChanges(
                 $task->project->gitlab_project_id,
-                $task->mr_iid,
+                $mrIid,
             );
 
             $filePaths = array_map(
