@@ -48,7 +48,7 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 |---|---|
 | **Backend** | Laravel 11 + Octane (FrankenPHP driver) |
 | **Frontend** | Vue 3 SPA (Composition API, `<script setup lang="ts">`) + TypeScript (strict) + Vite + Pinia + Vue Router + Zod |
-| **Database** | PostgreSQL 16 (JSONB, materialized views, full-text search via tsvector + GIN) |
+| **Database** | PostgreSQL 18 (JSONB, materialized views, full-text search via tsvector + GIN) |
 | **Cache / Queue** | Redis (separate DBs for cache, session, queue) |
 | **Real-time** | Laravel Reverb (WebSocket) + SSE (chat streaming) |
 | **AI (Chat)** | Laravel AI SDK (`laravel/ai`) — Agent classes with tools, middleware, structured output |

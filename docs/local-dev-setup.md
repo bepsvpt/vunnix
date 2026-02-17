@@ -15,7 +15,7 @@ Run Vunnix locally with Docker Compose and a reverse proxy tunnel for GitLab con
 
 ```
 Browser ──► Tunnel ──► FrankenPHP (app:80) ──► Laravel Octane
-                                                 ├── PostgreSQL 16
+                                                 ├── PostgreSQL 18
                                                  ├── Redis (cache/session/queue)
                                                  ├── Reverb (WebSocket)
                                                  ├── queue-server (immediate tasks)
@@ -35,6 +35,9 @@ cd /path/to/vunnix
 
 # Back up existing .env if present
 cp .env .env.backup 2>/dev/null || true
+
+# Install PHP dependencies (one-off container — writes to host vendor/ via bind mount)
+docker compose run --rm app composer install
 
 # Start all services
 docker compose up -d --build
