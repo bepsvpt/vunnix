@@ -74,10 +74,10 @@ class ReadMergeRequest implements Tool
         $updatedAt = $mr['updated_at'] ?? '';
         $description = $mr['description'] ?? '';
 
-        $labels = empty($mr['labels']) ? 'none' : implode(', ', $mr['labels']);
+        $labels = ($mr['labels'] ?? []) === [] ? 'none' : implode(', ', $mr['labels']);
 
         $assignees = 'none';
-        if (! empty($mr['assignees'])) {
+        if (($mr['assignees'] ?? []) !== []) {
             $assignees = implode(', ', array_map(
                 fn (array $a): string => '@'.($a['username'] ?? 'unknown'),
                 $mr['assignees'],
@@ -85,7 +85,7 @@ class ReadMergeRequest implements Tool
         }
 
         $reviewers = 'none';
-        if (! empty($mr['reviewers'])) {
+        if (($mr['reviewers'] ?? []) !== []) {
             $reviewers = implode(', ', array_map(
                 fn (array $r): string => '@'.($r['username'] ?? 'unknown'),
                 $mr['reviewers'],

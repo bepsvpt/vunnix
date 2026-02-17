@@ -119,13 +119,13 @@ class DispatchAction implements Tool
 
         // 3. Resolve the internal project and user
         $project = Project::where('gitlab_project_id', $projectId)->first();
-        if (! $project) {
+        if ($project === null) {
             return 'Error: project not found in Vunnix registry.';
         }
 
         $userId = $request->integer('user_id');
         $user = User::find($userId);
-        if (! $user) {
+        if ($user === null) {
             return 'Error: user not found.';
         }
 
@@ -151,7 +151,7 @@ class DispatchAction implements Tool
         ];
 
         // Set branch info for feature/UI/MR actions
-        if (in_array($actionType, ['implement_feature', 'ui_adjustment', 'create_mr'])) {
+        if (in_array($actionType, ['implement_feature', 'ui_adjustment', 'create_mr'], true)) {
             $targetBranch = (string) $request->string('target_branch');
             $taskData['commit_sha'] = $targetBranch !== '' ? $targetBranch : 'main';
         }

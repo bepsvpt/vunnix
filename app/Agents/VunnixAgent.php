@@ -142,7 +142,7 @@ class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
         }
 
         // Fall back to the RemembersConversations trait behavior
-        if (! $this->conversationId) {
+        if ($this->conversationId === null || $this->conversationId === '') {
             return [];
         }
 
@@ -352,7 +352,7 @@ PROMPT;
     {
         $language = GlobalSetting::get('ai_language');
 
-        if ($language && $language !== 'en') {
+        if (is_string($language) && $language !== '' && $language !== 'en') {
             return <<<PROMPT
 [Language]
 Always respond in {$language}. All output text — summaries, findings, descriptions — must be in {$language}.

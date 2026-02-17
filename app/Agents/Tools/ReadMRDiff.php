@@ -71,7 +71,7 @@ class ReadMRDiff implements Tool
 
         $changes = $data['changes'] ?? [];
 
-        if (empty($changes)) {
+        if ($changes === []) {
             return 'No file changes found in this merge request.';
         }
 
@@ -89,11 +89,11 @@ class ReadMRDiff implements Tool
             $diff = $change['diff'] ?? '';
 
             // Build file header
-            if ($isNewFile) {
+            if ($isNewFile === true) {
                 $header = "── New file: {$newPath} ──";
-            } elseif ($isDeletedFile) {
+            } elseif ($isDeletedFile === true) {
                 $header = "── Deleted file: {$oldPath} ──";
-            } elseif ($isRenamedFile) {
+            } elseif ($isRenamedFile === true) {
                 $header = "── Renamed: {$oldPath} → {$newPath} ──";
             } else {
                 $header = "── Modified: {$newPath} ──";

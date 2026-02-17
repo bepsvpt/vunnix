@@ -79,7 +79,7 @@ class SearchCode implements Tool
                 $snippet = substr($snippet, 0, 500).'…';
             }
 
-            $lines[] = "--- {$path}".($startLine ? ":L{$startLine}" : '')." ---\n{$snippet}";
+            $lines[] = "--- {$path}".($startLine > 0 ? ":L{$startLine}" : '')." ---\n{$snippet}";
         }
 
         return implode("\n\n", $lines);
