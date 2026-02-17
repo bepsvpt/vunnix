@@ -2,3 +2,8 @@ parameters:
     paths:
         - app/
     level: 8
+    ignoreErrors:
+        # Larastan limitation: Eloquent's __callStatic forwarding (e.g., Model::where(),
+        # Model::pluck()) is not fully resolved by Larastan + phpstan-strict-rules.
+        # These are false positives — the calls are valid at runtime.
+        - identifier: staticMethod.dynamicCall
