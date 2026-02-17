@@ -123,7 +123,7 @@ it('dispatches ProcessTaskResult job for completed results', function (): void {
         'Authorization' => "Bearer {$token}",
     ])->assertOk();
 
-    Queue::assertPushed(\App\Jobs\ProcessTaskResult::class, function ($job) use ($task) {
+    Queue::assertPushed(\App\Jobs\ProcessTaskResult::class, function ($job) use ($task): bool {
         return $job->taskId === $task->id;
     });
 
@@ -458,14 +458,14 @@ it('posts all 3 layers (summary, threads, labels+status) in sync queue pipeline'
     expect($task->status)->toBe(TaskStatus::Completed);
 
     // Layer 1: summary comment posted
-    Http::assertSent(fn ($r) => str_contains($r->url(), '/notes'));
+    Http::assertSent(fn ($r): bool => str_contains($r->url(), '/notes'));
     // Layer 2: inline discussion thread posted
-    Http::assertSent(fn ($r) => str_contains($r->url(), '/discussions'));
+    Http::assertSent(fn ($r): bool => str_contains($r->url(), '/discussions'));
     // Layer 3: labels applied via PUT with add_labels
-    Http::assertSent(fn ($r) => $r->method() === 'PUT'
+    Http::assertSent(fn ($r): bool => $r->method() === 'PUT'
         && str_contains($r->url(), '/merge_requests/')
         && str_contains($r['add_labels'] ?? '', 'ai::reviewed'));
     // Layer 3: commit status set via POST to statuses endpoint
-    Http::assertSent(fn ($r) => str_contains($r->url(), '/statuses/')
+    Http::assertSent(fn ($r): bool => str_contains($r->url(), '/statuses/')
         && ($r['state'] ?? '') === 'failed');
 });

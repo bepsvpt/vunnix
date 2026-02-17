@@ -5,7 +5,7 @@ use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
+Route::get('/', function (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View {
     return view('welcome');
 });
 
@@ -26,6 +26,6 @@ Route::post('/webhook', WebhookController::class)
 
 // SPA catch-all — serves Vue app for all non-API, non-asset routes
 // Must be the LAST route defined
-Route::get('/{any}', function () {
+Route::get('/{any}', function (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View {
     return view('app');
 })->where('any', '^(?!api|health|auth|webhook|up).*$');

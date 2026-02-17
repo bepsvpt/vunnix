@@ -14,7 +14,7 @@ beforeEach(function (): void {
     // Register test route under /api/ prefix to avoid SPA catch-all route (/{any})
     // which intercepts all non-excluded GET paths and returns the Vue app shell
     Route::middleware(['web', RevalidateGitLabMembership::class])
-        ->get('/api/test-revalidate', fn () => response('ok'));
+        ->get('/api/test-revalidate', fn (): \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response => response('ok'));
 });
 
 it('revalidates membership on authenticated request when cache is empty', function (): void {

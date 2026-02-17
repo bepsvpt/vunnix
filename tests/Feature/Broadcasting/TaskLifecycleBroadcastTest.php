@@ -20,7 +20,7 @@ test('task completing dispatches broadcast with status and result summary', func
     $task->result = ['summary' => 'All checks passed'];
     $task->transitionTo(TaskStatus::Completed);
 
-    Event::assertDispatched(TaskStatusChanged::class, function ($event) use ($task) {
+    Event::assertDispatched(TaskStatusChanged::class, function ($event) use ($task): bool {
         $data = $event->broadcastWith();
 
         return $event->task->id === $task->id
@@ -39,7 +39,7 @@ test('task failing dispatches broadcast with failed status', function (): void {
 
     $task->transitionTo(TaskStatus::Failed, 'Runner timeout');
 
-    Event::assertDispatched(TaskStatusChanged::class, function ($event) {
+    Event::assertDispatched(TaskStatusChanged::class, function ($event): bool {
         return $event->task->status === TaskStatus::Failed
             && $event->broadcastWith()['status'] === 'failed';
     });
@@ -56,7 +56,7 @@ test('includes pipeline_status in broadcast payload', function (): void {
 
     $task->transitionTo(TaskStatus::Running);
 
-    Event::assertDispatched(TaskStatusChanged::class, function ($event) {
+    Event::assertDispatched(TaskStatusChanged::class, function ($event): bool {
         $payload = $event->broadcastWith();
 
         return array_key_exists('pipeline_status', $payload)
@@ -75,7 +75,7 @@ test('includes null pipeline_status when not set', function (): void {
 
     $task->transitionTo(TaskStatus::Running);
 
-    Event::assertDispatched(TaskStatusChanged::class, function ($event) {
+    Event::assertDispatched(TaskStatusChanged::class, function ($event): bool {
         $payload = $event->broadcastWith();
 
         return array_key_exists('pipeline_status', $payload)
@@ -94,7 +94,7 @@ test('includes title, started_at, and conversation_id in broadcast payload', fun
 
     $task->transitionTo(TaskStatus::Running);
 
-    Event::assertDispatched(TaskStatusChanged::class, function ($event) {
+    Event::assertDispatched(TaskStatusChanged::class, function ($event): bool {
         $payload = $event->broadcastWith();
 
         return array_key_exists('title', $payload)

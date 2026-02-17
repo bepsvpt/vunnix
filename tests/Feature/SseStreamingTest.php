@@ -207,7 +207,7 @@ it('includes all SSE event types in the stream', function (): void {
     expect($content)->toContain('data: [DONE]');
 
     // Each event should be a valid SSE data line
-    $lines = array_filter(explode("\n", $content), fn ($line) => str_starts_with($line, 'data: '));
+    $lines = array_filter(explode("\n", $content), fn ($line): bool => str_starts_with($line, 'data: '));
     expect(count($lines))->toBeGreaterThanOrEqual(6); // start, text_start, at least 1 delta, text_end, stream_end, [DONE]
 
     // All data lines except [DONE] should be valid JSON
@@ -237,5 +237,5 @@ it('sends the user prompt to the agent', function (): void {
     // Consume stream to trigger the agent
     $response->streamedContent();
 
-    VunnixAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'Show me the auth module'));
+    VunnixAgent::assertPrompted(fn ($prompt): bool => str_contains($prompt->prompt, 'Show me the auth module'));
 });

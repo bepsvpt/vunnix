@@ -151,5 +151,5 @@ it('returns recent activity timestamp', function (): void {
     $response = $this->actingAs($user)->getJson('/api/v1/dashboard/overview');
 
     $response->assertOk();
-    $response->assertJsonPath('data.recent_activity', fn ($val) => $val !== null);
+    $response->assertJsonPath('data.recent_activity', fn ($val): bool => $val !== null);
 });

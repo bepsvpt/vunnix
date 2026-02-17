@@ -25,16 +25,16 @@ class ConversationFactory extends Factory
 
     public function archived(): static
     {
-        return $this->state(fn () => ['archived_at' => now()]);
+        return $this->state(fn (): array => ['archived_at' => now()]);
     }
 
     public function forProject(Project $project): static
     {
-        return $this->state(fn () => ['project_id' => $project->id]);
+        return $this->state(fn (): array => ['project_id' => $project->id]);
     }
 
     public function forUser(User $user): static
     {
-        return $this->state(fn () => ['user_id' => $user->id]);
+        return $this->state(fn (): array => ['user_id' => $user->id]);
     }
 }

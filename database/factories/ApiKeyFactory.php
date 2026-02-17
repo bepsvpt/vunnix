@@ -23,7 +23,7 @@ class ApiKeyFactory extends Factory
 
     public function revoked(): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (): array => [
             'revoked' => true,
             'revoked_at' => now(),
         ]);
@@ -31,7 +31,7 @@ class ApiKeyFactory extends Factory
 
     public function expired(): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (): array => [
             'expires_at' => now()->subDay(),
         ]);
     }

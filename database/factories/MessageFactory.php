@@ -32,11 +32,11 @@ class MessageFactory extends Factory
 
     public function assistant(): static
     {
-        return $this->state(fn () => ['role' => 'assistant']);
+        return $this->state(fn (): array => ['role' => 'assistant']);
     }
 
     public function forConversation(Conversation $conversation): static
     {
-        return $this->state(fn () => ['conversation_id' => $conversation->id]);
+        return $this->state(fn (): array => ['conversation_id' => $conversation->id]);
     }
 }

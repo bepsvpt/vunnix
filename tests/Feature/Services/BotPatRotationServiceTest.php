@@ -153,5 +153,5 @@ it('sends team chat notification when alert is created', function (): void {
     $service = app(BotPatRotationService::class);
     $service->evaluate();
 
-    Http::assertSent(fn ($r) => str_contains($r['text'] ?? json_encode($r->body()), 'PAT rotation'));
+    Http::assertSent(fn ($r): bool => str_contains($r['text'] ?? json_encode($r->body()), 'PAT rotation'));
 });

@@ -54,7 +54,7 @@ it('dispatches ProcessAcceptanceTracking job on MR merge webhook', function (): 
     $response->assertOk();
     $response->assertJson(['intent' => 'acceptance_tracking']);
 
-    Queue::assertPushed(ProcessAcceptanceTracking::class, function ($job) use ($project) {
+    Queue::assertPushed(ProcessAcceptanceTracking::class, function ($job) use ($project): bool {
         return $job->projectId === $project->id
             && $job->gitlabProjectId === $project->gitlab_project_id
             && $job->mrIid === 42;
@@ -118,7 +118,7 @@ it('dispatches ProcessCodeChangeCorrelation on push webhook', function (): void 
 
     $response->assertOk();
 
-    Queue::assertPushed(ProcessCodeChangeCorrelation::class, function ($job) use ($project) {
+    Queue::assertPushed(ProcessCodeChangeCorrelation::class, function ($job) use ($project): bool {
         return $job->projectId === $project->id
             && $job->mrIid === 42
             && $job->beforeSha === 'aaa111'

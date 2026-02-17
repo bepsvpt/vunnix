@@ -123,7 +123,7 @@ it('uses the configured gitlab url as base', function (): void {
     $service = app(GitLabService::class);
     $service->getUserProjects('fake-token');
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'my-gitlab.example.com/api/v4/projects');
     });
 });

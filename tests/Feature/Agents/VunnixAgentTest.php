@@ -387,7 +387,7 @@ it('asserts the prompt was received', function (): void {
     $agent = VunnixAgent::make();
     $agent->prompt('What is the auth module?');
 
-    VunnixAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'auth module'));
+    VunnixAgent::assertPrompted(fn ($prompt): bool => str_contains($prompt->prompt, 'auth module'));
 });
 
 // ─── Conversation Persistence (Integration) ─────────────────────
@@ -462,7 +462,7 @@ it('links agent to existing conversation via continue()', function (): void {
     $response->streamedContent();
 
     // The agent should have been prompted with the user's message
-    VunnixAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'Help me review this PR'));
+    VunnixAgent::assertPrompted(fn ($prompt): bool => str_contains($prompt->prompt, 'Help me review this PR'));
 });
 
 // ─── Quality Gate Integration (T54) ─────────────────────────────
@@ -489,7 +489,7 @@ it('supports quality gate conversation flow: vague request → challenge → cla
     $response1->streamedContent();
 
     // Verify the agent received the vague request
-    VunnixAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'add a payment feature'));
+    VunnixAgent::assertPrompted(fn ($prompt): bool => str_contains($prompt->prompt, 'add a payment feature'));
 
     // Turn 2: PM provides clarification → AI accepts
     $response2 = $this->actingAs($user)
@@ -542,7 +542,7 @@ it('dispatches action when user has chat.dispatch_task permission', function ():
     $response->streamedContent();
 
     VunnixAgent::assertPrompted(
-        fn ($prompt) => str_contains($prompt->prompt, 'implement the payment feature')
+        fn ($prompt): bool => str_contains($prompt->prompt, 'implement the payment feature')
     );
 });
 
@@ -566,7 +566,7 @@ it('explains permission denial when user lacks chat.dispatch_task', function ():
     $response->streamedContent();
 
     VunnixAgent::assertPrompted(
-        fn ($prompt) => str_contains($prompt->prompt, 'create an issue')
+        fn ($prompt): bool => str_contains($prompt->prompt, 'create an issue')
     );
 });
 

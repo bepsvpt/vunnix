@@ -52,7 +52,7 @@ it('does not prune conversations with 20 or fewer turns', function (): void {
     $prompt = buildAgentPrompt($agent);
     $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
 
-    $next = function (AgentPrompt $p) {
+    $next = function (AgentPrompt $p): \Laravel\Ai\Responses\AgentResponse {
         return new AgentResponse('test-id', 'response text', new Usage, new Meta);
     };
 
@@ -72,7 +72,7 @@ it('does not prune conversations with fewer than 20 turns', function (): void {
 
     $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
 
-    $next = function (AgentPrompt $p) {
+    $next = function (AgentPrompt $p): \Laravel\Ai\Responses\AgentResponse {
         return new AgentResponse('test-id', 'response text', new Usage, new Meta);
     };
 
@@ -91,7 +91,7 @@ it('does not prune when there are no messages (new conversation)', function (): 
 
     $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
 
-    $next = function (AgentPrompt $p) {
+    $next = function (AgentPrompt $p): \Laravel\Ai\Responses\AgentResponse {
         return new AgentResponse('test-id', 'response text', new Usage, new Meta);
     };
 
@@ -109,7 +109,7 @@ it('prunes conversations with more than 20 turns', function (): void {
 
     // Expect setPrunedMessages to be called with an array
     $prunedMessages = null;
-    $agent->shouldReceive('setPrunedMessages')->once()->withArgs(function ($msgs) use (&$prunedMessages) {
+    $agent->shouldReceive('setPrunedMessages')->once()->withArgs(function ($msgs) use (&$prunedMessages): bool {
         $prunedMessages = $msgs;
 
         return is_array($msgs);
@@ -129,7 +129,7 @@ it('prunes conversations with more than 20 turns', function (): void {
 
     $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
 
-    $next = function (AgentPrompt $p) {
+    $next = function (AgentPrompt $p): \Laravel\Ai\Responses\AgentResponse {
         return new AgentResponse('test-id', 'response text', new Usage, new Meta);
     };
 
@@ -163,7 +163,7 @@ it('keeps exactly the last 10 turns when pruning', function (): void {
     $agent->shouldReceive('messages')->andReturn($messages);
 
     $prunedMessages = null;
-    $agent->shouldReceive('setPrunedMessages')->once()->withArgs(function ($msgs) use (&$prunedMessages) {
+    $agent->shouldReceive('setPrunedMessages')->once()->withArgs(function ($msgs) use (&$prunedMessages): true {
         $prunedMessages = $msgs;
 
         return true;
@@ -181,7 +181,7 @@ it('keeps exactly the last 10 turns when pruning', function (): void {
     $middleware = new PruneConversationHistory($provider);
 
     $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
-    $next = fn ($p) => new AgentResponse('test-id', 'response text', new Usage, new Meta);
+    $next = fn ($p): \Laravel\Ai\Responses\AgentResponse => new AgentResponse('test-id', 'response text', new Usage, new Meta);
 
     $middleware->handle($prompt, $next);
 
@@ -205,7 +205,7 @@ it('sends older messages to the summarizer', function (): void {
     $summarizedContent = null;
     $gateway = Mockery::mock(TextGateway::class);
     $gateway->shouldReceive('generateText')->once()
-        ->withArgs(function ($provider, $model, $instructions, $msgs) use (&$summarizedContent) {
+        ->withArgs(function ($provider, $model, $instructions, $msgs) use (&$summarizedContent): true {
             // The instructions should mention summarization
             $summarizedContent = $instructions;
 
@@ -224,7 +224,7 @@ it('sends older messages to the summarizer', function (): void {
     $middleware = new PruneConversationHistory($provider);
 
     $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
-    $next = fn ($p) => new AgentResponse('test-id', 'response text', new Usage, new Meta);
+    $next = fn ($p): \Laravel\Ai\Responses\AgentResponse => new AgentResponse('test-id', 'response text', new Usage, new Meta);
 
     $middleware->handle($prompt, $next);
 
@@ -253,7 +253,7 @@ it('keeps all messages when summarization fails', function (): void {
     $middleware = new PruneConversationHistory($provider);
 
     $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
-    $next = fn ($p) => new AgentResponse('test-id', 'response text', new Usage, new Meta);
+    $next = fn ($p): \Laravel\Ai\Responses\AgentResponse => new AgentResponse('test-id', 'response text', new Usage, new Meta);
 
     // Should not throw — gracefully continues with full history
     $result = $middleware->handle($prompt, $next);
@@ -273,7 +273,7 @@ it('passes through without pruning for non-VunnixAgent agents', function (): voi
     $middleware = new PruneConversationHistory($provider);
 
     $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
-    $next = fn ($p) => new AgentResponse('test-id', 'response text', new Usage, new Meta);
+    $next = fn ($p): \Laravel\Ai\Responses\AgentResponse => new AgentResponse('test-id', 'response text', new Usage, new Meta);
 
     $result = $middleware->handle($prompt, $next);
 
@@ -288,7 +288,7 @@ it('triggers pruning at exactly 21 turns', function (): void {
     $agent->shouldReceive('messages')->andReturn($messages);
 
     $prunedMessages = null;
-    $agent->shouldReceive('setPrunedMessages')->once()->withArgs(function ($msgs) use (&$prunedMessages) {
+    $agent->shouldReceive('setPrunedMessages')->once()->withArgs(function ($msgs) use (&$prunedMessages): true {
         $prunedMessages = $msgs;
 
         return true;
@@ -306,7 +306,7 @@ it('triggers pruning at exactly 21 turns', function (): void {
     $middleware = new PruneConversationHistory($provider);
 
     $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
-    $next = fn ($p) => new AgentResponse('test-id', 'response text', new Usage, new Meta);
+    $next = fn ($p): \Laravel\Ai\Responses\AgentResponse => new AgentResponse('test-id', 'response text', new Usage, new Meta);
 
     $middleware->handle($prompt, $next);
 

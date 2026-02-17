@@ -11,7 +11,7 @@ function fakeGitLabProjects(array $projects): void
 {
     Http::fake([
         '*/api/v4/projects?membership=true&per_page=100&page=1' => Http::response(
-            collect($projects)->map(fn ($p) => [
+            collect($projects)->map(fn ($p): array => [
                 'id' => $p['gitlab_id'],
                 'name' => $p['name'],
                 'path_with_namespace' => $p['path'] ?? 'group/'.strtolower($p['name']),

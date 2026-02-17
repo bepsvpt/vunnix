@@ -92,7 +92,7 @@ it('dispatches PostFailureComment when task has MR', function (): void {
     $job = new ProcessTask($task->id);
     $job->failed($exception);
 
-    Queue::assertPushed(PostFailureComment::class, function ($job) use ($task) {
+    Queue::assertPushed(PostFailureComment::class, function ($job) use ($task): bool {
         return $job->taskId === $task->id;
     });
 });

@@ -177,7 +177,7 @@ it('completes full @ai improve flow with 3-layer code review output', function (
     expect($task->pipeline_id)->toBe($pipelineId);
     expect($task->status)->toBe(TaskStatus::Running);
 
-    Http::assertSent(function ($request) use ($taskId) {
+    Http::assertSent(function ($request) use ($taskId): bool {
         if (! str_contains($request->url(), 'trigger/pipeline')) {
             return false;
         }
@@ -258,7 +258,7 @@ it('completes full @ai improve flow with 3-layer code review output', function (
 
     // ── 8. Assert: summary comment updated in-place (Layer 1) ────
 
-    Http::assertSent(function ($request) use ($placeholderNoteId) {
+    Http::assertSent(function ($request) use ($placeholderNoteId): bool {
         return str_contains($request->url(), "notes/{$placeholderNoteId}")
             && $request->method() === 'PUT'
             && ! empty($request->data()['body']);
@@ -267,7 +267,7 @@ it('completes full @ai improve flow with 3-layer code review output', function (
     // ── 9. Assert: inline threads posted for major finding (Layer 2) ──
 
     $discussionRequests = collect(Http::recorded())
-        ->filter(function ($pair) {
+        ->filter(function ($pair): bool {
             [$request] = $pair;
 
             return str_contains($request->url(), '/discussions')
@@ -278,7 +278,7 @@ it('completes full @ai improve flow with 3-layer code review output', function (
 
     // ── 10. Assert: labels applied (Layer 3) ─────────────────────
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), 'merge_requests/10') || $request->method() !== 'PUT') {
             return false;
         }
@@ -430,7 +430,7 @@ it('completes full @ai ask flow with answer posted as MR comment', function (): 
     expect($task->pipeline_id)->toBe($pipelineId);
     expect($task->status)->toBe(TaskStatus::Running);
 
-    Http::assertSent(function ($request) use ($taskId) {
+    Http::assertSent(function ($request) use ($taskId): bool {
         if (! str_contains($request->url(), 'trigger/pipeline')) {
             return false;
         }
@@ -480,7 +480,7 @@ it('completes full @ai ask flow with answer posted as MR comment', function (): 
 
     // ── 8. Assert: answer comment posted as new MR note ──────────
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), 'merge_requests/20/notes') || $request->method() !== 'POST') {
             return false;
         }
@@ -497,7 +497,7 @@ it('completes full @ai ask flow with answer posted as MR comment', function (): 
 
     // No label application (PUT to merge_requests)
     $labelRequests = collect(Http::recorded())
-        ->filter(function ($pair) {
+        ->filter(function ($pair): bool {
             [$request] = $pair;
 
             return str_contains($request->url(), 'merge_requests/20')
@@ -508,7 +508,7 @@ it('completes full @ai ask flow with answer posted as MR comment', function (): 
 
     // No discussion threads
     $discussionRequests = collect(Http::recorded())
-        ->filter(function ($pair) {
+        ->filter(function ($pair): bool {
             [$request] = $pair;
 
             return str_contains($request->url(), '/discussions')

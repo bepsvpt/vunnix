@@ -151,7 +151,7 @@ it('fails immediately on 401 without retry', function (): void {
 it('logs critical on 401 for admin alert', function (): void {
     Log::shouldReceive('warning')->once()->withAnyArgs();
     Log::shouldReceive('critical')->once()
-        ->withArgs(function (string $message) {
+        ->withArgs(function (string $message): bool {
             return str_contains($message, 'authentication failure');
         });
 

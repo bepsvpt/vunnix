@@ -246,7 +246,7 @@ it('completes full on-demand review flow from @ai review comment to 3-layer GitL
     expect($task->status)->toBe(TaskStatus::Running);
 
     // Verify pipeline trigger included VUNNIX_* variables
-    Http::assertSent(function ($request) use ($taskId) {
+    Http::assertSent(function ($request) use ($taskId): bool {
         if (! str_contains($request->url(), 'trigger/pipeline')) {
             return false;
         }
@@ -279,7 +279,7 @@ it('completes full on-demand review flow from @ai review comment to 3-layer GitL
 
     // ── 8. Assert: summary comment updated in-place (Layer 1) ────
 
-    Http::assertSent(function ($request) use ($placeholderNoteId) {
+    Http::assertSent(function ($request) use ($placeholderNoteId): bool {
         return str_contains($request->url(), "notes/{$placeholderNoteId}")
             && $request->method() === 'PUT'
             && ! empty($request->data()['body']);
@@ -288,7 +288,7 @@ it('completes full on-demand review flow from @ai review comment to 3-layer GitL
     // ── 9. Assert: inline threads posted for major finding (Layer 2) ──
 
     $discussionRequests = collect(Http::recorded())
-        ->filter(function ($pair) {
+        ->filter(function ($pair): bool {
             [$request] = $pair;
 
             return str_contains($request->url(), '/discussions')
@@ -300,7 +300,7 @@ it('completes full on-demand review flow from @ai review comment to 3-layer GitL
 
     // ── 10. Assert: labels applied (Layer 3) ─────────────────────
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), 'merge_requests/30') || $request->method() !== 'PUT') {
             return false;
         }
@@ -313,7 +313,7 @@ it('completes full on-demand review flow from @ai review comment to 3-layer GitL
 
     // ── 11. Assert: commit status set to success (Layer 3) ───────
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'statuses/ondemand-sha-123')
             && $request->method() === 'POST'
             && ($request->data()['state'] ?? '') === 'success';

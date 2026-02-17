@@ -15,7 +15,7 @@ test('TaskObserver dispatches TaskStatusChanged on status transition', function 
 
     $task->transitionTo(TaskStatus::Running);
 
-    Event::assertDispatched(TaskStatusChanged::class, function ($event) use ($task) {
+    Event::assertDispatched(TaskStatusChanged::class, function ($event) use ($task): bool {
         return $event->task->id === $task->id
             && $event->task->status === TaskStatus::Running;
     });
@@ -39,7 +39,7 @@ test('TaskObserver dispatches on terminal transitions with result data', functio
     $task->result = ['summary' => 'Review complete', 'severity' => 'clean'];
     $task->transitionTo(TaskStatus::Completed);
 
-    Event::assertDispatched(TaskStatusChanged::class, function ($event) {
+    Event::assertDispatched(TaskStatusChanged::class, function ($event): bool {
         return $event->task->status === TaskStatus::Completed;
     });
 });

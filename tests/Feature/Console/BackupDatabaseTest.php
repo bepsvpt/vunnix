@@ -40,7 +40,7 @@ it('runs pg_dump with correct connection parameters', function (): void {
     $username = config('database.connections.pgsql.username');
     $database = config('database.connections.pgsql.database');
 
-    Process::assertRan(function ($process) use ($host, $port, $username, $database) {
+    Process::assertRan(function ($process) use ($host, $port, $username, $database): bool {
         $command = $process->command;
 
         return str_contains($command, "pg_dump -h {$host} -p {$port} -U {$username} -Z 9")
@@ -56,7 +56,7 @@ it('targets a gzipped backup file via pg_dump --file flag', function (): void {
     $this->artisan('backup:database', ['--path' => $this->backupDir])
         ->assertSuccessful();
 
-    Process::assertRan(function ($process) {
+    Process::assertRan(function ($process): bool {
         return str_contains($process->command, '--file=')
             && str_contains($process->command, '.sql.gz');
     });
@@ -120,7 +120,7 @@ it('does not pass password on command line', function (): void {
     $this->artisan('backup:database', ['--path' => $this->backupDir])
         ->assertSuccessful();
 
-    Process::assertRan(function ($process) {
+    Process::assertRan(function ($process): bool {
         // Password should be via PGPASSWORD env var, not --password flag
         return ! str_contains($process->command, '--password')
             && ! str_contains($process->command, '-W');

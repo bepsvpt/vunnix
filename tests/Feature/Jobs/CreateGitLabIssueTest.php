@@ -46,7 +46,7 @@ it('creates a GitLab Issue via bot PAT and stores issue_iid on task', function (
 
     expect($task->issue_iid)->toBe(15);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return str_contains($request->url(), '/projects/200/issues')
             && $request['title'] === 'Add user notification preferences'
             && str_contains($request['description'], 'notification settings')
@@ -87,7 +87,7 @@ it('creates Issue without assignee when assignee_id is not provided', function (
 
     expect($task->issue_iid)->toBe(7);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return str_contains($request->url(), '/projects/300/issues')
             && $request['title'] === 'Simple issue without assignee'
             && ! isset($request['assignee_ids']);
@@ -126,7 +126,7 @@ it('creates Issue without labels when labels are not provided', function (): voi
 
     expect($task->issue_iid)->toBe(3);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return str_contains($request->url(), '/projects/400/issues')
             && ! isset($request['labels']);
     });

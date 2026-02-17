@@ -272,7 +272,7 @@ it('completes full code review flow from webhook to 3-layer GitLab comments', fu
     expect($task->status)->toBe(TaskStatus::Running);
 
     // Verify the pipeline trigger included VUNNIX_* variables
-    Http::assertSent(function ($request) use ($taskId) {
+    Http::assertSent(function ($request) use ($taskId): bool {
         if (! str_contains($request->url(), 'trigger/pipeline')) {
             return false;
         }
@@ -313,7 +313,7 @@ it('completes full code review flow from webhook to 3-layer GitLab comments', fu
     // (not createMergeRequestNote) since the task has a comment_id
     // from the placeholder.
 
-    Http::assertSent(function ($request) use ($placeholderNoteId) {
+    Http::assertSent(function ($request) use ($placeholderNoteId): bool {
         return str_contains($request->url(), "notes/{$placeholderNoteId}")
             && $request->method() === 'PUT'
             && ! empty($request->data()['body']);
@@ -325,7 +325,7 @@ it('completes full code review flow from webhook to 3-layer GitLab comments', fu
     // Minor findings are excluded (only appear in Layer 1 summary).
 
     $discussionRequests = collect(Http::recorded())
-        ->filter(function ($pair) {
+        ->filter(function ($pair): bool {
             [$request] = $pair;
 
             return str_contains($request->url(), '/discussions')
@@ -339,7 +339,7 @@ it('completes full code review flow from webhook to 3-layer GitLab comments', fu
     // LabelMapper computes labels independently: ai::reviewed + ai::risk-high + ai::security
     // (security because there's a finding with category=security).
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), 'merge_requests/42') || $request->method() !== 'PUT') {
             return false;
         }
@@ -355,7 +355,7 @@ it('completes full code review flow from webhook to 3-layer GitLab comments', fu
     //
     // Critical findings → commit_status = 'failed'
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'statuses/abc123def456')
             && $request->method() === 'POST'
             && ($request->data()['state'] ?? '') === 'failed';
@@ -451,7 +451,7 @@ it('uses placeholder-then-update pattern: creates placeholder then updates in-pl
     $cleanResult['summary']['findings_by_severity'] = ['critical' => 0, 'major' => 1, 'minor' => 1];
     $cleanResult['findings'] = array_filter(
         $cleanResult['findings'],
-        fn ($f) => $f['severity'] !== 'critical',
+        fn (array $f): bool => $f['severity'] !== 'critical',
     );
     $cleanResult['findings'] = array_values($cleanResult['findings']);
     $cleanResult['summary']['total_findings'] = count($cleanResult['findings']);
@@ -467,14 +467,14 @@ it('uses placeholder-then-update pattern: creates placeholder then updates in-pl
     )->assertOk();
 
     // The summary comment was updated via PUT to the placeholder note ID
-    Http::assertSent(function ($request) use ($placeholderNoteId) {
+    Http::assertSent(function ($request) use ($placeholderNoteId): bool {
         return str_contains($request->url(), "notes/{$placeholderNoteId}")
             && $request->method() === 'PUT';
     });
 
     // No new note was created (only 1 POST to /notes — the placeholder)
     $noteCreateRequests = collect(Http::recorded())
-        ->filter(function ($pair) {
+        ->filter(function ($pair): bool {
             [$request] = $pair;
 
             return str_contains($request->url(), '/notes')
@@ -591,7 +591,7 @@ it('sets commit status to success when no critical findings exist', function ():
 
     // No inline threads (no critical/major findings)
     $discussionRequests = collect(Http::recorded())
-        ->filter(function ($pair) {
+        ->filter(function ($pair): bool {
             [$request] = $pair;
 
             return str_contains($request->url(), '/discussions')
@@ -601,14 +601,14 @@ it('sets commit status to success when no critical findings exist', function ():
     expect($discussionRequests)->toHaveCount(0);
 
     // Commit status should be success (no critical findings)
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'statuses/cleansha123')
             && $request->method() === 'POST'
             && ($request->data()['state'] ?? '') === 'success';
     });
 
     // Labels should be ai::reviewed + ai::risk-low (no ai::security)
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), 'merge_requests/5') || $request->method() !== 'PUT') {
             return false;
         }

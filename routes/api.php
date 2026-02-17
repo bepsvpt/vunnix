@@ -42,7 +42,7 @@ Route::prefix('v1')->group(function (): void {
     // Auth state endpoint (T62)
     // Returns authenticated user's profile, projects, roles, and permissions
     Route::middleware('auth')->group(function (): void {
-        Route::get('/user', function () {
+        Route::get('/user', function (): \App\Http\Resources\UserResource {
             return new UserResource(request()->user());
         })->name('api.user');
     });

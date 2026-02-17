@@ -104,7 +104,7 @@ it('includes api_key_configured status', function (): void {
     $response = $this->actingAs($user)->getJson('/api/v1/admin/settings');
 
     $response->assertOk()
-        ->assertJsonPath('api_key_configured', fn ($v) => is_bool($v));
+        ->assertJsonPath('api_key_configured', fn ($v): bool => is_bool($v));
 });
 
 it('includes defaults for reference', function (): void {

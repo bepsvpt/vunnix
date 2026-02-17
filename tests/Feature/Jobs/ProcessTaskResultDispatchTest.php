@@ -36,7 +36,7 @@ it('dispatches PostSummaryComment after successful code review processing', func
     $job = new ProcessTaskResult($task->id);
     $job->handle(app(\App\Services\ResultProcessor::class));
 
-    Queue::assertPushed(PostSummaryComment::class, function ($job) use ($task) {
+    Queue::assertPushed(PostSummaryComment::class, function ($job) use ($task): bool {
         return $job->taskId === $task->id;
     });
 });
@@ -163,7 +163,7 @@ it('dispatches PostInlineThreads after successful code review processing', funct
     $job = new ProcessTaskResult($task->id);
     $job->handle(app(\App\Services\ResultProcessor::class));
 
-    Queue::assertPushed(PostInlineThreads::class, function ($job) use ($task) {
+    Queue::assertPushed(PostInlineThreads::class, function ($job) use ($task): bool {
         return $job->taskId === $task->id;
     });
 });
@@ -290,7 +290,7 @@ it('dispatches PostLabelsAndStatus after successful code review processing', fun
     $job = new ProcessTaskResult($task->id);
     $job->handle(app(\App\Services\ResultProcessor::class));
 
-    Queue::assertPushed(PostLabelsAndStatus::class, function ($job) use ($task) {
+    Queue::assertPushed(PostLabelsAndStatus::class, function ($job) use ($task): bool {
         return $job->taskId === $task->id;
     });
 });
@@ -411,7 +411,7 @@ it('dispatches CreateGitLabIssue after successful PrdCreation processing', funct
     $job = new ProcessTaskResult($task->id);
     $job->handle(app(\App\Services\ResultProcessor::class));
 
-    Queue::assertPushed(\App\Jobs\CreateGitLabIssue::class, function ($job) use ($task) {
+    Queue::assertPushed(\App\Jobs\CreateGitLabIssue::class, function ($job) use ($task): bool {
         return $job->taskId === $task->id;
     });
 });

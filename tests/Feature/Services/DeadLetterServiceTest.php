@@ -61,7 +61,7 @@ it('retries a DLQ entry by creating a new queued task', function (): void {
     expect($newTask->error_reason)->toBeNull();
 
     // ProcessTask job should be dispatched
-    Queue::assertPushed(ProcessTask::class, fn ($job) => $job->taskId === $newTask->id);
+    Queue::assertPushed(ProcessTask::class, fn ($job): bool => $job->taskId === $newTask->id);
 });
 
 // ─── Retry fails for already retried entry ───────────────────────

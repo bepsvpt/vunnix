@@ -65,7 +65,7 @@ it('executes the full server-side pipeline: dispatch → process → create GitL
     expect($task->result['gitlab_issue_url'])->toBe('https://gitlab.example.com/my-project/issues/23');
 
     // GitLab API was called with correct payload
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return str_contains($request->url(), '/projects/777/issues')
             && $request['title'] === 'Add notification preferences'
             && str_contains($request['description'], 'notification preferences')
@@ -109,7 +109,7 @@ it('completes full pipeline without assignee or labels when not provided', funct
     expect($task->issue_iid)->toBe(5);
 
     // Verify no assignee_ids or labels were sent
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return str_contains($request->url(), '/projects/888/issues')
             && $request['title'] === 'Minimal Issue'
             && ! isset($request['assignee_ids'])
@@ -148,11 +148,11 @@ it('does not trigger a CI pipeline for server-side PrdCreation tasks', function 
     $dispatcher->dispatch($task);
 
     // No pipeline trigger calls were made (only the Issue creation)
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), '/issues');
     });
 
-    Http::assertNotSent(function ($request) {
+    Http::assertNotSent(function ($request): bool {
         return str_contains($request->url(), '/trigger/pipeline')
             || str_contains($request->url(), '/pipeline');
     });

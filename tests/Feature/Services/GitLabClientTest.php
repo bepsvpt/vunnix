@@ -36,7 +36,7 @@ it('constructs URLs using configured gitlab host', function (): void {
     $client = app(GitLabClient::class);
     $client->listIssues(42);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'gitlab.example.com/api/v4/projects/42/issues');
     });
 });
@@ -51,7 +51,7 @@ it('defaults to gitlab.com when no host is configured', function (): void {
     $client = app(GitLabClient::class);
     $client->listIssues(1);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'gitlab.com/api/v4/');
     });
 });
@@ -64,7 +64,7 @@ it('sends Accept: application/json header', function (): void {
     $client = app(GitLabClient::class);
     $client->listIssues(1);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->header('Accept')[0] ?? '', 'application/json');
     });
 });
@@ -125,7 +125,7 @@ it('lists issues with default pagination', function (): void {
 
     expect($result)->toHaveCount(2);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'per_page=25');
     });
 });
@@ -138,7 +138,7 @@ it('lists issues with custom filters', function (): void {
     $client = app(GitLabClient::class);
     $client->listIssues(1, ['state' => 'opened', 'labels' => 'bug']);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'state=opened')
             && str_contains($request->url(), 'labels=bug');
     });
@@ -178,7 +178,7 @@ it('creates an issue', function (): void {
 
     expect($result)->toHaveKey('iid', 10);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'POST'
             && $request['title'] === 'New issue';
     });
@@ -251,7 +251,7 @@ it('creates a merge request', function (): void {
 
     expect($result)->toHaveKey('iid', 7);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'POST'
             && $request['source_branch'] === 'feature';
     });
@@ -275,7 +275,7 @@ it('sends PUT request to update merge request', function (): void {
     expect($result['iid'])->toBe(123);
     expect($result['title'])->toBe('Updated title');
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'PUT'
             && str_contains($request->url(), 'merge_requests/123')
             && $request['title'] === 'Updated title';
@@ -295,7 +295,7 @@ it('finds an open merge request for a branch', function (): void {
     expect($mr)->not->toBeNull()
         ->and($mr['iid'])->toBe(42);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'source_branch=feature')
             && str_contains($request->url(), 'state=opened')
             && str_contains($request->url(), 'per_page=1');
@@ -345,7 +345,7 @@ it('updates a merge request note', function (): void {
 
     expect($result)->toHaveKey('body', 'Updated comment');
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return $request->method() === 'PUT';
     });
 });
@@ -379,7 +379,7 @@ it('lists merge request discussions', function (): void {
         ->and($discussions[0]['id'])->toBe('disc-1')
         ->and($discussions[1]['id'])->toBe('disc-2');
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return $request->method() === 'GET'
             && str_contains($request->url(), 'discussions')
             && str_contains($request->url(), 'per_page=100');
@@ -406,7 +406,7 @@ it('creates a merge request discussion thread', function (): void {
 
     expect($result)->toHaveKey('id', 'abc123');
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'POST'
             && isset($request['position']);
     });
@@ -429,7 +429,7 @@ it('creates a branch', function (): void {
 
     expect($result)->toHaveKey('name', 'ai/feature-123');
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'POST'
             && $request['branch'] === 'ai/feature-123'
             && $request['ref'] === 'main';
@@ -451,7 +451,7 @@ it('compares two commits and returns diffs', function (): void {
     expect($result)->toHaveKey('diffs');
     expect($result['diffs'])->toHaveCount(1);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), '/repository/compare')
             && str_contains($request->url(), 'from=abc123')
             && str_contains($request->url(), 'to=def456');
@@ -475,7 +475,7 @@ it('sets merge request labels', function (): void {
 
     expect($result['labels'])->toBe(['ai::reviewed', 'ai::risk-low']);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'PUT'
             && $request['labels'] === 'ai::reviewed,ai::risk-low';
     });
@@ -492,7 +492,7 @@ it('adds merge request labels without removing existing ones', function (): void
     $client = app(GitLabClient::class);
     $result = $client->addMergeRequestLabels(1, 3, ['ai::reviewed']);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'PUT'
             && $request['add_labels'] === 'ai::reviewed';
     });
@@ -511,7 +511,7 @@ it('removes specific labels from a merge request', function (): void {
 
     expect($result['labels'])->toBe(['ai::reviewed']);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'PUT'
             && $request['remove_labels'] === 'ai::risk-high,ai::risk-medium';
     });
@@ -538,7 +538,7 @@ it('sets commit status', function (): void {
 
     expect($result)->toHaveKey('status', 'success');
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'POST'
             && $request['state'] === 'success'
             && $request['name'] === 'vunnix/review';
@@ -567,7 +567,7 @@ it('creates a webhook', function (): void {
 
     expect($result)->toHaveKey('id', 50);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'POST'
             && $request['url'] === 'https://vunnix.example.com/webhook'
             && $request['token'] === 'secret123'
@@ -583,7 +583,7 @@ it('deletes a webhook', function (): void {
     $client = app(GitLabClient::class);
     $client->deleteWebhook(1, 50);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return $request->method() === 'DELETE'
             && str_contains($request->url(), 'hooks/50');
     });
@@ -609,7 +609,7 @@ it('triggers a pipeline', function (): void {
     expect($result)->toHaveKey('id', 999)
         ->toHaveKey('status', 'pending');
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'POST'
             && $request['token'] === 'trigger-token-123'
             && $request['ref'] === 'main'
@@ -659,7 +659,7 @@ it('logs warning on error responses', function (): void {
 
     \Illuminate\Support\Facades\Log::shouldReceive('warning')
         ->once()
-        ->withArgs(function ($message, $context) {
+        ->withArgs(function ($message, array $context): bool {
             return str_contains($message, 'GitLab API error')
                 && $context['status'] === 500;
         });

@@ -470,7 +470,7 @@ it('dispatches PostPlaceholderComment for CodeReview with mr_iid', function (): 
     $dispatcher = app(TaskDispatcher::class);
     $dispatcher->dispatch($task);
 
-    Queue::assertPushed(PostPlaceholderComment::class, function ($job) use ($task) {
+    Queue::assertPushed(PostPlaceholderComment::class, function ($job) use ($task): bool {
         return $job->taskId === $task->id;
     });
 });
@@ -500,7 +500,7 @@ it('dispatches PostPlaceholderComment for SecurityAudit with mr_iid', function (
     $dispatcher = app(TaskDispatcher::class);
     $dispatcher->dispatch($task);
 
-    Queue::assertPushed(PostPlaceholderComment::class, function ($job) use ($task) {
+    Queue::assertPushed(PostPlaceholderComment::class, function ($job) use ($task): bool {
         return $job->taskId === $task->id;
     });
 });
@@ -575,7 +575,7 @@ it('dispatches ProcessTaskResult for server-side PrdCreation tasks', function ()
 
     expect($task->status)->toBe(TaskStatus::Running);
 
-    Queue::assertPushed(\App\Jobs\ProcessTaskResult::class, function ($job) use ($task) {
+    Queue::assertPushed(\App\Jobs\ProcessTaskResult::class, function ($job) use ($task): bool {
         return $job->taskId === $task->id;
     });
 });
@@ -688,7 +688,7 @@ it('triggers pipeline with MR source branch name, not commit SHA', function (): 
     $dispatcher->dispatch($task);
 
     // Verify pipeline was triggered with branch name, not commit SHA
-    Http::assertSent(fn ($req) => str_contains($req->url(), '/trigger/pipeline') &&
+    Http::assertSent(fn ($req): bool => str_contains($req->url(), '/trigger/pipeline') &&
         ($req->data()['ref'] ?? null) === 'feat/my-feature'
     );
 });
@@ -719,7 +719,7 @@ it('triggers pipeline with main when task has no MR', function (): void {
     $dispatcher->dispatch($task);
 
     // Verify pipeline was triggered with 'main', not commit SHA
-    Http::assertSent(fn ($req) => str_contains($req->url(), '/trigger/pipeline') &&
+    Http::assertSent(fn ($req): bool => str_contains($req->url(), '/trigger/pipeline') &&
         ($req->data()['ref'] ?? null) === 'main'
     );
 });
@@ -753,7 +753,7 @@ it('falls back to main when MR source branch lookup fails', function (): void {
     $dispatcher->dispatch($task);
 
     // Should fall back to 'main' and still succeed
-    Http::assertSent(fn ($req) => str_contains($req->url(), '/trigger/pipeline') &&
+    Http::assertSent(fn ($req): bool => str_contains($req->url(), '/trigger/pipeline') &&
         ($req->data()['ref'] ?? null) === 'main'
     );
 
@@ -775,7 +775,7 @@ it('does not read .vunnix.toml for server-side tasks', function (): void {
     $dispatcher->dispatch($task);
 
     // Server-side tasks don't trigger GitLab file reads
-    Http::assertNotSent(function ($request) {
+    Http::assertNotSent(function ($request): bool {
         return str_contains($request->url(), '.vunnix.toml');
     });
 });

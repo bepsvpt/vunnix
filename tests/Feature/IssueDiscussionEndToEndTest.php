@@ -136,7 +136,7 @@ it('completes full @ai issue discussion flow with response posted as Issue comme
     expect($task->pipeline_id)->toBe($pipelineId);
     expect($task->status)->toBe(TaskStatus::Running);
 
-    Http::assertSent(function ($request) use ($taskId) {
+    Http::assertSent(function ($request) use ($taskId): bool {
         if (! str_contains($request->url(), 'trigger/pipeline')) {
             return false;
         }
@@ -201,7 +201,7 @@ it('completes full @ai issue discussion flow with response posted as Issue comme
 
     // ── 8. Assert: response posted as Issue comment ──────────────
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), 'issues/5/notes') || $request->method() !== 'POST') {
             return false;
         }
@@ -218,7 +218,7 @@ it('completes full @ai issue discussion flow with response posted as Issue comme
 
     // No MR note creation
     $mrNoteRequests = collect(Http::recorded())
-        ->filter(function ($pair) {
+        ->filter(function ($pair): bool {
             [$request] = $pair;
 
             return str_contains($request->url(), 'merge_requests')
@@ -230,7 +230,7 @@ it('completes full @ai issue discussion flow with response posted as Issue comme
 
     // No discussion threads
     $discussionRequests = collect(Http::recorded())
-        ->filter(function ($pair) {
+        ->filter(function ($pair): bool {
             [$request] = $pair;
 
             return str_contains($request->url(), '/discussions')

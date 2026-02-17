@@ -42,12 +42,12 @@ it('updates existing MR instead of creating new one when existing_mr_iid is set'
     expect($task->mr_iid)->toBe(456);
 
     // Should have called PUT (update), not POST (create) for the MR
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return $request->method() === 'PUT'
             && str_contains($request->url(), 'merge_requests/456');
     });
 
-    Http::assertNotSent(function ($request) {
+    Http::assertNotSent(function ($request): bool {
         return $request->method() === 'POST'
             && str_contains($request->url(), 'merge_requests');
     });
@@ -81,7 +81,7 @@ it('skips issue summary when task has no issue_iid (conversation origin)', funct
     expect($task->mr_iid)->toBe(789);
 
     // Should NOT call the issue notes endpoint
-    Http::assertNotSent(function ($request) {
+    Http::assertNotSent(function ($request): bool {
         return str_contains($request->url(), '/notes');
     });
 });
@@ -113,7 +113,7 @@ it('creates new MR when existing_mr_iid is not set', function (): void {
     $task->refresh();
     expect($task->mr_iid)->toBe(789);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return $request->method() === 'POST'
             && str_contains($request->url(), 'merge_requests');
     });

@@ -13,7 +13,7 @@ uses(RefreshDatabase::class);
 
 function createReviewTaskWithFindings(int $mrIid = 42, array $findings = []): Task
 {
-    if (empty($findings)) {
+    if ($findings === []) {
         $findings = [
             [
                 'id' => 1,

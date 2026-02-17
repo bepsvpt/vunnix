@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 
 function completedCodeReviewTask(): Task
 {
-    $task = Task::factory()->create([
+    return Task::factory()->create([
         'type' => TaskType::CodeReview,
         'status' => TaskStatus::Completed,
         'started_at' => now()->subMinutes(5),
@@ -46,8 +46,6 @@ function completedCodeReviewTask(): Task
             'commit_status' => 'success',
         ],
     ]);
-
-    return $task;
 }
 
 // ─── Creates new comment when no placeholder exists ─────────────
@@ -65,7 +63,7 @@ it('posts the summary comment to GitLab and stores the note ID', function (): vo
     $job = new PostSummaryComment($task->id);
     $job->handle(app(GitLabClient::class));
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return str_contains($request->url(), '/notes')
             && str_contains($request['body'], '## 🤖 AI Code Review');
     });
@@ -142,7 +140,7 @@ it('updates existing placeholder comment in-place when comment_id exists', funct
     $job->handle(app(GitLabClient::class));
 
     // Should use PUT (update), not POST (create)
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'PUT'
             && str_contains($request->url(), '/notes/5555')
             && str_contains($request['body'], '## 🤖 AI Code Review');
@@ -184,7 +182,7 @@ it('includes updated timestamp when task reuses a previous comment_id', function
     $job->handle(app(GitLabClient::class));
 
     // Assert the PUT body contains the "Updated" timestamp
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'PUT'
             && str_contains($request['body'] ?? '', '📝 Updated:');
     });
@@ -207,7 +205,7 @@ it('does not include timestamp when no previous task shares the comment_id', fun
     $job->handle(app(GitLabClient::class));
 
     // Assert the PUT body does NOT contain the "Updated" timestamp
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'PUT'
             && ! str_contains($request['body'] ?? '', '📝 Updated:');
     });
@@ -229,7 +227,7 @@ it('does not POST a new comment when updating placeholder in-place', function ()
     $job->handle(app(GitLabClient::class));
 
     // Should NOT have any POST to /notes (only PUT to /notes/5555)
-    Http::assertNotSent(function ($request) {
+    Http::assertNotSent(function ($request): bool {
         return $request->method() === 'POST'
             && str_contains($request->url(), '/notes');
     });

@@ -70,7 +70,7 @@ it('dispatches PostFailureComment job on permanent failure', function (): void {
         attempts: [],
     );
 
-    Queue::assertPushed(PostFailureComment::class, function ($job) use ($task) {
+    Queue::assertPushed(PostFailureComment::class, function ($job) use ($task): bool {
         return $job->taskId === $task->id
             && $job->failureReason === 'max_retries_exceeded'
             && $job->errorDetails === 'HTTP 503';

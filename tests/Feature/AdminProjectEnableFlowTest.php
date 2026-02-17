@@ -98,7 +98,7 @@ it('creates webhook with correct URL, secret, and events on enable', function ()
         ->assertOk();
 
     // Verify webhook creation request
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), '/hooks') || $request->method() !== 'POST') {
             return false;
         }
@@ -155,7 +155,7 @@ it('creates all 6 ai:: labels with correct names and colors', function (): void 
     ];
 
     $labelRequests = collect(Http::recorded())
-        ->filter(fn ($pair) => str_contains($pair[0]->url(), '/labels') &&
+        ->filter(fn ($pair): bool => str_contains($pair[0]->url(), '/labels') &&
             $pair[0]->method() === 'POST'
         )
         ->map(fn ($pair) => $pair[0]->data()['name']);
@@ -216,7 +216,7 @@ it('removes webhook and preserves data on disable', function (): void {
         ->postJson("/api/v1/admin/projects/{$project->id}/disable")
         ->assertOk();
 
-    Http::assertSent(fn ($req) => str_contains($req->url(), '/hooks/555') && $req->method() === 'DELETE'
+    Http::assertSent(fn ($req): bool => str_contains($req->url(), '/hooks/555') && $req->method() === 'DELETE'
     );
 
     $project->refresh();

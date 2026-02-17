@@ -26,7 +26,7 @@ class AuditLogFactory extends Factory
 
     public function conversationTurn(): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (): array => [
             'event_type' => 'conversation_turn',
             'summary' => 'Conversation turn recorded',
             'properties' => [
@@ -41,7 +41,7 @@ class AuditLogFactory extends Factory
 
     public function taskExecution(): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (): array => [
             'event_type' => 'task_execution',
             'summary' => 'Task execution completed',
             'properties' => [
@@ -58,7 +58,7 @@ class AuditLogFactory extends Factory
 
     public function configurationChange(): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (): array => [
             'event_type' => 'configuration_change',
             'summary' => 'Configuration changed: ai_model',
             'properties' => [
@@ -71,7 +71,7 @@ class AuditLogFactory extends Factory
 
     public function authEvent(): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (): array => [
             'event_type' => 'auth_event',
             'summary' => 'User logged in',
             'properties' => [
@@ -82,7 +82,7 @@ class AuditLogFactory extends Factory
 
     public function webhookReceived(): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (): array => [
             'event_type' => 'webhook_received',
             'summary' => 'Webhook received: merge_request',
             'properties' => [
@@ -94,7 +94,7 @@ class AuditLogFactory extends Factory
 
     public function actionDispatch(): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (): array => [
             'event_type' => 'action_dispatch',
             'summary' => 'Action dispatched: code_review',
             'properties' => [

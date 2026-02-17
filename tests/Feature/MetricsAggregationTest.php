@@ -76,7 +76,7 @@ test('byProject aggregates task_metrics by project', function (): void {
         ->and((int) $projectARow->total_input_tokens)->toBe(4000)
         ->and((int) $projectARow->total_output_tokens)->toBe(7000)
         ->and((int) $projectARow->total_tokens)->toBe(11000)
-        ->and((float) round($projectARow->total_cost, 6))->toBe(2.0);
+        ->and(round($projectARow->total_cost, 6))->toBe(2.0);
 
     $projectBRow = $result->firstWhere('project_id', $projectB->id);
     expect((int) $projectBRow->task_count)->toBe(1)
@@ -140,7 +140,7 @@ test('byType aggregates task_metrics by project and task type', function (): voi
         ->and((int) $codeReview->total_findings)->toBe(8)
         ->and((int) $codeReview->total_severity_critical)->toBe(3)
         ->and((int) $codeReview->total_severity_high)->toBe(3)
-        ->and((float) round($codeReview->total_cost, 6))->toBe(1.25);
+        ->and(round($codeReview->total_cost, 6))->toBe(1.25);
 
     $featureDev = $result->firstWhere('task_type', 'feature_dev');
     expect((int) $featureDev->task_count)->toBe(1)
@@ -223,12 +223,12 @@ test('byPeriod aggregates task_metrics by project, type, and month', function ()
     $thisMonthRows = $result->where('period_month', $currentMonth);
     expect($thisMonthRows)->toHaveCount(1);
     expect((int) $thisMonthRows->first()->task_count)->toBe(2)
-        ->and((float) round($thisMonthRows->first()->total_cost, 6))->toBe(1.25);
+        ->and(round($thisMonthRows->first()->total_cost, 6))->toBe(1.25);
 
     $lastMonthRows = $result->where('period_month', $lastMonth);
     expect($lastMonthRows)->toHaveCount(1);
     expect((int) $lastMonthRows->first()->task_count)->toBe(1)
-        ->and((float) round($lastMonthRows->first()->total_cost, 6))->toBe(2.0);
+        ->and(round($lastMonthRows->first()->total_cost, 6))->toBe(2.0);
 });
 
 // ─── MetricsQueryService: empty project_ids ─────────────────────────
@@ -346,14 +346,14 @@ test('10 tasks with known metrics produce correct aggregation', function (): voi
         // 6 reviews × (1000+2000) + 2 features × (5000+8000) = 18000 + 26000 = 44000
         ->and((int) $projectARow->total_tokens)->toBe(44000)
         // 6 × 0.50 + 2 × 2.00 = 3.00 + 4.00 = 7.00
-        ->and((float) round($projectARow->total_cost, 2))->toBe(7.0);
+        ->and(round($projectARow->total_cost, 2))->toBe(7.0);
 
     $projectBRow = $byProject->firstWhere('project_id', $projectB->id);
     expect((int) $projectBRow->task_count)->toBe(2)
         // 2 × (2000+3000) = 10000
         ->and((int) $projectBRow->total_tokens)->toBe(10000)
         // 2 × 0.75 = 1.50
-        ->and((float) round($projectBRow->total_cost, 2))->toBe(1.5);
+        ->and(round($projectBRow->total_cost, 2))->toBe(1.5);
 
     // ─── By Type ────────────────────────────
     $byType = $service->byType($projectIds);
@@ -437,8 +437,8 @@ test('aggregate broadcasts MetricsUpdated event per project', function (): void 
     $result = $service->aggregate();
 
     Event::assertDispatched(MetricsUpdated::class, 2);
-    Event::assertDispatched(MetricsUpdated::class, fn ($e) => $e->projectId === $projectA->id);
-    Event::assertDispatched(MetricsUpdated::class, fn ($e) => $e->projectId === $projectB->id);
+    Event::assertDispatched(MetricsUpdated::class, fn ($e): bool => $e->projectId === $projectA->id);
+    Event::assertDispatched(MetricsUpdated::class, fn ($e): bool => $e->projectId === $projectB->id);
 });
 
 // ─── MetricsAggregationService: returns result ──────────────────────
@@ -459,7 +459,7 @@ test('metrics:aggregate is scheduled every 15 minutes', function (): void {
     $schedule = app(\Illuminate\Console\Scheduling\Schedule::class);
 
     $events = collect($schedule->events())->filter(
-        fn ($event) => str_contains($event->command ?? '', 'metrics:aggregate')
+        fn ($event): bool => str_contains($event->command ?? '', 'metrics:aggregate')
     );
 
     expect($events)->toHaveCount(1);

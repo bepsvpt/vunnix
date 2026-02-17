@@ -34,7 +34,7 @@ it('posts a failure comment on the MR', function (): void {
     );
     $job->handle(app(GitLabClient::class));
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return str_contains($request->url(), '/notes')
             && str_contains($request['body'], '🤖 AI review failed')
             && str_contains($request['body'], 'Service Unavailable');
@@ -67,7 +67,7 @@ it('updates placeholder comment in-place when comment_id exists', function (): v
     $job->handle(app(GitLabClient::class));
 
     // Should use PUT (update), not POST (create)
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->method() === 'PUT'
             && str_contains($request->url(), '/notes/5555')
             && str_contains($request['body'], '🤖 AI review failed');
@@ -99,7 +99,7 @@ it('posts a failure comment on an Issue when task has issue_iid', function (): v
     );
     $job->handle(app(GitLabClient::class));
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return str_contains($request->url(), '/issues/')
             && str_contains($request->url(), '/notes')
             && str_contains($request['body'], '🤖 AI review failed');
@@ -166,7 +166,7 @@ it('formats the failure reason as human-readable text', function (): void {
     );
     $job->handle(app(GitLabClient::class));
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         $body = $request['body'];
 
         return str_contains($body, 'too large')

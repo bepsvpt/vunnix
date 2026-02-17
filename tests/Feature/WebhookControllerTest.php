@@ -364,7 +364,7 @@ it('dispatches ProcessTask job and returns task_id for MR open events', function
     ]);
 
     // ProcessTask was dispatched
-    Queue::assertPushed(\App\Jobs\ProcessTask::class, fn ($job) => $job->taskId === $taskId);
+    Queue::assertPushed(\App\Jobs\ProcessTask::class, fn ($job): bool => $job->taskId === $taskId);
 });
 
 it('returns null task_id for non-dispatchable events', function (): void {

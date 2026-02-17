@@ -31,7 +31,7 @@ it('posts placeholder comment to GitLab and stores the note ID', function (): vo
     $job = new PostPlaceholderComment($task->id);
     $job->handle(app(GitLabClient::class));
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return str_contains($request->url(), '/notes')
             && $request['body'] === '🤖 AI Review in progress…';
     });
@@ -126,11 +126,11 @@ it('reuses previous review comment_id for incremental review on same MR', functi
     expect($newTask->comment_id)->toBe(99001);
 
     // Should PUT (update) existing note, not POST (create) new one
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return $request->method() === 'PUT'
             && str_contains($request->url(), '/notes/99001');
     });
-    Http::assertNotSent(function ($request) {
+    Http::assertNotSent(function ($request): bool {
         return $request->method() === 'POST'
             && str_contains($request->url(), '/notes');
     });

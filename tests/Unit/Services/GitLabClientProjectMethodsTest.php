@@ -27,7 +27,7 @@ it('fetches project details via getProject', function (): void {
         ->toHaveKey('id', 42)
         ->toHaveKey('visibility', 'internal');
 
-    Http::assertSent(fn ($req) => str_contains($req->url(), '/api/v4/projects/42') &&
+    Http::assertSent(fn ($req): bool => str_contains($req->url(), '/api/v4/projects/42') &&
         $req->header('PRIVATE-TOKEN')[0] === 'test-token'
     );
 });
@@ -49,7 +49,7 @@ it('fetches project by path via getProjectByPath', function (): void {
         ->toHaveKey('id', 42)
         ->toHaveKey('path_with_namespace', 'mygroup/myproject');
 
-    Http::assertSent(fn ($req) => str_contains($req->url(), '/api/v4/projects/mygroup%2Fmyproject')
+    Http::assertSent(fn ($req): bool => str_contains($req->url(), '/api/v4/projects/mygroup%2Fmyproject')
     );
 });
 
@@ -114,7 +114,7 @@ it('creates a project label via createProjectLabel', function (): void {
     expect($result)
         ->toHaveKey('name', 'ai::reviewed');
 
-    Http::assertSent(fn ($req) => str_contains($req->url(), '/api/v4/projects/42/labels') &&
+    Http::assertSent(fn ($req): bool => str_contains($req->url(), '/api/v4/projects/42/labels') &&
         $req->method() === 'POST' &&
         $req->data()['name'] === 'ai::reviewed' &&
         $req->data()['color'] === '#428BCA' &&
@@ -152,7 +152,7 @@ it('creates a pipeline trigger via createPipelineTrigger', function (): void {
         ->toHaveKey('id', 10)
         ->toHaveKey('token', '6d056f63e50fe6f8c5f8f4aa10571c00');
 
-    Http::assertSent(fn ($req) => str_contains($req->url(), '/api/v4/projects/42/triggers') &&
+    Http::assertSent(fn ($req): bool => str_contains($req->url(), '/api/v4/projects/42/triggers') &&
         $req->method() === 'POST' &&
         $req->data()['description'] === 'Vunnix task executor'
     );

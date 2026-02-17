@@ -181,7 +181,7 @@ it('dispatches help response for unrecognized @ai command', function (): void {
     expect($result)->not->toBeNull()
         ->and($result->intent)->toBe('help_response');
 
-    Queue::assertPushed(PostHelpResponse::class, function ($job) {
+    Queue::assertPushed(PostHelpResponse::class, function ($job): bool {
         return $job->gitlabProjectId === 100
             && $job->mergeRequestIid === 42
             && $job->unrecognizedCommand === '@ai summarize';

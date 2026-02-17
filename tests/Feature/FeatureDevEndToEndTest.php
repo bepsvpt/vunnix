@@ -146,7 +146,7 @@ it('completes full feature dev flow: label → task → MR created → issue sum
     expect($task->pipeline_id)->toBe($pipelineId);
     expect($task->status)->toBe(TaskStatus::Running);
 
-    Http::assertSent(function ($request) use ($taskId) {
+    Http::assertSent(function ($request) use ($taskId): bool {
         if (! str_contains($request->url(), 'trigger/pipeline')) {
             return false;
         }
@@ -219,7 +219,7 @@ it('completes full feature dev flow: label → task → MR created → issue sum
 
     // ── 8. Assert: MR created via GitLab API ─────────────────────
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), '/merge_requests') || $request->method() !== 'POST') {
             return false;
         }
@@ -238,7 +238,7 @@ it('completes full feature dev flow: label → task → MR created → issue sum
 
     // ── 9. Assert: summary posted as Issue comment ───────────────
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), 'issues/8/notes') || $request->method() !== 'POST') {
             return false;
         }
@@ -255,7 +255,7 @@ it('completes full feature dev flow: label → task → MR created → issue sum
 
     // No discussion thread creation
     $discussionRequests = collect(Http::recorded())
-        ->filter(function ($pair) {
+        ->filter(function ($pair): bool {
             [$request] = $pair;
 
             return str_contains($request->url(), '/discussions')

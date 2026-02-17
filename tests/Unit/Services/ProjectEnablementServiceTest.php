@@ -135,7 +135,7 @@ it('creates all 6 ai:: labels on enable', function (): void {
 
     // Verify 6 label creation requests were sent
     $labelRequests = collect(Http::recorded())
-        ->filter(fn ($pair) => str_contains($pair[0]->url(), '/labels') &&
+        ->filter(fn ($pair): bool => str_contains($pair[0]->url(), '/labels') &&
             $pair[0]->method() === 'POST'
         );
 

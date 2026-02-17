@@ -45,7 +45,7 @@ it('triggers GitLab pipeline with correct variables for runner task', function (
     $dispatcher->dispatch($task);
 
     // Verify pipeline trigger was called
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), 'trigger/pipeline')) {
             return false;
         }
@@ -91,7 +91,7 @@ it('passes correct pipeline variable values', function (): void {
     $dispatcher = app(TaskDispatcher::class);
     $dispatcher->dispatch($task);
 
-    Http::assertSent(function ($request) use ($task) {
+    Http::assertSent(function ($request) use ($task): bool {
         if (! str_contains($request->url(), 'trigger/pipeline')) {
             return false;
         }
@@ -136,7 +136,7 @@ it('uses MR source branch as pipeline ref', function (): void {
     $dispatcher = app(TaskDispatcher::class);
     $dispatcher->dispatch($task);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), 'trigger/pipeline')) {
             return false;
         }
@@ -256,7 +256,7 @@ it('fails task when project has no ci_trigger_token', function (): void {
     expect($task->status)->toBe(TaskStatus::Failed)
         ->and($task->error_reason)->toBe('missing_trigger_token');
 
-    Http::assertNotSent(function ($request) {
+    Http::assertNotSent(function ($request): bool {
         return str_contains($request->url(), 'trigger/pipeline');
     });
 });
@@ -351,7 +351,7 @@ it('passes comma-separated skills for mixed-review strategy', function (): void 
     $dispatcher = app(TaskDispatcher::class);
     $dispatcher->dispatch($task);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), 'trigger/pipeline')) {
             return false;
         }
@@ -377,7 +377,7 @@ it('does not trigger pipeline for server-side tasks', function (): void {
     $dispatcher = app(TaskDispatcher::class);
     $dispatcher->dispatch($task);
 
-    Http::assertNotSent(function ($request) {
+    Http::assertNotSent(function ($request): bool {
         return str_contains($request->url(), 'trigger/pipeline');
     });
 

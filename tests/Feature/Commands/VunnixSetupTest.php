@@ -144,7 +144,7 @@ it('skips enablement when project already enabled', function (): void {
         ->expectsOutputToContain('already enabled');
 
     // No webhook creation call should have been made
-    Http::assertNotSent(fn ($req) => str_contains($req->url(), '/hooks'));
+    Http::assertNotSent(fn ($req): bool => str_contains($req->url(), '/hooks'));
 });
 
 it('is idempotent for permissions and roles', function (): void {

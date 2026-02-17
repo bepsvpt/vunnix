@@ -254,7 +254,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
 
     // Phase 1 created 2 discussion threads (both new — no dedup)
     $phase1DiscussionPosts = collect(Http::recorded())
-        ->filter(function ($pair) {
+        ->filter(function ($pair): bool {
             [$request] = $pair;
 
             return str_contains($request->url(), '/discussions')
@@ -378,7 +378,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
     expect($task2->comment_id)->toBe($placeholderNoteId);
 
     // Verify the placeholder was UPDATED (PUT), not created (POST)
-    Http::assertSent(function ($request) use ($placeholderNoteId) {
+    Http::assertSent(function ($request) use ($placeholderNoteId): bool {
         return str_contains($request->url(), "notes/{$placeholderNoteId}")
             && $request->method() === 'PUT';
     });
@@ -398,7 +398,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
     // PostSummaryComment detects this is an incremental review (same
     // comment_id as completed task1) and includes "📝 Updated:" timestamp.
 
-    Http::assertSent(function ($request) use ($placeholderNoteId) {
+    Http::assertSent(function ($request) use ($placeholderNoteId): bool {
         if (! str_contains($request->url(), "notes/{$placeholderNoteId}")) {
             return false;
         }
@@ -419,7 +419,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
     // Only 1 NEW discussion POST should be made (for N+1 query).
 
     $phase2DiscussionPosts = collect(Http::recorded())
-        ->filter(function ($pair) {
+        ->filter(function ($pair): bool {
             [$request] = $pair;
 
             return str_contains($request->url(), '/discussions')
@@ -429,7 +429,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
     expect($phase2DiscussionPosts)->toHaveCount(1);
 
     // Verify the POST was for the NEW finding (N+1 query), not the duplicate
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         if ($request->method() !== 'POST' || ! str_contains($request->url(), '/discussions')) {
             return false;
         }
@@ -440,7 +440,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
     });
 
     // Verify NO POST was made for the deduplicated finding
-    Http::assertNotSent(function ($request) {
+    Http::assertNotSent(function (array $request): bool {
         if ($request->method() !== 'POST' || ! str_contains($request->url(), '/discussions')) {
             return false;
         }
@@ -455,7 +455,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
     // Phase 1 was risk-high. Phase 2 is risk-medium.
     // PostLabelsAndStatus should remove stale risk labels before adding new ones.
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), 'merge_requests/15') || $request->method() !== 'PUT') {
             return false;
         }
@@ -469,7 +469,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
     });
 
     // New labels should include ai::risk-medium
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         if (! str_contains($request->url(), 'merge_requests/15') || $request->method() !== 'PUT') {
             return false;
         }

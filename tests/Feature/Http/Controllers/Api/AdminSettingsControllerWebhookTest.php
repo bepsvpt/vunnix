@@ -77,7 +77,7 @@ it('sends test webhook successfully', function (): void {
     $response->assertOk()
         ->assertJsonPath('success', true);
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function (array $request): bool {
         return $request->url() === 'https://hooks.slack.com/services/T/B/x'
             && str_contains($request['text'], 'Vunnix webhook test');
     });
