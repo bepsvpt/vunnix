@@ -56,14 +56,12 @@ git clone https://github.com/bepsvpt/vunnix.git
 cd vunnix
 docker compose up -d --build
 
-# First-time setup (install deps, generate key, build frontend)
+# First-time setup (install deps, create .env, generate key, build frontend)
 docker compose exec app composer setup
 
-# Run database migrations
+# Edit .env — set GitLab OAuth, Anthropic API key, tunnel URL
+# Then run database migrations
 docker compose exec app php artisan migrate
-
-# Configure environment — set GitLab OAuth, Anthropic API key, tunnel URL
-cp .env.example .env
 ```
 
 A **reverse proxy tunnel** (cloudflared or ngrok) is needed for GitLab webhooks to reach your machine. See [`docs/local-dev-setup.md`](docs/local-dev-setup.md) for the complete walkthrough.
@@ -82,14 +80,14 @@ See [`docs/project-setup.md`](docs/project-setup.md) for CI template integration
 # Start dev environment (server + queue + logs + Vite, all concurrent)
 composer dev
 
-# Run PHP tests (--parallel required, 900+ tests OOM otherwise)
+# Run PHP tests (--parallel required, 1,600+ tests OOM otherwise)
 php artisan test --parallel
 
 # Run Vue/JS tests
 npm test
 
 # Code style (PSR-12)
-./vendor/bin/pint
+composer format
 ```
 
 > **Note:** FrankenPHP and queue workers cache code in memory. After code changes, run `docker compose down && docker compose up -d` — a simple `restart` is not sufficient.
@@ -114,12 +112,12 @@ See [`docs/deployment.md`](docs/deployment.md) for backup/restore, upgrades, and
 ## Testing
 
 ```bash
-php artisan test --parallel   # PHP (Pest) — 900+ tests
+php artisan test --parallel   # PHP (Pest) — 1,600+ tests
 npm test                      # Vue (Vitest)
-./vendor/bin/pint             # Code style
+composer format               # Code style
 ```
 
-All tests use real PostgreSQL and Redis — no SQLite or array driver substitutions. External APIs are faked via `Http::fake()` and AI SDK `HasFakes`.
+Local tests run against SQLite `:memory:` (fast, no services needed). CI tests run against real PostgreSQL 18 to match production. External APIs are faked via `Http::fake()` and AI SDK `HasFakes`.
 
 ## Documentation
 

@@ -48,7 +48,7 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 
 | Component | Technology |
 |---|---|
-| **Backend** | Laravel 11 + Octane (FrankenPHP driver) |
+| **Backend** | Laravel 12 + Octane (FrankenPHP driver) |
 | **Frontend** | Vue 3 SPA (Composition API, `<script setup lang="ts">`) + TypeScript (strict) + Vite + Pinia + Vue Router + Zod |
 | **Database** | PostgreSQL 18 (JSONB, materialized views, full-text search via tsvector + GIN) |
 | **Cache / Queue** | Redis (separate DBs for cache, session, queue) |
