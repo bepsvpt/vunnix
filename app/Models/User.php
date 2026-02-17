@@ -133,6 +133,8 @@ class User extends Authenticatable
 
     /**
      * Get roles for a specific project.
+     *
+     * @return Collection<int, Role>
      */
     public function rolesForProject(Project $project): Collection
     {
@@ -167,6 +169,8 @@ class User extends Authenticatable
 
     /**
      * Get all permission names the user has on a specific project.
+     *
+     * @return Collection<int, Permission>
      */
     public function permissionsForProject(Project $project): Collection
     {

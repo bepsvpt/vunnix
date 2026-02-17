@@ -90,6 +90,8 @@ class PostAnswerComment implements ShouldQueue
 
     /**
      * Format the answer as a markdown comment with the original question.
+     *
+     * @param  array<string, mixed>  $result
      */
     private function formatAnswer(array $result): string
     {

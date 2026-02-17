@@ -14,6 +14,8 @@ class UserResource extends JsonResource
      *
      * Returns user profile + accessible projects, each annotated
      * with the user's roles and permissions on that project.
+     *
+     * @return array<string, mixed>
      */
     public function toArray(Request $request): array
     {

@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ApiKey extends Model
 {
+    /** @use HasFactory<\Database\Factories\ApiKeyFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -69,6 +70,10 @@ class ApiKey extends Model
         return ! $this->isRevoked() && ! $this->isExpired();
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('revoked', false)

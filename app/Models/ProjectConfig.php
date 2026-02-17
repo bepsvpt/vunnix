@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ProjectConfig extends Model
 {
+    /** @use HasFactory<\Database\Factories\ProjectConfigFactory> */
     use HasFactory;
 
     protected $fillable = [

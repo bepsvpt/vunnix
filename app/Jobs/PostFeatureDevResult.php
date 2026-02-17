@@ -75,6 +75,9 @@ class PostFeatureDevResult implements ShouldQueue
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $result
+     */
     private function createMergeRequest(GitLabClient $gitLab, Task $task, array $result, int $gitlabProjectId): ?int
     {
         $branch = $result['branch'] ?? null;
@@ -166,6 +169,9 @@ class PostFeatureDevResult implements ShouldQueue
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $result
+     */
     private function postIssueSummary(GitLabClient $gitLab, Task $task, array $result, int $gitlabProjectId, int $mrIid): void
     {
         $markdown = $this->formatSummary($result, $mrIid);
@@ -197,6 +203,8 @@ class PostFeatureDevResult implements ShouldQueue
 
     /**
      * Format the feature dev result as a markdown summary for the Issue.
+     *
+     * @param  array<string, mixed>  $result
      */
     private function formatSummary(array $result, int $mrIid): string
     {

@@ -35,6 +35,9 @@ class ReadMRDiff implements Tool
         return 'Read the file changes (diff) of a GitLab merge request. Returns the diff hunks for each changed file.';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function schema(JsonSchema $schema): array
     {
         return [

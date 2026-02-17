@@ -65,6 +65,8 @@ class TaskStatusChanged implements ShouldBroadcast
 
     /**
      * Build result card data from the task result, based on task type.
+     *
+     * @return array<string, mixed>
      */
     private function buildResultData(): array
     {

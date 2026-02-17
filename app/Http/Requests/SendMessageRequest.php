@@ -11,6 +11,7 @@ class SendMessageRequest extends FormRequest
         return true; // Auth handled by policy
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [

@@ -4,6 +4,9 @@ namespace App\Events\Webhook;
 
 class NoteOnMR extends WebhookEvent
 {
+    /**
+     * @param  array<string, mixed>  $payload
+     */
     public function __construct(
         int $projectId,
         int $gitlabProjectId,

@@ -4,6 +4,10 @@ namespace App\Services\TeamChat;
 
 class GoogleChatFormatter implements ChatFormatterInterface
 {
+    /**
+     * @param  array<string, mixed>  $context
+     * @return array<string, mixed>
+     */
     public function format(string $type, string $message, array $context = []): array
     {
         $header = match ($type) {

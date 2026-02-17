@@ -5,6 +5,7 @@ namespace App\Events\Webhook;
 class IssueLabelChanged extends WebhookEvent
 {
     /**
+     * @param  array<string, mixed>  $payload
      * @param  array<int, string>  $labels  Current label titles on the issue.
      */
     public function __construct(

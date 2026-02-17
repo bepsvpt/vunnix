@@ -22,6 +22,8 @@ class InlineThreadFormatter
 
     /**
      * Format a single finding as a markdown discussion thread body.
+     *
+     * @param  array<string, mixed>  $finding
      */
     public function format(array $finding): string
     {
@@ -48,8 +50,8 @@ class InlineThreadFormatter
      * Per §4.5: "high/medium severity only" — critical and major findings get threads,
      * minor findings are informational only (appear in Layer 1 summary).
      *
-     * @param  array<int, array>  $findings
-     * @return array<int, array>
+     * @param  array<int, array<string, mixed>>  $findings
+     * @return array<int, array<string, mixed>>
      */
     public function filterHighMedium(array $findings): array
     {

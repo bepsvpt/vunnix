@@ -30,6 +30,8 @@ class AcceptanceTrackingService
      * - Resolved (by engineer) → accepted
      * - Resolved (auto — finding no longer present) → accepted_auto
      * - Unresolved at merge → dismissed
+     *
+     * @param  array<string, mixed>  $discussion
      */
     public function classifyThreadState(array $discussion): string
     {
@@ -51,7 +53,7 @@ class AcceptanceTrackingService
      * Per D113/§16.5: If 3+ threads are all resolved within 60 seconds,
      * flag as potential over-reliance (rubber-stamping).
      *
-     * @param  array<int, array>  $discussions  Resolved AI discussions
+     * @param  array<int, array<string, mixed>>  $discussions  Resolved AI discussions
      */
     public function detectBulkResolution(array $discussions): bool
     {
@@ -121,6 +123,8 @@ class AcceptanceTrackingService
      *
      * AI-created discussions use the InlineThreadFormatter format with
      * severity tag markers (emoji + bold severity level).
+     *
+     * @param  array<string, mixed>  $discussion
      */
     public function isAiCreatedDiscussion(array $discussion): bool
     {
@@ -140,8 +144,8 @@ class AcceptanceTrackingService
      *
      * Same matching logic as PostInlineThreads::hasExistingThread().
      *
-     * @param  array  $finding  Finding from task result
-     * @param  array<int, array>  $discussions  GitLab discussions
+     * @param  array<string, mixed>  $finding  Finding from task result
+     * @param  array<int, array<string, mixed>>  $discussions  GitLab discussions
      * @return string|null The discussion ID if found, null otherwise
      */
     public function matchFindingToDiscussion(array $finding, array $discussions): ?string

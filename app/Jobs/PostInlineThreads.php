@@ -143,7 +143,7 @@ class PostInlineThreads implements ShouldQueue
     /**
      * Fetch existing discussion threads for an MR to check for duplicates.
      *
-     * @return array<int, array>
+     * @return array<int, array<string, mixed>>
      */
     private function fetchExistingDiscussions(GitLabClient $gitLab, int $projectId, int $mrIid): array
     {
@@ -164,6 +164,9 @@ class PostInlineThreads implements ShouldQueue
      *
      * Matches by file path and finding title in the discussion body.
      * Per D33: "Same issue = same discussion thread. No duplicate threads."
+     *
+     * @param  array<string, mixed>  $finding
+     * @param  array<int, array<string, mixed>>  $discussions
      */
     private function hasExistingThread(array $finding, array $discussions): bool
     {

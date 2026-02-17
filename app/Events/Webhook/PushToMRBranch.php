@@ -5,7 +5,8 @@ namespace App\Events\Webhook;
 class PushToMRBranch extends WebhookEvent
 {
     /**
-     * @param  array<int, array>  $commits  List of commit objects from the push payload.
+     * @param  array<string, mixed>  $payload
+     * @param  array<int, array<string, mixed>>  $commits  List of commit objects from the push payload.
      */
     public function __construct(
         int $projectId,

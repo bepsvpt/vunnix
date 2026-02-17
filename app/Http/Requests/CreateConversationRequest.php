@@ -11,6 +11,7 @@ class CreateConversationRequest extends FormRequest
         return true; // Auth handled by controller (project-specific permission check)
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [

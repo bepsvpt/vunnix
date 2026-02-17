@@ -38,6 +38,7 @@ class ActionDispatchSchema
     /**
      * Validate an action dispatch data array against the schema.
      *
+     * @param  array<string, mixed>  $data
      * @return array{valid: bool, errors: array<string, string[]>}
      */
     public static function validate(array $data): array
@@ -52,6 +53,9 @@ class ActionDispatchSchema
 
     /**
      * Strip unknown fields from action dispatch data, keeping only schema-defined keys.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
      */
     public static function strip(array $data): array
     {
@@ -66,7 +70,8 @@ class ActionDispatchSchema
     /**
      * Validate and strip in one call. Returns stripped data only if valid.
      *
-     * @return array{valid: bool, errors: array<string, string[]>, data: ?array}
+     * @param  array<string, mixed>  $data
+     * @return array{valid: bool, errors: array<string, string[]>, data: ?array<string, mixed>}
      */
     public static function validateAndStrip(array $data): array
     {
@@ -89,6 +94,8 @@ class ActionDispatchSchema
 
     /**
      * Laravel validation rules for the action dispatch schema.
+     *
+     * @return array<string, mixed>
      */
     public static function rules(): array
     {

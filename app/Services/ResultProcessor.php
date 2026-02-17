@@ -43,7 +43,7 @@ class ResultProcessor
      * Validates the result against the task type's schema, strips extra
      * fields, and transitions the task to Completed or Failed.
      *
-     * @return array{success: bool, data: ?array, errors: array<string, string[]>}
+     * @return array{success: bool, data: ?array<string, mixed>, errors: array<string, string[]>}
      */
     public function process(Task $task): array
     {
@@ -62,7 +62,7 @@ class ResultProcessor
         }
 
         // Validate against the appropriate schema
-        /** @var array{valid: bool, errors: array<string, string[]>, data: ?array} $validation */
+        /** @var array{valid: bool, errors: array<string, string[]>, data: ?array<string, mixed>} $validation */
         $validation = $schemaClass::validateAndStrip($result);
 
         if (! $validation['valid']) {
@@ -91,7 +91,8 @@ class ResultProcessor
     /**
      * Transition the task to Completed and return success.
      *
-     * @return array{success: bool, data: ?array, errors: array<string, string[]>}
+     * @param  array<string, mixed>  $data
+     * @return array{success: bool, data: ?array<string, mixed>, errors: array<string, string[]>}
      */
     private function succeed(Task $task, array $data): array
     {
@@ -112,7 +113,7 @@ class ResultProcessor
     /**
      * Transition the task to Failed and return failure.
      *
-     * @return array{success: bool, data: ?array, errors: array<string, string[]>}
+     * @return array{success: bool, data: ?array<string, mixed>, errors: array<string, string[]>}
      */
     private function fail(Task $task, string $reason): array
     {
@@ -133,6 +134,8 @@ class ResultProcessor
 
     /**
      * Format validation errors into a single summary string for logging.
+     *
+     * @param  array<string, mixed>  $errors
      */
     private function formatValidationErrors(array $errors): string
     {

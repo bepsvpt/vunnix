@@ -11,6 +11,7 @@ class UpdatePrdTemplateRequest extends FormRequest
         return true; // Authorization handled in controller
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [

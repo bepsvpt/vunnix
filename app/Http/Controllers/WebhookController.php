@@ -215,6 +215,9 @@ class WebhookController extends Controller
      *
      * Extracts common fields used by the Event Router (T13) for intent
      * classification, deduplication (T14), and task dispatch (T17).
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
      */
     private function buildEventContext(string $eventType, array $payload, Project $project): array
     {
@@ -234,6 +237,11 @@ class WebhookController extends Controller
         };
     }
 
+    /**
+     * @param  array<string, mixed>  $context
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
     private function enrichMergeRequestContext(array $context, array $payload): array
     {
         $attrs = $payload['object_attributes'] ?? [];
@@ -248,6 +256,11 @@ class WebhookController extends Controller
         return $context;
     }
 
+    /**
+     * @param  array<string, mixed>  $context
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
     private function enrichNoteContext(array $context, array $payload): array
     {
         $attrs = $payload['object_attributes'] ?? [];
@@ -269,6 +282,11 @@ class WebhookController extends Controller
         return $context;
     }
 
+    /**
+     * @param  array<string, mixed>  $context
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
     private function enrichIssueContext(array $context, array $payload): array
     {
         $attrs = $payload['object_attributes'] ?? [];
@@ -284,6 +302,11 @@ class WebhookController extends Controller
         return $context;
     }
 
+    /**
+     * @param  array<string, mixed>  $context
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
     private function enrichPushContext(array $context, array $payload): array
     {
         $context['ref'] = $payload['ref'] ?? null;
@@ -449,6 +472,8 @@ class WebhookController extends Controller
      * Used to filter duplicate webhook events: GitLab sends both push + MR update
      * when pushing to an MR branch. We ignore the push event since the MR update
      * event provides better context (auto_review vs incremental_review).
+     *
+     * @param  array<string, mixed>  $eventContext
      */
     private function branchHasOpenMR(array $eventContext, Project $project): bool
     {

@@ -29,7 +29,7 @@ class SummaryCommentFormatter
     /**
      * Format a validated code review result as a markdown summary comment.
      *
-     * @param  array  $result  A validated CodeReviewSchema array.
+     * @param  array<string, mixed>  $result  A validated CodeReviewSchema array.
      * @param  DateTimeInterface|null  $updatedAt  If set, adds an "Updated" timestamp (T40 incremental review).
      */
     public function format(array $result, ?DateTimeInterface $updatedAt = null): string

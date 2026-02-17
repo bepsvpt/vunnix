@@ -34,6 +34,7 @@ use Illuminate\Support\Str;
  */
 class Message extends Model
 {
+    /** @use HasFactory<\Database\Factories\MessageFactory> */
     use HasFactory;
 
     public $incrementing = false;

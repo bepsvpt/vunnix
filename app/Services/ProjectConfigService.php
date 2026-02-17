@@ -16,6 +16,8 @@ class ProjectConfigService
     /**
      * Configurable setting keys with their types.
      * Matches the .vunnix.toml schema from §3.7.
+     *
+     * @return array<string, string>
      */
     public static function settingKeys(): array
     {
@@ -89,6 +91,8 @@ class ProjectConfigService
     /**
      * Bulk-update project settings from a flat key → value map.
      * Keys with null values are removed (reset to global/default).
+     *
+     * @param  array<string, mixed>  $overrides
      */
     public function bulkSet(Project $project, array $overrides): void
     {
@@ -147,6 +151,7 @@ class ProjectConfigService
      * Returns: ['key' => ['value' => mixed, 'source' => 'project'|'file'|'global'|'default']]
      *
      * @param  array<string, mixed>  $fileConfig  Pre-fetched flat .vunnix.toml settings
+     * @return array<string, mixed>
      */
     public function allEffective(Project $project, array $fileConfig = []): array
     {
@@ -182,6 +187,8 @@ class ProjectConfigService
 
     /**
      * Get raw project settings from cache or DB.
+     *
+     * @return array<string, mixed>
      */
     private function getProjectSettings(Project $project): array
     {

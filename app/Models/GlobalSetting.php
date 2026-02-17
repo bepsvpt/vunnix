@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Cache;
  */
 class GlobalSetting extends Model
 {
+    /** @use HasFactory<\Database\Factories\GlobalSettingFactory> */
     use HasFactory;
 
     private const CACHE_PREFIX = 'global_setting:';

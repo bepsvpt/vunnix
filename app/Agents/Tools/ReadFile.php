@@ -37,6 +37,9 @@ class ReadFile implements Tool
         return 'Read the content of a specific file from a GitLab repository. Returns the decoded file content.';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function schema(JsonSchema $schema): array
     {
         return [

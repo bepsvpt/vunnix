@@ -13,7 +13,7 @@ class EngineerFeedbackService
     /**
      * Classify award emoji reactions into a sentiment result.
      *
-     * @param  array<int, array{name: string, user: array}>  $emoji
+     * @param  array<int, array<string, mixed>>  $emoji
      * @return array{positive_count: int, negative_count: int, sentiment: string}
      */
     public function classifyReactions(array $emoji): array

@@ -106,6 +106,9 @@ class VunnixSetup extends Command
         $this->info('  [✓] RBAC permissions seeded');
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     private function resolveGitLabProject(): ?array
     {
         $path = $this->argument('gitlab_project_path');
@@ -126,6 +129,9 @@ class VunnixSetup extends Command
         return $project;
     }
 
+    /**
+     * @param  array<string, mixed>  $gitlabProject
+     */
     private function createProjectRecord(array $gitlabProject): Project
     {
         $project = Project::firstOrCreate(

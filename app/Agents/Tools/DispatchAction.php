@@ -52,6 +52,9 @@ class DispatchAction implements Tool
         return 'Dispatch an action (create Issue, implement feature, UI adjustment, create MR, or deep analysis) to the task queue. Only call this after presenting a preview and receiving explicit user confirmation.';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function schema(JsonSchema $schema): array
     {
         return [
@@ -186,6 +189,8 @@ class DispatchAction implements Tool
 
     /**
      * Build the result metadata stored on the Task record.
+     *
+     * @return array<string, mixed>
      */
     private function buildResultMetadata(Request $request, string $actionType): array
     {

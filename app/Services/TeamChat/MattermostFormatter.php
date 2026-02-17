@@ -11,6 +11,10 @@ class MattermostFormatter implements ChatFormatterInterface
         'info' => '#3b82f6',
     ];
 
+    /**
+     * @param  array<string, mixed>  $context
+     * @return array<string, mixed>
+     */
     public function format(string $type, string $message, array $context = []): array
     {
         $urgency = $context['urgency'] ?? 'info';

@@ -13,6 +13,8 @@ class ApiKeyService
      *
      * Returns an array with ['api_key' => ApiKey, 'plaintext' => string].
      * The plaintext is shown once at creation and cannot be retrieved afterward (D152).
+     *
+     * @return array<string, mixed>
      */
     public function generate(User $user, string $name, ?Carbon $expiresAt = null): array
     {

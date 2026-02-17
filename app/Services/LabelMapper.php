@@ -16,6 +16,7 @@ class LabelMapper
     /**
      * Map a code review result to GitLab labels.
      *
+     * @param  array<string, mixed>  $result
      * @return array<int, string>
      */
     public function mapLabels(array $result): array
@@ -41,6 +42,7 @@ class LabelMapper
     /**
      * Map a code review result to a GitLab commit status.
      *
+     * @param  array<string, mixed>  $result
      * @return string 'success' or 'failed'
      */
     public function mapCommitStatus(array $result): string
@@ -50,12 +52,18 @@ class LabelMapper
             : 'success';
     }
 
+    /**
+     * @param  array<int, array<string, mixed>>  $findings
+     */
     private function hasSecurityFinding(array $findings): bool
     {
         return collect($findings)
             ->contains(fn (array $f) => ($f['category'] ?? '') === 'security');
     }
 
+    /**
+     * @param  array<int, array<string, mixed>>  $findings
+     */
     private function hasCriticalFinding(array $findings): bool
     {
         return collect($findings)

@@ -51,7 +51,7 @@ class EventRouter
     /**
      * Route a webhook event context to an AI action intent.
      *
-     * @param  array  $context  The normalized event context from WebhookController::buildEventContext()
+     * @param  array<string, mixed>  $context  The normalized event context from WebhookController::buildEventContext()
      * @return RoutingResult|null Null if the event should be ignored (bot event, unsupported, etc.)
      */
     public function route(array $context): ?RoutingResult
@@ -81,6 +81,8 @@ class EventRouter
 
     /**
      * Parse a webhook context array into a typed Event object.
+     *
+     * @param  array<string, mixed>  $context
      */
     public function parseEvent(array $context): ?WebhookEvent
     {
@@ -102,6 +104,10 @@ class EventRouter
     //  Event parsing
     // ------------------------------------------------------------------
 
+    /**
+     * @param  array<string, mixed>  $context
+     * @param  array<string, mixed>  $payload
+     */
     private function parseMergeRequestEvent(array $context, int $projectId, int $gitlabProjectId, array $payload): ?WebhookEvent
     {
         $action = $context['action'] ?? null;
@@ -130,6 +136,10 @@ class EventRouter
         };
     }
 
+    /**
+     * @param  array<string, mixed>  $context
+     * @param  array<string, mixed>  $payload
+     */
     private function parseNoteEvent(array $context, int $projectId, int $gitlabProjectId, array $payload): ?WebhookEvent
     {
         $noteableType = $context['noteable_type'] ?? null;
@@ -157,6 +167,10 @@ class EventRouter
         };
     }
 
+    /**
+     * @param  array<string, mixed>  $context
+     * @param  array<string, mixed>  $payload
+     */
     private function parseIssueEvent(array $context, int $projectId, int $gitlabProjectId, array $payload): ?WebhookEvent
     {
         $iid = $context['issue_iid'] ?? null;
@@ -176,6 +190,10 @@ class EventRouter
         );
     }
 
+    /**
+     * @param  array<string, mixed>  $context
+     * @param  array<string, mixed>  $payload
+     */
     private function parsePushEvent(array $context, int $projectId, int $gitlabProjectId, array $payload): ?WebhookEvent
     {
         $ref = $context['ref'] ?? null;

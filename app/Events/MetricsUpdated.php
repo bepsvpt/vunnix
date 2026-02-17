@@ -12,6 +12,9 @@ class MetricsUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function __construct(
         public readonly int $projectId,
         public readonly array $data,

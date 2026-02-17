@@ -20,6 +20,8 @@ class TeamChatNotificationService
      * Send a notification to the configured team chat webhook.
      *
      * Returns true if sent successfully, false if disabled/unconfigured/failed.
+     *
+     * @param  array<string, mixed>  $context
      */
     public function send(string $type, string $message, array $context = []): bool
     {

@@ -63,6 +63,8 @@ class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
     /**
      * Pruned messages set by the PruneConversationHistory middleware.
      * When set, these replace the full conversation history for the API call.
+     *
+     * @var array<int, mixed>|null
      */
     protected ?array $prunedMessages = null;
 
@@ -130,6 +132,8 @@ class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
      * When the PruneConversationHistory middleware detects a long conversation
      * (>20 turns), it summarizes older messages and calls setPrunedMessages().
      * This override ensures the SDK uses the pruned set when available.
+     *
+     * @return iterable<int, mixed>
      */
     public function messages(): iterable
     {
@@ -154,6 +158,8 @@ class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
      *
      * Called by PruneConversationHistory middleware when conversations
      * exceed the turn threshold.
+     *
+     * @param  array<int, mixed>  $messages
      */
     public function setPrunedMessages(array $messages): void
     {
@@ -162,6 +168,8 @@ class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
 
     /**
      * Get the agent's prompt middleware.
+     *
+     * @return array<int, mixed>
      */
     public function middleware(): array
     {

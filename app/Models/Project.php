@@ -36,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 class Project extends Model
 {
+    /** @use HasFactory<\Database\Factories\ProjectFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -73,6 +74,10 @@ class Project extends Model
         return $this->roles()->where('is_default', true)->first();
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeEnabled(Builder $query): Builder
     {
         return $query->where('enabled', true);

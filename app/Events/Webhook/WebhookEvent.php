@@ -11,6 +11,9 @@ namespace App\Events\Webhook;
  */
 abstract class WebhookEvent
 {
+    /**
+     * @param  array<string, mixed>  $payload
+     */
     public function __construct(
         public readonly int $projectId,
         public readonly int $gitlabProjectId,

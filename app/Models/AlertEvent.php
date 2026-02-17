@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class AlertEvent extends Model
 {
+    /** @use HasFactory<\Database\Factories\AlertEventFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -47,6 +48,9 @@ class AlertEvent extends Model
 
     /**
      * Scope: currently active (unresolved) alert events.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeActive(Builder $query): Builder
     {
@@ -55,6 +59,9 @@ class AlertEvent extends Model
 
     /**
      * Scope: alerts of a specific type.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeOfType(Builder $query, string $type): Builder
     {

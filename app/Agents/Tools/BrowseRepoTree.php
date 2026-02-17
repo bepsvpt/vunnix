@@ -29,6 +29,9 @@ class BrowseRepoTree implements Tool
         return 'List files and directories in a GitLab repository path. Returns names, types (tree/blob), and paths.';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function schema(JsonSchema $schema): array
     {
         return [

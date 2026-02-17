@@ -669,6 +669,9 @@ class AlertEventService
         };
     }
 
+    /**
+     * @param  array<string, mixed>  $result
+     */
     private function buildCodeReviewMessage(\App\Models\Task $task, string $projectName, array $result): string
     {
         if ($task->status === \App\Enums\TaskStatus::Failed) {
@@ -690,6 +693,9 @@ class AlertEventService
         return "🤖 Review complete on **{$projectName}** MR !{$mrIid} — {$riskEmoji} ".ucfirst($riskLevel)." risk, {$findingsCount} findings";
     }
 
+    /**
+     * @param  array<string, mixed>  $result
+     */
     private function buildFeatureDevMessage(\App\Models\Task $task, string $projectName, array $result): string
     {
         if ($task->status === \App\Enums\TaskStatus::Failed) {
@@ -704,6 +710,9 @@ class AlertEventService
         return "🤖 Feature branch created for **{$projectName}** — MR !{$mrIid} '{$title}' ({$count} files)";
     }
 
+    /**
+     * @param  array<string, mixed>  $result
+     */
     private function buildUiAdjustmentMessage(\App\Models\Task $task, string $projectName, array $result): string
     {
         if ($task->status === \App\Enums\TaskStatus::Failed) {
@@ -716,6 +725,9 @@ class AlertEventService
         return "🤖 UI fix for **{$projectName}** — MR !{$mrIid} '{$title}'";
     }
 
+    /**
+     * @param  array<string, mixed>  $result
+     */
     private function buildPrdMessage(\App\Models\Task $task, string $projectName, array $result): string
     {
         if ($task->status === \App\Enums\TaskStatus::Failed) {

@@ -33,7 +33,7 @@ class PruneConversationHistory
      * and keep the most recent turns in full. This reduces token usage by
      * 30-50% on long conversations while preserving context quality.
      */
-    public function handle(AgentPrompt $prompt, Closure $next)
+    public function handle(AgentPrompt $prompt, Closure $next): mixed
     {
         $agent = $prompt->agent;
 
@@ -66,6 +66,8 @@ class PruneConversationHistory
      *
      * A turn is a user-assistant message pair. We count user messages
      * as the canonical turn indicator.
+     *
+     * @param  array<int, mixed>  $messages
      */
     protected function countTurns(array $messages): int
     {
@@ -86,6 +88,8 @@ class PruneConversationHistory
 
     /**
      * Prune the message history by summarizing older messages.
+     *
+     * @param  array<int, mixed>  $messages
      */
     protected function pruneMessages(VunnixAgent $agent, array $messages, TextProvider $provider): void
     {
@@ -113,6 +117,8 @@ class PruneConversationHistory
 
     /**
      * Summarize older messages using the cheapest available model.
+     *
+     * @param  array<int, mixed>  $messages
      */
     protected function summarize(array $messages, TextProvider $provider): string
     {
@@ -133,6 +139,8 @@ class PruneConversationHistory
 
     /**
      * Format messages into a readable transcript for the summarizer.
+     *
+     * @param  array<int, mixed>  $messages
      */
     protected function formatMessagesForSummary(array $messages): string
     {

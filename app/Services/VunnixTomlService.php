@@ -59,6 +59,9 @@ class VunnixTomlService
         return $this->parseAndFlatten($content, $gitlabProjectId);
     }
 
+    /**
+     * @param  array<string, mixed>  $fileData
+     */
     private function decodeContent(array $fileData): ?string
     {
         $encoding = $fileData['encoding'] ?? 'base64';

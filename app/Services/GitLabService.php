@@ -18,7 +18,7 @@ class GitLabService
      * Fetch all projects the user has membership in from GitLab API.
      * Paginates through all pages (100 per page).
      *
-     * @return array<int, array>
+     * @return array<int, array<string, mixed>>
      */
     public function getUserProjects(string $token): array
     {
@@ -55,6 +55,8 @@ class GitLabService
     /**
      * Resolve the effective access level for a GitLab project.
      * Takes the higher of project_access and group_access.
+     *
+     * @param  array<string, mixed>  $project
      */
     public function resolveAccessLevel(array $project): int
     {

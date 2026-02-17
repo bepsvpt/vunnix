@@ -24,6 +24,8 @@ class UiAdjustmentSchema extends FeatureDevSchema
      * Laravel validation rules for the UI adjustment schema.
      *
      * Inherits all feature dev rules and adds screenshot fields.
+     *
+     * @return array<string, mixed>
      */
     public static function rules(): array
     {
@@ -35,6 +37,8 @@ class UiAdjustmentSchema extends FeatureDevSchema
 
     /**
      * Top-level keys allowed in the schema.
+     *
+     * @return array<int, string>
      */
     protected static function topLevelKeys(): array
     {

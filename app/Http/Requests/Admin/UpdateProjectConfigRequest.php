@@ -11,6 +11,7 @@ class UpdateProjectConfigRequest extends FormRequest
         return true; // Controller handles authorization
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [

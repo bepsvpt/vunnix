@@ -29,6 +29,9 @@ class ReadMergeRequest implements Tool
         return 'Read a specific GitLab merge request by its IID. Returns full details including title, description, state, branches, labels, assignees, and merge status.';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function schema(JsonSchema $schema): array
     {
         return [

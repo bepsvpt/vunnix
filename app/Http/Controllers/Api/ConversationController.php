@@ -14,6 +14,8 @@ use App\Models\Project;
 use App\Services\ConversationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Laravel\Ai\Responses\StreamableAgentResponse;
 
 class ConversationController extends Controller
 {
@@ -25,7 +27,7 @@ class ConversationController extends Controller
      * GET /api/v1/conversations
      * List conversations with filters, search, and cursor pagination.
      */
-    public function index(Request $request)
+    public function index(Request $request): AnonymousResourceCollection
     {
         $request->validate([
             'project_id' => ['nullable', 'integer'],
@@ -110,7 +112,7 @@ class ConversationController extends Controller
      * stream_start, text_start, text_delta, text_end, tool_call,
      * tool_result, stream_end, followed by [DONE].
      */
-    public function stream(SendMessageRequest $request, Conversation $conversation)
+    public function stream(SendMessageRequest $request, Conversation $conversation): StreamableAgentResponse
     {
         $this->authorize('stream', $conversation);
 

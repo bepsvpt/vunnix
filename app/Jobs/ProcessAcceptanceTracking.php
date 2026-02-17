@@ -160,7 +160,7 @@ class ProcessAcceptanceTracking implements ShouldQueue
      * Returns a map of discussion_id => emoji classification result.
      * Failures for individual notes are logged and treated as neutral.
      *
-     * @param  array<int, array>  $aiDiscussions
+     * @param  array<int, array<string, mixed>>  $aiDiscussions
      * @return array<string, array{positive_count: int, negative_count: int, sentiment: string}>
      */
     private function collectEmojiReactions(

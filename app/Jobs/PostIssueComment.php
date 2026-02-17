@@ -94,6 +94,8 @@ class PostIssueComment implements ShouldQueue
      *
      * The executor returns a JSON object with a "response" field containing
      * pre-formatted markdown. We wrap it with a bot header.
+     *
+     * @param  array<string, mixed>  $result
      */
     private function formatResponse(array $result): string
     {

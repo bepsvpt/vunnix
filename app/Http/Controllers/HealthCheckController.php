@@ -28,6 +28,7 @@ class HealthCheckController extends Controller
         ], $healthy ? 200 : 503);
     }
 
+    /** @return array<string, mixed> */
     private function checkPostgresql(): array
     {
         try {
@@ -40,6 +41,7 @@ class HealthCheckController extends Controller
         }
     }
 
+    /** @return array<string, mixed> */
     private function checkRedis(): array
     {
         try {
@@ -57,6 +59,7 @@ class HealthCheckController extends Controller
         }
     }
 
+    /** @return array<string, mixed> */
     private function checkQueueWorker(): array
     {
         try {
@@ -80,6 +83,7 @@ class HealthCheckController extends Controller
         }
     }
 
+    /** @return array<string, mixed> */
     private function checkReverb(): array
     {
         try {
@@ -98,6 +102,7 @@ class HealthCheckController extends Controller
         }
     }
 
+    /** @return array<string, mixed> */
     private function checkDisk(): array
     {
         try {

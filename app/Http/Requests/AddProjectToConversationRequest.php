@@ -11,6 +11,7 @@ class AddProjectToConversationRequest extends FormRequest
         return true; // Auth handled by controller policy
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [

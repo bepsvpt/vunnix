@@ -6,6 +6,9 @@ use App\Models\AuditLog;
 
 class AuditLogService
 {
+    /**
+     * @param  array<int, mixed>  $toolCalls
+     */
     public function logConversationTurn(
         int $userId,
         string $conversationId,
@@ -30,6 +33,9 @@ class AuditLogService
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $gitlabContext
+     */
     public function logTaskExecution(
         int $taskId,
         ?int $userId,
@@ -102,6 +108,9 @@ class AuditLogService
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $relevantIds
+     */
     public function logWebhookReceived(
         int $projectId,
         string $eventType,

@@ -9,6 +9,7 @@ use App\Services\MetricsQueryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use stdClass;
 
 class DashboardCostController extends Controller
 {
@@ -46,6 +47,9 @@ class DashboardCostController extends Controller
 
     /**
      * Build response from materialized view / task_metrics data.
+     *
+     * @param  \Illuminate\Support\Collection<int, int>  $projectIds
+     * @param  \Illuminate\Support\Collection<int, stdClass>  $byType
      */
     private function fromMaterializedViews($projectIds, $byType): JsonResponse
     {
@@ -110,6 +114,8 @@ class DashboardCostController extends Controller
 
     /**
      * Build response from live Task table queries (fallback when no task_metrics data).
+     *
+     * @param  \Illuminate\Support\Collection<int, int>  $projectIds
      */
     private function fromLiveQueries($projectIds): JsonResponse
     {
@@ -137,6 +143,7 @@ class DashboardCostController extends Controller
             ])
             ->all();
 
+        // @phpstan-ignore method.unresolvableReturnType, method.unresolvableReturnType, method.unresolvableReturnType
         $costPerProject = Task::whereIn('project_id', $projectIds)
             ->where('status', TaskStatus::Completed)
             ->whereNotNull('cost')
@@ -158,6 +165,7 @@ class DashboardCostController extends Controller
             ? "strftime('%Y-%m', created_at)"
             : "TO_CHAR(created_at, 'YYYY-MM')";
 
+        // @phpstan-ignore method.unresolvableReturnType, method.unresolvableReturnType, method.unresolvableReturnType
         $monthlyTrend = Task::whereIn('project_id', $projectIds)
             ->whereIn('status', [TaskStatus::Completed, TaskStatus::Failed])
             ->where('created_at', '>=', now()->subMonths(12)->startOfMonth())

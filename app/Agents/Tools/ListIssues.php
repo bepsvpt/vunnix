@@ -29,6 +29,9 @@ class ListIssues implements Tool
         return 'List issues in a GitLab project. Supports filtering by state (opened/closed/all), labels, and search query.';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function schema(JsonSchema $schema): array
     {
         return [

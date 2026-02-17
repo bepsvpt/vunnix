@@ -40,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class DeadLetterEntry extends Model
 {
+    /** @use HasFactory<\Database\Factories\DeadLetterEntryFactory> */
     use HasFactory;
 
     protected $table = 'dead_letter_queue';
@@ -91,6 +92,9 @@ class DeadLetterEntry extends Model
 
     /**
      * Active DLQ entries: not dismissed and not retried.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeActive(Builder $query): Builder
     {

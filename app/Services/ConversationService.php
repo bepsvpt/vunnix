@@ -14,6 +14,8 @@ class ConversationService
 {
     /**
      * List conversations accessible by the user with filters and cursor pagination.
+     *
+     * @return CursorPaginator<int, Conversation>
      */
     public function listForUser(
         User $user,

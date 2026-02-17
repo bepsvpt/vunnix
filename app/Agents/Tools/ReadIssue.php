@@ -29,6 +29,9 @@ class ReadIssue implements Tool
         return 'Read a specific GitLab issue by its IID. Returns full details including title, description, state, labels, assignees, and timestamps.';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function schema(JsonSchema $schema): array
     {
         return [

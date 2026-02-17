@@ -27,6 +27,7 @@ class FeatureDevSchema
     /**
      * Validate a feature development result array against the schema.
      *
+     * @param  array<string, mixed>  $data
      * @return array{valid: bool, errors: array<string, string[]>}
      */
     public static function validate(array $data): array
@@ -43,6 +44,9 @@ class FeatureDevSchema
      * Strip unknown fields from a feature development result, keeping only schema-defined keys.
      *
      * Operates recursively on nested objects (files_changed entries).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
      */
     public static function strip(array $data): array
     {
@@ -63,7 +67,8 @@ class FeatureDevSchema
     /**
      * Validate and strip in one call. Returns stripped data only if valid.
      *
-     * @return array{valid: bool, errors: array<string, string[]>, data: ?array}
+     * @param  array<string, mixed>  $data
+     * @return array{valid: bool, errors: array<string, string[]>, data: ?array<string, mixed>}
      */
     public static function validateAndStrip(array $data): array
     {
@@ -86,6 +91,8 @@ class FeatureDevSchema
 
     /**
      * Laravel validation rules for the feature development schema.
+     *
+     * @return array<string, mixed>
      */
     public static function rules(): array
     {
@@ -111,6 +118,8 @@ class FeatureDevSchema
 
     /**
      * Top-level keys allowed in the schema.
+     *
+     * @return array<int, string>
      */
     protected static function topLevelKeys(): array
     {

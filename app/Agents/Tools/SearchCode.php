@@ -29,6 +29,9 @@ class SearchCode implements Tool
         return 'Search for code across a GitLab repository. Returns matching file paths and code snippets.';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function schema(JsonSchema $schema): array
     {
         return [

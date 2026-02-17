@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 /** @mixin \App\Models\Conversation */
 class ConversationResource extends JsonResource
 {
+    /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         return [

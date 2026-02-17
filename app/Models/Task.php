@@ -63,6 +63,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 class Task extends Model
 {
+    /** @use HasFactory<\Database\Factories\TaskFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -195,6 +196,9 @@ class Task extends Model
 
     /**
      * Scope to tasks that are currently active (queued or running).
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeActive(Builder $query): Builder
     {
@@ -203,6 +207,9 @@ class Task extends Model
 
     /**
      * Scope to tasks for a specific merge request in a project.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeForMergeRequest(Builder $query, int $projectId, int $mrIid): Builder
     {

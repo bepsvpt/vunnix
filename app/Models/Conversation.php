@@ -41,6 +41,7 @@ use Illuminate\Support\Str;
  */
 class Conversation extends Model
 {
+    /** @use HasFactory<\Database\Factories\ConversationFactory> */
     use HasFactory;
 
     public $incrementing = false;
@@ -98,6 +99,8 @@ class Conversation extends Model
     /**
      * Get all project IDs associated with this conversation
      * (primary project_id + any additional pivot projects).
+     *
+     * @return array<int, int>
      */
     public function allProjectIds(): array
     {
@@ -109,16 +112,28 @@ class Conversation extends Model
         return $ids;
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeNotArchived(Builder $query): Builder
     {
         return $query->whereNull('archived_at');
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeArchived(Builder $query): Builder
     {
         return $query->whereNotNull('archived_at');
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeForProject(Builder $query, int $projectId): Builder
     {
         return $query->where('project_id', $projectId);
@@ -128,6 +143,9 @@ class Conversation extends Model
      * Scope to conversations accessible by a user.
      * A user can access conversations belonging to projects they are a member of,
      * either via the primary project_id or additional projects in the pivot table.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeAccessibleBy(Builder $query, User $user): Builder
     {

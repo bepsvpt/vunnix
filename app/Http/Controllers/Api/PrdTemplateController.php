@@ -97,6 +97,8 @@ class PrdTemplateController extends Controller
     /**
      * Resolve the effective template for a project: project → global → default.
      * Checks each layer individually to determine the source.
+     *
+     * @return array<string, mixed>
      */
     private function resolveTemplate(Project $project): array
     {

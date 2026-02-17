@@ -29,6 +29,9 @@ class ListMergeRequests implements Tool
         return 'List merge requests in a GitLab project. Supports filtering by state (opened/closed/merged/all), labels, and search query.';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function schema(JsonSchema $schema): array
     {
         return [

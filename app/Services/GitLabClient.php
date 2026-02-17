@@ -93,7 +93,7 @@ class GitLabClient
      * List issues for a project.
      *
      * @param  array<string, mixed>  $params  Filters: state, labels, search, per_page, etc.
-     * @return array<int, array>
+     * @return array<int, array<string, mixed>>
      */
     public function listIssues(int $projectId, array $params = []): array
     {
@@ -107,6 +107,8 @@ class GitLabClient
 
     /**
      * Get a single issue.
+     *
+     * @return array<string, mixed>
      */
     public function getIssue(int $projectId, int $issueIid): array
     {
@@ -121,6 +123,7 @@ class GitLabClient
      * Create an issue.
      *
      * @param  array<string, mixed>  $data  title, description, labels, assignee_ids, etc.
+     * @return array<string, mixed>
      */
     public function createIssue(int $projectId, array $data): array
     {
@@ -140,7 +143,7 @@ class GitLabClient
      * List merge requests for a project.
      *
      * @param  array<string, mixed>  $params  Filters: state, labels, search, per_page, etc.
-     * @return array<int, array>
+     * @return array<int, array<string, mixed>>
      */
     public function listMergeRequests(int $projectId, array $params = []): array
     {
@@ -154,6 +157,8 @@ class GitLabClient
 
     /**
      * Get a single merge request.
+     *
+     * @return array<string, mixed>
      */
     public function getMergeRequest(int $projectId, int $mrIid): array
     {
@@ -166,6 +171,8 @@ class GitLabClient
 
     /**
      * Get merge request changes (diff).
+     *
+     * @return array<string, mixed>
      */
     public function getMergeRequestChanges(int $projectId, int $mrIid): array
     {
@@ -180,6 +187,7 @@ class GitLabClient
      * Create a merge request.
      *
      * @param  array<string, mixed>  $data  source_branch, target_branch, title, description, etc.
+     * @return array<string, mixed>
      */
     public function createMergeRequest(int $projectId, array $data): array
     {
@@ -198,6 +206,7 @@ class GitLabClient
      * when pushing corrections to the same branch.
      *
      * @param  array<string, mixed>  $data  title, description, etc.
+     * @return array<string, mixed>
      */
     public function updateMergeRequest(int $projectId, int $mrIid, array $data): array
     {
@@ -214,6 +223,8 @@ class GitLabClient
      *
      * Used by incremental review (T40) to resolve push events to their
      * associated MR. Returns null if no open MR exists for the branch.
+     *
+     * @return array<string, mixed>|null
      */
     public function findOpenMergeRequestForBranch(int $projectId, string $sourceBranch): ?array
     {
@@ -232,6 +243,8 @@ class GitLabClient
 
     /**
      * Post a comment on a merge request.
+     *
+     * @return array<string, mixed>
      */
     public function createMergeRequestNote(int $projectId, int $mrIid, string $body): array
     {
@@ -245,6 +258,8 @@ class GitLabClient
 
     /**
      * Edit an existing comment on a merge request.
+     *
+     * @return array<string, mixed>
      */
     public function updateMergeRequestNote(int $projectId, int $mrIid, int $noteId, string $body): array
     {
@@ -258,6 +273,8 @@ class GitLabClient
 
     /**
      * Post a comment on an issue.
+     *
+     * @return array<string, mixed>
      */
     public function createIssueNote(int $projectId, int $issueIid, string $body): array
     {
@@ -276,7 +293,8 @@ class GitLabClient
      * Used by incremental review (T40) to check for existing threads before
      * posting duplicates (D33).
      *
-     * @return array<int, array>
+     * @param  array<string, mixed>  $params
+     * @return array<int, array<string, mixed>>
      */
     public function listMergeRequestDiscussions(int $projectId, int $mrIid, array $params = []): array
     {
@@ -292,6 +310,7 @@ class GitLabClient
      * Create a merge request discussion thread (for inline code comments).
      *
      * @param  array<string, mixed>  $position  Position data: base_sha, start_sha, head_sha, old_path, new_path, new_line, etc.
+     * @return array<string, mixed>
      */
     public function createMergeRequestDiscussion(int $projectId, int $mrIid, string $body, array $position = []): array
     {
@@ -316,7 +335,7 @@ class GitLabClient
      *
      * @see https://docs.gitlab.com/ee/api/award_emoji.html#list-an-awardables-award-emoji
      *
-     * @return array<int, array{id: int, name: string, user: array}>
+     * @return array<int, array{id: int, name: string, user: array<string, mixed>}>
      */
     public function listNoteAwardEmoji(int $projectId, int $mrIid, string $discussionId, int $noteId): array
     {
@@ -334,6 +353,8 @@ class GitLabClient
 
     /**
      * Create a branch.
+     *
+     * @return array<string, mixed>
      */
     public function createBranch(int $projectId, string $branchName, string $ref): array
     {
@@ -374,6 +395,7 @@ class GitLabClient
      * Apply labels to a merge request (overwrites existing labels).
      *
      * @param  array<int, string>  $labels
+     * @return array<string, mixed>
      */
     public function setMergeRequestLabels(int $projectId, int $mrIid, array $labels): array
     {
@@ -389,6 +411,7 @@ class GitLabClient
      * Add labels to a merge request (preserves existing labels).
      *
      * @param  array<int, string>  $labels
+     * @return array<string, mixed>
      */
     public function addMergeRequestLabels(int $projectId, int $mrIid, array $labels): array
     {
@@ -407,6 +430,7 @@ class GitLabClient
      * before applying updated ones.
      *
      * @param  array<int, string>  $labels
+     * @return array<string, mixed>
      */
     public function removeMergeRequestLabels(int $projectId, int $mrIid, array $labels): array
     {
@@ -427,6 +451,7 @@ class GitLabClient
      *
      * @param  string  $state  pending, running, success, failed, canceled
      * @param  array<string, mixed>  $options  name, target_url, description, coverage, etc.
+     * @return array<string, mixed>
      */
     public function setCommitStatus(int $projectId, string $sha, string $state, array $options = []): array
     {
@@ -446,6 +471,7 @@ class GitLabClient
      * Create a project webhook.
      *
      * @param  array<string, mixed>  $events  merge_requests_events, note_events, issues_events, push_events, etc.
+     * @return array<string, mixed>
      */
     public function createWebhook(int $projectId, string $url, string $secretToken, array $events = []): array
     {
@@ -478,6 +504,8 @@ class GitLabClient
 
     /**
      * Get the authenticated user (bot account).
+     *
+     * @return array<string, mixed>
      */
     public function getCurrentUser(): array
     {
@@ -490,6 +518,8 @@ class GitLabClient
 
     /**
      * Get project details (visibility, name, namespace, etc.).
+     *
+     * @return array<string, mixed>
      */
     public function getProject(int $projectId): array
     {
@@ -504,6 +534,8 @@ class GitLabClient
      * Get project details by path (e.g. "bepsvpt-gl/vunnix").
      *
      * GitLab accepts URL-encoded paths in place of numeric project IDs.
+     *
+     * @return array<string, mixed>
      */
     public function getProjectByPath(string $pathWithNamespace): array
     {
@@ -521,6 +553,8 @@ class GitLabClient
      *
      * Uses the /members/all endpoint which includes inherited members
      * from parent groups. Returns null if the user is not a member.
+     *
+     * @return array<string, mixed>|null
      */
     public function getProjectMember(int $projectId, int $userId): ?array
     {
@@ -543,6 +577,8 @@ class GitLabClient
      * Create a project-level label.
      *
      * Returns null if the label already exists (409 Conflict) — idempotent.
+     *
+     * @return array<string, mixed>|null
      */
     public function createProjectLabel(int $projectId, string $name, string $color, string $description = ''): ?array
     {
@@ -600,6 +636,7 @@ class GitLabClient
      * Trigger a pipeline via the pipeline triggers API.
      *
      * @param  array<string, string>  $variables  Key-value pairs for CI variables.
+     * @return array<string, mixed>
      */
     public function triggerPipeline(int $projectId, string $ref, string $triggerToken, array $variables = []): array
     {

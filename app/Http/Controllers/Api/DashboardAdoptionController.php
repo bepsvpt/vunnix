@@ -72,6 +72,7 @@ class DashboardAdoptionController extends Controller
             ? "strftime('%Y-W%W', created_at)"
             : "TO_CHAR(created_at, 'IYYY-\"W\"IW')";
 
+        // @phpstan-ignore method.unresolvableReturnType, method.unresolvableReturnType, method.unresolvableReturnType
         $aiMentionsPerWeek = Task::whereIn('project_id', $projectIds)
             ->where('origin', TaskOrigin::Webhook)
             ->where('created_at', '>=', now()->subWeeks(12)->startOfWeek())
