@@ -71,8 +71,60 @@ function initShiki(): Promise<void> {
     if (shikiPromise)
         return shikiPromise;
 
-    shikiPromise = import('@shikijs/markdown-it').then(async ({ default: markdownItShiki }) => {
-        const plugin = await markdownItShiki({
+    shikiPromise = (async () => {
+        const [
+            { createHighlighterCore },
+            { createOnigurumaEngine },
+            { fromHighlighter },
+        ] = await Promise.all([
+            import('shiki/core'),
+            import('shiki/engine/oniguruma'),
+            import('@shikijs/markdown-it/core'),
+        ]);
+
+        const highlighter = await createHighlighterCore({
+            themes: [
+                import('@shikijs/themes/github-light'),
+                import('@shikijs/themes/github-dark'),
+            ],
+            langs: [
+                import('@shikijs/langs/javascript'),
+                import('@shikijs/langs/typescript'),
+                import('@shikijs/langs/jsx'),
+                import('@shikijs/langs/tsx'),
+                import('@shikijs/langs/vue'),
+                import('@shikijs/langs/vue-html'),
+                import('@shikijs/langs/html'),
+                import('@shikijs/langs/css'),
+                import('@shikijs/langs/scss'),
+                import('@shikijs/langs/less'),
+                import('@shikijs/langs/json'),
+                import('@shikijs/langs/yaml'),
+                import('@shikijs/langs/toml'),
+                import('@shikijs/langs/xml'),
+                import('@shikijs/langs/markdown'),
+                import('@shikijs/langs/python'),
+                import('@shikijs/langs/ruby'),
+                import('@shikijs/langs/php'),
+                import('@shikijs/langs/go'),
+                import('@shikijs/langs/rust'),
+                import('@shikijs/langs/java'),
+                import('@shikijs/langs/kotlin'),
+                import('@shikijs/langs/swift'),
+                import('@shikijs/langs/c'),
+                import('@shikijs/langs/cpp'),
+                import('@shikijs/langs/csharp'),
+                import('@shikijs/langs/shellscript'),
+                import('@shikijs/langs/sql'),
+                import('@shikijs/langs/graphql'),
+                import('@shikijs/langs/docker'),
+                import('@shikijs/langs/diff'),
+                import('@shikijs/langs/nginx'),
+            ],
+            engine: createOnigurumaEngine(import('shiki/wasm')),
+        });
+
+        const plugin = fromHighlighter(highlighter, {
             themes: {
                 light: 'github-light',
                 dark: 'github-dark',
@@ -83,7 +135,7 @@ function initShiki(): Promise<void> {
         shikiReady = true;
         if (onHighlightReady)
             onHighlightReady();
-    }).catch(() => {
+    })().catch(() => {
         // Shiki failed to load — code blocks stay as plain <pre><code>
     });
 

@@ -19,6 +19,23 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                chunkFileNames: 'assets/[hash].js',
+                entryFileNames: 'assets/[hash].js',
+                assetFileNames: 'assets/[hash].[ext]',
+                manualChunks(id) {
+                    if (id.includes('@shikijs/langs/') || id.includes('shiki/dist/langs/')) {
+                        return 'hl-l';
+                    }
+                    if (id.includes('@shikijs/') || id.includes('shiki/')) {
+                        return 'hl-c';
+                    }
+                },
+            },
+        },
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],
