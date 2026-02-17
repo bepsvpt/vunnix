@@ -73,10 +73,13 @@ class SearchCode implements Tool
             $startLine = $result['startline'];
             $data = $result['data'];
 
-            // Trim excessive whitespace from snippets
+            // Trim excessive whitespace and ensure valid UTF-8 (GitLab may return non-UTF-8 content)
             $snippet = trim($data);
+            if (! mb_check_encoding($snippet, 'UTF-8')) {
+                $snippet = mb_convert_encoding($snippet, 'UTF-8', 'UTF-8');
+            }
             if (strlen($snippet) > 500) {
-                $snippet = substr($snippet, 0, 500).'…';
+                $snippet = mb_strcut($snippet, 0, 500, 'UTF-8').'…';
             }
 
             $lines[] = "--- {$path}".($startLine > 0 ? ":L{$startLine}" : '')." ---\n{$snippet}";

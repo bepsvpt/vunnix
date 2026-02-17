@@ -126,6 +126,69 @@ it('truncates long code snippets to 500 characters', function (): void {
     expect($result)->not->toContain(str_repeat('a', 600));
 });
 
+it('preserves valid UTF-8 when truncating multi-byte characters at boundary', function (): void {
+    // Build a snippet of exactly 499 bytes of ASCII + a 3-byte Chinese character at position 499-501.
+    // substr() would cut the character at byte 500, creating invalid UTF-8.
+    // mb_strcut() should back up to avoid splitting the character.
+    $ascii = str_repeat('a', 499);
+    $longSnippet = $ascii.'你好世界'; // 499 + 12 = 511 bytes (4 Chinese chars × 3 bytes each)
+
+    $this->gitLab
+        ->shouldReceive('searchCode')
+        ->once()
+        ->andReturn([
+            [
+                'basename' => 'chinese.php',
+                'data' => $longSnippet,
+                'path' => 'src/chinese.php',
+                'filename' => 'chinese.php',
+                'ref' => 'main',
+                'startline' => 1,
+                'project_id' => 42,
+            ],
+        ]);
+
+    $result = $this->tool->handle(new Request([
+        'project_id' => 42,
+        'search' => 'test',
+    ]));
+
+    // Result must be valid UTF-8 (json_encode would fail otherwise)
+    expect(mb_check_encoding($result, 'UTF-8'))->toBeTrue();
+    expect(json_encode($result))->not->toBeFalse();
+    expect($result)->toContain('…');
+});
+
+it('sanitizes non-UTF-8 content from GitLab search results', function (): void {
+    // Simulate GitLab returning Latin-1 encoded content (e.g., 0xC0 is not valid UTF-8)
+    $invalidUtf8 = "some code here \xC0\xC1 more code";
+
+    $this->gitLab
+        ->shouldReceive('searchCode')
+        ->once()
+        ->andReturn([
+            [
+                'basename' => 'legacy.php',
+                'data' => $invalidUtf8,
+                'path' => 'src/legacy.php',
+                'filename' => 'legacy.php',
+                'ref' => 'main',
+                'startline' => 1,
+                'project_id' => 42,
+            ],
+        ]);
+
+    $result = $this->tool->handle(new Request([
+        'project_id' => 42,
+        'search' => 'test',
+    ]));
+
+    // Result must be valid UTF-8 (invalid bytes should be replaced, not propagated)
+    expect(mb_check_encoding($result, 'UTF-8'))->toBeTrue();
+    expect(json_encode($result))->not->toBeFalse();
+    expect($result)->toContain('src/legacy.php');
+});
+
 // ─── Handle — empty ─────────────────────────────────────────────
 
 it('returns a message when no matches are found', function (): void {

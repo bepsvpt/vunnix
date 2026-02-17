@@ -81,10 +81,15 @@ class ReadFile implements Tool
             return 'Error: Unable to decode file content (binary file or invalid encoding).';
         }
 
+        // Ensure content is valid UTF-8 (files may use Latin-1, Windows-1252, etc.)
+        if (! mb_check_encoding($content, 'UTF-8')) {
+            $content = mb_convert_encoding($content, 'UTF-8', 'UTF-8');
+        }
+
         $fileName = $fileData['file_name'];
 
         if (strlen($content) > self::MAX_FILE_SIZE) {
-            $truncated = substr($content, 0, self::MAX_FILE_SIZE);
+            $truncated = mb_strcut($content, 0, self::MAX_FILE_SIZE, 'UTF-8');
 
             return "File: {$fileName}\n(Truncated — file is ".number_format(strlen($content)).' bytes, showing first '.number_format(self::MAX_FILE_SIZE).")\n\n{$truncated}";
         }

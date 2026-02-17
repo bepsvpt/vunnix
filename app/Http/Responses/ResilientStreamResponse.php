@@ -8,6 +8,7 @@ use Laravel\Ai\Exceptions\ProviderOverloadedException;
 use Laravel\Ai\Exceptions\RateLimitedException;
 use Laravel\Ai\Responses\StreamableAgentResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 /**
  * Wraps StreamableAgentResponse with exception handling for AI provider errors.
@@ -48,6 +49,8 @@ class ResilientStreamResponse
                     self::emitErrorEvent('overloaded', 'The AI service is currently overloaded. Please try again shortly.', true, $e);
                 } catch (AiException $e) {
                     self::emitErrorEvent('ai_error', 'An error occurred while generating the response.', false, $e);
+                } catch (Throwable $e) {
+                    self::emitErrorEvent('internal_error', 'An unexpected error occurred while generating the response.', false, $e);
                 }
 
                 echo "data: [DONE]\n\n";
@@ -70,7 +73,7 @@ class ResilientStreamResponse
     /**
      * Emit a structured SSE error event and log the exception.
      */
-    private static function emitErrorEvent(string $code, string $message, bool $retryable, AiException $exception): void
+    private static function emitErrorEvent(string $code, string $message, bool $retryable, Throwable $exception): void
     {
         Log::warning('ResilientStreamResponse: AI provider error during streaming', [
             'code' => $code,

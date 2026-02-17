@@ -175,6 +175,30 @@ it('sets correct response headers', function (): void {
     expect($response->headers->get('X-Accel-Buffering'))->toBe('no');
 });
 
+it('emits internal_error event for non-AiException throwables', function (): void {
+    Log::shouldReceive('warning')
+        ->once()
+        ->with('ResilientStreamResponse: AI provider error during streaming', \Mockery::on(function (array $context): bool {
+            return $context['code'] === 'internal_error'
+                && $context['retryable'] === false
+                && $context['exception_class'] === \InvalidArgumentException::class;
+        }));
+
+    $events = [['type' => 'stream_start']];
+    $exception = new \InvalidArgumentException('json_encode error: Malformed UTF-8 characters, possibly incorrectly encoded');
+
+    $output = captureStream(makeAgentResponse($events, $exception));
+    $parsed = parseSSEOutput($output);
+
+    // Should have: stream_start, error event, [DONE]
+    expect($parsed)->toHaveCount(3);
+    expect($parsed[1]['type'])->toBe('error');
+    expect($parsed[1]['error']['code'])->toBe('internal_error');
+    expect($parsed[1]['error']['retryable'])->toBeFalse();
+    expect($parsed[1]['error']['message'])->toContain('unexpected error');
+    expect($parsed[2])->toBe('[DONE]');
+});
+
 it('always emits [DONE] even after error events', function (): void {
     Log::spy();
 

@@ -105,6 +105,56 @@ it('truncates files larger than 100KB', function (): void {
     expect(strlen($result))->toBeLessThan(120_000);
 });
 
+it('sanitizes non-UTF-8 file content to valid UTF-8', function (): void {
+    // Simulate a file with Latin-1 characters (invalid in UTF-8)
+    $latin1Content = "<?php\n// Stra\xDFe (German for 'street' in Latin-1)\n";
+
+    $this->gitLab
+        ->shouldReceive('getFile')
+        ->once()
+        ->andReturn([
+            'file_name' => 'german.php',
+            'file_path' => 'src/german.php',
+            'content' => base64_encode($latin1Content),
+            'encoding' => 'base64',
+        ]);
+
+    $result = $this->tool->handle(new Request([
+        'project_id' => 42,
+        'file_path' => 'src/german.php',
+    ]));
+
+    // Result must be valid UTF-8 (json_encode would fail otherwise)
+    expect(mb_check_encoding($result, 'UTF-8'))->toBeTrue();
+    expect(json_encode($result))->not->toBeFalse();
+    expect($result)->toContain('File: german.php');
+});
+
+it('truncates large files without splitting multi-byte characters', function (): void {
+    // Build content just over 100KB with multi-byte characters at the boundary
+    $content = str_repeat('a', 99_999).'你好'; // 99,999 + 6 bytes = 100,005
+
+    $this->gitLab
+        ->shouldReceive('getFile')
+        ->once()
+        ->andReturn([
+            'file_name' => 'big-unicode.txt',
+            'file_path' => 'data/big-unicode.txt',
+            'content' => base64_encode($content),
+            'encoding' => 'base64',
+        ]);
+
+    $result = $this->tool->handle(new Request([
+        'project_id' => 42,
+        'file_path' => 'data/big-unicode.txt',
+    ]));
+
+    expect($result)->toContain('Truncated');
+    // Result must be valid UTF-8
+    expect(mb_check_encoding($result, 'UTF-8'))->toBeTrue();
+    expect(json_encode($result))->not->toBeFalse();
+});
+
 // ─── Handle — binary file ───────────────────────────────────────
 
 it('returns error for binary file with invalid base64', function (): void {
