@@ -59,7 +59,7 @@ SCHEMA_VERSION="1.0"
 usage() {
     echo "Usage: format-output.sh <task-type> <claude-output-file> [options]"
     echo ""
-    echo "Task types: code_review, security_audit, feature_dev, ui_adjustment, issue_discussion"
+    echo "Task types: code_review, security_audit, feature_dev, ui_adjustment, issue_discussion, deep_analysis"
     echo ""
     echo "Options:"
     echo "  --strategy <name>        Strategy name (e.g., frontend-review)"
@@ -119,11 +119,11 @@ done
 
 # ── Validate task type ───────────────────────────────────────────────
 case "$TASK_TYPE" in
-    code_review|security_audit|feature_dev|ui_adjustment|issue_discussion)
+    code_review|security_audit|feature_dev|ui_adjustment|issue_discussion|deep_analysis)
         ;;
     *)
         log_error "Unknown task type: $TASK_TYPE"
-        log_error "Expected: code_review, security_audit, feature_dev, ui_adjustment, issue_discussion"
+        log_error "Expected: code_review, security_audit, feature_dev, ui_adjustment, issue_discussion, deep_analysis"
         exit 1
         ;;
 esac
@@ -234,6 +234,9 @@ case "$TASK_TYPE" in
         ;;
     issue_discussion)
         SCHEMA_NAME="discussion:${SCHEMA_VERSION}"
+        ;;
+    deep_analysis)
+        SCHEMA_NAME="analysis:${SCHEMA_VERSION}"
         ;;
 esac
 

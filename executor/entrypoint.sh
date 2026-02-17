@@ -155,6 +155,9 @@ resolve_schema() {
         issue_discussion)
             schema_file="${EXECUTOR_DIR}/schemas/issue_discussion.json"
             ;;
+        deep_analysis)
+            schema_file="${EXECUTOR_DIR}/schemas/deep_analysis.json"
+            ;;
         *)
             log_error "Unknown task type: $task_type"
             return 1
@@ -333,6 +336,23 @@ EOF
         issue_discussion)
             cat <<EOF
 Answer the question from the issue context. Reference relevant code from the repository with specific file paths and line numbers. Keep your response concise and actionable.
+
+CRITICAL: Your output MUST be ONLY a valid JSON object matching the provided schema.
+Do NOT include any markdown fencing, explanations, or commentary outside the JSON.
+Output the raw JSON object directly with no wrapper text.
+EOF
+            ;;
+        deep_analysis)
+            cat <<EOF
+Perform a deep analysis of this repository. Thoroughly explore the codebase structure, architecture, patterns, and implementation details relevant to the task description.
+
+Focus on:
+- Understanding the overall architecture and module organization
+- Identifying key design patterns and architectural decisions
+- Tracing data flows and module dependencies
+- Noting potential concerns or areas for improvement
+
+Provide a comprehensive analysis with specific file paths and line numbers as references.
 
 CRITICAL: Your output MUST be ONLY a valid JSON object matching the provided schema.
 Do NOT include any markdown fencing, explanations, or commentary outside the JSON.

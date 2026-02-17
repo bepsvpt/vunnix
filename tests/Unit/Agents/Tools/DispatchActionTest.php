@@ -36,9 +36,11 @@ it('defines the expected schema parameters', function (): void {
         'target_branch',
         'assignee_id',
         'labels',
-        'user_id',
         'conversation_id',
     ]);
+
+    // user_id was removed — authenticated user is resolved from session
+    expect($params)->not->toHaveKey('user_id');
 });
 
 // ─── Handle — access denied ────────────────────────────────────

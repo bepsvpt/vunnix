@@ -376,6 +376,9 @@ The frontend renders this as a structured preview card with Confirm/Cancel butto
 3. Wait for explicit user confirmation before calling DispatchAction
 4. Never dispatch an action without explicit user confirmation
 
+**Authentication:**
+The DispatchAction tool automatically resolves the authenticated user from the session. Do NOT pass user_id — it is resolved server-side for security. You only need to provide the conversation_id.
+
 **Permission handling:**
 The DispatchAction tool checks the user's `chat.dispatch_task` permission automatically.
 If the user lacks this permission, explain that they need to contact their project admin to get the "chat.dispatch_task" permission assigned to their role.

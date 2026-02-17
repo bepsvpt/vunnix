@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\ProjectAccessChecker;
 use App\Services\TaskDispatcher;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
@@ -90,10 +91,6 @@ class DispatchAction implements Tool
             'existing_mr_iid' => $schema
                 ->integer()
                 ->description('Existing MR IID to push corrections to (for designer iteration flow). When set, the executor pushes to the same branch and updates the existing MR instead of creating a new one.'),
-            'user_id' => $schema
-                ->integer()
-                ->description('The authenticated user ID dispatching this action.')
-                ->required(),
             'conversation_id' => $schema
                 ->string()
                 ->description('The conversation ID this action was dispatched from.')
@@ -118,16 +115,16 @@ class DispatchAction implements Tool
                 .implode(', ', array_keys(self::ACTION_TYPE_MAP)).'.';
         }
 
-        // 3. Resolve the internal project and user
+        // 3. Resolve the internal project and authenticated user
         $project = Project::where('gitlab_project_id', $projectId)->first();
         if ($project === null) {
             return 'Error: project not found in Vunnix registry.';
         }
 
-        $userId = $request->integer('user_id');
-        $user = User::find($userId);
-        if ($user === null) {
-            return 'Error: user not found.';
+        // Resolve user from the authenticated session — never trust the AI's user_id parameter
+        $user = Auth::user();
+        if (! $user instanceof User) {
+            return 'Error: not authenticated. Please log in to dispatch actions.';
         }
 
         // 4. Check chat.dispatch_task permission

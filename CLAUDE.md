@@ -92,8 +92,8 @@ tests/
 **Chat pipeline:** User message → `ConversationController::stream()` → `ConversationService::streamResponse()` → `VunnixAgent::stream()` (with tools: BrowseRepoTree, ReadFile, SearchCode, ListIssues, ReadIssue, ListMergeRequests, ReadMergeRequest, ReadMRDiff, DispatchAction) → Claude API → `StreamableAgentResponse` (SSE: `text_delta`, `tool_call`, `tool_result` events). The AI SDK's `RemembersConversations` trait persists messages. `PruneConversationHistory` middleware summarizes old turns when conversation exceeds 20 turns.
 
 **Code review pipeline:** GitLab webhook → `WebhookController` → parse into typed `WebhookEvent` DTO (MergeRequestOpened, NoteOnMR, IssueLabelChanged, PushToMRBranch, etc.) → `EventRouter::route()` classifies intent (auto_review, on_demand_review, improve, ask_command, issue_discussion, feature_dev, incremental_review) → `EventDeduplicator` (latest-wins, D140) → permission check → `TaskDispatchService::dispatch()` creates Task model → `ProcessTask` job → `TaskDispatcher` chooses execution mode:
-- **Server-side** (PrdCreation, IssueDiscussion, DeepAnalysis): immediate `ProcessTaskResult`
-- **Runner** (CodeReview, FeatureDev, UiAdjustment): triggers GitLab CI pipeline with `VUNNIX_*` env vars → executor posts result back → `ProcessTaskResult`
+- **Server-side** (PrdCreation): immediate `ProcessTaskResult`
+- **Runner** (CodeReview, FeatureDev, UiAdjustment, IssueDiscussion, DeepAnalysis): triggers GitLab CI pipeline with `VUNNIX_*` env vars → executor posts result back → `ProcessTaskResult`
 
 `ProcessTaskResult` then dispatches downstream jobs by task type: `PostSummaryComment` → `PostInlineThreads` → `PostLabelsAndStatus` (code review), `PostAnswerComment` (@ai ask), `PostIssueComment` (@ai on issues), `PostFeatureDevResult` (feature dev), `CreateGitLabIssue` (PRD creation).
 
