@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth';
 const routes: RouteRecordRaw[] = [
     { path: '/', redirect: '/chat' },
     { path: '/chat', name: 'chat', component: ChatPage },
+    { path: '/chat/:id', name: 'chat-conversation', component: ChatPage },
     { path: '/dashboard', name: 'dashboard', component: DashboardPage },
     { path: '/admin', name: 'admin', component: AdminPage },
 ];

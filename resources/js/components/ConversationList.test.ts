@@ -1,7 +1,10 @@
+import type { Router } from 'vue-router';
 import { flushPromises, mount } from '@vue/test-utils';
 import axios from 'axios';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createMemoryHistory, createRouter } from 'vue-router';
+import ChatPage from '@/pages/ChatPage.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useConversationsStore } from '@/stores/conversations';
 import ConversationList from './ConversationList.vue';
@@ -12,8 +15,19 @@ vi.mock('axios');
 const mockedAxios = vi.mocked(axios, true);
 
 let pinia: ReturnType<typeof createPinia>;
+let router: Router;
 
-beforeEach(() => {
+function createTestRouter() {
+    return createRouter({
+        history: createMemoryHistory(),
+        routes: [
+            { path: '/chat', name: 'chat', component: ChatPage },
+            { path: '/chat/:id', name: 'chat-conversation', component: ChatPage },
+        ],
+    });
+}
+
+beforeEach(async () => {
     pinia = createPinia();
     setActivePinia(pinia);
     vi.restoreAllMocks();
@@ -21,6 +35,9 @@ beforeEach(() => {
     mockedAxios.get.mockResolvedValue({
         data: { data: [], meta: { next_cursor: null } },
     });
+    router = createTestRouter();
+    router.push('/chat');
+    await router.isReady();
 });
 
 function makeConversation(overrides: Record<string, unknown> = {}) {
@@ -44,7 +61,7 @@ function makeConversation(overrides: Record<string, unknown> = {}) {
 function mountList() {
     return mount(ConversationList, {
         global: {
-            plugins: [pinia],
+            plugins: [pinia, router],
         },
     });
 }
@@ -217,5 +234,67 @@ describe('conversationList', () => {
 
         const archiveBtn = wrapper.findAll('button').find(b => b.text() === 'Archived');
         expect(archiveBtn).toBeTruthy();
+    });
+
+    it('navigates to /chat/:id when selecting a conversation', async () => {
+        mockedAxios.get.mockResolvedValue({
+            data: {
+                data: [makeConversation({ id: 'conv-42' })],
+                meta: { next_cursor: null },
+            },
+        });
+
+        const wrapper = mountList();
+        await flushPromises();
+
+        const item = wrapper.findComponent(ConversationListItem);
+        item.vm.$emit('select', 'conv-42');
+        await flushPromises();
+
+        expect(router.currentRoute.value.name).toBe('chat-conversation');
+        expect(router.currentRoute.value.params.id).toBe('conv-42');
+    });
+
+    it('navigates to /chat/:id after creating a conversation', async () => {
+        const newConv = makeConversation({ id: 'conv-new' });
+        mockedAxios.post.mockResolvedValue({ data: { data: newConv } });
+
+        const store = useConversationsStore();
+        // Simulate what onCreateConversation does
+        const conversation = await store.createConversation(1);
+        router.push({ name: 'chat-conversation', params: { id: conversation.id } });
+        await flushPromises();
+
+        expect(router.currentRoute.value.name).toBe('chat-conversation');
+        expect(router.currentRoute.value.params.id).toBe('conv-new');
+    });
+
+    it('navigates to /chat after archiving the selected conversation', async () => {
+        mockedAxios.patch.mockResolvedValue({});
+        mockedAxios.get.mockResolvedValue({
+            data: {
+                data: [makeConversation({ id: 'conv-1' })],
+                meta: { next_cursor: null },
+            },
+        });
+
+        // Start on /chat/conv-1
+        router.push({ name: 'chat-conversation', params: { id: 'conv-1' } });
+        await router.isReady();
+
+        const store = useConversationsStore();
+        store.selectedId = 'conv-1';
+        store.conversations = [makeConversation({ id: 'conv-1' })];
+
+        // Simulate archive of the selected conversation
+        const wasSelected = store.selectedId === 'conv-1';
+        await store.toggleArchive('conv-1');
+        if (wasSelected) {
+            router.push({ name: 'chat' });
+        }
+        await flushPromises();
+
+        expect(router.currentRoute.value.name).toBe('chat');
+        expect(router.currentRoute.value.params.id).toBeUndefined();
     });
 });

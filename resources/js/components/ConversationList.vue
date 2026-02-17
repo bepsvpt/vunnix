@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useConversationsStore } from '@/stores/conversations';
 import ConversationListItem from './ConversationListItem.vue';
@@ -7,6 +8,7 @@ import NewConversationDialog from './NewConversationDialog.vue';
 
 const store = useConversationsStore();
 const auth = useAuthStore();
+const router = useRouter();
 
 const showNewDialog = ref(false);
 
@@ -33,11 +35,15 @@ function onArchiveToggle() {
 }
 
 function onSelect(id: string) {
-    store.selectConversation(id);
+    router.push({ name: 'chat-conversation', params: { id } });
 }
 
-function onArchive(id: string) {
-    store.toggleArchive(id);
+async function onArchive(id: string) {
+    const wasSelected = store.selectedId === id;
+    await store.toggleArchive(id);
+    if (wasSelected) {
+        router.push({ name: 'chat' });
+    }
 }
 
 function projectNameForId(projectId: number): string {
@@ -47,8 +53,9 @@ function projectNameForId(projectId: number): string {
 
 async function onCreateConversation(projectId: number) {
     try {
-        await store.createConversation(projectId);
+        const conversation = await store.createConversation(projectId);
         showNewDialog.value = false;
+        router.push({ name: 'chat-conversation', params: { id: conversation.id } });
     } catch {
         // Error is set in the store; dialog stays open so user can retry
     }

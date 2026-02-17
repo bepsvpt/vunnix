@@ -1,9 +1,41 @@
 <script setup lang="ts">
+import { watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import ConversationList from '@/components/ConversationList.vue';
 import MessageThread from '@/components/MessageThread.vue';
 import { useConversationsStore } from '@/stores/conversations';
 
 const store = useConversationsStore();
+const route = useRoute();
+const router = useRouter();
+
+// Sync route param → store selection.
+// When URL is /chat/:id, select that conversation.
+// When URL is /chat (no id), deselect.
+watch(
+    () => route.params.id as string | undefined,
+    (id) => {
+        if (id && id !== store.selectedId) {
+            store.selectConversation(id);
+        } else if (!id && store.selectedId) {
+            store.selectConversation(null);
+        }
+    },
+    { immediate: true },
+);
+
+// Sync store → route for archive clearing selectedId.
+// When the store nullifies selectedId (e.g., archiving the active conversation),
+// navigate back to /chat so the URL stays consistent.
+watch(
+    () => store.selectedId,
+    (newId) => {
+        const routeId = route.params.id as string | undefined;
+        if (!newId && routeId) {
+            router.replace({ name: 'chat' });
+        }
+    },
+);
 </script>
 
 <template>

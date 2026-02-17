@@ -7,9 +7,10 @@ describe('router', () => {
         expect(router.options.history.base).toBe('');
     });
 
-    it('has three named routes: chat, dashboard, admin', () => {
+    it('has four named routes: chat, chat-conversation, dashboard, admin', () => {
         const routeNames = router.getRoutes().map(r => r.name).filter(Boolean);
         expect(routeNames).toContain('chat');
+        expect(routeNames).toContain('chat-conversation');
         expect(routeNames).toContain('dashboard');
         expect(routeNames).toContain('admin');
     });
@@ -17,5 +18,11 @@ describe('router', () => {
     it('redirects / to /chat', () => {
         const rootOption = router.options.routes.find(r => r.path === '/');
         expect(rootOption!.redirect).toBe('/chat');
+    });
+
+    it('defines /chat/:id route for deep-linking conversations', () => {
+        const route = router.options.routes.find(r => r.path === '/chat/:id');
+        expect(route).toBeDefined();
+        expect(route!.name).toBe('chat-conversation');
     });
 });
