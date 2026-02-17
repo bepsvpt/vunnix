@@ -16,6 +16,7 @@
         "yosymfony/toml": "^1.0"
     },
     "require-dev": {
+        "barryvdh/laravel-ide-helper": "^3.6",
         "fakerphp/faker": "^1.23",
         "larastan/larastan": "^3.0",
         "laravel/pail": "^1.2.2",
@@ -57,6 +58,7 @@
         "test:coverage": "php artisan config:clear --ansi && php artisan test --parallel --coverage --coverage-html=coverage/php",
         "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
         "analyse:baseline": "vendor/bin/phpstan analyse --memory-limit=1G --generate-baseline",
+        "ide-helper:models": "php artisan ide-helper:models --reset --write --no-interaction",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

@@ -28,6 +28,7 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 | `npm run build` | Production frontend build |
 | `composer analyse` | Run PHPStan static analysis |
 | `composer analyse:baseline` | Regenerate PHPStan baseline after fixing errors |
+| `composer ide-helper:models` | Regenerate Eloquent model PHPDoc annotations (requires DB connection) |
 | `./vendor/bin/pint` | Run Laravel Pint (PSR-12 code style) |
 | `docker compose up -d` | Start Docker services (PostgreSQL, Redis) |
 | `docker compose down && docker compose up -d` | Full restart (required after code changes — see Learnings) |

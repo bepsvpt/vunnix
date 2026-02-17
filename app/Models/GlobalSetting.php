@@ -6,11 +6,29 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * @property int $id
+ * @property string $key
+ * @property array<array-key, mixed>|null $value
+ * @property string $type
+ * @property string|null $description
+ * @property \Illuminate\Support\Carbon|null $bot_pat_created_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ *
+ * @method static \Database\Factories\GlobalSettingFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalSetting newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalSetting newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|GlobalSetting query()
+ *
+ * @mixin \Eloquent
+ */
 class GlobalSetting extends Model
 {
     use HasFactory;
 
     private const CACHE_PREFIX = 'global_setting:';
+
     private const CACHE_TTL_MINUTES = 60;
 
     protected $fillable = [
@@ -99,7 +117,7 @@ TEMPLATE;
     public static function get(string $key, mixed $default = null): mixed
     {
         $value = Cache::remember(
-            self::CACHE_PREFIX . $key,
+            self::CACHE_PREFIX.$key,
             now()->addMinutes(self::CACHE_TTL_MINUTES),
             function () use ($key) {
                 $setting = static::where('key', $key)->first();
@@ -130,7 +148,7 @@ TEMPLATE;
      */
     public static function set(string $key, mixed $value, string $type = 'string', ?string $description = null): static
     {
-        Cache::forget(self::CACHE_PREFIX . $key);
+        Cache::forget(self::CACHE_PREFIX.$key);
 
         $attributes = ['value' => $value, 'type' => $type];
         if ($description !== null) {
@@ -159,11 +177,11 @@ TEMPLATE;
     protected static function booted(): void
     {
         static::saved(function (GlobalSetting $setting) {
-            Cache::forget(self::CACHE_PREFIX . $setting->key);
+            Cache::forget(self::CACHE_PREFIX.$setting->key);
         });
 
         static::deleted(function (GlobalSetting $setting) {
-            Cache::forget(self::CACHE_PREFIX . $setting->key);
+            Cache::forget(self::CACHE_PREFIX.$setting->key);
         });
     }
 }

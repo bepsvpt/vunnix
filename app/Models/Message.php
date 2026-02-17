@@ -7,6 +7,31 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
+/**
+ * @property string $id
+ * @property string $conversation_id
+ * @property int $user_id
+ * @property string $agent
+ * @property string $role
+ * @property string $content
+ * @property string $attachments
+ * @property string $tool_calls
+ * @property string $tool_results
+ * @property string $usage
+ * @property string $meta
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $content_search
+ * @property-read \App\Models\Conversation|null $conversation
+ * @property-read \App\Models\User|null $user
+ *
+ * @method static \Database\Factories\MessageFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Message newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Message newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Message query()
+ *
+ * @mixin \Eloquent
+ */
 class Message extends Model
 {
     use HasFactory;
@@ -14,6 +39,7 @@ class Message extends Model
     protected $table = 'agent_conversation_messages';
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

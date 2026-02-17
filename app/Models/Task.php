@@ -14,6 +14,53 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property int $id
+ * @property TaskType $type
+ * @property TaskOrigin $origin
+ * @property int|null $user_id
+ * @property int $project_id
+ * @property TaskPriority $priority
+ * @property TaskStatus $status
+ * @property int|null $mr_iid
+ * @property int|null $issue_iid
+ * @property int|null $comment_id
+ * @property string|null $commit_sha
+ * @property string|null $conversation_id
+ * @property string|null $prompt
+ * @property string|null $response
+ * @property int|null $tokens_used
+ * @property string|null $model
+ * @property array<array-key, mixed>|null $result
+ * @property array<array-key, mixed>|null $prompt_version
+ * @property numeric|null $cost
+ * @property int $retry_count
+ * @property string|null $error_reason
+ * @property \Illuminate\Support\Carbon|null $started_at
+ * @property \Illuminate\Support\Carbon|null $completed_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int|null $superseded_by_id
+ * @property int|null $pipeline_id
+ * @property string|null $pipeline_status
+ * @property int|null $input_tokens
+ * @property int|null $output_tokens
+ * @property int|null $duration_seconds
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FindingAcceptance> $findingAcceptances
+ * @property-read int|null $finding_acceptances_count
+ * @property-read \App\Models\TaskMetric|null $metric
+ * @property-read \App\Models\Project $project
+ * @property-read \App\Models\User|null $user
+ *
+ * @method static Builder<static>|Task active()
+ * @method static \Database\Factories\TaskFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Task forMergeRequest(int $projectId, int $mrIid)
+ * @method static Builder<static>|Task newModelQuery()
+ * @method static Builder<static>|Task newQuery()
+ * @method static Builder<static>|Task query()
+ *
+ * @mixin \Eloquent
+ */
 class Task extends Model
 {
     use HasFactory;

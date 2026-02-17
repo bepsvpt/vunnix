@@ -11,6 +11,38 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string|null $password
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int $gitlab_id
+ * @property string $username
+ * @property string|null $avatar_url
+ * @property string $oauth_provider
+ * @property string|null $oauth_token
+ * @property string|null $oauth_refresh_token
+ * @property \Illuminate\Support\Carbon|null $oauth_token_expires_at
+ * @property-read Collection<int, \App\Models\ApiKey> $apiKeys
+ * @property-read int|null $api_keys_count
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
+ * @property-read Collection<int, \App\Models\Project> $projects
+ * @property-read int|null $projects_count
+ * @property-read Collection<int, \App\Models\Role> $roles
+ * @property-read int|null $roles_count
+ *
+ * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User query()
+ *
+ * @mixin \Eloquent
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */

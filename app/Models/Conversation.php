@@ -11,6 +11,34 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
+/**
+ * @property string $id
+ * @property int $user_id
+ * @property string $title
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int|null $project_id
+ * @property string|null $title_search
+ * @property \Illuminate\Support\Carbon|null $archived_at
+ * @property-read \App\Models\Message|null $latestMessage
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Message> $messages
+ * @property-read int|null $messages_count
+ * @property-read \App\Models\Project|null $project
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Project> $projects
+ * @property-read int|null $projects_count
+ * @property-read \App\Models\User|null $user
+ *
+ * @method static Builder<static>|Conversation accessibleBy(\App\Models\User $user)
+ * @method static Builder<static>|Conversation archived()
+ * @method static \Database\Factories\ConversationFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Conversation forProject(int $projectId)
+ * @method static Builder<static>|Conversation newModelQuery()
+ * @method static Builder<static>|Conversation newQuery()
+ * @method static Builder<static>|Conversation notArchived()
+ * @method static Builder<static>|Conversation query()
+ *
+ * @mixin \Eloquent
+ */
 class Conversation extends Model
 {
     use HasFactory;
@@ -18,6 +46,7 @@ class Conversation extends Model
     protected $table = 'agent_conversations';
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

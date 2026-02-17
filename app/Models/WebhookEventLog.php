@@ -13,6 +13,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * Also stores MR IID and commit SHA to support latest-wins superseding
  * lookups (D140).
+ *
+ * @property int $id
+ * @property string $gitlab_event_uuid
+ * @property int $project_id
+ * @property string $event_type
+ * @property string|null $intent
+ * @property int|null $mr_iid
+ * @property string|null $commit_sha
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property-read \App\Models\Project $project
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|WebhookEventLog newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|WebhookEventLog newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|WebhookEventLog query()
+ *
+ * @mixin \Eloquent
  */
 class WebhookEventLog extends Model
 {

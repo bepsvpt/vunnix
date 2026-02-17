@@ -5,6 +5,31 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $task_id
+ * @property int $project_id
+ * @property string $task_type
+ * @property int $input_tokens
+ * @property int $output_tokens
+ * @property numeric $cost
+ * @property int $duration
+ * @property int $severity_critical
+ * @property int $severity_high
+ * @property int $severity_medium
+ * @property int $severity_low
+ * @property int $findings_count
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Project $project
+ * @property-read \App\Models\Task $task
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TaskMetric newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TaskMetric newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TaskMetric query()
+ *
+ * @mixin \Eloquent
+ */
 class TaskMetric extends Model
 {
     protected $fillable = [
