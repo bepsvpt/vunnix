@@ -15,6 +15,7 @@ use App\Agents\Tools\SearchCode;
 use App\Models\GlobalSetting;
 use App\Models\Project;
 use App\Services\ProjectConfigService;
+use Laravel\Ai\Attributes\MaxTokens;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
@@ -36,6 +37,7 @@ use Laravel\Ai\Promptable;
  * Since the primary interface is SSE streaming (T48), structured output for action
  * dispatch will be added in T57 via a separate non-streaming invocation path.
  */
+#[MaxTokens(32000)]
 class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
 {
     use Promptable;
