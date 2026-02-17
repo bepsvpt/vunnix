@@ -254,6 +254,44 @@ export const useConversationsStore = defineStore('conversations', () => {
         });
 
         taskSubscriptions.value = new Set([...taskSubscriptions.value, taskId]);
+
+        // Catch up on status changes that happened before the subscription
+        // was established (race condition: Queued/Running broadcasts may fire
+        // before the frontend subscribes to the Reverb channel).
+        pollCurrentTaskStatus(taskId);
+    }
+
+    async function pollCurrentTaskStatus(taskId: number): Promise<void> {
+        try {
+            const response = await axios.get(`/api/v1/tasks/${taskId}/view`);
+            const data = response.data?.data;
+            if (!data)
+                return;
+
+            const currentStatus = data.status as string;
+            const tracked = activeTasks.value.get(taskId);
+
+            // Only update if the polled status is newer than what we have
+            if (tracked && currentStatus !== tracked.status) {
+                updateTaskStatus(taskId, {
+                    status: currentStatus,
+                    pipeline_id: data.result?.pipeline_id ?? null,
+                    started_at: null,
+                    result_summary: null,
+                });
+
+                // Handle terminal status caught by polling
+                if (isTerminalStatus(currentStatus)) {
+                    deliverTaskResult(taskId, data);
+                    setTimeout(() => {
+                        removeTask(taskId);
+                        unsubscribeFromTask(taskId);
+                    }, 3000);
+                }
+            }
+        } catch {
+            // Non-critical — Reverb subscription is the primary mechanism
+        }
     }
 
     /**
