@@ -685,7 +685,6 @@ export const useConversationsStore = defineStore('conversations', () => {
             });
             const newConversation = response.data.data;
             conversations.value.unshift(newConversation);
-            selectedId.value = newConversation.id;
             return newConversation;
         } catch (err: unknown) {
             error.value = getErrorMessage(err, 'Failed to create conversation');

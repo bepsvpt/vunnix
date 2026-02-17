@@ -417,14 +417,15 @@ describe('useConversationsStore', () => {
             expect(result).toEqual(newConv);
         });
 
-        it('selects the newly created conversation', async () => {
+        it('does not set selectedId (route watcher handles selection)', async () => {
             const newConv = makeConversation({ id: 'conv-new' });
             mockedAxios.post.mockResolvedValue({ data: { data: newConv } });
 
             const store = useConversationsStore();
+            store.selectedId = 'conv-old';
             await store.createConversation(1);
 
-            expect(store.selectedId).toBe('conv-new');
+            expect(store.selectedId).toBe('conv-old');
         });
 
         it('sets error and throws on failure', async () => {
