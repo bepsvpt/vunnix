@@ -83,7 +83,7 @@ class VunnixSetup extends Command
             return false;
         }
 
-        if ($appUrl === null || $appUrl === '' || $appUrl === 'http://localhost') {
+        if (in_array($appUrl, [null, '', 'http://localhost'], true)) {
             $this->error('APP_URL is not configured. Set it to your public URL (e.g. https://your-tunnel.trycloudflare.com)');
 
             return false;

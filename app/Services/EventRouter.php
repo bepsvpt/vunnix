@@ -44,7 +44,7 @@ class EventRouter
             $this->botAccountId = $botAccountId;
         } else {
             $botId = config('services.gitlab.bot_account_id');
-            $this->botAccountId = $botId !== null && $botId !== '' && $botId !== 0 ? (int) $botId : null;
+            $this->botAccountId = in_array($botId, [null, '', 0], true) ? null : (int) $botId;
         }
     }
 
