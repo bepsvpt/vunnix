@@ -59,8 +59,9 @@ interface SSEEvent {
     type: string;
     delta?: string;
     id?: string;
-    tool?: string;
-    input?: Record<string, unknown>;
+    // Laravel AI SDK sends tool_name and arguments (not tool/input)
+    tool_name?: string;
+    arguments?: Record<string, unknown>;
 }
 
 interface TaskDispatchInfo {
@@ -505,13 +506,13 @@ export const useConversationsStore = defineStore('conversations', () => {
                     if (event.type === 'tool_call') {
                         activeToolCalls.value.push({
                             id: event.id || `tool-${Date.now()}`,
-                            tool: event.tool!,
-                            input: event.input || {},
+                            tool: event.tool_name || 'unknown',
+                            input: event.arguments || {},
                         });
                     }
                     if (event.type === 'tool_result') {
                         activeToolCalls.value = activeToolCalls.value.filter(
-                            tc => tc.tool !== event.tool,
+                            tc => tc.tool !== event.tool_name,
                         );
                     }
                 },

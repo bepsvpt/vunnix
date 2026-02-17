@@ -896,8 +896,8 @@ describe('useConversationsStore', () => {
         it('tracks active tool calls from tool_call events', async () => {
             const events = [
                 { type: 'stream_start' },
-                { type: 'tool_call', tool: 'ReadFile', input: { file_path: 'src/Auth.php' } },
-                { type: 'tool_result', tool: 'ReadFile', output: '<?php ...' },
+                { type: 'tool_call', tool_name: 'ReadFile', arguments: { file_path: 'src/Auth.php' } },
+                { type: 'tool_result', tool_name: 'ReadFile', result: '<?php ...' },
                 { type: 'text_start' },
                 { type: 'text_delta', delta: 'Here is the file' },
                 { type: 'text_end' },
@@ -940,13 +940,13 @@ describe('useConversationsStore', () => {
             await vi.waitFor(() => expect(store.streaming).toBe(true));
 
             controller!.enqueue(encoder.encode('data: {"type":"stream_start"}\n\n'));
-            controller!.enqueue(encoder.encode('data: {"type":"tool_call","tool":"BrowseRepoTree","input":{"project_id":1,"path":"src/"}}\n\n'));
+            controller!.enqueue(encoder.encode('data: {"type":"tool_call","tool_name":"BrowseRepoTree","arguments":{"project_id":1,"path":"src/"}}\n\n'));
 
             await vi.waitFor(() => expect(store.activeToolCalls).toHaveLength(1));
             expect(store.activeToolCalls[0].tool).toBe('BrowseRepoTree');
             expect(store.activeToolCalls[0].input.path).toBe('src/');
 
-            controller!.enqueue(encoder.encode('data: {"type":"tool_result","tool":"BrowseRepoTree","output":"file1.php\\nfile2.php"}\n\n'));
+            controller!.enqueue(encoder.encode('data: {"type":"tool_result","tool_name":"BrowseRepoTree","result":"file1.php\\nfile2.php"}\n\n'));
 
             await vi.waitFor(() => expect(store.activeToolCalls).toHaveLength(0));
 
@@ -958,7 +958,7 @@ describe('useConversationsStore', () => {
         it('clears activeToolCalls when stream completes', async () => {
             const events = [
                 { type: 'stream_start' },
-                { type: 'tool_call', tool: 'SearchCode', input: { query: 'processPayment' } },
+                { type: 'tool_call', tool_name: 'SearchCode', arguments: { query: 'processPayment' } },
                 // Note: no tool_result — simulates edge case
                 { type: 'stream_end' },
                 '[DONE]',
