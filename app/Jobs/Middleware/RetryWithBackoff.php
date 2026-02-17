@@ -112,7 +112,7 @@ class RetryWithBackoff
         }
 
         // Backoff index: attempt 1 → backoff[0]=30s, attempt 2 → backoff[1]=120s, attempt 3 → backoff[2]=480s
-        $delay = self::BACKOFF_SECONDS[$attempts - 1] ?? end(self::BACKOFF_SECONDS);
+        $delay = self::BACKOFF_SECONDS[$attempts - 1] ?? self::BACKOFF_SECONDS[count(self::BACKOFF_SECONDS) - 1];
 
         Log::info('RetryWithBackoff: releasing for retry', [
             'job' => $job::class,

@@ -82,7 +82,7 @@ class DashboardAdoptionController extends Controller
             ->groupBy(DB::raw($weekExpr))
             ->orderBy('week')
             ->get()
-            ->map(fn ($row) => [
+            ->map(fn ($row) => [ // @phpstan-ignore argument.unresolvableType (selectRaw virtual columns)
                 'week' => $row->week,
                 'count' => (int) $row->count,
             ])

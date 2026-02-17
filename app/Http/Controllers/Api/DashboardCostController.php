@@ -144,7 +144,7 @@ class DashboardCostController extends Controller
             ->select('projects.id as project_id', 'projects.name as project_name', DB::raw('SUM(tasks.cost) as total_cost'), DB::raw('COUNT(*) as task_count'))
             ->groupBy('projects.id', 'projects.name')
             ->get()
-            ->map(fn ($row) => [
+            ->map(fn ($row) => [ // @phpstan-ignore argument.unresolvableType (selectRaw virtual columns)
                 'project_id' => (int) $row->project_id,
                 'project_name' => $row->project_name,
                 'total_cost' => (float) round($row->total_cost, 6),
@@ -170,7 +170,7 @@ class DashboardCostController extends Controller
             ->groupBy(DB::raw($monthExpr))
             ->orderBy('month')
             ->get()
-            ->map(fn ($row) => [
+            ->map(fn ($row) => [ // @phpstan-ignore argument.unresolvableType (selectRaw virtual columns)
                 'month' => $row->month,
                 'total_cost' => (float) round($row->total_cost ?? 0, 6),
                 'total_tokens' => (int) ($row->total_tokens ?? 0),

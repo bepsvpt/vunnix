@@ -39,7 +39,7 @@ class PromptVersionController extends Controller
         }
 
         return response()->json([
-            'data' => $versions->map(fn ($v) => [
+            'data' => $versions->map(fn ($v) => [ // @phpstan-ignore argument.unresolvableType (selectRaw virtual columns)
                 'skill' => $v->skill,
                 'claude_md' => $v->claude_md,
                 'schema' => $v->schema,

@@ -101,6 +101,7 @@ class User extends Authenticatable
         return $this->hasMany(ApiKey::class);
     }
 
+    /** @return Collection<int, Project> */
     public function accessibleProjects(): Collection
     {
         return $this->projects()->where('enabled', true)->get();
