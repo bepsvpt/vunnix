@@ -59,13 +59,13 @@
         ],
         "test": "php artisan config:clear --ansi && php artisan test --parallel",
         "test:coverage": "php artisan config:clear --ansi && php artisan test --parallel --coverage --coverage-html=coverage/php",
-        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=-1",
         "audit:all": "composer audit && npm audit",
         "format": "./vendor/bin/pint",
         "format:check": "./vendor/bin/pint --test",
         "ide-helper:models": "php artisan ide-helper:models --reset --write --no-interaction",
-        "rector": "vendor/bin/rector process --dry-run",
-        "rector:fix": "vendor/bin/rector process",
+        "rector": "vendor/bin/rector process --dry-run --memory-limit=-1",
+        "rector:fix": "vendor/bin/rector process --memory-limit=-1",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
