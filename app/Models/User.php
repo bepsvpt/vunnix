@@ -111,7 +111,7 @@ class User extends Authenticatable
     {
         $pivot = $this->projects()->where('projects.id', $project->id)->first();
 
-        return $pivot?->pivot->gitlab_access_level;
+        return $pivot?->pivot->gitlab_access_level; // @phpstan-ignore property.notFound (custom pivot column)
     }
 
     /**

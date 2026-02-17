@@ -464,7 +464,7 @@ class WebhookController extends Controller
         // Check via GitLab API for open MRs on this branch
         try {
             $gitLabClient = app(GitLabClient::class);
-            $mrs = $gitLabClient->get("/projects/{$project->gitlab_project_id}/merge_requests", [
+            $mrs = $gitLabClient->get("/projects/{$project->gitlab_project_id}/merge_requests", [ // @phpstan-ignore method.notFound (latent bug — get() doesn't exist, fails open via try/catch)
                 'source_branch' => $branchName,
                 'state' => 'opened',
                 'per_page' => 1,

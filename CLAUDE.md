@@ -27,7 +27,6 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 | `npm run dev` | Vite dev server only (frontend) |
 | `npm run build` | Production frontend build |
 | `composer analyse` | Run PHPStan static analysis |
-| `composer analyse:baseline` | Regenerate PHPStan baseline after fixing errors |
 | `composer ide-helper:models` | Regenerate Eloquent model PHPDoc annotations (requires DB connection) |
 | `composer format` | Run Laravel Pint (auto-fix code style) |
 | `composer format:check` | Check code style without fixing (CI mode) |

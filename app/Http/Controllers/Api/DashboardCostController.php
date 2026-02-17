@@ -130,9 +130,9 @@ class DashboardCostController extends Controller
             ->get()
             ->mapWithKeys(fn ($row) => [
                 $row->type->value => [
-                    'avg_cost' => (float) round($row->avg_cost, 6),
-                    'total_cost' => (float) round($row->total_cost, 6),
-                    'task_count' => (int) $row->task_count,
+                    'avg_cost' => (float) round($row->avg_cost, 6), // @phpstan-ignore property.notFound (selectRaw virtual column)
+                    'total_cost' => (float) round($row->total_cost, 6), // @phpstan-ignore property.notFound
+                    'task_count' => (int) $row->task_count, // @phpstan-ignore property.notFound
                 ],
             ])
             ->all();
@@ -146,9 +146,9 @@ class DashboardCostController extends Controller
             ->get()
             ->map(fn ($row) => [ // @phpstan-ignore argument.unresolvableType (selectRaw virtual columns)
                 'project_id' => (int) $row->project_id,
-                'project_name' => $row->project_name,
-                'total_cost' => (float) round($row->total_cost, 6),
-                'task_count' => (int) $row->task_count,
+                'project_name' => $row->project_name, // @phpstan-ignore property.notFound (join + selectRaw virtual column)
+                'total_cost' => (float) round($row->total_cost, 6), // @phpstan-ignore property.notFound
+                'task_count' => (int) $row->task_count, // @phpstan-ignore property.notFound
             ])
             ->values()
             ->all();
@@ -171,10 +171,10 @@ class DashboardCostController extends Controller
             ->orderBy('month')
             ->get()
             ->map(fn ($row) => [ // @phpstan-ignore argument.unresolvableType (selectRaw virtual columns)
-                'month' => $row->month,
+                'month' => $row->month, // @phpstan-ignore property.notFound (selectRaw virtual column)
                 'total_cost' => (float) round($row->total_cost ?? 0, 6),
                 'total_tokens' => (int) ($row->total_tokens ?? 0),
-                'task_count' => (int) $row->task_count,
+                'task_count' => (int) $row->task_count, // @phpstan-ignore property.notFound
             ])
             ->values()
             ->all();

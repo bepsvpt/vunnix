@@ -7,6 +7,8 @@ use App\Services\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\AbstractProvider;
+use Laravel\Socialite\Two\User as SocialiteUser;
 use Throwable;
 
 class AuthController extends Controller
@@ -16,7 +18,10 @@ class AuthController extends Controller
      */
     public function redirect(): RedirectResponse
     {
-        return Socialite::driver('gitlab')
+        /** @var AbstractProvider $driver */
+        $driver = Socialite::driver('gitlab');
+
+        return $driver
             ->scopes(['read_user', 'read_api'])
             ->redirect();
     }
@@ -30,6 +35,7 @@ class AuthController extends Controller
      */
     public function callback(): RedirectResponse
     {
+        /** @var SocialiteUser $gitlabUser */
         $gitlabUser = Socialite::driver('gitlab')->user();
 
         $user = User::updateOrCreate(

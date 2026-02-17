@@ -43,7 +43,9 @@ class HealthCheckController extends Controller
     private function checkRedis(): array
     {
         try {
-            $result = Cache::store('redis')->getRedis()->connection()->ping();
+            /** @var \Illuminate\Cache\RedisStore $store */
+            $store = Cache::store('redis');
+            $result = $store->getRedis()->connection()->ping();
 
             if ($result) {
                 return ['status' => 'ok'];

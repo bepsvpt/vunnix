@@ -63,7 +63,7 @@ class DashboardAdoptionController extends Controller
             ->get()
             ->groupBy('month')
             ->map(fn ($rows) => $rows->mapWithKeys(fn ($row) => [
-                $row->type->value => (int) $row->count,
+                $row->type->value => (int) $row->count, // @phpstan-ignore property.notFound (selectRaw virtual column)
             ])->all())
             ->all();
 
@@ -83,8 +83,8 @@ class DashboardAdoptionController extends Controller
             ->orderBy('week')
             ->get()
             ->map(fn ($row) => [ // @phpstan-ignore argument.unresolvableType (selectRaw virtual columns)
-                'week' => $row->week,
-                'count' => (int) $row->count,
+                'week' => $row->week, // @phpstan-ignore property.notFound (selectRaw virtual column)
+                'count' => (int) $row->count, // @phpstan-ignore property.notFound
             ])
             ->values()
             ->all();
