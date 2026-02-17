@@ -92,6 +92,11 @@ class TaskStatusChanged implements ShouldBroadcast
             $data['files_changed'] = $result['files_changed'];
         }
 
+        // FeatureDev / UiAdjustment: include implementation notes
+        if (isset($result['notes'])) {
+            $data['notes'] = $result['notes'];
+        }
+
         // UI adjustment: include screenshot
         if ($this->task->type === \App\Enums\TaskType::UiAdjustment) {
             $data['screenshot'] = $result['screenshot'] ?? null;
@@ -108,6 +113,21 @@ class TaskStatusChanged implements ShouldBroadcast
             if (isset($result['references'])) {
                 $data['references'] = $result['references'];
             }
+        }
+
+        // Issue discussion: include response and references
+        if ($this->task->type === \App\Enums\TaskType::IssueDiscussion) {
+            if (isset($result['response'])) {
+                $data['response'] = $result['response'];
+            }
+            if (isset($result['references'])) {
+                $data['references'] = $result['references'];
+            }
+        }
+
+        // PRD creation: include created issue details
+        if ($this->task->type === \App\Enums\TaskType::PrdCreation && isset($result['gitlab_issue_url'])) {
+            $data['gitlab_issue_url'] = $result['gitlab_issue_url'];
         }
 
         return $data;

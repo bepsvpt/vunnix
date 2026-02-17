@@ -47,12 +47,12 @@ class DeliverTaskResultToConversation
 
     private function buildResultContent(\App\Models\Task $task): string
     {
-        // Deep analysis: include full analysis text for the AI to reference
-        if ($task->type === \App\Enums\TaskType::DeepAnalysis) {
-            return $this->buildDeepAnalysisContent($task);
-        }
-
-        return $this->buildGenericResultContent($task);
+        return match ($task->type) {
+            \App\Enums\TaskType::DeepAnalysis => $this->buildDeepAnalysisContent($task),
+            \App\Enums\TaskType::IssueDiscussion => $this->buildIssueDiscussionContent($task),
+            \App\Enums\TaskType::PrdCreation => $this->buildPrdCreationContent($task),
+            default => $this->buildGenericResultContent($task),
+        };
     }
 
     private function buildGenericResultContent(\App\Models\Task $task): string
@@ -82,7 +82,61 @@ class DeliverTaskResultToConversation
             $parts[] = "{$count} ".($count === 1 ? 'file' : 'files').' changed';
         }
 
+        // Implementation notes
+        $notes = $result['notes'] ?? null;
+        if (is_string($notes) && $notes !== '') {
+            $parts[] = "Notes: {$notes}";
+        }
+
         return implode(' | ', $parts);
+    }
+
+    private function buildIssueDiscussionContent(\App\Models\Task $task): string
+    {
+        $result = $task->result ?? [];
+        $title = $result['title'] ?? $result['question'] ?? 'Issue Discussion';
+        $statusText = $task->status->value;
+
+        $parts = ["[System: Task result delivered] Task #{$task->id} \"{$title}\" {$statusText}."];
+
+        $response = $result['response'] ?? null;
+        if (is_string($response) && $response !== '') {
+            $parts[] = "\n\n## Response\n\n{$response}";
+        }
+
+        $references = $result['references'] ?? [];
+        if (is_array($references) && $references !== []) {
+            $refLines = ["\n\n## References"];
+            foreach ($references as $ref) {
+                $file = $ref['file'] ?? '';
+                $line = $ref['line'] ?? 0;
+                $context = $ref['context'] ?? '';
+                $refLines[] = "- `{$file}:{$line}` — {$context}";
+            }
+            $parts[] = implode("\n", $refLines);
+        }
+
+        return implode('', $parts);
+    }
+
+    private function buildPrdCreationContent(\App\Models\Task $task): string
+    {
+        $result = $task->result ?? [];
+        $title = $result['title'] ?? 'Issue';
+        $statusText = $task->status->value;
+
+        $parts = ["[System: Task result delivered] Task #{$task->id} \"{$title}\" {$statusText}."];
+
+        if ($task->issue_iid !== null) {
+            $parts[] = " Issue #{$task->issue_iid} created.";
+        }
+
+        $url = $result['gitlab_issue_url'] ?? null;
+        if (is_string($url) && $url !== '') {
+            $parts[] = " URL: {$url}";
+        }
+
+        return implode('', $parts);
     }
 
     private function buildDeepAnalysisContent(\App\Models\Task $task): string

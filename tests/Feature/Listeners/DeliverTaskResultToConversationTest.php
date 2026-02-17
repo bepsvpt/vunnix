@@ -200,6 +200,83 @@ test('includes full analysis content in system message for deep_analysis tasks',
     expect($systemMsg->content)->toContain('[critical]');
 });
 
+test('includes response content in system message for issue_discussion tasks', function (): void {
+    $conversation = Conversation::factory()->create();
+    $task = Task::factory()->create([
+        'conversation_id' => $conversation->id,
+        'type' => 'issue_discussion',
+        'status' => 'completed',
+        'result' => [
+            'question' => 'How does auth work?',
+            'response' => 'The auth module uses JWT tokens stored in Redis with 24h expiry.',
+            'references' => [
+                ['file' => 'app/Auth.php', 'line' => 10, 'context' => 'JWT setup'],
+            ],
+        ],
+    ]);
+
+    $listener = new DeliverTaskResultToConversation;
+    $listener->handle(new TaskStatusChanged($task));
+
+    $systemMsg = Message::where('conversation_id', $conversation->id)
+        ->where('role', 'system')
+        ->first();
+
+    expect($systemMsg->content)->toContain('[System: Task result delivered]');
+    expect($systemMsg->content)->toContain('JWT tokens stored in Redis');
+    expect($systemMsg->content)->toContain('app/Auth.php:10');
+});
+
+test('includes issue URL in system message for prd_creation tasks', function (): void {
+    $conversation = Conversation::factory()->create();
+    $task = Task::factory()->create([
+        'conversation_id' => $conversation->id,
+        'type' => 'prd_creation',
+        'status' => 'completed',
+        'issue_iid' => 42,
+        'result' => [
+            'title' => 'Add dark mode',
+            'gitlab_issue_url' => 'https://gitlab.com/foo/bar/-/issues/42',
+        ],
+    ]);
+
+    $listener = new DeliverTaskResultToConversation;
+    $listener->handle(new TaskStatusChanged($task));
+
+    $systemMsg = Message::where('conversation_id', $conversation->id)
+        ->where('role', 'system')
+        ->first();
+
+    expect($systemMsg->content)->toContain('[System: Task result delivered]');
+    expect($systemMsg->content)->toContain('Issue #42 created');
+    expect($systemMsg->content)->toContain('https://gitlab.com/foo/bar/-/issues/42');
+});
+
+test('includes notes in system message for feature_dev tasks', function (): void {
+    $conversation = Conversation::factory()->create();
+    $task = Task::factory()->create([
+        'conversation_id' => $conversation->id,
+        'type' => 'feature_dev',
+        'status' => 'completed',
+        'mr_iid' => 100,
+        'result' => [
+            'mr_title' => 'Add payment',
+            'branch' => 'ai/payment',
+            'files_changed' => [['path' => 'app/Pay.php']],
+            'notes' => 'Added Stripe integration with webhooks',
+        ],
+    ]);
+
+    $listener = new DeliverTaskResultToConversation;
+    $listener->handle(new TaskStatusChanged($task));
+
+    $systemMsg = Message::where('conversation_id', $conversation->id)
+        ->where('role', 'system')
+        ->first();
+
+    expect($systemMsg->content)->toContain('Notes: Added Stripe integration');
+});
+
 test('includes task title in system message for failed tasks', function (): void {
     $conversation = Conversation::factory()->create();
     $task = Task::factory()->create([

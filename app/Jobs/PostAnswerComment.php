@@ -96,7 +96,7 @@ class PostAnswerComment implements ShouldQueue
     private function formatAnswer(array $result): string
     {
         $question = $result['question'] ?? 'Unknown question';
-        $answer = $result['answer'] ?? 'No answer available.';
+        $answer = $result['response'] ?? $result['answer'] ?? 'No answer available.';
 
         return "### 🤖 Answer\n\n"
             ."> {$question}\n\n"

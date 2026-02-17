@@ -139,3 +139,29 @@ it('logs warning and rethrows when GitLab API fails', function (): void {
     expect(fn () => $job->handle(app(GitLabClient::class)))
         ->toThrow(GitLabApiException::class);
 });
+
+// ─── Schema field name: response (executor schema) ──────────
+
+it('uses response field from executor schema when answer field is absent', function (): void {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response([
+            'id' => 9999,
+            'body' => 'mocked',
+        ], 201),
+    ]);
+
+    $task = Task::factory()->running()->create([
+        'mr_iid' => 42,
+        'result' => [
+            'question' => 'How does auth work?',
+            'response' => 'JWT tokens with 24h expiry.',
+        ],
+    ]);
+
+    $job = new PostAnswerComment($task->id);
+    $job->handle(app(GitLabClient::class));
+
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+        return str_contains($request['body'], 'JWT tokens with 24h expiry.');
+    });
+});

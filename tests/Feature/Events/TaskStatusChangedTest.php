@@ -151,6 +151,62 @@ test('includes analysis content in broadcast payload for completed deep_analysis
     expect($payload['result_data']['references'])->toHaveCount(1);
 });
 
+test('includes notes in broadcast payload for completed feature_dev task', function (): void {
+    $task = Task::factory()->create([
+        'type' => 'feature_dev',
+        'status' => 'completed',
+        'mr_iid' => 100,
+        'result' => [
+            'branch' => 'ai/add-auth',
+            'mr_title' => 'Add auth',
+            'files_changed' => [['path' => 'app/Auth.php', 'action' => 'created']],
+            'notes' => 'Added JWT middleware and guard',
+        ],
+    ]);
+
+    $event = new TaskStatusChanged($task);
+    $payload = $event->broadcastWith();
+
+    expect($payload['result_data'])->toHaveKey('notes', 'Added JWT middleware and guard');
+});
+
+test('includes response in broadcast payload for completed issue_discussion task', function (): void {
+    $task = Task::factory()->create([
+        'type' => 'issue_discussion',
+        'status' => 'completed',
+        'result' => [
+            'response' => 'The auth module uses JWT tokens stored in Redis.',
+            'references' => [
+                ['file' => 'app/Auth.php', 'line' => 10, 'context' => 'JWT setup'],
+            ],
+        ],
+    ]);
+
+    $event = new TaskStatusChanged($task);
+    $payload = $event->broadcastWith();
+
+    expect($payload['result_data'])->toHaveKey('response');
+    expect($payload['result_data']['response'])->toContain('JWT tokens');
+    expect($payload['result_data']['references'])->toHaveCount(1);
+});
+
+test('includes gitlab_issue_url in broadcast payload for completed prd_creation task', function (): void {
+    $task = Task::factory()->create([
+        'type' => 'prd_creation',
+        'status' => 'completed',
+        'issue_iid' => 42,
+        'result' => [
+            'title' => 'Add dark mode',
+            'gitlab_issue_url' => 'https://gitlab.com/foo/bar/-/issues/42',
+        ],
+    ]);
+
+    $event = new TaskStatusChanged($task);
+    $payload = $event->broadcastWith();
+
+    expect($payload['result_data'])->toHaveKey('gitlab_issue_url', 'https://gitlab.com/foo/bar/-/issues/42');
+});
+
 test('omits result_data for non-terminal tasks', function (): void {
     $task = Task::factory()->create([
         'type' => 'feature_dev',
