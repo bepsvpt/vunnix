@@ -21,6 +21,7 @@ use App\Services\TaskDispatchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class WebhookController extends Controller
 {
@@ -28,6 +29,7 @@ class WebhookController extends Controller
      * Supported GitLab webhook event types and their internal names.
      *
      * GitLab sends the event type via the X-Gitlab-Event header.
+     *
      * @see https://docs.gitlab.com/ee/user/project/integrations/webhook_events.html
      */
     private const EVENT_MAP = [
@@ -116,7 +118,7 @@ class WebhookController extends Controller
                     'event_uuid' => $eventUuid,
                 ]),
             );
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // Audit logging should never break webhook processing
         }
 
@@ -433,7 +435,7 @@ class WebhookController extends Controller
                 $event->beforeSha,
                 $event->afterSha,
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('WebhookController: failed to dispatch code change correlation', [
                 'project_id' => $project->id,
                 'error' => $e->getMessage(),
@@ -468,8 +470,8 @@ class WebhookController extends Controller
                 'per_page' => 1,
             ]);
 
-            return !empty($mrs);
-        } catch (\Throwable $e) {
+            return ! empty($mrs);
+        } catch (Throwable $e) {
             Log::warning('Failed to check if branch has open MR via GitLab API', [
                 'project_id' => $project->id,
                 'branch' => $branchName,

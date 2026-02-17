@@ -13,9 +13,9 @@ uses(RefreshDatabase::class);
 
 // ─── Setup ─────────────────────────────────────────────────────
 
-beforeEach(function () {
+beforeEach(function (): void {
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -25,14 +25,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -51,7 +51,7 @@ beforeEach(function () {
 
 // ─── Tests ─────────────────────────────────────────────────────
 
-it('returns designer activity stats scoped to user projects', function () {
+it('returns designer activity stats scoped to user projects', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -100,7 +100,7 @@ it('returns designer activity stats scoped to user projects', function () {
     $response->assertJsonPath('data.first_attempt_success_rate', 50);
 });
 
-it('returns correct response structure', function () {
+it('returns correct response structure', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -118,7 +118,7 @@ it('returns correct response structure', function () {
     ]);
 });
 
-it('returns null metrics when no UI adjustments exist', function () {
+it('returns null metrics when no UI adjustments exist', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -132,12 +132,12 @@ it('returns null metrics when no UI adjustments exist', function () {
     $response->assertJsonPath('data.first_attempt_success_rate', null);
 });
 
-it('returns 401 for unauthenticated users', function () {
+it('returns 401 for unauthenticated users', function (): void {
     $response = $this->getJson('/api/v1/dashboard/designer-activity');
     $response->assertUnauthorized();
 });
 
-it('excludes tasks from disabled projects', function () {
+it('excludes tasks from disabled projects', function (): void {
     $user = User::factory()->create();
     $disabledProject = Project::factory()->create(['enabled' => false]);
     $disabledProject->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -158,7 +158,7 @@ it('excludes tasks from disabled projects', function () {
     $response->assertJsonPath('data.mrs_created_from_chat', 0);
 });
 
-it('excludes non-UiAdjustment tasks', function () {
+it('excludes non-UiAdjustment tasks', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -178,7 +178,7 @@ it('excludes non-UiAdjustment tasks', function () {
     $response->assertJsonPath('data.ui_adjustments_dispatched', 0);
 });
 
-it('excludes failed UI adjustment tasks', function () {
+it('excludes failed UI adjustment tasks', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -200,7 +200,7 @@ it('excludes failed UI adjustment tasks', function () {
     $response->assertJsonPath('data.first_attempt_success_rate', null);
 });
 
-it('computes 100% first-attempt success when all tasks have zero retries', function () {
+it('computes 100% first-attempt success when all tasks have zero retries', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -224,7 +224,7 @@ it('computes 100% first-attempt success when all tasks have zero retries', funct
     $response->assertJsonPath('data.first_attempt_success_rate', 100);
 });
 
-it('counts only conversation-originated tasks with mr_iid for MRs from chat', function () {
+it('counts only conversation-originated tasks with mr_iid for MRs from chat', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);

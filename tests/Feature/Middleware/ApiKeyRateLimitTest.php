@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Use /api/ prefix to avoid SPA catch-all route in web.php
     // Register a test route with api.key + throttle middleware
     Route::middleware(['api.key', 'throttle:api_key'])->get('/api/test-rate-limit', function () {
@@ -15,22 +15,22 @@ beforeEach(function () {
     });
 });
 
-it('allows requests within rate limit', function () {
+it('allows requests within rate limit', function (): void {
     $service = app(ApiKeyService::class);
     $user = User::factory()->create();
     $result = $service->generate($user, 'Test Key');
 
     $this->getJson('/api/test-rate-limit', [
-        'Authorization' => 'Bearer ' . $result['plaintext'],
+        'Authorization' => 'Bearer '.$result['plaintext'],
     ])->assertOk();
 });
 
-it('returns 429 when rate limit exceeded', function () {
+it('returns 429 when rate limit exceeded', function (): void {
     $service = app(ApiKeyService::class);
     $user = User::factory()->create();
     $result = $service->generate($user, 'Test Key');
 
-    $headers = ['Authorization' => 'Bearer ' . $result['plaintext']];
+    $headers = ['Authorization' => 'Bearer '.$result['plaintext']];
 
     // Exhaust the rate limit (default 60/min)
     for ($i = 0; $i < 60; $i++) {
@@ -41,13 +41,13 @@ it('returns 429 when rate limit exceeded', function () {
     $this->getJson('/api/test-rate-limit', $headers)->assertStatus(429);
 });
 
-it('includes rate limit headers in response', function () {
+it('includes rate limit headers in response', function (): void {
     $service = app(ApiKeyService::class);
     $user = User::factory()->create();
     $result = $service->generate($user, 'Test Key');
 
     $response = $this->getJson('/api/test-rate-limit', [
-        'Authorization' => 'Bearer ' . $result['plaintext'],
+        'Authorization' => 'Bearer '.$result['plaintext'],
     ]);
 
     $response->assertOk();
@@ -55,7 +55,7 @@ it('includes rate limit headers in response', function () {
     $response->assertHeader('X-RateLimit-Remaining');
 });
 
-it('rate limits per key not per user', function () {
+it('rate limits per key not per user', function (): void {
     $service = app(ApiKeyService::class);
     $user = User::factory()->create();
     $key1 = $service->generate($user, 'Key 1');
@@ -64,17 +64,17 @@ it('rate limits per key not per user', function () {
     // Exhaust key1's limit
     for ($i = 0; $i < 60; $i++) {
         $this->getJson('/api/test-rate-limit', [
-            'Authorization' => 'Bearer ' . $key1['plaintext'],
+            'Authorization' => 'Bearer '.$key1['plaintext'],
         ]);
     }
 
     // key1 is throttled
     $this->getJson('/api/test-rate-limit', [
-        'Authorization' => 'Bearer ' . $key1['plaintext'],
+        'Authorization' => 'Bearer '.$key1['plaintext'],
     ])->assertStatus(429);
 
     // key2 should still work (separate limit)
     $this->getJson('/api/test-rate-limit', [
-        'Authorization' => 'Bearer ' . $key2['plaintext'],
+        'Authorization' => 'Bearer '.$key2['plaintext'],
     ])->assertOk();
 });

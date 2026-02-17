@@ -7,6 +7,7 @@ use App\Services\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -56,7 +57,7 @@ class AuthController extends Controller
                 ipAddress: request()->ip(),
                 userAgent: request()->userAgent(),
             );
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // Audit logging should never break auth flow
         }
 
@@ -81,7 +82,7 @@ class AuthController extends Controller
                     ipAddress: $request->ip(),
                     userAgent: $request->userAgent(),
                 );
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 // Audit logging should never break auth flow
             }
         }

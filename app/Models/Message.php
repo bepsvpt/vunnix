@@ -36,9 +36,9 @@ class Message extends Model
 {
     use HasFactory;
 
-    protected $table = 'agent_conversation_messages';
-
     public $incrementing = false;
+
+    protected $table = 'agent_conversation_messages';
 
     protected $keyType = 'string';
 
@@ -57,7 +57,7 @@ class Message extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (Message $message) {
+        static::creating(function (Message $message): void {
             if (! $message->id) {
                 $message->id = (string) Str::uuid7();
             }

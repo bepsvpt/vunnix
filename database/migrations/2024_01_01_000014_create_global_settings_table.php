@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('global_settings', function (Blueprint $table) {
+        Schema::create('global_settings', function (Blueprint $table): void {
             $table->id();
 
             $table->string('key')->unique(); // Configuration key (e.g., 'ai_model', 'default_language', 'timeout_minutes')

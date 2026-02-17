@@ -36,6 +36,12 @@ class ProjectConfig extends Model
         'settings',
     ];
 
+    /** @return BelongsTo<Project, $this> */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
     /**
      * @return array{
      *   webhook_secret: 'encrypted',
@@ -52,11 +58,5 @@ class ProjectConfig extends Model
             'ci_trigger_token' => 'encrypted',
             'settings' => 'array',
         ];
-    }
-
-    /** @return BelongsTo<Project, $this> */
-    public function project(): BelongsTo
-    {
-        return $this->belongsTo(Project::class);
     }
 }

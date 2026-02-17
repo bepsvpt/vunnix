@@ -59,6 +59,18 @@ class FindingAcceptance extends Model
         'emoji_sentiment',
     ];
 
+    /** @return BelongsTo<Task, $this> */
+    public function task(): BelongsTo
+    {
+        return $this->belongsTo(Task::class);
+    }
+
+    /** @return BelongsTo<Project, $this> */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
     /**
      * @return array{
      *   line: 'integer',
@@ -79,17 +91,5 @@ class FindingAcceptance extends Model
             'bulk_resolved' => 'boolean',
             'resolved_at' => 'datetime',
         ];
-    }
-
-    /** @return BelongsTo<Task, $this> */
-    public function task(): BelongsTo
-    {
-        return $this->belongsTo(Task::class);
-    }
-
-    /** @return BelongsTo<Project, $this> */
-    public function project(): BelongsTo
-    {
-        return $this->belongsTo(Project::class);
     }
 }

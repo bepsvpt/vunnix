@@ -91,7 +91,7 @@ function fakeDiscussionsWithNoteIds(): array
 
 // ─── Emoji reaction collection ──────────────────────────────────
 
-it('stores emoji reactions alongside finding acceptance records', function () {
+it('stores emoji reactions alongside finding acceptance records', function (): void {
     Http::fake([
         // Emoji patterns must come BEFORE the discussions pattern — both contain
         // "discussions" in the path, and Http::fake matches the first pattern.
@@ -126,7 +126,7 @@ it('stores emoji reactions alongside finding acceptance records', function () {
     expect($dismissed->category)->toBe('bug');
 });
 
-it('stores neutral sentiment when no emoji reactions exist', function () {
+it('stores neutral sentiment when no emoji reactions exist', function (): void {
     Http::fake([
         '*/award_emoji*' => Http::response([], 200),
         '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::response(fakeDiscussionsWithNoteIds(), 200),
@@ -146,7 +146,7 @@ it('stores neutral sentiment when no emoji reactions exist', function () {
     $records->each(fn ($r) => expect($r->emoji_sentiment)->toBe('neutral'));
 });
 
-it('continues processing even when emoji API call fails for one note', function () {
+it('continues processing even when emoji API call fails for one note', function (): void {
     Http::fake([
         '*/notes/100/award_emoji*' => Http::response('Server Error', 500),
         '*/notes/200/award_emoji*' => Http::response([

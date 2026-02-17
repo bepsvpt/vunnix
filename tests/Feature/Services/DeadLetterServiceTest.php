@@ -14,7 +14,7 @@ uses(RefreshDatabase::class);
 
 // ─── Retry creates new task and marks DLQ entry ──────────────────
 
-it('retries a DLQ entry by creating a new queued task', function () {
+it('retries a DLQ entry by creating a new queued task', function (): void {
     Queue::fake();
 
     $originalTask = Task::factory()->create([
@@ -41,7 +41,7 @@ it('retries a DLQ entry by creating a new queued task', function () {
 
     $admin = User::factory()->create();
 
-    $service = new DeadLetterService();
+    $service = new DeadLetterService;
     $newTask = $service->retry($entry, $admin);
 
     // DLQ entry should be marked as retried
@@ -66,41 +66,41 @@ it('retries a DLQ entry by creating a new queued task', function () {
 
 // ─── Retry fails for already retried entry ───────────────────────
 
-it('throws when retrying an already retried DLQ entry', function () {
+it('throws when retrying an already retried DLQ entry', function (): void {
     $entry = DeadLetterEntry::factory()->create([
         'retried' => true,
         'retried_at' => now(),
     ]);
 
     $admin = User::factory()->create();
-    $service = new DeadLetterService();
+    $service = new DeadLetterService;
 
     $service->retry($entry, $admin);
 })->throws(\LogicException::class, 'already been retried');
 
 // ─── Retry fails for dismissed entry ─────────────────────────────
 
-it('throws when retrying a dismissed DLQ entry', function () {
+it('throws when retrying a dismissed DLQ entry', function (): void {
     $entry = DeadLetterEntry::factory()->create([
         'dismissed' => true,
         'dismissed_at' => now(),
     ]);
 
     $admin = User::factory()->create();
-    $service = new DeadLetterService();
+    $service = new DeadLetterService;
 
     $service->retry($entry, $admin);
 })->throws(\LogicException::class, 'dismissed');
 
 // ─── Dismiss marks entry as acknowledged ─────────────────────────
 
-it('dismisses a DLQ entry', function () {
+it('dismisses a DLQ entry', function (): void {
     $entry = DeadLetterEntry::factory()->create([
         'dismissed' => false,
     ]);
 
     $admin = User::factory()->create();
-    $service = new DeadLetterService();
+    $service = new DeadLetterService;
     $service->dismiss($entry, $admin);
 
     $entry->refresh();
@@ -111,28 +111,28 @@ it('dismisses a DLQ entry', function () {
 
 // ─── Dismiss fails for already dismissed entry ───────────────────
 
-it('throws when dismissing an already dismissed DLQ entry', function () {
+it('throws when dismissing an already dismissed DLQ entry', function (): void {
     $entry = DeadLetterEntry::factory()->create([
         'dismissed' => true,
         'dismissed_at' => now(),
     ]);
 
     $admin = User::factory()->create();
-    $service = new DeadLetterService();
+    $service = new DeadLetterService;
 
     $service->dismiss($entry, $admin);
 })->throws(\LogicException::class, 'already been dismissed');
 
 // ─── Dismiss fails for retried entry ─────────────────────────────
 
-it('throws when dismissing a retried DLQ entry', function () {
+it('throws when dismissing a retried DLQ entry', function (): void {
     $entry = DeadLetterEntry::factory()->create([
         'retried' => true,
         'retried_at' => now(),
     ]);
 
     $admin = User::factory()->create();
-    $service = new DeadLetterService();
+    $service = new DeadLetterService;
 
     $service->dismiss($entry, $admin);
 })->throws(\LogicException::class, 'retried');

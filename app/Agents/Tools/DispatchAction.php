@@ -14,6 +14,7 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
+use Throwable;
 
 /**
  * AI SDK Tool: Dispatch an action from conversation.
@@ -110,7 +111,7 @@ class DispatchAction implements Tool
         // 2. Validate action type
         if (! isset(self::ACTION_TYPE_MAP[$actionType])) {
             return "Invalid action type: \"{$actionType}\". Supported types: "
-                . implode(', ', array_keys(self::ACTION_TYPE_MAP)) . '.';
+                .implode(', ', array_keys(self::ACTION_TYPE_MAP)).'.';
         }
 
         // 3. Resolve the internal project and user
@@ -127,8 +128,8 @@ class DispatchAction implements Tool
 
         // 4. Check chat.dispatch_task permission
         if (! $user->hasPermission('chat.dispatch_task', $project)) {
-            return "You do not have permission to dispatch actions on this project. "
-                . "The 'chat.dispatch_task' permission is required. Contact your project admin to request access.";
+            return 'You do not have permission to dispatch actions on this project. '
+                ."The 'chat.dispatch_task' permission is required. Contact your project admin to request access.";
         }
 
         // 5. Create the task
@@ -170,14 +171,14 @@ class DispatchAction implements Tool
         // 6. Dispatch the task
         try {
             $this->taskDispatcher->dispatch($task);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('DispatchAction: dispatch failed', [
                 'task_id' => $task->id,
                 'error' => $e->getMessage(),
             ]);
 
             return "Task #{$task->id} was created but dispatch failed: {$e->getMessage()}. "
-                . 'The task will be retried automatically.';
+                .'The task will be retried automatically.';
         }
 
         return $this->buildSuccessMessage($task, $actionType, $title);

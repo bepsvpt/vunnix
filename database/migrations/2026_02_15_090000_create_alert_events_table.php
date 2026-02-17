@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('alert_events', function (Blueprint $table) {
+        Schema::create('alert_events', function (Blueprint $table): void {
             $table->id();
             $table->string('alert_type');          // e.g. api_outage, high_failure_rate, queue_depth, infrastructure, auth_failure, disk_usage
             $table->string('status');               // active, resolved

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('overreliance_alerts', function (Blueprint $table) {
+        Schema::create('overreliance_alerts', function (Blueprint $table): void {
             $table->id();
             $table->string('rule');          // high_acceptance_rate, critical_acceptance_rate, bulk_resolution, zero_reactions
             $table->string('severity');      // warning, info

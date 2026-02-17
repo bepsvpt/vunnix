@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Log;
 
 uses(Tests\TestCase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Log::spy();
 });
 
@@ -58,11 +58,11 @@ function runMiddleware(FakeJob $job, \Closure $next): void
 
 // ─── Transient errors → retry with backoff ─────────────────────────
 
-it('retries transient 429 on first attempt with 30s delay', function () {
+it('retries transient 429 on first attempt with 30s delay', function (): void {
     $job = new FakeJob;
     $job->attemptCount = 1;
 
-    runMiddleware($job, function () {
+    runMiddleware($job, function (): void {
         throw makeGitLabException(429);
     });
 
@@ -70,11 +70,11 @@ it('retries transient 429 on first attempt with 30s delay', function () {
     expect($job->failedWith)->toBeNull();
 });
 
-it('retries transient 500 on second attempt with 120s delay', function () {
+it('retries transient 500 on second attempt with 120s delay', function (): void {
     $job = new FakeJob;
     $job->attemptCount = 2;
 
-    runMiddleware($job, function () {
+    runMiddleware($job, function (): void {
         throw makeGitLabException(500);
     });
 
@@ -82,11 +82,11 @@ it('retries transient 500 on second attempt with 120s delay', function () {
     expect($job->failedWith)->toBeNull();
 });
 
-it('retries transient 503 on third attempt with 480s delay', function () {
+it('retries transient 503 on third attempt with 480s delay', function (): void {
     $job = new FakeJob;
     $job->attemptCount = 3;
 
-    runMiddleware($job, function () {
+    runMiddleware($job, function (): void {
         throw makeGitLabException(503);
     });
 
@@ -94,11 +94,11 @@ it('retries transient 503 on third attempt with 480s delay', function () {
     expect($job->failedWith)->toBeNull();
 });
 
-it('retries transient 529 (overloaded)', function () {
+it('retries transient 529 (overloaded)', function (): void {
     $job = new FakeJob;
     $job->attemptCount = 1;
 
-    runMiddleware($job, function () {
+    runMiddleware($job, function (): void {
         throw makeGitLabException(529);
     });
 
@@ -106,11 +106,11 @@ it('retries transient 529 (overloaded)', function () {
     expect($job->failedWith)->toBeNull();
 });
 
-it('fails after max retries on transient error', function () {
+it('fails after max retries on transient error', function (): void {
     $job = new FakeJob;
     $job->attemptCount = 4; // Beyond max retries (3)
 
-    runMiddleware($job, function () {
+    runMiddleware($job, function (): void {
         throw makeGitLabException(503);
     });
 
@@ -120,11 +120,11 @@ it('fails after max retries on transient error', function () {
 
 // ─── Invalid request (400) → no retry ──────────────────────────────
 
-it('fails immediately on 400 without retry', function () {
+it('fails immediately on 400 without retry', function (): void {
     $job = new FakeJob;
     $job->attemptCount = 1;
 
-    runMiddleware($job, function () {
+    runMiddleware($job, function (): void {
         throw makeGitLabException(400);
     });
 
@@ -135,11 +135,11 @@ it('fails immediately on 400 without retry', function () {
 
 // ─── Authentication error (401) → no retry + admin alert ───────────
 
-it('fails immediately on 401 without retry', function () {
+it('fails immediately on 401 without retry', function (): void {
     $job = new FakeJob;
     $job->attemptCount = 1;
 
-    runMiddleware($job, function () {
+    runMiddleware($job, function (): void {
         throw makeGitLabException(401);
     });
 
@@ -148,7 +148,7 @@ it('fails immediately on 401 without retry', function () {
     expect($job->releasedWithDelay)->toBeNull();
 });
 
-it('logs critical on 401 for admin alert', function () {
+it('logs critical on 401 for admin alert', function (): void {
     Log::shouldReceive('warning')->once()->withAnyArgs();
     Log::shouldReceive('critical')->once()
         ->withArgs(function (string $message) {
@@ -158,7 +158,7 @@ it('logs critical on 401 for admin alert', function () {
     $job = new FakeJob;
     $job->attemptCount = 1;
 
-    runMiddleware($job, function () {
+    runMiddleware($job, function (): void {
         throw makeGitLabException(401);
     });
 
@@ -168,11 +168,11 @@ it('logs critical on 401 for admin alert', function () {
 
 // ─── Other errors → no retry ───────────────────────────────────────
 
-it('fails immediately on 403 without retry', function () {
+it('fails immediately on 403 without retry', function (): void {
     $job = new FakeJob;
     $job->attemptCount = 1;
 
-    runMiddleware($job, function () {
+    runMiddleware($job, function (): void {
         throw makeGitLabException(403);
     });
 
@@ -180,11 +180,11 @@ it('fails immediately on 403 without retry', function () {
     expect($job->releasedWithDelay)->toBeNull();
 });
 
-it('fails immediately on 404 without retry', function () {
+it('fails immediately on 404 without retry', function (): void {
     $job = new FakeJob;
     $job->attemptCount = 1;
 
-    runMiddleware($job, function () {
+    runMiddleware($job, function (): void {
         throw makeGitLabException(404);
     });
 
@@ -194,11 +194,11 @@ it('fails immediately on 404 without retry', function () {
 
 // ─── Success → no middleware action ────────────────────────────────
 
-it('passes through when job succeeds', function () {
+it('passes through when job succeeds', function (): void {
     $job = new FakeJob;
     $executed = false;
 
-    runMiddleware($job, function () use (&$executed) {
+    runMiddleware($job, function () use (&$executed): void {
         $executed = true;
     });
 
@@ -209,24 +209,24 @@ it('passes through when job succeeds', function () {
 
 // ─── Non-GitLabApiException → not caught ───────────────────────────
 
-it('does not catch non-GitLabApiException', function () {
+it('does not catch non-GitLabApiException', function (): void {
     $job = new FakeJob;
 
-    expect(fn () => runMiddleware($job, function () {
+    expect(fn () => runMiddleware($job, function (): void {
         throw new \RuntimeException('Some other error');
     }))->toThrow(\RuntimeException::class, 'Some other error');
 });
 
 // ─── Backoff schedule verification ─────────────────────────────────
 
-it('follows exact backoff schedule: 30s → 120s → 480s', function () {
+it('follows exact backoff schedule: 30s → 120s → 480s', function (): void {
     $delays = [];
 
     foreach ([1, 2, 3] as $attempt) {
         $job = new FakeJob;
         $job->attemptCount = $attempt;
 
-        runMiddleware($job, function () {
+        runMiddleware($job, function (): void {
             throw makeGitLabException(503);
         });
 
@@ -238,7 +238,7 @@ it('follows exact backoff schedule: 30s → 120s → 480s', function () {
 
 // ─── All jobs have middleware configured ────────────────────────────
 
-it('is configured on ProcessTask', function () {
+it('is configured on ProcessTask', function (): void {
     $job = new \App\Jobs\ProcessTask(1);
     $middleware = $job->middleware();
 
@@ -246,7 +246,7 @@ it('is configured on ProcessTask', function () {
     expect($middleware[0])->toBeInstanceOf(RetryWithBackoff::class);
 });
 
-it('is configured on ProcessTaskResult', function () {
+it('is configured on ProcessTaskResult', function (): void {
     $job = new \App\Jobs\ProcessTaskResult(1);
     $middleware = $job->middleware();
 
@@ -254,7 +254,7 @@ it('is configured on ProcessTaskResult', function () {
     expect($middleware[0])->toBeInstanceOf(RetryWithBackoff::class);
 });
 
-it('is configured on PostSummaryComment', function () {
+it('is configured on PostSummaryComment', function (): void {
     $job = new \App\Jobs\PostSummaryComment(1);
     $middleware = $job->middleware();
 
@@ -262,7 +262,7 @@ it('is configured on PostSummaryComment', function () {
     expect($middleware[0])->toBeInstanceOf(RetryWithBackoff::class);
 });
 
-it('is configured on PostInlineThreads', function () {
+it('is configured on PostInlineThreads', function (): void {
     $job = new \App\Jobs\PostInlineThreads(1);
     $middleware = $job->middleware();
 
@@ -270,7 +270,7 @@ it('is configured on PostInlineThreads', function () {
     expect($middleware[0])->toBeInstanceOf(RetryWithBackoff::class);
 });
 
-it('is configured on PostLabelsAndStatus', function () {
+it('is configured on PostLabelsAndStatus', function (): void {
     $job = new \App\Jobs\PostLabelsAndStatus(1);
     $middleware = $job->middleware();
 
@@ -278,7 +278,7 @@ it('is configured on PostLabelsAndStatus', function () {
     expect($middleware[0])->toBeInstanceOf(RetryWithBackoff::class);
 });
 
-it('is configured on PostPlaceholderComment', function () {
+it('is configured on PostPlaceholderComment', function (): void {
     $job = new \App\Jobs\PostPlaceholderComment(1);
     $middleware = $job->middleware();
 
@@ -286,7 +286,7 @@ it('is configured on PostPlaceholderComment', function () {
     expect($middleware[0])->toBeInstanceOf(RetryWithBackoff::class);
 });
 
-it('is configured on PostHelpResponse', function () {
+it('is configured on PostHelpResponse', function (): void {
     $job = new \App\Jobs\PostHelpResponse(1, 1, 'unknown');
     $middleware = $job->middleware();
 
@@ -296,7 +296,7 @@ it('is configured on PostHelpResponse', function () {
 
 // ─── Jobs have correct tries ───────────────────────────────────────
 
-it('sets tries to 4 on all jobs', function () {
+it('sets tries to 4 on all jobs', function (): void {
     $jobs = [
         new \App\Jobs\ProcessTask(1),
         new \App\Jobs\ProcessTaskResult(1),
@@ -308,6 +308,6 @@ it('sets tries to 4 on all jobs', function () {
     ];
 
     foreach ($jobs as $job) {
-        expect($job->tries)->toBe(4, $job::class . ' should have tries = 4');
+        expect($job->tries)->toBe(4, $job::class.' should have tries = 4');
     }
 });

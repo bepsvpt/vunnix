@@ -7,6 +7,7 @@ use App\Events\TaskStatusChanged;
 use App\Services\AlertEventService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class SendTaskCompletionNotification
 {
@@ -35,7 +36,7 @@ class SendTaskCompletionNotification
 
             // Mark as notified — cache for 24 hours (beyond any retry window)
             Cache::put($cacheKey, true, now()->addHours(24));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('SendTaskCompletionNotification: failed to send', [
                 'task_id' => $task->id,
                 'error' => $e->getMessage(),

@@ -69,8 +69,8 @@ class BotPatRotationService
             'status' => 'active',
             'severity' => 'high',
             'message' => "Bot PAT rotation needed — PAT is {$ageMonths} months old. "
-                . 'GitLab PATs expire after 12 months. Rotate now to prevent service disruption. '
-                . 'Go to Admin → Settings to update the PAT and creation date.',
+                .'GitLab PATs expire after 12 months. Rotate now to prevent service disruption. '
+                .'Go to Admin → Settings to update the PAT and creation date.',
             'context' => [
                 'pat_created_at' => $patCreatedAt->toIso8601String(),
                 'age_days' => $ageInDays,

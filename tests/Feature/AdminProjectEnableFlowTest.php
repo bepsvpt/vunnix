@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Ensure agent_conversations table exists (SQLite test env — AI SDK migration sorts after ours)
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -24,14 +24,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -69,7 +69,7 @@ function setupAdmin(Project $project): User
     return $user;
 }
 
-it('creates webhook with correct URL, secret, and events on enable', function () {
+it('creates webhook with correct URL, secret, and events on enable', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => false,
@@ -104,6 +104,7 @@ it('creates webhook with correct URL, secret, and events on enable', function ()
         }
 
         $data = $request->data();
+
         return str_contains($data['url'] ?? '', '/api/webhook')
             && ! empty($data['token'])
             && ($data['merge_requests_events'] ?? false) === true
@@ -120,7 +121,7 @@ it('creates webhook with correct URL, secret, and events on enable', function ()
     expect($project->projectConfig->webhook_secret)->not->toBeNull();
 });
 
-it('creates all 6 ai:: labels with correct names and colors', function () {
+it('creates all 6 ai:: labels with correct names and colors', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => false,
@@ -154,8 +155,7 @@ it('creates all 6 ai:: labels with correct names and colors', function () {
     ];
 
     $labelRequests = collect(Http::recorded())
-        ->filter(fn ($pair) =>
-            str_contains($pair[0]->url(), '/labels') &&
+        ->filter(fn ($pair) => str_contains($pair[0]->url(), '/labels') &&
             $pair[0]->method() === 'POST'
         )
         ->map(fn ($pair) => $pair[0]->data()['name']);
@@ -167,7 +167,7 @@ it('creates all 6 ai:: labels with correct names and colors', function () {
     expect($labelRequests)->toHaveCount(6);
 });
 
-it('handles already-existing labels without error', function () {
+it('handles already-existing labels without error', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => false,
@@ -199,7 +199,7 @@ it('handles already-existing labels without error', function () {
         ->assertJsonPath('success', true);
 });
 
-it('removes webhook and preserves data on disable', function () {
+it('removes webhook and preserves data on disable', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => true,
@@ -216,8 +216,7 @@ it('removes webhook and preserves data on disable', function () {
         ->postJson("/api/v1/admin/projects/{$project->id}/disable")
         ->assertOk();
 
-    Http::assertSent(fn ($req) =>
-        str_contains($req->url(), '/hooks/555') && $req->method() === 'DELETE'
+    Http::assertSent(fn ($req) => str_contains($req->url(), '/hooks/555') && $req->method() === 'DELETE'
     );
 
     $project->refresh();

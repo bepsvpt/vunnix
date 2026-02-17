@@ -8,28 +8,6 @@ use Illuminate\Database\Seeder;
 class RbacSeeder extends Seeder
 {
     /**
-     * Default permissions grouped by area.
-     * These are global — they exist once and are assigned to roles per-project.
-     */
-    private const PERMISSIONS = [
-        'chat' => [
-            ['name' => 'chat.access', 'description' => 'Can use the conversational chat UI'],
-            ['name' => 'chat.dispatch_task', 'description' => 'Can trigger AI actions from chat'],
-        ],
-        'review' => [
-            ['name' => 'review.view', 'description' => 'Can view AI review results on the dashboard'],
-            ['name' => 'review.trigger', 'description' => 'Can trigger on-demand review via @ai in GitLab'],
-        ],
-        'config' => [
-            ['name' => 'config.manage', 'description' => 'Can edit project-level Vunnix configuration'],
-        ],
-        'admin' => [
-            ['name' => 'admin.roles', 'description' => 'Can create/edit roles and assign permissions'],
-            ['name' => 'admin.global_config', 'description' => 'Can edit global Vunnix settings'],
-        ],
-    ];
-
-    /**
      * Default role templates.
      *
      * These are NOT created in the seeder (roles are per-project), but define
@@ -72,20 +50,27 @@ class RbacSeeder extends Seeder
         ],
     ];
 
-    public function run(): void
-    {
-        foreach (self::PERMISSIONS as $group => $permissions) {
-            foreach ($permissions as $permData) {
-                Permission::firstOrCreate(
-                    ['name' => $permData['name']],
-                    [
-                        'description' => $permData['description'],
-                        'group' => $group,
-                    ]
-                );
-            }
-        }
-    }
+    /**
+     * Default permissions grouped by area.
+     * These are global — they exist once and are assigned to roles per-project.
+     */
+    private const PERMISSIONS = [
+        'chat' => [
+            ['name' => 'chat.access', 'description' => 'Can use the conversational chat UI'],
+            ['name' => 'chat.dispatch_task', 'description' => 'Can trigger AI actions from chat'],
+        ],
+        'review' => [
+            ['name' => 'review.view', 'description' => 'Can view AI review results on the dashboard'],
+            ['name' => 'review.trigger', 'description' => 'Can trigger on-demand review via @ai in GitLab'],
+        ],
+        'config' => [
+            ['name' => 'config.manage', 'description' => 'Can edit project-level Vunnix configuration'],
+        ],
+        'admin' => [
+            ['name' => 'admin.roles', 'description' => 'Can create/edit roles and assign permissions'],
+            ['name' => 'admin.global_config', 'description' => 'Can edit global Vunnix settings'],
+        ],
+    ];
 
     /**
      * Create default roles for a project using the role templates.
@@ -104,6 +89,21 @@ class RbacSeeder extends Seeder
 
             $permissionIds = Permission::whereIn('name', $template['permissions'])->pluck('id');
             $role->permissions()->syncWithoutDetaching($permissionIds);
+        }
+    }
+
+    public function run(): void
+    {
+        foreach (self::PERMISSIONS as $group => $permissions) {
+            foreach ($permissions as $permData) {
+                Permission::firstOrCreate(
+                    ['name' => $permData['name']],
+                    [
+                        'description' => $permData['description'],
+                        'group' => $group,
+                    ]
+                );
+            }
         }
     }
 }

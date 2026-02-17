@@ -20,7 +20,7 @@ class DeadLetterEntryFactory extends Factory
                 'max_retries_exceeded', 'expired', 'invalid_request',
                 'context_exceeded', 'scheduling_timeout',
             ]),
-            'error_details' => 'Test error: ' . $this->faker->sentence(),
+            'error_details' => 'Test error: '.$this->faker->sentence(),
             'attempts' => [],
             'dismissed' => false,
             'retried' => false,

@@ -2,7 +2,7 @@
 
 use App\Models\GlobalSetting;
 
-it('returns default PRD template via static method', function () {
+it('returns default PRD template via static method', function (): void {
     $template = GlobalSetting::defaultPrdTemplate();
 
     expect($template)->toContain('## Problem')

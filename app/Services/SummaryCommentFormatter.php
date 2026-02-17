@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use DateTimeInterface;
+
 /**
  * Formats a validated CodeReviewSchema result as a markdown summary comment.
  *
@@ -28,9 +30,9 @@ class SummaryCommentFormatter
      * Format a validated code review result as a markdown summary comment.
      *
      * @param  array  $result  A validated CodeReviewSchema array.
-     * @param  \DateTimeInterface|null  $updatedAt  If set, adds an "Updated" timestamp (T40 incremental review).
+     * @param  DateTimeInterface|null  $updatedAt  If set, adds an "Updated" timestamp (T40 incremental review).
      */
-    public function format(array $result, ?\DateTimeInterface $updatedAt = null): string
+    public function format(array $result, ?DateTimeInterface $updatedAt = null): string
     {
         $summary = $result['summary'];
         $findings = $result['findings'];
@@ -60,7 +62,7 @@ class SummaryCommentFormatter
         $lines[] = '| File | Change |';
         $lines[] = '|------|--------|';
         foreach ($summary['walkthrough'] as $entry) {
-            $file = '`' . $entry['file'] . '`';
+            $file = '`'.$entry['file'].'`';
             $lines[] = "| {$file} | {$entry['change_summary']} |";
         }
         $lines[] = '';
@@ -76,7 +78,7 @@ class SummaryCommentFormatter
         foreach ($findings as $finding) {
             $severity = self::SEVERITY_BADGES[$finding['severity']] ?? $finding['severity'];
             $category = ucfirst($finding['category']);
-            $file = '`' . $finding['file'] . ':' . $finding['line'] . '`';
+            $file = '`'.$finding['file'].':'.$finding['line'].'`';
             $lines[] = "| {$finding['id']} | {$severity} | {$category} | {$file} | {$finding['title']} |";
         }
         $lines[] = '';

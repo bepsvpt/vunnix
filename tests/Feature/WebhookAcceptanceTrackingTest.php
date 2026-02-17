@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Queue::fake();
 });
 
@@ -30,7 +30,7 @@ function acceptanceWebhookProject(string $secret = 'test-secret'): array
 
 // ─── MR merge → acceptance tracking ─────────────────────────────
 
-it('dispatches ProcessAcceptanceTracking job on MR merge webhook', function () {
+it('dispatches ProcessAcceptanceTracking job on MR merge webhook', function (): void {
     [$project, $token] = acceptanceWebhookProject();
 
     $payload = [
@@ -61,7 +61,7 @@ it('dispatches ProcessAcceptanceTracking job on MR merge webhook', function () {
     });
 });
 
-it('does not dispatch acceptance tracking for non-merge MR actions', function () {
+it('does not dispatch acceptance tracking for non-merge MR actions', function (): void {
     [$project, $token] = acceptanceWebhookProject();
 
     $payload = [
@@ -89,7 +89,7 @@ it('does not dispatch acceptance tracking for non-merge MR actions', function ()
 
 // ─── Push → code change correlation ─────────────────────────────
 
-it('dispatches ProcessCodeChangeCorrelation on push webhook', function () {
+it('dispatches ProcessCodeChangeCorrelation on push webhook', function (): void {
     Queue::fake([ProcessCodeChangeCorrelation::class]);
 
     Http::fake([

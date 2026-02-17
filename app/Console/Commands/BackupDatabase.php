@@ -50,7 +50,7 @@ class BackupDatabase extends Command
         }
 
         $size = file_exists($filepath) ? filesize($filepath) : 0;
-        $this->info("Backup completed: {$filename} (" . number_format($size / 1024) . " KB)");
+        $this->info("Backup completed: {$filename} (".number_format($size / 1024).' KB)');
 
         $this->pruneOldBackups($backupDir, (int) $this->option('retention'));
 

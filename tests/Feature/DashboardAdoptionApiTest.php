@@ -14,9 +14,9 @@ uses(RefreshDatabase::class);
 
 // ─── Setup ─────────────────────────────────────────────────────
 
-beforeEach(function () {
+beforeEach(function (): void {
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -26,14 +26,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -63,12 +63,12 @@ function createUserWithProject(Project $project): User
 
 // ─── Authentication ──────────────────────────────────────────
 
-it('returns 401 for unauthenticated users', function () {
+it('returns 401 for unauthenticated users', function (): void {
     $response = $this->getJson('/api/v1/dashboard/adoption');
     $response->assertUnauthorized();
 });
 
-it('allows authenticated users to access adoption data', function () {
+it('allows authenticated users to access adoption data', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createUserWithProject($project);
 
@@ -78,7 +78,7 @@ it('allows authenticated users to access adoption data', function () {
 
 // ─── Response Structure ───────────────────────────────────────
 
-it('returns correct response structure', function () {
+it('returns correct response structure', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createUserWithProject($project);
 
@@ -97,7 +97,7 @@ it('returns correct response structure', function () {
     ]);
 });
 
-it('returns empty data when no tasks exist', function () {
+it('returns empty data when no tasks exist', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createUserWithProject($project);
 
@@ -114,7 +114,7 @@ it('returns empty data when no tasks exist', function () {
 
 // ─── AI-Reviewed MR % ────────────────────────────────────────
 
-it('calculates AI-reviewed MR percentage correctly', function () {
+it('calculates AI-reviewed MR percentage correctly', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createUserWithProject($project);
 
@@ -150,7 +150,7 @@ it('calculates AI-reviewed MR percentage correctly', function () {
     $response->assertJsonPath('data.total_mr_count', 3);
 });
 
-it('counts distinct MRs not duplicate tasks on same MR', function () {
+it('counts distinct MRs not duplicate tasks on same MR', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createUserWithProject($project);
 
@@ -179,7 +179,7 @@ it('counts distinct MRs not duplicate tasks on same MR', function () {
     $response->assertJsonPath('data.total_mr_count', 1);
 });
 
-it('returns null MR percent when no MRs exist', function () {
+it('returns null MR percent when no MRs exist', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createUserWithProject($project);
 
@@ -200,7 +200,7 @@ it('returns null MR percent when no MRs exist', function () {
 
 // ─── Chat Active Users ───────────────────────────────────────
 
-it('counts distinct chat active users', function () {
+it('counts distinct chat active users', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createUserWithProject($project);
     $otherUser = User::factory()->create();
@@ -235,7 +235,7 @@ it('counts distinct chat active users', function () {
 
 // ─── Tasks by Type Over Time ─────────────────────────────────
 
-it('returns tasks grouped by month and type', function () {
+it('returns tasks grouped by month and type', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createUserWithProject($project);
 
@@ -270,7 +270,7 @@ it('returns tasks grouped by month and type', function () {
     expect($tasksOverTime[$currentMonth]['feature_dev'])->toBe(1);
 });
 
-it('excludes non-terminal tasks from type over time', function () {
+it('excludes non-terminal tasks from type over time', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createUserWithProject($project);
 
@@ -299,7 +299,7 @@ it('excludes non-terminal tasks from type over time', function () {
 
 // ─── @ai Mentions per Week ───────────────────────────────────
 
-it('returns webhook-originated tasks grouped by week', function () {
+it('returns webhook-originated tasks grouped by week', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createUserWithProject($project);
 
@@ -338,7 +338,7 @@ it('returns webhook-originated tasks grouped by week', function () {
 
 // ─── Project Scoping ──────────────────────────────────────────
 
-it('excludes tasks from projects the user does not have access to', function () {
+it('excludes tasks from projects the user does not have access to', function (): void {
     $project = Project::factory()->enabled()->create();
     $otherProject = Project::factory()->enabled()->create();
     $user = createUserWithProject($project);
@@ -365,7 +365,7 @@ it('excludes tasks from projects the user does not have access to', function () 
     $response->assertJsonPath('data.total_mr_count', 1);
 });
 
-it('excludes tasks from disabled projects', function () {
+it('excludes tasks from disabled projects', function (): void {
     $project = Project::factory()->enabled()->create();
     $disabledProject = Project::factory()->create(['enabled' => false]);
     $user = createUserWithProject($project);
@@ -392,7 +392,7 @@ it('excludes tasks from disabled projects', function () {
     $response->assertJsonPath('data.total_mr_count', 1);
 });
 
-it('excludes conversations from other projects in chat active users', function () {
+it('excludes conversations from other projects in chat active users', function (): void {
     $project = Project::factory()->enabled()->create();
     $otherProject = Project::factory()->enabled()->create();
     $user = createUserWithProject($project);

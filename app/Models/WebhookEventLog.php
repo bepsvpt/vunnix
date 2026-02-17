@@ -45,6 +45,12 @@ class WebhookEventLog extends Model
         'commit_sha',
     ];
 
+    /** @return BelongsTo<Project, $this> */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
     /**
      * @return array{
      *   mr_iid: 'integer',
@@ -57,11 +63,5 @@ class WebhookEventLog extends Model
             'mr_iid' => 'integer',
             'created_at' => 'datetime',
         ];
-    }
-
-    /** @return BelongsTo<Project, $this> */
-    public function project(): BelongsTo
-    {
-        return $this->belongsTo(Project::class);
     }
 }

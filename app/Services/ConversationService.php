@@ -37,7 +37,7 @@ class ConversationService
 
         if ($search) {
             // Full-text search on title (LIKE fallback for SQLite in tests)
-            $query->whereRaw('LOWER(title) LIKE ?', ['%' . strtolower($search) . '%']);
+            $query->whereRaw('LOWER(title) LIKE ?', ['%'.strtolower($search).'%']);
         }
 
         return $query->orderByDesc('updated_at')->cursorPaginate($perPage);
@@ -60,7 +60,7 @@ class ConversationService
      */
     public function loadWithMessages(Conversation $conversation): Conversation
     {
-        return $conversation->load(['messages' => function ($query) {
+        return $conversation->load(['messages' => function ($query): void {
             $query->orderBy('created_at', 'asc');
         }, 'projects']);
     }

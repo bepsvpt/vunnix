@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\TaskOrigin;
-use App\Enums\TaskStatus;
 use App\Enums\TaskType;
 use App\Jobs\CreateGitLabIssue;
 use App\Models\Project;
@@ -13,7 +12,7 @@ uses(RefreshDatabase::class);
 
 // ─── Core: creates GitLab Issue from task result metadata ────
 
-it('creates a GitLab Issue via bot PAT and stores issue_iid on task', function () {
+it('creates a GitLab Issue via bot PAT and stores issue_iid on task', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 200]);
 
     $task = Task::factory()->running()->create([
@@ -56,7 +55,7 @@ it('creates a GitLab Issue via bot PAT and stores issue_iid on task', function (
     });
 });
 
-it('creates Issue without assignee when assignee_id is not provided', function () {
+it('creates Issue without assignee when assignee_id is not provided', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 300]);
 
     $task = Task::factory()->running()->create([
@@ -95,7 +94,7 @@ it('creates Issue without assignee when assignee_id is not provided', function (
     });
 });
 
-it('creates Issue without labels when labels are not provided', function () {
+it('creates Issue without labels when labels are not provided', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 400]);
 
     $task = Task::factory()->running()->create([
@@ -135,7 +134,7 @@ it('creates Issue without labels when labels are not provided', function () {
 
 // ─── Error handling ─────────────────────────────────────────
 
-it('skips if task not found', function () {
+it('skips if task not found', function (): void {
     Http::fake();
 
     $job = new CreateGitLabIssue(99999);
@@ -144,7 +143,7 @@ it('skips if task not found', function () {
     Http::assertNothingSent();
 });
 
-it('skips if task has no result', function () {
+it('skips if task has no result', function (): void {
     Http::fake();
 
     $task = Task::factory()->running()->create([
@@ -159,7 +158,7 @@ it('skips if task has no result', function () {
     Http::assertNothingSent();
 });
 
-it('rethrows GitLab API errors for retry', function () {
+it('rethrows GitLab API errors for retry', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 500]);
 
     $task = Task::factory()->running()->create([
@@ -187,13 +186,13 @@ it('rethrows GitLab API errors for retry', function () {
 
 // ─── Queue configuration ────────────────────────────────────
 
-it('uses the vunnix-server queue', function () {
+it('uses the vunnix-server queue', function (): void {
     $job = new CreateGitLabIssue(1);
 
     expect($job->queue)->toBe('vunnix-server');
 });
 
-it('has retry with backoff middleware', function () {
+it('has retry with backoff middleware', function (): void {
     $job = new CreateGitLabIssue(1);
 
     $middleware = $job->middleware();
@@ -204,7 +203,7 @@ it('has retry with backoff middleware', function () {
 
 // ─── Result metadata enrichment ─────────────────────────────
 
-it('stores gitlab_issue_url in task result after creation', function () {
+it('stores gitlab_issue_url in task result after creation', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 600]);
 
     $task = Task::factory()->running()->create([

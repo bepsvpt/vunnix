@@ -8,7 +8,7 @@ uses(RefreshDatabase::class);
 
 // ── Basic CRUD ──────────────────────────────────────────────
 
-it('creates a setting with key, value, and type', function () {
+it('creates a setting with key, value, and type', function (): void {
     $setting = GlobalSetting::create([
         'key' => 'ai_model',
         'value' => 'opus',
@@ -22,7 +22,7 @@ it('creates a setting with key, value, and type', function () {
         ->and($setting->description)->toBe('Default AI model for all projects');
 });
 
-it('enforces unique keys', function () {
+it('enforces unique keys', function (): void {
     GlobalSetting::create(['key' => 'ai_model', 'value' => 'opus', 'type' => 'string']);
 
     GlobalSetting::create(['key' => 'ai_model', 'value' => 'sonnet', 'type' => 'string']);
@@ -30,7 +30,7 @@ it('enforces unique keys', function () {
 
 // ── Static get() with caching ───────────────────────────────
 
-it('retrieves a setting value by key', function () {
+it('retrieves a setting value by key', function (): void {
     GlobalSetting::create(['key' => 'ai_model', 'value' => 'opus', 'type' => 'string']);
 
     $value = GlobalSetting::get('ai_model');
@@ -38,19 +38,19 @@ it('retrieves a setting value by key', function () {
     expect($value)->toBe('opus');
 });
 
-it('returns default when key does not exist', function () {
+it('returns default when key does not exist', function (): void {
     $value = GlobalSetting::get('nonexistent', 'fallback');
 
     expect($value)->toBe('fallback');
 });
 
-it('returns null when key does not exist and no default given', function () {
+it('returns null when key does not exist and no default given', function (): void {
     $value = GlobalSetting::get('nonexistent');
 
     expect($value)->toBeNull();
 });
 
-it('caches retrieved values', function () {
+it('caches retrieved values', function (): void {
     GlobalSetting::create(['key' => 'ai_model', 'value' => 'opus', 'type' => 'string']);
 
     // First call — hits DB and caches
@@ -69,7 +69,7 @@ it('caches retrieved values', function () {
 
 // ── Type casting ────────────────────────────────────────────
 
-it('casts string type correctly', function () {
+it('casts string type correctly', function (): void {
     GlobalSetting::create(['key' => 'ai_model', 'value' => 'opus', 'type' => 'string']);
 
     $value = GlobalSetting::get('ai_model');
@@ -77,7 +77,7 @@ it('casts string type correctly', function () {
     expect($value)->toBeString()->toBe('opus');
 });
 
-it('casts boolean type correctly for true', function () {
+it('casts boolean type correctly for true', function (): void {
     GlobalSetting::create(['key' => 'auto_review', 'value' => true, 'type' => 'boolean']);
 
     $value = GlobalSetting::get('auto_review');
@@ -85,7 +85,7 @@ it('casts boolean type correctly for true', function () {
     expect($value)->toBeBool()->toBeTrue();
 });
 
-it('casts boolean type correctly for false', function () {
+it('casts boolean type correctly for false', function (): void {
     GlobalSetting::create(['key' => 'auto_review', 'value' => false, 'type' => 'boolean']);
 
     $value = GlobalSetting::get('auto_review');
@@ -93,7 +93,7 @@ it('casts boolean type correctly for false', function () {
     expect($value)->toBeBool()->toBeFalse();
 });
 
-it('casts integer type correctly', function () {
+it('casts integer type correctly', function (): void {
     GlobalSetting::create(['key' => 'timeout_minutes', 'value' => 10, 'type' => 'integer']);
 
     $value = GlobalSetting::get('timeout_minutes');
@@ -101,7 +101,7 @@ it('casts integer type correctly', function () {
     expect($value)->toBeInt()->toBe(10);
 });
 
-it('casts json type and returns array', function () {
+it('casts json type and returns array', function (): void {
     $jsonValue = ['severity_threshold' => 'major', 'max_retries' => 3];
     GlobalSetting::create(['key' => 'review_config', 'value' => $jsonValue, 'type' => 'json']);
 
@@ -114,20 +114,20 @@ it('casts json type and returns array', function () {
 
 // ── Static set() with cache invalidation ────────────────────
 
-it('sets a new setting value', function () {
+it('sets a new setting value', function (): void {
     GlobalSetting::set('ai_model', 'opus', 'string');
 
     expect(GlobalSetting::get('ai_model'))->toBe('opus');
 });
 
-it('updates an existing setting value', function () {
+it('updates an existing setting value', function (): void {
     GlobalSetting::set('ai_model', 'opus', 'string');
     GlobalSetting::set('ai_model', 'sonnet', 'string');
 
     expect(GlobalSetting::get('ai_model'))->toBe('sonnet');
 });
 
-it('invalidates cache when setting is updated', function () {
+it('invalidates cache when setting is updated', function (): void {
     GlobalSetting::set('ai_model', 'opus', 'string');
 
     // Prime the cache
@@ -141,7 +141,7 @@ it('invalidates cache when setting is updated', function () {
     expect(GlobalSetting::get('ai_model'))->toBe('sonnet');
 });
 
-it('invalidates cache when model is saved directly', function () {
+it('invalidates cache when model is saved directly', function (): void {
     $setting = GlobalSetting::create(['key' => 'ai_model', 'value' => 'opus', 'type' => 'string']);
 
     // Prime the cache
@@ -156,7 +156,7 @@ it('invalidates cache when model is saved directly', function () {
     expect(Cache::has('global_setting:ai_model'))->toBeFalse();
 });
 
-it('invalidates cache when model is deleted', function () {
+it('invalidates cache when model is deleted', function (): void {
     $setting = GlobalSetting::create(['key' => 'ai_model', 'value' => 'opus', 'type' => 'string']);
 
     // Prime the cache
@@ -171,7 +171,7 @@ it('invalidates cache when model is deleted', function () {
 
 // ── Bulk retrieval ──────────────────────────────────────────
 
-it('retrieves all settings as a keyed collection', function () {
+it('retrieves all settings as a keyed collection', function (): void {
     GlobalSetting::set('ai_model', 'opus', 'string');
     GlobalSetting::set('timeout_minutes', 10, 'integer');
     GlobalSetting::set('auto_review', true, 'boolean');
@@ -183,7 +183,7 @@ it('retrieves all settings as a keyed collection', function () {
 
 // ── Bot PAT tracking (D144) ─────────────────────────────────
 
-it('stores and retrieves bot_pat_created_at timestamp', function () {
+it('stores and retrieves bot_pat_created_at timestamp', function (): void {
     $now = now();
     $setting = GlobalSetting::create([
         'key' => 'bot_pat_info',
@@ -197,7 +197,7 @@ it('stores and retrieves bot_pat_created_at timestamp', function () {
 
 // ── Default values ──────────────────────────────────────────
 
-it('provides default settings via a static method', function () {
+it('provides default settings via a static method', function (): void {
     $defaults = GlobalSetting::defaults();
 
     expect($defaults)->toBeArray()
@@ -207,7 +207,7 @@ it('provides default settings via a static method', function () {
         ->and($defaults)->toHaveKey('max_tokens');
 });
 
-it('falls back to default values when key exists in defaults but not in DB', function () {
+it('falls back to default values when key exists in defaults but not in DB', function (): void {
     // Don't create any settings in DB
     $defaults = GlobalSetting::defaults();
     $value = GlobalSetting::get('ai_model');

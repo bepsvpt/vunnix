@@ -2,8 +2,8 @@
 
 use App\Services\TeamChat\SlackFormatter;
 
-it('formats basic notification with text fallback', function () {
-    $formatter = new SlackFormatter();
+it('formats basic notification with text fallback', function (): void {
+    $formatter = new SlackFormatter;
     $payload = $formatter->format('task_completed', '🤖 Review complete on **project-x**');
 
     expect($payload)->toHaveKey('text', '🤖 Review complete on **project-x**');
@@ -12,29 +12,29 @@ it('formats basic notification with text fallback', function () {
     expect($payload['attachments'][0])->toHaveKey('blocks');
 });
 
-it('uses correct color for high urgency', function () {
-    $formatter = new SlackFormatter();
+it('uses correct color for high urgency', function (): void {
+    $formatter = new SlackFormatter;
     $payload = $formatter->format('alert', 'API outage', ['urgency' => 'high']);
 
     expect($payload['attachments'][0]['color'])->toBe('#dc2626');
 });
 
-it('uses correct color for medium urgency', function () {
-    $formatter = new SlackFormatter();
+it('uses correct color for medium urgency', function (): void {
+    $formatter = new SlackFormatter;
     $payload = $formatter->format('alert', 'Queue depth', ['urgency' => 'medium']);
 
     expect($payload['attachments'][0]['color'])->toBe('#f59e0b');
 });
 
-it('uses correct color for info urgency', function () {
-    $formatter = new SlackFormatter();
+it('uses correct color for info urgency', function (): void {
+    $formatter = new SlackFormatter;
     $payload = $formatter->format('task_completed', 'Done', ['urgency' => 'info']);
 
     expect($payload['attachments'][0]['color'])->toBe('#3b82f6');
 });
 
-it('includes action link buttons', function () {
-    $formatter = new SlackFormatter();
+it('includes action link buttons', function (): void {
+    $formatter = new SlackFormatter;
     $payload = $formatter->format('task_completed', 'Review done', [
         'links' => [
             ['label' => 'View MR', 'url' => 'https://gitlab.example.com/mr/1'],

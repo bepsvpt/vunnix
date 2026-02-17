@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Event;
 
 uses(RefreshDatabase::class);
 
-test('task completing dispatches broadcast with status and result summary', function () {
+test('task completing dispatches broadcast with status and result summary', function (): void {
     Event::fake([TaskStatusChanged::class]);
 
     $task = Task::factory()->create([
@@ -32,7 +32,7 @@ test('task completing dispatches broadcast with status and result summary', func
     });
 });
 
-test('task failing dispatches broadcast with failed status', function () {
+test('task failing dispatches broadcast with failed status', function (): void {
     Event::fake([TaskStatusChanged::class]);
 
     $task = Task::factory()->create(['status' => TaskStatus::Running]);
@@ -45,7 +45,7 @@ test('task failing dispatches broadcast with failed status', function () {
     });
 });
 
-test('includes pipeline_status in broadcast payload', function () {
+test('includes pipeline_status in broadcast payload', function (): void {
     Event::fake([TaskStatusChanged::class]);
 
     $task = Task::factory()->create([
@@ -58,12 +58,13 @@ test('includes pipeline_status in broadcast payload', function () {
 
     Event::assertDispatched(TaskStatusChanged::class, function ($event) {
         $payload = $event->broadcastWith();
+
         return array_key_exists('pipeline_status', $payload)
             && $payload['pipeline_status'] === 'pending';
     });
 });
 
-test('includes null pipeline_status when not set', function () {
+test('includes null pipeline_status when not set', function (): void {
     Event::fake([TaskStatusChanged::class]);
 
     $task = Task::factory()->create([
@@ -76,12 +77,13 @@ test('includes null pipeline_status when not set', function () {
 
     Event::assertDispatched(TaskStatusChanged::class, function ($event) {
         $payload = $event->broadcastWith();
+
         return array_key_exists('pipeline_status', $payload)
             && $payload['pipeline_status'] === null;
     });
 });
 
-test('includes title, started_at, and conversation_id in broadcast payload', function () {
+test('includes title, started_at, and conversation_id in broadcast payload', function (): void {
     Event::fake([TaskStatusChanged::class]);
 
     $task = Task::factory()->create([
@@ -94,6 +96,7 @@ test('includes title, started_at, and conversation_id in broadcast payload', fun
 
     Event::assertDispatched(TaskStatusChanged::class, function ($event) {
         $payload = $event->broadcastWith();
+
         return array_key_exists('title', $payload)
             && $payload['title'] === 'Implement payment flow'
             && array_key_exists('started_at', $payload)
@@ -103,7 +106,7 @@ test('includes title, started_at, and conversation_id in broadcast payload', fun
     });
 });
 
-test('activity feed channel receives task status events', function () {
+test('activity feed channel receives task status events', function (): void {
     Event::fake([TaskStatusChanged::class]);
 
     $task = Task::factory()->create(['status' => TaskStatus::Queued]);
@@ -112,6 +115,7 @@ test('activity feed channel receives task status events', function () {
 
     Event::assertDispatched(TaskStatusChanged::class, function ($event) use ($task) {
         $channels = collect($event->broadcastOn())->map->name;
+
         return $channels->contains("private-project.{$task->project_id}.activity");
     });
 });

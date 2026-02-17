@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Illuminate\Http\Client\RequestException;
 use RuntimeException;
+use Throwable;
 
 /**
  * GitLab API error with classification for retry decisions.
@@ -29,7 +30,7 @@ class GitLabApiException extends RuntimeException
         public readonly int $statusCode,
         public readonly string $responseBody,
         public readonly string $context,
-        ?\Throwable $previous = null,
+        ?Throwable $previous = null,
     ) {
         parent::__construct($message, $statusCode, $previous);
     }

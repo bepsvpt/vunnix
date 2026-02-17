@@ -6,14 +6,14 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('belongs to a user', function () {
+it('belongs to a user', function (): void {
     $user = User::factory()->create();
     $apiKey = ApiKey::factory()->create(['user_id' => $user->id]);
 
     expect($apiKey->user->id)->toBe($user->id);
 });
 
-it('can check if revoked', function () {
+it('can check if revoked', function (): void {
     $key = ApiKey::factory()->create(['revoked' => false]);
     expect($key->isRevoked())->toBeFalse();
 
@@ -21,7 +21,7 @@ it('can check if revoked', function () {
     expect($key->isRevoked())->toBeTrue();
 });
 
-it('can check if expired', function () {
+it('can check if expired', function (): void {
     $key = ApiKey::factory()->create(['expires_at' => null]);
     expect($key->isExpired())->toBeFalse();
 
@@ -32,7 +32,7 @@ it('can check if expired', function () {
     expect($key->isExpired())->toBeFalse();
 });
 
-it('can check if active (not revoked and not expired)', function () {
+it('can check if active (not revoked and not expired)', function (): void {
     $key = ApiKey::factory()->create(['revoked' => false, 'expires_at' => null]);
     expect($key->isActive())->toBeTrue();
 
@@ -40,7 +40,7 @@ it('can check if active (not revoked and not expired)', function () {
     expect($key->isActive())->toBeFalse();
 });
 
-it('has an active scope', function () {
+it('has an active scope', function (): void {
     ApiKey::factory()->create(['revoked' => false, 'expires_at' => null]);
     ApiKey::factory()->create(['revoked' => true, 'revoked_at' => now()]);
     ApiKey::factory()->create(['revoked' => false, 'expires_at' => now()->subDay()]);
@@ -48,7 +48,7 @@ it('has an active scope', function () {
     expect(ApiKey::active()->count())->toBe(1);
 });
 
-it('records last used info', function () {
+it('records last used info', function (): void {
     $key = ApiKey::factory()->create();
     $key->recordUsage('192.168.1.1');
 

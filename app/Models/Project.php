@@ -48,22 +48,6 @@ class Project extends Model
         'webhook_id',
     ];
 
-    /**
-     * @return array{
-     *   gitlab_project_id: 'integer',
-     *   enabled: 'boolean',
-     *   webhook_configured: 'boolean',
-     * }
-     */
-    protected function casts(): array
-    {
-        return [
-            'gitlab_project_id' => 'integer',
-            'enabled' => 'boolean',
-            'webhook_configured' => 'boolean',
-        ];
-    }
-
     /** @return BelongsToMany<User, $this> */
     public function users(): BelongsToMany
     {
@@ -92,5 +76,21 @@ class Project extends Model
     public function scopeEnabled(Builder $query): Builder
     {
         return $query->where('enabled', true);
+    }
+
+    /**
+     * @return array{
+     *   gitlab_project_id: 'integer',
+     *   enabled: 'boolean',
+     *   webhook_configured: 'boolean',
+     * }
+     */
+    protected function casts(): array
+    {
+        return [
+            'gitlab_project_id' => 'integer',
+            'enabled' => 'boolean',
+            'webhook_configured' => 'boolean',
+        ];
     }
 }

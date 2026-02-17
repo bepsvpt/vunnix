@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
-it('marks code_change_correlated when push modifies finding region', function () {
+it('marks code_change_correlated when push modifies finding region', function (): void {
     $task = Task::factory()->create([
         'type' => TaskType::CodeReview,
         'status' => TaskStatus::Completed,
@@ -60,7 +60,7 @@ it('marks code_change_correlated when push modifies finding region', function ()
     expect($acceptance->correlated_commit_sha)->toBe('bbb222');
 });
 
-it('does not correlate when push does not touch finding file', function () {
+it('does not correlate when push does not touch finding file', function (): void {
     $task = Task::factory()->create([
         'type' => TaskType::CodeReview,
         'status' => TaskStatus::Completed,
@@ -108,7 +108,7 @@ it('does not correlate when push does not touch finding file', function () {
     expect($acceptance->code_change_correlated)->toBeFalse();
 });
 
-it('skips when no pending acceptances exist for the MR', function () {
+it('skips when no pending acceptances exist for the MR', function (): void {
     Http::fake();
 
     $job = new ProcessCodeChangeCorrelation(

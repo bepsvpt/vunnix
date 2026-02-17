@@ -7,7 +7,7 @@ use App\Services\ProjectAccessChecker;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Laravel\Ai\Tools\Request;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->gitLab = Mockery::mock(GitLabClient::class);
     $this->accessChecker = Mockery::mock(ProjectAccessChecker::class);
     $this->accessChecker->shouldReceive('check')->andReturn(null);
@@ -16,13 +16,13 @@ beforeEach(function () {
 
 // ─── Description ────────────────────────────────────────────────
 
-it('has a description', function () {
+it('has a description', function (): void {
     expect($this->tool->description())->toBeString()->not->toBeEmpty();
 });
 
 // ─── Schema ─────────────────────────────────────────────────────
 
-it('defines the expected schema parameters', function () {
+it('defines the expected schema parameters', function (): void {
     $schema = new JsonSchemaTypeFactory;
     $result = $this->tool->schema($schema);
 
@@ -31,7 +31,7 @@ it('defines the expected schema parameters', function () {
 
 // ─── Handle — success ───────────────────────────────────────────
 
-it('returns formatted issue list', function () {
+it('returns formatted issue list', function (): void {
     $this->gitLab
         ->shouldReceive('listIssues')
         ->with(42, [])
@@ -65,7 +65,7 @@ it('returns formatted issue list', function () {
         ->toContain('#2 [opened] Add dark mode');
 });
 
-it('passes state filter to GitLab client', function () {
+it('passes state filter to GitLab client', function (): void {
     $this->gitLab
         ->shouldReceive('listIssues')
         ->with(42, ['state' => 'closed'])
@@ -90,7 +90,7 @@ it('passes state filter to GitLab client', function () {
         ->toContain('#5 [closed] Old feature request');
 });
 
-it('passes labels filter to GitLab client', function () {
+it('passes labels filter to GitLab client', function (): void {
     $this->gitLab
         ->shouldReceive('listIssues')
         ->with(42, ['labels' => 'bug,critical'])
@@ -114,7 +114,7 @@ it('passes labels filter to GitLab client', function () {
     expect($result)->toContain('#1 [opened] Fix login bug [bug, critical]');
 });
 
-it('passes search query to GitLab client', function () {
+it('passes search query to GitLab client', function (): void {
     $this->gitLab
         ->shouldReceive('listIssues')
         ->with(42, ['search' => 'authentication'])
@@ -138,7 +138,7 @@ it('passes search query to GitLab client', function () {
     expect($result)->toContain('#3 [opened] Authentication timeout');
 });
 
-it('passes per_page to GitLab client', function () {
+it('passes per_page to GitLab client', function (): void {
     $this->gitLab
         ->shouldReceive('listIssues')
         ->with(42, ['per_page' => 5])
@@ -162,7 +162,7 @@ it('passes per_page to GitLab client', function () {
     expect($result)->toContain('Found 1 issue(s)');
 });
 
-it('combines multiple filters', function () {
+it('combines multiple filters', function (): void {
     $this->gitLab
         ->shouldReceive('listIssues')
         ->with(42, ['state' => 'opened', 'labels' => 'bug', 'search' => 'login', 'per_page' => 10])
@@ -183,7 +183,7 @@ it('combines multiple filters', function () {
 
 // ─── Handle — empty ─────────────────────────────────────────────
 
-it('returns a message when no issues are found', function () {
+it('returns a message when no issues are found', function (): void {
     $this->gitLab
         ->shouldReceive('listIssues')
         ->once()
@@ -198,7 +198,7 @@ it('returns a message when no issues are found', function () {
 
 // ─── Handle — error ─────────────────────────────────────────────
 
-it('returns error message instead of throwing on GitLab API failure', function () {
+it('returns error message instead of throwing on GitLab API failure', function (): void {
     $this->gitLab
         ->shouldReceive('listIssues')
         ->once()
@@ -218,7 +218,7 @@ it('returns error message instead of throwing on GitLab API failure', function (
 
 // ─── Handle — access denied ────────────────────────────────────
 
-it('returns rejection when access checker denies access', function () {
+it('returns rejection when access checker denies access', function (): void {
     $checker = Mockery::mock(ProjectAccessChecker::class);
     $checker->shouldReceive('check')
         ->with(999)

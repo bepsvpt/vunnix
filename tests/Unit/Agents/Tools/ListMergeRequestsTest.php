@@ -7,7 +7,7 @@ use App\Services\ProjectAccessChecker;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Laravel\Ai\Tools\Request;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->gitLab = Mockery::mock(GitLabClient::class);
     $this->accessChecker = Mockery::mock(ProjectAccessChecker::class);
     $this->accessChecker->shouldReceive('check')->andReturn(null);
@@ -16,13 +16,13 @@ beforeEach(function () {
 
 // ─── Description ────────────────────────────────────────────────
 
-it('has a description', function () {
+it('has a description', function (): void {
     expect($this->tool->description())->toBeString()->not->toBeEmpty();
 });
 
 // ─── Schema ─────────────────────────────────────────────────────
 
-it('defines the expected schema parameters', function () {
+it('defines the expected schema parameters', function (): void {
     $schema = new JsonSchemaTypeFactory;
     $result = $this->tool->schema($schema);
 
@@ -31,7 +31,7 @@ it('defines the expected schema parameters', function () {
 
 // ─── Handle — success ───────────────────────────────────────────
 
-it('returns formatted merge request list', function () {
+it('returns formatted merge request list', function (): void {
     $this->gitLab
         ->shouldReceive('listMergeRequests')
         ->with(42, [])
@@ -67,7 +67,7 @@ it('returns formatted merge request list', function () {
         ->toContain('!2 [merged] Fix CI pipeline (fix/ci → main)');
 });
 
-it('passes state filter to GitLab client', function () {
+it('passes state filter to GitLab client', function (): void {
     $this->gitLab
         ->shouldReceive('listMergeRequests')
         ->with(42, ['state' => 'merged'])
@@ -93,7 +93,7 @@ it('passes state filter to GitLab client', function () {
         ->toContain('!5 [merged] Completed feature');
 });
 
-it('passes labels filter to GitLab client', function () {
+it('passes labels filter to GitLab client', function (): void {
     $this->gitLab
         ->shouldReceive('listMergeRequests')
         ->with(42, ['labels' => 'bug,hotfix'])
@@ -118,7 +118,7 @@ it('passes labels filter to GitLab client', function () {
     expect($result)->toContain('!3 [opened] Hotfix for login (hotfix/login → main) [bug, hotfix]');
 });
 
-it('passes search query to GitLab client', function () {
+it('passes search query to GitLab client', function (): void {
     $this->gitLab
         ->shouldReceive('listMergeRequests')
         ->with(42, ['search' => 'refactor'])
@@ -143,7 +143,7 @@ it('passes search query to GitLab client', function () {
     expect($result)->toContain('!10 [opened] Refactor payment service');
 });
 
-it('passes per_page to GitLab client', function () {
+it('passes per_page to GitLab client', function (): void {
     $this->gitLab
         ->shouldReceive('listMergeRequests')
         ->with(42, ['per_page' => 5])
@@ -168,7 +168,7 @@ it('passes per_page to GitLab client', function () {
     expect($result)->toContain('Found 1 merge request(s)');
 });
 
-it('combines multiple filters', function () {
+it('combines multiple filters', function (): void {
     $this->gitLab
         ->shouldReceive('listMergeRequests')
         ->with(42, ['state' => 'opened', 'labels' => 'feature', 'search' => 'auth', 'per_page' => 10])
@@ -189,7 +189,7 @@ it('combines multiple filters', function () {
 
 // ─── Handle — empty ─────────────────────────────────────────────
 
-it('returns a message when no merge requests are found', function () {
+it('returns a message when no merge requests are found', function (): void {
     $this->gitLab
         ->shouldReceive('listMergeRequests')
         ->once()
@@ -204,7 +204,7 @@ it('returns a message when no merge requests are found', function () {
 
 // ─── Handle — error ─────────────────────────────────────────────
 
-it('returns error message instead of throwing on GitLab API failure', function () {
+it('returns error message instead of throwing on GitLab API failure', function (): void {
     $this->gitLab
         ->shouldReceive('listMergeRequests')
         ->once()
@@ -224,7 +224,7 @@ it('returns error message instead of throwing on GitLab API failure', function (
 
 // ─── Handle — access denied ────────────────────────────────────
 
-it('returns rejection when access checker denies access', function () {
+it('returns rejection when access checker denies access', function (): void {
     $checker = Mockery::mock(ProjectAccessChecker::class);
     $checker->shouldReceive('check')
         ->with(999)

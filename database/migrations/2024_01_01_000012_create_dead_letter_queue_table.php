@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('dead_letter_queue', function (Blueprint $table) {
+        Schema::create('dead_letter_queue', function (Blueprint $table): void {
             $table->id();
 
             // Original task snapshot — full JSONB copy of the task at failure time

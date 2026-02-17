@@ -97,7 +97,7 @@ function fakeDiscussionResponse(string $id = 'disc-1'): array
 
 // ─── Posts threads for high/medium findings only ─────────────────
 
-it('creates discussion threads for critical and major findings only', function () {
+it('creates discussion threads for critical and major findings only', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::response(fakeMrResponse(), 200),
         '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::sequence()
@@ -117,7 +117,7 @@ it('creates discussion threads for critical and major findings only', function (
 
 // ─── Sends correct position data ─────────────────────────────────
 
-it('sends correct position data from MR diff_refs', function () {
+it('sends correct position data from MR diff_refs', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::response(fakeMrResponse(), 200),
         '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::sequence()
@@ -149,7 +149,7 @@ it('sends correct position data from MR diff_refs', function () {
 
 // ─── Thread body contains severity tag and suggestion ────────────
 
-it('sends formatted finding body with severity tag', function () {
+it('sends formatted finding body with severity tag', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::response(fakeMrResponse(), 200),
         '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::sequence()
@@ -177,7 +177,7 @@ it('sends formatted finding body with severity tag', function () {
 
 // ─── Skips if task not found ────────────────────────────────────
 
-it('returns early if the task does not exist', function () {
+it('returns early if the task does not exist', function (): void {
     Http::fake();
 
     $job = new PostInlineThreads(999999);
@@ -188,7 +188,7 @@ it('returns early if the task does not exist', function () {
 
 // ─── Skips if task has no MR IID ────────────────────────────────
 
-it('returns early if the task has no mr_iid', function () {
+it('returns early if the task has no mr_iid', function (): void {
     Http::fake();
 
     $task = Task::factory()->create([
@@ -208,7 +208,7 @@ it('returns early if the task has no mr_iid', function () {
 
 // ─── Skips if task has no result ────────────────────────────────
 
-it('returns early if the task has no result', function () {
+it('returns early if the task has no result', function (): void {
     Http::fake();
 
     $task = Task::factory()->create([
@@ -229,7 +229,7 @@ it('returns early if the task has no result', function () {
 
 // ─── T40: Deduplicates threads for incremental review (D33) ──────
 
-it('does not create duplicate threads for findings that already have unresolved discussions', function () {
+it('does not create duplicate threads for findings that already have unresolved discussions', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::response(fakeMrResponse(), 200),
         '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::sequence()
@@ -282,7 +282,7 @@ it('does not create duplicate threads for findings that already have unresolved 
     });
 });
 
-it('creates all threads when discussion fetch fails gracefully', function () {
+it('creates all threads when discussion fetch fails gracefully', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::response(fakeMrResponse(), 200),
         '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::sequence()
@@ -302,7 +302,7 @@ it('creates all threads when discussion fetch fails gracefully', function () {
 
 // ─── Skips if no high/medium findings ───────────────────────────
 
-it('does not create threads when only minor findings exist', function () {
+it('does not create threads when only minor findings exist', function (): void {
     Http::fake();
 
     $task = Task::factory()->create([

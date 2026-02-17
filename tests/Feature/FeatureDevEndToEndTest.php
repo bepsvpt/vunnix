@@ -48,7 +48,7 @@ function grantReviewTriggerT44(User $user, Project $project): void
 //  ai::develop label — full feature dev flow
 // ──────────────────────────────────────────────────────────────
 
-it('completes full feature dev flow: label → task → MR created → issue summary', function () {
+it('completes full feature dev flow: label → task → MR created → issue summary', function (): void {
     // ── 1. Set up project, config, and user with permission ──────
 
     $project = Project::factory()->enabled()->create([
@@ -278,7 +278,7 @@ it('completes full feature dev flow: label → task → MR created → issue sum
 //  Permission denied — user without review.trigger
 // ──────────────────────────────────────────────────────────────
 
-it('rejects ai::develop label from user without review.trigger permission', function () {
+it('rejects ai::develop label from user without review.trigger permission', function (): void {
     $project = Project::factory()->enabled()->create([
         'gitlab_project_id' => 44002,
     ]);
@@ -322,7 +322,7 @@ it('rejects ai::develop label from user without review.trigger permission', func
 //  Issue without ai::develop label — ignored
 // ──────────────────────────────────────────────────────────────
 
-it('ignores issue label changes without ai::develop label', function () {
+it('ignores issue label changes without ai::develop label', function (): void {
     $project = Project::factory()->enabled()->create([
         'gitlab_project_id' => 44003,
     ]);
@@ -363,7 +363,7 @@ it('ignores issue label changes without ai::develop label', function () {
 //  Low priority — feature dev tasks get low priority
 // ──────────────────────────────────────────────────────────────
 
-it('dispatches feature dev tasks with low priority', function () {
+it('dispatches feature dev tasks with low priority', function (): void {
     $project = Project::factory()->enabled()->create([
         'gitlab_project_id' => 44004,
     ]);

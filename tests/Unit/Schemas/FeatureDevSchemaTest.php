@@ -35,21 +35,21 @@ function validFeatureDevResult(array $overrides = []): array
 
 // ─── Valid data passes ──────────────────────────────────────────
 
-it('validates a complete valid feature dev result', function () {
+it('validates a complete valid feature dev result', function (): void {
     $result = FeatureDevSchema::validate(validFeatureDevResult());
 
     expect($result['valid'])->toBeTrue();
     expect($result['errors'])->toBeEmpty();
 });
 
-it('validates a result with no files changed', function () {
+it('validates a result with no files changed', function (): void {
     $data = validFeatureDevResult(['files_changed' => []]);
     $result = FeatureDevSchema::validate($data);
 
     expect($result['valid'])->toBeTrue();
 });
 
-it('validates both file action values', function (string $action) {
+it('validates both file action values', function (string $action): void {
     $data = validFeatureDevResult();
     $data['files_changed'][0]['action'] = $action;
     $result = FeatureDevSchema::validate($data);
@@ -57,14 +57,14 @@ it('validates both file action values', function (string $action) {
     expect($result['valid'])->toBeTrue();
 })->with(['created', 'modified']);
 
-it('validates when tests_added is false', function () {
+it('validates when tests_added is false', function (): void {
     $data = validFeatureDevResult(['tests_added' => false]);
     $result = FeatureDevSchema::validate($data);
 
     expect($result['valid'])->toBeTrue();
 });
 
-it('validates a result with many files changed', function () {
+it('validates a result with many files changed', function (): void {
     $files = [];
     for ($i = 1; $i <= 20; $i++) {
         $files[] = [
@@ -81,7 +81,7 @@ it('validates a result with many files changed', function () {
 
 // ─── Missing required fields fail ───────────────────────────────
 
-it('fails when version is missing', function () {
+it('fails when version is missing', function (): void {
     $data = validFeatureDevResult();
     unset($data['version']);
     $result = FeatureDevSchema::validate($data);
@@ -90,7 +90,7 @@ it('fails when version is missing', function () {
     expect($result['errors'])->toHaveKey('version');
 });
 
-it('fails when branch is missing', function () {
+it('fails when branch is missing', function (): void {
     $data = validFeatureDevResult();
     unset($data['branch']);
     $result = FeatureDevSchema::validate($data);
@@ -99,7 +99,7 @@ it('fails when branch is missing', function () {
     expect($result['errors'])->toHaveKey('branch');
 });
 
-it('fails when mr_title is missing', function () {
+it('fails when mr_title is missing', function (): void {
     $data = validFeatureDevResult();
     unset($data['mr_title']);
     $result = FeatureDevSchema::validate($data);
@@ -108,7 +108,7 @@ it('fails when mr_title is missing', function () {
     expect($result['errors'])->toHaveKey('mr_title');
 });
 
-it('fails when mr_description is missing', function () {
+it('fails when mr_description is missing', function (): void {
     $data = validFeatureDevResult();
     unset($data['mr_description']);
     $result = FeatureDevSchema::validate($data);
@@ -117,7 +117,7 @@ it('fails when mr_description is missing', function () {
     expect($result['errors'])->toHaveKey('mr_description');
 });
 
-it('fails when files_changed is missing', function () {
+it('fails when files_changed is missing', function (): void {
     $data = validFeatureDevResult();
     unset($data['files_changed']);
     $result = FeatureDevSchema::validate($data);
@@ -126,7 +126,7 @@ it('fails when files_changed is missing', function () {
     expect($result['errors'])->toHaveKey('files_changed');
 });
 
-it('fails when tests_added is missing', function () {
+it('fails when tests_added is missing', function (): void {
     $data = validFeatureDevResult();
     unset($data['tests_added']);
     $result = FeatureDevSchema::validate($data);
@@ -135,7 +135,7 @@ it('fails when tests_added is missing', function () {
     expect($result['errors'])->toHaveKey('tests_added');
 });
 
-it('fails when notes is missing', function () {
+it('fails when notes is missing', function (): void {
     $data = validFeatureDevResult();
     unset($data['notes']);
     $result = FeatureDevSchema::validate($data);
@@ -144,7 +144,7 @@ it('fails when notes is missing', function () {
     expect($result['errors'])->toHaveKey('notes');
 });
 
-it('fails when a file entry is missing path', function () {
+it('fails when a file entry is missing path', function (): void {
     $data = validFeatureDevResult();
     unset($data['files_changed'][0]['path']);
     $result = FeatureDevSchema::validate($data);
@@ -153,7 +153,7 @@ it('fails when a file entry is missing path', function () {
     expect($result['errors'])->toHaveKey('files_changed.0.path');
 });
 
-it('fails when a file entry is missing action', function () {
+it('fails when a file entry is missing action', function (): void {
     $data = validFeatureDevResult();
     unset($data['files_changed'][0]['action']);
     $result = FeatureDevSchema::validate($data);
@@ -162,7 +162,7 @@ it('fails when a file entry is missing action', function () {
     expect($result['errors'])->toHaveKey('files_changed.0.action');
 });
 
-it('fails when a file entry is missing summary', function () {
+it('fails when a file entry is missing summary', function (): void {
     $data = validFeatureDevResult();
     unset($data['files_changed'][0]['summary']);
     $result = FeatureDevSchema::validate($data);
@@ -173,7 +173,7 @@ it('fails when a file entry is missing summary', function () {
 
 // ─── Invalid values fail ────────────────────────────────────────
 
-it('fails when file action has an invalid value', function () {
+it('fails when file action has an invalid value', function (): void {
     $data = validFeatureDevResult();
     $data['files_changed'][0]['action'] = 'deleted';
     $result = FeatureDevSchema::validate($data);
@@ -182,7 +182,7 @@ it('fails when file action has an invalid value', function () {
     expect($result['errors'])->toHaveKey('files_changed.0.action');
 });
 
-it('fails when tests_added is not a boolean', function () {
+it('fails when tests_added is not a boolean', function (): void {
     $data = validFeatureDevResult(['tests_added' => 'yes']);
     $result = FeatureDevSchema::validate($data);
 
@@ -190,7 +190,7 @@ it('fails when tests_added is not a boolean', function () {
     expect($result['errors'])->toHaveKey('tests_added');
 });
 
-it('fails when mr_title exceeds 500 characters', function () {
+it('fails when mr_title exceeds 500 characters', function (): void {
     $data = validFeatureDevResult(['mr_title' => str_repeat('A', 501)]);
     $result = FeatureDevSchema::validate($data);
 
@@ -198,7 +198,7 @@ it('fails when mr_title exceeds 500 characters', function () {
     expect($result['errors'])->toHaveKey('mr_title');
 });
 
-it('fails when branch exceeds 255 characters', function () {
+it('fails when branch exceeds 255 characters', function (): void {
     $data = validFeatureDevResult(['branch' => str_repeat('a', 256)]);
     $result = FeatureDevSchema::validate($data);
 
@@ -208,7 +208,7 @@ it('fails when branch exceeds 255 characters', function () {
 
 // ─── Extra fields stripped ──────────────────────────────────────
 
-it('strips unknown top-level fields', function () {
+it('strips unknown top-level fields', function (): void {
     $data = validFeatureDevResult();
     $data['unknown_field'] = 'should be removed';
     $data['another_extra'] = 42;
@@ -219,7 +219,7 @@ it('strips unknown top-level fields', function () {
     expect($stripped)->toHaveKeys(['version', 'branch', 'mr_title', 'mr_description', 'files_changed', 'tests_added', 'notes']);
 });
 
-it('strips unknown fields from files_changed entries', function () {
+it('strips unknown fields from files_changed entries', function (): void {
     $data = validFeatureDevResult();
     $data['files_changed'][0]['diff'] = '+some code';
     $data['files_changed'][0]['lines_added'] = 42;
@@ -230,7 +230,7 @@ it('strips unknown fields from files_changed entries', function () {
     expect($stripped['files_changed'][0])->toHaveKeys(['path', 'action', 'summary']);
 });
 
-it('preserves valid data through strip', function () {
+it('preserves valid data through strip', function (): void {
     $data = validFeatureDevResult();
     $stripped = FeatureDevSchema::strip($data);
 
@@ -239,7 +239,7 @@ it('preserves valid data through strip', function () {
 
 // ─── validateAndStrip ───────────────────────────────────────────
 
-it('returns stripped data when valid via validateAndStrip', function () {
+it('returns stripped data when valid via validateAndStrip', function (): void {
     $data = validFeatureDevResult();
     $data['extra'] = 'junk';
     $result = FeatureDevSchema::validateAndStrip($data);
@@ -250,7 +250,7 @@ it('returns stripped data when valid via validateAndStrip', function () {
     expect($result['data'])->toHaveKeys(['version', 'branch', 'mr_title', 'mr_description', 'files_changed', 'tests_added', 'notes']);
 });
 
-it('returns null data when invalid via validateAndStrip', function () {
+it('returns null data when invalid via validateAndStrip', function (): void {
     $data = validFeatureDevResult();
     unset($data['branch']);
     $result = FeatureDevSchema::validateAndStrip($data);
@@ -262,15 +262,15 @@ it('returns null data when invalid via validateAndStrip', function () {
 
 // ─── Constants ──────────────────────────────────────────────────
 
-it('exposes schema version constant', function () {
+it('exposes schema version constant', function (): void {
     expect(FeatureDevSchema::VERSION)->toBe('1.0');
 });
 
-it('exposes file action constants', function () {
+it('exposes file action constants', function (): void {
     expect(FeatureDevSchema::FILE_ACTIONS)->toBe(['created', 'modified']);
 });
 
-it('returns rules as an array', function () {
+it('returns rules as an array', function (): void {
     $rules = FeatureDevSchema::rules();
 
     expect($rules)->toBeArray();

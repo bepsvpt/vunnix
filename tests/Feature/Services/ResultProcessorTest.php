@@ -85,7 +85,7 @@ function makeRunningTask(TaskType $type): Task
 
 // ─── Code review: valid result ─────────────────────────────────
 
-it('processes a valid code review result and transitions to Completed', function () {
+it('processes a valid code review result and transitions to Completed', function (): void {
     $task = makeRunningTask(TaskType::CodeReview);
     $task->result = validCodeReview();
     $task->save();
@@ -105,7 +105,7 @@ it('processes a valid code review result and transitions to Completed', function
         ->and($task->completed_at)->not->toBeNull();
 });
 
-it('strips extra fields from valid code review result', function () {
+it('strips extra fields from valid code review result', function (): void {
     $task = makeRunningTask(TaskType::CodeReview);
     $resultWithExtras = validCodeReview();
     $resultWithExtras['extra_field'] = 'should be stripped';
@@ -126,7 +126,7 @@ it('strips extra fields from valid code review result', function () {
 
 // ─── Code review: invalid result ───────────────────────────────
 
-it('fails with invalid code review result and transitions to Failed', function () {
+it('fails with invalid code review result and transitions to Failed', function (): void {
     $task = makeRunningTask(TaskType::CodeReview);
     $task->result = ['summary' => 'just a string, not valid schema'];
     $task->save();
@@ -143,7 +143,7 @@ it('fails with invalid code review result and transitions to Failed', function (
         ->and($task->error_reason)->toContain('Schema validation failed');
 });
 
-it('fails when code review is missing required summary fields', function () {
+it('fails when code review is missing required summary fields', function (): void {
     $task = makeRunningTask(TaskType::CodeReview);
     $invalid = validCodeReview();
     unset($invalid['summary']['risk_level']);
@@ -162,7 +162,7 @@ it('fails when code review is missing required summary fields', function () {
 
 // ─── Security audit: uses CodeReviewSchema ──────────────────────
 
-it('processes a security audit using CodeReviewSchema', function () {
+it('processes a security audit using CodeReviewSchema', function (): void {
     $task = makeRunningTask(TaskType::SecurityAudit);
     $task->result = validCodeReview();
     $task->save();
@@ -179,7 +179,7 @@ it('processes a security audit using CodeReviewSchema', function () {
 
 // ─── Feature dev: valid result ──────────────────────────────────
 
-it('processes a valid feature dev result and transitions to Completed', function () {
+it('processes a valid feature dev result and transitions to Completed', function (): void {
     $task = makeRunningTask(TaskType::FeatureDev);
     $task->result = validFeatureDev();
     $task->save();
@@ -198,7 +198,7 @@ it('processes a valid feature dev result and transitions to Completed', function
 
 // ─── Feature dev: invalid result ────────────────────────────────
 
-it('fails when feature dev result is missing branch', function () {
+it('fails when feature dev result is missing branch', function (): void {
     $task = makeRunningTask(TaskType::FeatureDev);
     $invalid = validFeatureDev();
     unset($invalid['branch']);
@@ -217,7 +217,7 @@ it('fails when feature dev result is missing branch', function () {
 
 // ─── UI adjustment: valid result ────────────────────────────────
 
-it('processes a valid UI adjustment result and transitions to Completed', function () {
+it('processes a valid UI adjustment result and transitions to Completed', function (): void {
     $task = makeRunningTask(TaskType::UiAdjustment);
     $task->result = validUiAdjustment();
     $task->save();
@@ -235,7 +235,7 @@ it('processes a valid UI adjustment result and transitions to Completed', functi
 
 // ─── Issue discussion: no schema (passthrough) ──────────────────
 
-it('passes through issue discussion results without schema validation', function () {
+it('passes through issue discussion results without schema validation', function (): void {
     $task = makeRunningTask(TaskType::IssueDiscussion);
     $freeformResult = [
         'response' => 'Here is my analysis of the issue...',
@@ -256,7 +256,7 @@ it('passes through issue discussion results without schema validation', function
 
 // ─── PRD creation: no schema (passthrough) ──────────────────────
 
-it('passes through PRD creation results without schema validation', function () {
+it('passes through PRD creation results without schema validation', function (): void {
     $task = makeRunningTask(TaskType::PrdCreation);
     $prdResult = [
         'title' => 'Payment Feature PRD',
@@ -277,7 +277,7 @@ it('passes through PRD creation results without schema validation', function () 
 
 // ─── Null result ────────────────────────────────────────────────
 
-it('fails when result is null', function () {
+it('fails when result is null', function (): void {
     $task = makeRunningTask(TaskType::CodeReview);
     $task->result = null;
     $task->save();
@@ -295,7 +295,7 @@ it('fails when result is null', function () {
 
 // ─── Schema routing ─────────────────────────────────────────────
 
-it('maps task types to correct schemas', function () {
+it('maps task types to correct schemas', function (): void {
     $processor = app(ResultProcessor::class);
 
     expect($processor->schemaFor(TaskType::CodeReview))->toBe(\App\Schemas\CodeReviewSchema::class)
@@ -308,7 +308,7 @@ it('maps task types to correct schemas', function () {
 
 // ─── Sanitized result stored on task ────────────────────────────
 
-it('stores the sanitized result back on the task after validation', function () {
+it('stores the sanitized result back on the task after validation', function (): void {
     $task = makeRunningTask(TaskType::CodeReview);
     $resultWithExtras = validCodeReview();
     $resultWithExtras['injected_field'] = 'should not persist';

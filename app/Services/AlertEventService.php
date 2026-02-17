@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
+use Throwable;
 
 class AlertEventService
 {
@@ -43,7 +44,7 @@ class AlertEventService
                 if ($event = $check()) {
                     $events[] = $event;
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 Log::warning('AlertEventService: check failed', [
                     'error' => $e->getMessage(),
                 ]);
@@ -228,7 +229,7 @@ class AlertEventService
         $authFailures = DB::table('tasks')
             ->where('status', 'failed')
             ->where('updated_at', '>=', $thirtyMinutesAgo)
-            ->where(function ($q) {
+            ->where(function ($q): void {
                 $q->where('error_reason', 'like', '%401%')
                     ->orWhere('error_reason', 'like', '%unauthorized%')
                     ->orWhere('error_reason', 'like', '%authentication%')
@@ -285,7 +286,7 @@ class AlertEventService
             }
 
             $usedPercent = round((1 - $freeBytes / $totalBytes) * 100, 1);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return null;
         }
 
@@ -335,7 +336,7 @@ class AlertEventService
         try {
             $response = Http::timeout(5)->get('http://127.0.0.1/health');
             $healthy = $response->successful() && ($response->json('status') === 'healthy');
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $healthy = false;
         }
 
@@ -522,49 +523,6 @@ class AlertEventService
     }
 
     /**
-     * Get CPU usage percentage from system load average.
-     */
-    private function getSystemCpuPercent(): ?float
-    {
-        if (! function_exists('sys_getloadavg')) {
-            return null;
-        }
-
-        $load = sys_getloadavg();
-        if ($load === false) {
-            return null;
-        }
-
-        // Use 1-minute load average, normalize by CPU count
-        $cpuCount = 1;
-        if (is_readable('/proc/cpuinfo')) {
-            $cpuCount = max(1, substr_count((string) file_get_contents('/proc/cpuinfo'), 'processor'));
-        }
-
-        return min(100.0, ($load[0] / $cpuCount) * 100);
-    }
-
-    /**
-     * Get system memory usage percentage.
-     */
-    private function getSystemMemoryPercent(): ?float
-    {
-        if (is_readable('/proc/meminfo')) {
-            $meminfo = (string) file_get_contents('/proc/meminfo');
-            if (preg_match('/MemTotal:\s+(\d+)/', $meminfo, $totalMatch)
-                && preg_match('/MemAvailable:\s+(\d+)/', $meminfo, $availMatch)) {
-                $total = (int) $totalMatch[1];
-                $available = (int) $availMatch[1];
-                if ($total > 0) {
-                    return round((1 - $available / $total) * 100, 1);
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * Send a team chat notification for a newly detected alert.
      */
     public function notifyAlert(AlertEvent $alert): void
@@ -627,7 +585,7 @@ class AlertEventService
         $this->teamChat->send('alert', $costAlert->message, [
             'category' => 'alert',
             'urgency' => $severityToUrgency[$costAlert->severity] ?? 'medium',
-            'alert_type' => 'cost_' . $costAlert->rule,
+            'alert_type' => 'cost_'.$costAlert->rule,
         ]);
     }
 
@@ -649,6 +607,49 @@ class AlertEventService
             'task_id' => $task->id,
             'project' => $projectName,
         ]);
+    }
+
+    /**
+     * Get CPU usage percentage from system load average.
+     */
+    private function getSystemCpuPercent(): ?float
+    {
+        if (! function_exists('sys_getloadavg')) {
+            return null;
+        }
+
+        $load = sys_getloadavg();
+        if ($load === false) {
+            return null;
+        }
+
+        // Use 1-minute load average, normalize by CPU count
+        $cpuCount = 1;
+        if (is_readable('/proc/cpuinfo')) {
+            $cpuCount = max(1, substr_count((string) file_get_contents('/proc/cpuinfo'), 'processor'));
+        }
+
+        return min(100.0, ($load[0] / $cpuCount) * 100);
+    }
+
+    /**
+     * Get system memory usage percentage.
+     */
+    private function getSystemMemoryPercent(): ?float
+    {
+        if (is_readable('/proc/meminfo')) {
+            $meminfo = (string) file_get_contents('/proc/meminfo');
+            if (preg_match('/MemTotal:\s+(\d+)/', $meminfo, $totalMatch)
+                && preg_match('/MemAvailable:\s+(\d+)/', $meminfo, $availMatch)) {
+                $total = (int) $totalMatch[1];
+                $available = (int) $availMatch[1];
+                if ($total > 0) {
+                    return round((1 - $available / $total) * 100, 1);
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -686,7 +687,7 @@ class AlertEventService
             default => '⚪',
         };
 
-        return "🤖 Review complete on **{$projectName}** MR !{$mrIid} — {$riskEmoji} " . ucfirst($riskLevel) . " risk, {$findingsCount} findings";
+        return "🤖 Review complete on **{$projectName}** MR !{$mrIid} — {$riskEmoji} ".ucfirst($riskLevel)." risk, {$findingsCount} findings";
     }
 
     private function buildFeatureDevMessage(\App\Models\Task $task, string $projectName, array $result): string
@@ -734,7 +735,7 @@ class AlertEventService
             $mrRef = $task->mr_iid ? " MR !{$task->mr_iid}" : '';
             $reason = $task->error_reason ?: 'max retries exceeded';
 
-            return "❌ " . ucfirst($typeLabel) . " failed for **{$projectName}**{$mrRef} — {$reason}";
+            return '❌ '.ucfirst($typeLabel)." failed for **{$projectName}**{$mrRef} — {$reason}";
         }
 
         return "🤖 Task #{$task->id} completed for **{$projectName}**";

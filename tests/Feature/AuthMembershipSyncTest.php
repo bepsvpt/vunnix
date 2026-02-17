@@ -9,7 +9,7 @@ use Laravel\Socialite\Two\User as SocialiteUser;
 
 uses(RefreshDatabase::class);
 
-it('syncs memberships on oauth login callback', function () {
+it('syncs memberships on oauth login callback', function (): void {
     // Create a project in Vunnix that matches one in GitLab
     $project = Project::factory()->create(['gitlab_project_id' => 999, 'enabled' => true]);
 
@@ -69,7 +69,7 @@ it('syncs memberships on oauth login callback', function () {
         ->and($user->projects->first()->pivot->gitlab_access_level)->toBe(30);
 });
 
-it('updates memberships on re-login', function () {
+it('updates memberships on re-login', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 999]);
     $newProject = Project::factory()->create(['gitlab_project_id' => 888]);
 

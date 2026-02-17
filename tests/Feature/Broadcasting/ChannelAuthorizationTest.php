@@ -9,7 +9,7 @@ uses(RefreshDatabase::class);
 
 // Override the broadcast driver to reverb so channel authorization callbacks
 // are actually evaluated. The null driver (phpunit.xml default) skips them.
-uses()->beforeEach(function () {
+uses()->beforeEach(function (): void {
     config([
         'broadcasting.default' => 'reverb',
         'broadcasting.connections.reverb.key' => 'test-key',
@@ -29,7 +29,7 @@ uses()->beforeEach(function () {
     require base_path('routes/channels.php');
 });
 
-test('task channel authorizes user with access to task project', function () {
+test('task channel authorizes user with access to task project', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create(['enabled' => true]);
     $user->projects()->attach($project->id, [
@@ -46,7 +46,7 @@ test('task channel authorizes user with access to task project', function () {
         ->assertOk();
 });
 
-test('task channel rejects user without access to task project', function () {
+test('task channel rejects user without access to task project', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create(['enabled' => true]);
     $task = Task::factory()->create(['project_id' => $project->id]);
@@ -59,7 +59,7 @@ test('task channel rejects user without access to task project', function () {
         ->assertForbidden();
 });
 
-test('project activity channel authorizes project member', function () {
+test('project activity channel authorizes project member', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create(['enabled' => true]);
     $user->projects()->attach($project->id, [
@@ -75,7 +75,7 @@ test('project activity channel authorizes project member', function () {
         ->assertOk();
 });
 
-test('project activity channel rejects non-member', function () {
+test('project activity channel rejects non-member', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create(['enabled' => true]);
 
@@ -87,7 +87,7 @@ test('project activity channel rejects non-member', function () {
         ->assertForbidden();
 });
 
-test('metrics channel authorizes project member', function () {
+test('metrics channel authorizes project member', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create(['enabled' => true]);
     $user->projects()->attach($project->id, [
@@ -103,7 +103,7 @@ test('metrics channel authorizes project member', function () {
         ->assertOk();
 });
 
-test('metrics channel rejects non-member', function () {
+test('metrics channel rejects non-member', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create(['enabled' => true]);
 
@@ -115,7 +115,7 @@ test('metrics channel rejects non-member', function () {
         ->assertForbidden();
 });
 
-test('unauthenticated user cannot authorize any channel', function () {
+test('unauthenticated user cannot authorize any channel', function (): void {
     $task = Task::factory()->create();
 
     $this->postJson('/broadcasting/auth', [

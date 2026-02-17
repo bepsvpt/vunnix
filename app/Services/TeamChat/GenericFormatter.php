@@ -10,7 +10,7 @@ class GenericFormatter implements ChatFormatterInterface
 
         if (! empty($context['links'])) {
             $linkTexts = array_map(fn ($l) => "{$l['label']}: {$l['url']}", $context['links']);
-            $text .= "\n\n" . implode("\n", $linkTexts);
+            $text .= "\n\n".implode("\n", $linkTexts);
         }
 
         return ['text' => $text];

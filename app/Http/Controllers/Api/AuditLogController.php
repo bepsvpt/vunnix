@@ -21,7 +21,7 @@ class AuditLogController extends Controller
             ->when($request->filled('user_id'), fn ($q) => $q->where('user_id', $request->input('user_id')))
             ->when($request->filled('project_id'), fn ($q) => $q->where('project_id', $request->input('project_id')))
             ->when($request->filled('date_from'), fn ($q) => $q->where('created_at', '>=', $request->input('date_from')))
-            ->when($request->filled('date_to'), fn ($q) => $q->where('created_at', '<=', $request->input('date_to') . ' 23:59:59'))
+            ->when($request->filled('date_to'), fn ($q) => $q->where('created_at', '<=', $request->input('date_to').' 23:59:59'))
             ->orderByDesc('id');
 
         $paginator = $query->cursorPaginate($perPage);

@@ -5,7 +5,7 @@ use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 
-it('classifies 429 as transient', function () {
+it('classifies 429 as transient', function (): void {
     $exception = new GitLabApiException(
         message: 'Rate limited',
         statusCode: 429,
@@ -18,7 +18,7 @@ it('classifies 429 as transient', function () {
     expect($exception->classification())->toBe('transient');
 });
 
-it('classifies 500 as transient', function () {
+it('classifies 500 as transient', function (): void {
     $exception = new GitLabApiException(
         message: 'Server error',
         statusCode: 500,
@@ -30,7 +30,7 @@ it('classifies 500 as transient', function () {
     expect($exception->shouldRetry())->toBeTrue();
 });
 
-it('classifies 503 as transient', function () {
+it('classifies 503 as transient', function (): void {
     $exception = new GitLabApiException(
         message: 'Service unavailable',
         statusCode: 503,
@@ -42,7 +42,7 @@ it('classifies 503 as transient', function () {
     expect($exception->shouldRetry())->toBeTrue();
 });
 
-it('classifies 529 as transient', function () {
+it('classifies 529 as transient', function (): void {
     $exception = new GitLabApiException(
         message: 'Overloaded',
         statusCode: 529,
@@ -55,7 +55,7 @@ it('classifies 529 as transient', function () {
     expect($exception->classification())->toBe('transient');
 });
 
-it('classifies 400 as invalid request', function () {
+it('classifies 400 as invalid request', function (): void {
     $exception = new GitLabApiException(
         message: 'Bad request',
         statusCode: 400,
@@ -68,7 +68,7 @@ it('classifies 400 as invalid request', function () {
     expect($exception->classification())->toBe('invalid_request');
 });
 
-it('classifies 401 as authentication error', function () {
+it('classifies 401 as authentication error', function (): void {
     $exception = new GitLabApiException(
         message: 'Unauthorized',
         statusCode: 401,
@@ -81,7 +81,7 @@ it('classifies 401 as authentication error', function () {
     expect($exception->classification())->toBe('authentication');
 });
 
-it('classifies other status codes as unknown', function () {
+it('classifies other status codes as unknown', function (): void {
     $exception = new GitLabApiException(
         message: 'Forbidden',
         statusCode: 403,
@@ -96,7 +96,7 @@ it('classifies other status codes as unknown', function () {
     expect($exception->classification())->toBe('unknown');
 });
 
-it('creates from RequestException with correct fields', function () {
+it('creates from RequestException with correct fields', function (): void {
     $psr7Response = new Psr7Response(429, [], '{"error":"rate_limit"}');
     $response = new Response($psr7Response);
     $requestException = new RequestException($response);
@@ -110,7 +110,7 @@ it('creates from RequestException with correct fields', function () {
     expect($gitlab->getPrevious())->toBe($requestException);
 });
 
-it('preserves status code as exception code', function () {
+it('preserves status code as exception code', function (): void {
     $exception = new GitLabApiException(
         message: 'Server error',
         statusCode: 503,

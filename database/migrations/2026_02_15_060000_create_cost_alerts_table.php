@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('cost_alerts', function (Blueprint $table) {
+        Schema::create('cost_alerts', function (Blueprint $table): void {
             $table->id();
             $table->string('rule');          // monthly_anomaly, daily_spike, single_task_outlier, approaching_projection
             $table->string('severity');      // warning, critical

@@ -2,15 +2,15 @@
 
 use App\Services\TeamChat\GenericFormatter;
 
-it('formats notification as plain text', function () {
-    $formatter = new GenericFormatter();
+it('formats notification as plain text', function (): void {
+    $formatter = new GenericFormatter;
     $payload = $formatter->format('task_completed', 'Review done');
 
     expect($payload)->toBe(['text' => 'Review done']);
 });
 
-it('appends action links as plain text URLs', function () {
-    $formatter = new GenericFormatter();
+it('appends action links as plain text URLs', function (): void {
+    $formatter = new GenericFormatter;
     $payload = $formatter->format('task_completed', 'Done', [
         'links' => [
             ['label' => 'View MR', 'url' => 'https://example.com/mr/1'],

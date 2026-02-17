@@ -2,36 +2,36 @@
 
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AdminApiKeyController;
-use App\Http\Controllers\Api\AuditLogController;
+use App\Http\Controllers\Api\AdminProjectConfigController;
 use App\Http\Controllers\Api\AdminProjectController;
 use App\Http\Controllers\Api\AdminRoleController;
-use App\Http\Controllers\Api\AdminProjectConfigController;
 use App\Http\Controllers\Api\AdminSettingsController;
 use App\Http\Controllers\Api\ApiKeyController;
+use App\Http\Controllers\Api\AuditLogController;
+use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\CostAlertController;
+use App\Http\Controllers\Api\DashboardAdoptionController;
+use App\Http\Controllers\Api\DashboardCostController;
+use App\Http\Controllers\Api\DashboardDesignerActivityController;
+use App\Http\Controllers\Api\DashboardEfficiencyController;
+use App\Http\Controllers\Api\DashboardOverviewController;
+use App\Http\Controllers\Api\DashboardPMActivityController;
+use App\Http\Controllers\Api\DashboardQualityController;
 use App\Http\Controllers\Api\DeadLetterController;
-use App\Http\Controllers\Api\InfrastructureAlertController;
 use App\Http\Controllers\Api\ExternalActivityController;
 use App\Http\Controllers\Api\ExternalMetricsController;
 use App\Http\Controllers\Api\ExternalProjectController;
 use App\Http\Controllers\Api\ExternalTaskController;
+use App\Http\Controllers\Api\InfrastructureAlertController;
 use App\Http\Controllers\Api\OverrelianceAlertController;
 use App\Http\Controllers\Api\PrdTemplateController;
 use App\Http\Controllers\Api\PromptVersionController;
-use App\Http\Controllers\Api\ConversationController;
-use App\Http\Controllers\Api\DashboardOverviewController;
-use App\Http\Controllers\Api\DashboardDesignerActivityController;
-use App\Http\Controllers\Api\DashboardAdoptionController;
-use App\Http\Controllers\Api\DashboardCostController;
-use App\Http\Controllers\Api\DashboardEfficiencyController;
-use App\Http\Controllers\Api\DashboardPMActivityController;
-use App\Http\Controllers\Api\DashboardQualityController;
 use App\Http\Controllers\Api\TaskResultViewController;
 use App\Http\Controllers\TaskResultController;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->group(function (): void {
 
     // Runner ↔ Vunnix Interface (T29)
     // Authenticated via task-scoped HMAC bearer token — no session or CSRF needed
@@ -41,7 +41,7 @@ Route::prefix('v1')->group(function () {
 
     // Auth state endpoint (T62)
     // Returns authenticated user's profile, projects, roles, and permissions
-    Route::middleware('auth')->group(function () {
+    Route::middleware('auth')->group(function (): void {
         Route::get('/user', function () {
             return new UserResource(request()->user());
         })->name('api.user');
@@ -49,7 +49,7 @@ Route::prefix('v1')->group(function () {
 
     // Chat API (T47)
     // Session-authenticated routes for conversation management
-    Route::middleware('auth')->group(function () {
+    Route::middleware('auth')->group(function (): void {
         Route::get('/conversations', [ConversationController::class, 'index'])
             ->name('api.conversations.index');
         Route::post('/conversations', [ConversationController::class, 'store'])
@@ -219,7 +219,7 @@ Route::prefix('v1')->group(function () {
     // Rate-limited per API key (60 req/min). Session auth not rate-limited here.
     Route::prefix('ext')
         ->middleware(['auth.api_key_or_session', 'throttle:api_key'])
-        ->group(function () {
+        ->group(function (): void {
             Route::get('/tasks', [ExternalTaskController::class, 'index'])
                 ->name('api.ext.tasks.index');
             Route::get('/tasks/{task}', [ExternalTaskController::class, 'show'])

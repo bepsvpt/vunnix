@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -23,14 +23,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -84,7 +84,7 @@ function createNonAdmin(Project $project): User
 
 // ─── Index ──────────────────────────────────────────────────────
 
-it('returns project list for admin users', function () {
+it('returns project list for admin users', function (): void {
     $project = Project::factory()->create(['enabled' => true]);
     ProjectConfig::factory()->create(['project_id' => $project->id]);
     $admin = createAdmin($project);
@@ -97,7 +97,7 @@ it('returns project list for admin users', function () {
         ]);
 });
 
-it('rejects project list for non-admin users', function () {
+it('rejects project list for non-admin users', function (): void {
     $project = Project::factory()->create(['enabled' => true]);
     ProjectConfig::factory()->create(['project_id' => $project->id]);
     $user = createNonAdmin($project);
@@ -107,14 +107,14 @@ it('rejects project list for non-admin users', function () {
         ->assertForbidden();
 });
 
-it('rejects project list for unauthenticated users', function () {
+it('rejects project list for unauthenticated users', function (): void {
     $this->getJson('/api/v1/admin/projects')
         ->assertUnauthorized();
 });
 
 // ─── Enable ─────────────────────────────────────────────────────
 
-it('enables a project successfully', function () {
+it('enables a project successfully', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => false,
@@ -148,7 +148,7 @@ it('enables a project successfully', function () {
     expect($project->webhook_id)->toBe(555);
 });
 
-it('returns error when bot is not a member on enable', function () {
+it('returns error when bot is not a member on enable', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => false,
@@ -173,7 +173,7 @@ it('returns error when bot is not a member on enable', function () {
 
 // ─── Disable ────────────────────────────────────────────────────
 
-it('disables an enabled project', function () {
+it('disables an enabled project', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => true,
@@ -196,7 +196,7 @@ it('disables an enabled project', function () {
     expect($project->webhook_id)->toBeNull();
 });
 
-it('rejects enable from non-admin', function () {
+it('rejects enable from non-admin', function (): void {
     $project = Project::factory()->create(['enabled' => false]);
     ProjectConfig::factory()->create(['project_id' => $project->id]);
     $user = createNonAdmin($project);
@@ -208,7 +208,7 @@ it('rejects enable from non-admin', function () {
 
 // ─── Show ───────────────────────────────────────────────────────
 
-it('returns project details for admin', function () {
+it('returns project details for admin', function (): void {
     $project = Project::factory()->create(['enabled' => true]);
     ProjectConfig::factory()->create(['project_id' => $project->id]);
     $admin = createAdmin($project);

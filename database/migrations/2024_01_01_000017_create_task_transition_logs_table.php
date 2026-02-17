@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('task_transition_logs', function (Blueprint $table) {
+        Schema::create('task_transition_logs', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('task_id')->constrained()->cascadeOnDelete();
             $table->string('from_status');

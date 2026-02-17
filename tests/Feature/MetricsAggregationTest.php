@@ -32,7 +32,7 @@ function seedTaskWithMetrics(array $attrs): Task
 
 // ─── MetricsQueryService: byProject aggregation ─────────────────────
 
-test('byProject aggregates task_metrics by project', function () {
+test('byProject aggregates task_metrics by project', function (): void {
     $projectA = Project::factory()->enabled()->create();
     $projectB = Project::factory()->enabled()->create();
 
@@ -85,7 +85,7 @@ test('byProject aggregates task_metrics by project', function () {
 
 // ─── MetricsQueryService: byType aggregation ────────────────────────
 
-test('byType aggregates task_metrics by project and task type', function () {
+test('byType aggregates task_metrics by project and task type', function (): void {
     $project = Project::factory()->enabled()->create();
 
     seedTaskWithMetrics([
@@ -149,7 +149,7 @@ test('byType aggregates task_metrics by project and task type', function () {
 
 // ─── MetricsQueryService: byPeriod aggregation ──────────────────────
 
-test('byPeriod aggregates task_metrics by project, type, and month', function () {
+test('byPeriod aggregates task_metrics by project, type, and month', function (): void {
     $project = Project::factory()->enabled()->create();
 
     // Use DB::table to bypass $fillable and set created_at explicitly for period testing
@@ -233,7 +233,7 @@ test('byPeriod aggregates task_metrics by project, type, and month', function ()
 
 // ─── MetricsQueryService: empty project_ids ─────────────────────────
 
-test('returns empty collection when no project IDs provided', function () {
+test('returns empty collection when no project IDs provided', function (): void {
     $service = app(MetricsQueryService::class);
 
     expect($service->byProject(collect()))->toBeEmpty()
@@ -243,7 +243,7 @@ test('returns empty collection when no project IDs provided', function () {
 
 // ─── MetricsQueryService: project scoping ───────────────────────────
 
-test('byProject only returns data for requested project IDs', function () {
+test('byProject only returns data for requested project IDs', function (): void {
     $projectA = Project::factory()->enabled()->create();
     $projectB = Project::factory()->enabled()->create();
 
@@ -277,7 +277,7 @@ test('byProject only returns data for requested project IDs', function () {
 
 // ─── Integration: 10 tasks → aggregate → verify ─────────────────────
 
-test('10 tasks with known metrics produce correct aggregation', function () {
+test('10 tasks with known metrics produce correct aggregation', function (): void {
     $projectA = Project::factory()->enabled()->create();
     $projectB = Project::factory()->enabled()->create();
 
@@ -388,14 +388,14 @@ test('10 tasks with known metrics produce correct aggregation', function () {
 
 // ─── Artisan command: metrics:aggregate ──────────────────────────────
 
-test('metrics:aggregate command runs successfully', function () {
+test('metrics:aggregate command runs successfully', function (): void {
     $this->artisan('metrics:aggregate')
         ->expectsOutputToContain('Starting metrics aggregation')
         ->expectsOutputToContain('Metrics aggregation completed')
         ->assertSuccessful();
 });
 
-test('metrics:aggregate command reports view count based on driver', function () {
+test('metrics:aggregate command reports view count based on driver', function (): void {
     $expected = DB::connection()->getDriverName() === 'pgsql'
         ? '3 views refreshed'
         : '0 views refreshed';
@@ -407,7 +407,7 @@ test('metrics:aggregate command reports view count based on driver', function ()
 
 // ─── MetricsAggregationService: broadcasts events ───────────────────
 
-test('aggregate broadcasts MetricsUpdated event per project', function () {
+test('aggregate broadcasts MetricsUpdated event per project', function (): void {
     Event::fake([MetricsUpdated::class, TaskStatusChanged::class]);
 
     $projectA = Project::factory()->enabled()->create();
@@ -443,7 +443,7 @@ test('aggregate broadcasts MetricsUpdated event per project', function () {
 
 // ─── MetricsAggregationService: returns result ──────────────────────
 
-test('aggregate returns views_refreshed and duration_ms', function () {
+test('aggregate returns views_refreshed and duration_ms', function (): void {
     $service = app(MetricsAggregationService::class);
     $result = $service->aggregate();
 
@@ -455,7 +455,7 @@ test('aggregate returns views_refreshed and duration_ms', function () {
 
 // ─── Scheduler registration ─────────────────────────────────────────
 
-test('metrics:aggregate is scheduled every 15 minutes', function () {
+test('metrics:aggregate is scheduled every 15 minutes', function (): void {
     $schedule = app(\Illuminate\Console\Scheduling\Schedule::class);
 
     $events = collect($schedule->events())->filter(

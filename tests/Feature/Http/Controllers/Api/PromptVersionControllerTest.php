@@ -13,10 +13,11 @@ function createPromptVersionTestUser(): array
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+
     return [$user, $project];
 }
 
-it('returns distinct prompt version skills from completed tasks', function () {
+it('returns distinct prompt version skills from completed tasks', function (): void {
     [$user, $project] = createPromptVersionTestUser();
 
     Task::factory()->create([
@@ -47,7 +48,7 @@ it('returns distinct prompt version skills from completed tasks', function () {
         ->toContain('frontend-review:1.1');
 });
 
-it('scopes prompt versions to user-accessible projects', function () {
+it('scopes prompt versions to user-accessible projects', function (): void {
     [$user, $project] = createPromptVersionTestUser();
 
     // Task on accessible project
@@ -75,7 +76,7 @@ it('scopes prompt versions to user-accessible projects', function () {
         ->not->toContain('security-audit:2.0');
 });
 
-it('excludes tasks with null prompt_version', function () {
+it('excludes tasks with null prompt_version', function (): void {
     [$user, $project] = createPromptVersionTestUser();
 
     Task::factory()->create([
@@ -95,7 +96,7 @@ it('excludes tasks with null prompt_version', function () {
         ->assertJsonCount(1, 'data');
 });
 
-it('requires authentication', function () {
+it('requires authentication', function (): void {
     $this->getJson('/api/v1/prompt-versions')
         ->assertStatus(401);
 });

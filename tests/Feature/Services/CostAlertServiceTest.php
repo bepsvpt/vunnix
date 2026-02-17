@@ -10,13 +10,13 @@ use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->project = Project::factory()->enabled()->create();
 });
 
 // ─── Monthly anomaly ─────────────────────────────────────────────────
 
-it('creates alert when monthly spend exceeds 2x rolling 3-month average', function () {
+it('creates alert when monthly spend exceeds 2x rolling 3-month average', function (): void {
     $now = Carbon::parse('2026-02-15 12:00:00');
 
     // Historical: 3 months × ~$100 avg = $300 total
@@ -27,7 +27,7 @@ it('creates alert when monthly spend exceeds 2x rolling 3-month average', functi
     // Current month: $250 (> 2 × $100 avg = $200)
     seedMetric($this->project, ['cost' => 250.0, 'created_at' => $now->copy()->startOfMonth()->addDays(5)]);
 
-    $service = new CostAlertService();
+    $service = new CostAlertService;
     $alert = $service->evaluateMonthlyAnomaly($now);
 
     expect($alert)->not->toBeNull()
@@ -36,7 +36,7 @@ it('creates alert when monthly spend exceeds 2x rolling 3-month average', functi
         ->and((float) $alert->context['current_spend'])->toBe(250.0);
 });
 
-it('does not create alert when monthly spend is within 2x average', function () {
+it('does not create alert when monthly spend is within 2x average', function (): void {
     $now = Carbon::parse('2026-02-15 12:00:00');
 
     // Historical: $100/month avg
@@ -46,18 +46,18 @@ it('does not create alert when monthly spend is within 2x average', function () 
     // Current month: $150 (< 2 × $100 = $200)
     seedMetric($this->project, ['cost' => 150.0, 'created_at' => $now->copy()->startOfMonth()->addDays(5)]);
 
-    $service = new CostAlertService();
+    $service = new CostAlertService;
     $alert = $service->evaluateMonthlyAnomaly($now);
 
     expect($alert)->toBeNull();
 });
 
-it('skips monthly anomaly when no historical data', function () {
+it('skips monthly anomaly when no historical data', function (): void {
     $now = Carbon::parse('2026-02-15 12:00:00');
 
     seedMetric($this->project, ['cost' => 500.0, 'created_at' => $now->copy()->startOfMonth()->addDays(5)]);
 
-    $service = new CostAlertService();
+    $service = new CostAlertService;
     $alert = $service->evaluateMonthlyAnomaly($now);
 
     expect($alert)->toBeNull();
@@ -65,7 +65,7 @@ it('skips monthly anomaly when no historical data', function () {
 
 // ─── Daily spike ─────────────────────────────────────────────────────
 
-it('creates alert when daily spend exceeds 5x daily average', function () {
+it('creates alert when daily spend exceeds 5x daily average', function (): void {
     $now = Carbon::parse('2026-02-15 14:00:00');
 
     // Historical: 10 days × $10 = $100 total, $10/day avg
@@ -76,7 +76,7 @@ it('creates alert when daily spend exceeds 5x daily average', function () {
     // Today: $60 (> 5 × $10 = $50)
     seedMetric($this->project, ['cost' => 60.0, 'created_at' => $now->copy()->setTime(10, 0)]);
 
-    $service = new CostAlertService();
+    $service = new CostAlertService;
     $alert = $service->evaluateDailySpike($now);
 
     expect($alert)->not->toBeNull()
@@ -85,7 +85,7 @@ it('creates alert when daily spend exceeds 5x daily average', function () {
         ->and((float) $alert->context['today_spend'])->toBe(60.0);
 });
 
-it('does not create alert when daily spend is within 5x average', function () {
+it('does not create alert when daily spend is within 5x average', function (): void {
     $now = Carbon::parse('2026-02-15 14:00:00');
 
     // Historical: $10/day avg
@@ -96,7 +96,7 @@ it('does not create alert when daily spend is within 5x average', function () {
     // Today: $40 (< 5 × $10 = $50)
     seedMetric($this->project, ['cost' => 40.0, 'created_at' => $now->copy()->setTime(10, 0)]);
 
-    $service = new CostAlertService();
+    $service = new CostAlertService;
     $alert = $service->evaluateDailySpike($now);
 
     expect($alert)->toBeNull();
@@ -104,13 +104,13 @@ it('does not create alert when daily spend is within 5x average', function () {
 
 // ─── Single task outlier ─────────────────────────────────────────────
 
-it('creates alert when single task cost exceeds 3x type average', function () {
+it('creates alert when single task cost exceeds 3x type average', function (): void {
     // Historical: 5 code_review tasks with avg cost $0.50
     for ($i = 0; $i < 5; $i++) {
         seedMetric($this->project, ['cost' => 0.50, 'task_type' => 'code_review']);
     }
 
-    $service = new CostAlertService();
+    $service = new CostAlertService;
     $alert = $service->evaluateSingleTaskOutlier(
         taskId: 999999, // ID that doesn't match any existing metric
         taskType: 'code_review',
@@ -124,12 +124,12 @@ it('creates alert when single task cost exceeds 3x type average', function () {
         ->and($alert->context['task_type'])->toBe('code_review');
 });
 
-it('does not create alert when single task cost is within 3x type average', function () {
+it('does not create alert when single task cost is within 3x type average', function (): void {
     for ($i = 0; $i < 5; $i++) {
         seedMetric($this->project, ['cost' => 0.50, 'task_type' => 'code_review']);
     }
 
-    $service = new CostAlertService();
+    $service = new CostAlertService;
     $alert = $service->evaluateSingleTaskOutlier(
         taskId: 999999,
         taskType: 'code_review',
@@ -139,8 +139,8 @@ it('does not create alert when single task cost is within 3x type average', func
     expect($alert)->toBeNull();
 });
 
-it('skips single task outlier when no history for type', function () {
-    $service = new CostAlertService();
+it('skips single task outlier when no history for type', function (): void {
+    $service = new CostAlertService;
     $alert = $service->evaluateSingleTaskOutlier(
         taskId: 999999,
         taskType: 'code_review',
@@ -152,7 +152,7 @@ it('skips single task outlier when no history for type', function () {
 
 // ─── Approaching projection ─────────────────────────────────────────
 
-it('creates alert when projected month-end exceeds 2x last month', function () {
+it('creates alert when projected month-end exceeds 2x last month', function (): void {
     $now = Carbon::parse('2026-02-15 12:00:00'); // Day 15 of 28
 
     // Last month: $100 total
@@ -162,7 +162,7 @@ it('creates alert when projected month-end exceeds 2x last month', function () {
     // Projection: ($120/15) × 28 = $224 (> 2 × $100 = $200)
     seedMetric($this->project, ['cost' => 120.0, 'created_at' => $now->copy()->startOfMonth()->addDays(5)]);
 
-    $service = new CostAlertService();
+    $service = new CostAlertService;
     $alert = $service->evaluateApproachingProjection($now);
 
     expect($alert)->not->toBeNull()
@@ -171,7 +171,7 @@ it('creates alert when projected month-end exceeds 2x last month', function () {
         ->and((float) $alert->context['last_month_spend'])->toBe(100.0);
 });
 
-it('does not create alert when projection is within 2x last month', function () {
+it('does not create alert when projection is within 2x last month', function (): void {
     $now = Carbon::parse('2026-02-15 12:00:00');
 
     // Last month: $200
@@ -180,19 +180,19 @@ it('does not create alert when projection is within 2x last month', function () 
     // Current month: $100 over 15 days → projection ($100/15)*28 = $186.67 (< $400)
     seedMetric($this->project, ['cost' => 100.0, 'created_at' => $now->copy()->startOfMonth()->addDays(5)]);
 
-    $service = new CostAlertService();
+    $service = new CostAlertService;
     $alert = $service->evaluateApproachingProjection($now);
 
     expect($alert)->toBeNull();
 });
 
-it('skips projection when too early in month', function () {
+it('skips projection when too early in month', function (): void {
     $now = Carbon::parse('2026-02-02 12:00:00'); // Day 2
 
     seedMetric($this->project, ['cost' => 100.0, 'created_at' => Carbon::parse('2026-01-15 12:00:00')]);
     seedMetric($this->project, ['cost' => 500.0, 'created_at' => $now->copy()->startOfMonth()->addDay()]);
 
-    $service = new CostAlertService();
+    $service = new CostAlertService;
     $alert = $service->evaluateApproachingProjection($now);
 
     expect($alert)->toBeNull();
@@ -200,14 +200,14 @@ it('skips projection when too early in month', function () {
 
 // ─── Deduplication ───────────────────────────────────────────────────
 
-it('does not create duplicate alert for same rule on same day', function () {
+it('does not create duplicate alert for same rule on same day', function (): void {
     $now = Carbon::parse('2026-02-15 14:00:00');
 
     // Historical data that would trigger monthly anomaly
     seedMetric($this->project, ['cost' => 100.0, 'created_at' => $now->copy()->subMonths(1)->addDays(5)]);
     seedMetric($this->project, ['cost' => 500.0, 'created_at' => $now->copy()->startOfMonth()->addDays(5)]);
 
-    $service = new CostAlertService();
+    $service = new CostAlertService;
 
     // First evaluation → alert
     $alert1 = $service->evaluateMonthlyAnomaly($now);
@@ -222,7 +222,7 @@ it('does not create duplicate alert for same rule on same day', function () {
 
 // ─── evaluateAll ─────────────────────────────────────────────────────
 
-it('evaluateAll runs 3 aggregate rules and returns created alerts', function () {
+it('evaluateAll runs 3 aggregate rules and returns created alerts', function (): void {
     $now = Carbon::parse('2026-02-15 12:00:00');
 
     // Set up data that triggers monthly anomaly
@@ -233,7 +233,7 @@ it('evaluateAll runs 3 aggregate rules and returns created alerts', function () 
     // Current month: $150 (> 2 × $50 = $100)
     seedMetric($this->project, ['cost' => 150.0, 'created_at' => $now->copy()->startOfMonth()->addDay()]);
 
-    $service = new CostAlertService();
+    $service = new CostAlertService;
     $alerts = $service->evaluateAll($now);
 
     // evaluateAll should run all 3 aggregate rules and return any triggered

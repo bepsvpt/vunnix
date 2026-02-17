@@ -15,13 +15,13 @@ uses(RefreshDatabase::class);
 
 // ─── Setup ─────────────────────────────────────────────────────
 
-beforeEach(function () {
+beforeEach(function (): void {
     // The SDK migration creates agent_conversations and agent_conversation_messages,
     // but our custom columns (project_id, archived_at) are added by PostgreSQL-only
     // migrations that skip on SQLite. Create the tables with all columns if they
     // don't exist yet (SDK migration may have a 2026 timestamp sorting after ours).
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -31,14 +31,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -57,7 +57,7 @@ beforeEach(function () {
 
 // ─── Tests ─────────────────────────────────────────────────────
 
-it('returns PM activity stats scoped to user projects', function () {
+it('returns PM activity stats scoped to user projects', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -114,7 +114,7 @@ it('returns PM activity stats scoped to user projects', function () {
     $response->assertJsonPath('data.avg_turns_per_prd', 8);
 });
 
-it('returns correct response structure', function () {
+it('returns correct response structure', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -132,7 +132,7 @@ it('returns correct response structure', function () {
     ]);
 });
 
-it('returns null avg turns when no PRDs exist', function () {
+it('returns null avg turns when no PRDs exist', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -144,12 +144,12 @@ it('returns null avg turns when no PRDs exist', function () {
     $response->assertJsonPath('data.avg_turns_per_prd', null);
 });
 
-it('returns 401 for unauthenticated users', function () {
+it('returns 401 for unauthenticated users', function (): void {
     $response = $this->getJson('/api/v1/dashboard/pm-activity');
     $response->assertUnauthorized();
 });
 
-it('excludes tasks from disabled projects', function () {
+it('excludes tasks from disabled projects', function (): void {
     $user = User::factory()->create();
     $disabledProject = Project::factory()->create(['enabled' => false]);
     $disabledProject->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -172,7 +172,7 @@ it('excludes tasks from disabled projects', function () {
     $response->assertJsonPath('data.issues_from_chat', 0);
 });
 
-it('excludes webhook-origin tasks from PM metrics', function () {
+it('excludes webhook-origin tasks from PM metrics', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -192,7 +192,7 @@ it('excludes webhook-origin tasks from PM metrics', function () {
     $response->assertJsonPath('data.prds_created', 0);
 });
 
-it('excludes failed PRD tasks from count and avg turns', function () {
+it('excludes failed PRD tasks from count and avg turns', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -215,7 +215,7 @@ it('excludes failed PRD tasks from count and avg turns', function () {
     $response->assertJsonPath('data.avg_turns_per_prd', null);
 });
 
-it('computes avg turns across multiple PRD conversations', function () {
+it('computes avg turns across multiple PRD conversations', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -252,7 +252,7 @@ it('computes avg turns across multiple PRD conversations', function () {
     $response->assertJsonPath('data.avg_turns_per_prd', 8);
 });
 
-it('handles zero conversations gracefully', function () {
+it('handles zero conversations gracefully', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);

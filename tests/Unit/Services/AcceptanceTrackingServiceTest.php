@@ -4,8 +4,8 @@ use App\Services\AcceptanceTrackingService;
 
 // ─── classifyThreadState ─────────────────────────────────────────
 
-it('classifies resolved thread as accepted', function () {
-    $service = new AcceptanceTrackingService();
+it('classifies resolved thread as accepted', function (): void {
+    $service = new AcceptanceTrackingService;
 
     $discussion = [
         'id' => 'disc-1',
@@ -19,8 +19,8 @@ it('classifies resolved thread as accepted', function () {
     expect($service->classifyThreadState($discussion))->toBe('accepted');
 });
 
-it('classifies unresolved thread as dismissed', function () {
-    $service = new AcceptanceTrackingService();
+it('classifies unresolved thread as dismissed', function (): void {
+    $service = new AcceptanceTrackingService;
 
     $discussion = [
         'id' => 'disc-2',
@@ -36,8 +36,8 @@ it('classifies unresolved thread as dismissed', function () {
 
 // ─── detectBulkResolution ────────────────────────────────────────
 
-it('detects bulk resolution when all threads resolved within 60 seconds', function () {
-    $service = new AcceptanceTrackingService();
+it('detects bulk resolution when all threads resolved within 60 seconds', function (): void {
+    $service = new AcceptanceTrackingService;
 
     $discussions = [
         ['id' => 'disc-1', 'notes' => [['resolved' => true, 'updated_at' => '2026-02-15T10:00:00Z']]],
@@ -48,8 +48,8 @@ it('detects bulk resolution when all threads resolved within 60 seconds', functi
     expect($service->detectBulkResolution($discussions))->toBeTrue();
 });
 
-it('does not flag bulk resolution when threads resolved over time', function () {
-    $service = new AcceptanceTrackingService();
+it('does not flag bulk resolution when threads resolved over time', function (): void {
+    $service = new AcceptanceTrackingService;
 
     $discussions = [
         ['id' => 'disc-1', 'notes' => [['resolved' => true, 'updated_at' => '2026-02-15T10:00:00Z']]],
@@ -60,8 +60,8 @@ it('does not flag bulk resolution when threads resolved over time', function () 
     expect($service->detectBulkResolution($discussions))->toBeFalse();
 });
 
-it('does not flag bulk resolution with fewer than 3 threads', function () {
-    $service = new AcceptanceTrackingService();
+it('does not flag bulk resolution with fewer than 3 threads', function (): void {
+    $service = new AcceptanceTrackingService;
 
     $discussions = [
         ['id' => 'disc-1', 'notes' => [['resolved' => true, 'updated_at' => '2026-02-15T10:00:00Z']]],
@@ -73,8 +73,8 @@ it('does not flag bulk resolution with fewer than 3 threads', function () {
 
 // ─── correlateCodeChange ─────────────────────────────────────────
 
-it('detects code change correlation when push modifies finding region', function () {
-    $service = new AcceptanceTrackingService();
+it('detects code change correlation when push modifies finding region', function (): void {
+    $service = new AcceptanceTrackingService;
 
     $finding = ['file' => 'src/auth.py', 'line' => 42, 'end_line' => 45];
 
@@ -89,8 +89,8 @@ it('detects code change correlation when push modifies finding region', function
     expect($service->correlateCodeChange($finding, $diffs))->toBeTrue();
 });
 
-it('does not correlate when push does not touch finding file', function () {
-    $service = new AcceptanceTrackingService();
+it('does not correlate when push does not touch finding file', function (): void {
+    $service = new AcceptanceTrackingService;
 
     $finding = ['file' => 'src/auth.py', 'line' => 42, 'end_line' => 45];
 
@@ -104,8 +104,8 @@ it('does not correlate when push does not touch finding file', function () {
     expect($service->correlateCodeChange($finding, $diffs))->toBeFalse();
 });
 
-it('does not correlate when push modifies different region of same file', function () {
-    $service = new AcceptanceTrackingService();
+it('does not correlate when push modifies different region of same file', function (): void {
+    $service = new AcceptanceTrackingService;
 
     $finding = ['file' => 'src/auth.py', 'line' => 42, 'end_line' => 45];
 
@@ -121,8 +121,8 @@ it('does not correlate when push modifies different region of same file', functi
 
 // ─── isAiCreatedDiscussion ───────────────────────────────────────
 
-it('identifies AI-created discussions by severity tag markers', function () {
-    $service = new AcceptanceTrackingService();
+it('identifies AI-created discussions by severity tag markers', function (): void {
+    $service = new AcceptanceTrackingService;
 
     $aiDiscussion = [
         'notes' => [[

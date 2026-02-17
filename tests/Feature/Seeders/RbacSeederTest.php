@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('seeds all default permissions', function () {
+it('seeds all default permissions', function (): void {
     $this->seed(RbacSeeder::class);
 
     expect(Permission::count())->toBe(7);
@@ -27,7 +27,7 @@ it('seeds all default permissions', function () {
     }
 });
 
-it('assigns correct groups to permissions', function () {
+it('assigns correct groups to permissions', function (): void {
     $this->seed(RbacSeeder::class);
 
     expect(Permission::where('name', 'chat.access')->value('group'))->toBe('chat')
@@ -36,14 +36,14 @@ it('assigns correct groups to permissions', function () {
         ->and(Permission::where('name', 'admin.roles')->value('group'))->toBe('admin');
 });
 
-it('is idempotent — running twice does not duplicate permissions', function () {
+it('is idempotent — running twice does not duplicate permissions', function (): void {
     $this->seed(RbacSeeder::class);
     $this->seed(RbacSeeder::class);
 
     expect(Permission::count())->toBe(7);
 });
 
-it('creates default roles for a project', function () {
+it('creates default roles for a project', function (): void {
     $this->seed(RbacSeeder::class);
     $project = Project::factory()->create();
 
@@ -71,7 +71,7 @@ it('creates default roles for a project', function () {
     expect($viewer->permissions->first()->name)->toBe('review.view');
 });
 
-it('createDefaultRolesForProject is idempotent', function () {
+it('createDefaultRolesForProject is idempotent', function (): void {
     $this->seed(RbacSeeder::class);
     $project = Project::factory()->create();
 

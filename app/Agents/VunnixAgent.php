@@ -36,10 +36,29 @@ use Laravel\Ai\Promptable;
  * Since the primary interface is SSE streaming (T48), structured output for action
  * dispatch will be added in T57 via a separate non-streaming invocation path.
  */
-class VunnixAgent implements Agent, Conversational, HasTools, HasMiddleware
+class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
 {
     use Promptable;
     use RemembersConversations;
+
+    /**
+     * Conversation Engine prompt version.
+     *
+     * Tracks the system prompt version for retrospective analysis (§14.8, D103).
+     * Bump this when the CE system prompt changes meaningfully.
+     */
+    public const PROMPT_VERSION = '1.0';
+
+    /**
+     * Model ID mapping from GlobalSetting ai_model values to Anthropic model IDs.
+     */
+    private const MODEL_MAP = [
+        'opus' => 'claude-opus-4-20250514',
+        'sonnet' => 'claude-sonnet-4-20250514',
+        'haiku' => 'claude-haiku-4-20250514',
+    ];
+
+    private const DEFAULT_MODEL = 'claude-opus-4-20250514';
 
     /**
      * Pruned messages set by the PruneConversationHistory middleware.
@@ -57,25 +76,6 @@ class VunnixAgent implements Agent, Conversational, HasTools, HasMiddleware
     {
         $this->project = $project;
     }
-
-    /**
-     * Model ID mapping from GlobalSetting ai_model values to Anthropic model IDs.
-     */
-    private const MODEL_MAP = [
-        'opus' => 'claude-opus-4-20250514',
-        'sonnet' => 'claude-sonnet-4-20250514',
-        'haiku' => 'claude-haiku-4-20250514',
-    ];
-
-    private const DEFAULT_MODEL = 'claude-opus-4-20250514';
-
-    /**
-     * Conversation Engine prompt version.
-     *
-     * Tracks the system prompt version for retrospective analysis (§14.8, D103).
-     * Bump this when the CE system prompt changes meaningfully.
-     */
-    public const PROMPT_VERSION = '1.0';
 
     public function instructions(): string
     {

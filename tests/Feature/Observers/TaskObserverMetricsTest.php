@@ -10,14 +10,14 @@ use Illuminate\Support\Facades\Event;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Fake the event to prevent broadcasting side effects in metrics tests
     Event::fake([TaskStatusChanged::class]);
 });
 
 // ─── Completed task → metrics record ──────────────────────────────────
 
-test('creates task_metrics record when task transitions to Completed', function () {
+test('creates task_metrics record when task transitions to Completed', function (): void {
     $task = Task::factory()->create([
         'status' => TaskStatus::Running,
         'type' => TaskType::CodeReview,
@@ -65,7 +65,7 @@ test('creates task_metrics record when task transitions to Completed', function 
 
 // ─── Failed task → metrics with failure data ──────────────────────────
 
-test('creates task_metrics record when task transitions to Failed', function () {
+test('creates task_metrics record when task transitions to Failed', function (): void {
     $task = Task::factory()->create([
         'status' => TaskStatus::Running,
         'type' => TaskType::FeatureDev,
@@ -92,7 +92,7 @@ test('creates task_metrics record when task transitions to Failed', function () 
 
 // ─── Non-terminal states → no metrics ─────────────────────────────────
 
-test('does not create metrics for non-terminal transitions', function () {
+test('does not create metrics for non-terminal transitions', function (): void {
     $task = Task::factory()->create(['status' => TaskStatus::Received]);
 
     $task->transitionTo(TaskStatus::Queued);
@@ -104,7 +104,7 @@ test('does not create metrics for non-terminal transitions', function () {
     expect(TaskMetric::count())->toBe(0);
 });
 
-test('does not create metrics for Superseded transition', function () {
+test('does not create metrics for Superseded transition', function (): void {
     $task = Task::factory()->create(['status' => TaskStatus::Running]);
 
     $task->transitionTo(TaskStatus::Superseded);
@@ -114,7 +114,7 @@ test('does not create metrics for Superseded transition', function () {
 
 // ─── Idempotency ──────────────────────────────────────────────────────
 
-test('does not create duplicate metrics if observer fires twice', function () {
+test('does not create duplicate metrics if observer fires twice', function (): void {
     $task = Task::factory()->create([
         'status' => TaskStatus::Running,
         'type' => TaskType::CodeReview,
@@ -141,7 +141,7 @@ test('does not create duplicate metrics if observer fires twice', function () {
 
 // ─── Non-review tasks → zero severity/findings ───────────────────────
 
-test('records zero severities and findings for non-review tasks', function () {
+test('records zero severities and findings for non-review tasks', function (): void {
     $task = Task::factory()->create([
         'status' => TaskStatus::Running,
         'type' => TaskType::IssueDiscussion,
@@ -165,7 +165,7 @@ test('records zero severities and findings for non-review tasks', function () {
 
 // ─── Duration fallback ────────────────────────────────────────────────
 
-test('falls back to started_at/completed_at diff when duration_seconds is null', function () {
+test('falls back to started_at/completed_at diff when duration_seconds is null', function (): void {
     $task = Task::factory()->create([
         'status' => TaskStatus::Running,
         'type' => TaskType::CodeReview,
@@ -193,7 +193,7 @@ test('falls back to started_at/completed_at diff when duration_seconds is null',
 
 // ─── Nullable token fields → default to 0 ────────────────────────────
 
-test('defaults tokens to 0 when task has no token data', function () {
+test('defaults tokens to 0 when task has no token data', function (): void {
     $task = Task::factory()->create([
         'status' => TaskStatus::Running,
         'type' => TaskType::PrdCreation,
@@ -216,7 +216,7 @@ test('defaults tokens to 0 when task has no token data', function () {
 
 // ─── Security audit uses same severity mapping as code review ─────────
 
-test('extracts severities from security audit results', function () {
+test('extracts severities from security audit results', function (): void {
     $task = Task::factory()->create([
         'status' => TaskStatus::Running,
         'type' => TaskType::SecurityAudit,

@@ -2,9 +2,8 @@
 
 use App\Agents\Middleware\PruneConversationHistory;
 use App\Agents\VunnixAgent;
-use Laravel\Ai\Contracts\Providers\TextProvider;
 use Laravel\Ai\Contracts\Gateway\TextGateway;
-use Laravel\Ai\Messages\AssistantMessage;
+use Laravel\Ai\Contracts\Providers\TextProvider;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Messages\UserMessage;
 use Laravel\Ai\Prompts\AgentPrompt;
@@ -41,7 +40,7 @@ function buildAgentPrompt(VunnixAgent $agent): AgentPrompt
 
 // ─── No pruning for ≤20 turns ──────────────────────────────────
 
-it('does not prune conversations with 20 or fewer turns', function () {
+it('does not prune conversations with 20 or fewer turns', function (): void {
     $messages = buildMessages(20); // exactly 20 turns = 40 messages
     $agent = Mockery::mock(VunnixAgent::class)->makePartial();
     $agent->shouldReceive('messages')->andReturn($messages);
@@ -62,7 +61,7 @@ it('does not prune conversations with 20 or fewer turns', function () {
     expect($result)->toBeInstanceOf(AgentResponse::class);
 });
 
-it('does not prune conversations with fewer than 20 turns', function () {
+it('does not prune conversations with fewer than 20 turns', function (): void {
     $messages = buildMessages(10); // 10 turns = 20 messages
     $agent = Mockery::mock(VunnixAgent::class)->makePartial();
     $agent->shouldReceive('messages')->andReturn($messages);
@@ -82,7 +81,7 @@ it('does not prune conversations with fewer than 20 turns', function () {
     expect($result)->toBeInstanceOf(AgentResponse::class);
 });
 
-it('does not prune when there are no messages (new conversation)', function () {
+it('does not prune when there are no messages (new conversation)', function (): void {
     $agent = Mockery::mock(VunnixAgent::class)->makePartial();
     $agent->shouldReceive('messages')->andReturn([]);
     $agent->shouldNotReceive('setPrunedMessages');
@@ -103,7 +102,7 @@ it('does not prune when there are no messages (new conversation)', function () {
 
 // ─── Pruning for >20 turns ─────────────────────────────────────
 
-it('prunes conversations with more than 20 turns', function () {
+it('prunes conversations with more than 20 turns', function (): void {
     $messages = buildMessages(25); // 25 turns = 50 messages
     $agent = Mockery::mock(VunnixAgent::class)->makePartial();
     $agent->shouldReceive('messages')->andReturn($messages);
@@ -158,7 +157,7 @@ it('prunes conversations with more than 20 turns', function () {
     expect($recentMessages[19]->content)->toBe('Assistant response 25');
 });
 
-it('keeps exactly the last 10 turns when pruning', function () {
+it('keeps exactly the last 10 turns when pruning', function (): void {
     $messages = buildMessages(30); // 30 turns = 60 messages
     $agent = Mockery::mock(VunnixAgent::class)->makePartial();
     $agent->shouldReceive('messages')->andReturn($messages);
@@ -197,7 +196,7 @@ it('keeps exactly the last 10 turns when pruning', function () {
 
 // ─── Summary content ───────────────────────────────────────────
 
-it('sends older messages to the summarizer', function () {
+it('sends older messages to the summarizer', function (): void {
     $messages = buildMessages(25); // turns 1-15 get summarized, 16-25 kept
     $agent = Mockery::mock(VunnixAgent::class)->makePartial();
     $agent->shouldReceive('messages')->andReturn($messages);
@@ -236,7 +235,7 @@ it('sends older messages to the summarizer', function () {
 
 // ─── Graceful failure ──────────────────────────────────────────
 
-it('keeps all messages when summarization fails', function () {
+it('keeps all messages when summarization fails', function (): void {
     $messages = buildMessages(25);
     $agent = Mockery::mock(VunnixAgent::class)->makePartial();
     $agent->shouldReceive('messages')->andReturn($messages);
@@ -264,7 +263,7 @@ it('keeps all messages when summarization fails', function () {
 
 // ─── Non-VunnixAgent passthrough ───────────────────────────────
 
-it('passes through without pruning for non-VunnixAgent agents', function () {
+it('passes through without pruning for non-VunnixAgent agents', function (): void {
     // If middleware is applied to a non-VunnixAgent, it should do nothing
     $agent = Mockery::mock(\Laravel\Ai\Contracts\Agent::class);
     $agent->shouldReceive('instructions')->andReturn('test');
@@ -283,7 +282,7 @@ it('passes through without pruning for non-VunnixAgent agents', function () {
 
 // ─── Boundary: exactly 21 turns triggers pruning ───────────────
 
-it('triggers pruning at exactly 21 turns', function () {
+it('triggers pruning at exactly 21 turns', function (): void {
     $messages = buildMessages(21); // 21 turns = 42 messages, just over threshold
     $agent = Mockery::mock(VunnixAgent::class)->makePartial();
     $agent->shouldReceive('messages')->andReturn($messages);

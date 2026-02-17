@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -22,14 +22,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -86,12 +86,12 @@ function createAuditRegularUser(Project $project): User
 
 // ─── Authentication & Authorization ──────────────────────────────
 
-it('returns 401 for unauthenticated users on audit log index', function () {
+it('returns 401 for unauthenticated users on audit log index', function (): void {
     $this->getJson('/api/v1/audit-logs')
         ->assertUnauthorized();
 });
 
-it('returns 403 for non-admin users on audit log index', function () {
+it('returns 403 for non-admin users on audit log index', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAuditRegularUser($project);
 
@@ -102,7 +102,7 @@ it('returns 403 for non-admin users on audit log index', function () {
 
 // ─── GET /api/v1/audit-logs ──────────────────────────────────────
 
-it('returns audit logs for admin users with cursor pagination', function () {
+it('returns audit logs for admin users with cursor pagination', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAuditAdmin($project);
 
@@ -120,7 +120,7 @@ it('returns audit logs for admin users with cursor pagination', function () {
         ]);
 });
 
-it('returns empty data when no audit logs exist', function () {
+it('returns empty data when no audit logs exist', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAuditAdmin($project);
 
@@ -130,7 +130,7 @@ it('returns empty data when no audit logs exist', function () {
         ->assertJsonCount(0, 'data');
 });
 
-it('filters audit logs by event_type', function () {
+it('filters audit logs by event_type', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAuditAdmin($project);
 
@@ -145,7 +145,7 @@ it('filters audit logs by event_type', function () {
         ->assertJsonPath('data.0.event_type', 'conversation_turn');
 });
 
-it('filters audit logs by user_id', function () {
+it('filters audit logs by user_id', function (): void {
     $project = Project::factory()->enabled()->create();
     $admin = createAuditAdmin($project);
     $other = User::factory()->create();
@@ -160,7 +160,7 @@ it('filters audit logs by user_id', function () {
         ->assertJsonPath('data.0.user_id', $other->id);
 });
 
-it('filters audit logs by project_id', function () {
+it('filters audit logs by project_id', function (): void {
     $project = Project::factory()->enabled()->create();
     $otherProject = Project::factory()->create();
     $user = createAuditAdmin($project);
@@ -175,7 +175,7 @@ it('filters audit logs by project_id', function () {
         ->assertJsonPath('data.0.project_id', $project->id);
 });
 
-it('filters audit logs by date range', function () {
+it('filters audit logs by date range', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAuditAdmin($project);
 
@@ -198,7 +198,7 @@ it('filters audit logs by date range', function () {
         ->assertJsonCount(1, 'data');
 });
 
-it('paginates audit logs with cursor', function () {
+it('paginates audit logs with cursor', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAuditAdmin($project);
 
@@ -220,7 +220,7 @@ it('paginates audit logs with cursor', function () {
 
 // ─── GET /api/v1/audit-logs/{id} ─────────────────────────────────
 
-it('returns a single audit log entry for admin', function () {
+it('returns a single audit log entry for admin', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAuditAdmin($project);
 
@@ -238,7 +238,7 @@ it('returns a single audit log entry for admin', function () {
         ->assertJsonStructure(['data' => ['id', 'event_type', 'summary', 'properties', 'created_at']]);
 });
 
-it('returns 403 for non-admin on audit log show', function () {
+it('returns 403 for non-admin on audit log show', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAuditRegularUser($project);
 
@@ -249,7 +249,7 @@ it('returns 403 for non-admin on audit log show', function () {
         ->assertForbidden();
 });
 
-it('returns 404 for non-existent audit log', function () {
+it('returns 404 for non-existent audit log', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAuditAdmin($project);
 

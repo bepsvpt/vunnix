@@ -7,7 +7,7 @@ use Laravel\Socialite\Two\User as SocialiteUser;
 
 uses(RefreshDatabase::class);
 
-it('redirects to gitlab oauth with correct scopes', function () {
+it('redirects to gitlab oauth with correct scopes', function (): void {
     config([
         'services.gitlab.client_id' => 'test-client-id',
         'services.gitlab.client_secret' => 'test-client-secret',
@@ -21,7 +21,7 @@ it('redirects to gitlab oauth with correct scopes', function () {
     $response->assertRedirectContains('read_api');
 });
 
-it('creates a new user on first oauth callback', function () {
+it('creates a new user on first oauth callback', function (): void {
     $socialiteUser = mockSocialiteUser();
 
     Socialite::shouldReceive('driver')
@@ -47,7 +47,7 @@ it('creates a new user on first oauth callback', function () {
     $this->assertAuthenticated();
 });
 
-it('updates existing user on subsequent oauth callback', function () {
+it('updates existing user on subsequent oauth callback', function (): void {
     $existingUser = User::factory()->create([
         'gitlab_id' => 12345,
         'name' => 'Old Name',
@@ -77,7 +77,7 @@ it('updates existing user on subsequent oauth callback', function () {
     expect(User::count())->toBe(1);
 });
 
-it('stores oauth tokens on login', function () {
+it('stores oauth tokens on login', function (): void {
     $socialiteUser = mockSocialiteUser();
 
     Socialite::shouldReceive('driver')
@@ -96,7 +96,7 @@ it('stores oauth tokens on login', function () {
         ->and($user->oauth_token_expires_at)->not->toBeNull();
 });
 
-it('establishes a session after oauth callback', function () {
+it('establishes a session after oauth callback', function (): void {
     $socialiteUser = mockSocialiteUser();
 
     Socialite::shouldReceive('driver')
@@ -112,7 +112,7 @@ it('establishes a session after oauth callback', function () {
     $this->assertAuthenticated();
 });
 
-it('logs out and invalidates session', function () {
+it('logs out and invalidates session', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user);
@@ -123,7 +123,7 @@ it('logs out and invalidates session', function () {
     $this->assertGuest();
 });
 
-it('redirects unauthenticated users to auth redirect', function () {
+it('redirects unauthenticated users to auth redirect', function (): void {
     $response = $this->post('/auth/logout');
 
     $response->assertRedirect('/auth/redirect');

@@ -10,6 +10,7 @@ use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Post inline discussion threads (Layer 2) on a GitLab merge request.
@@ -61,7 +62,7 @@ class PostInlineThreads implements ShouldQueue
             return;
         }
 
-        $formatter = new InlineThreadFormatter();
+        $formatter = new InlineThreadFormatter;
         $findings = $formatter->filterHighMedium($task->result['findings'] ?? []);
 
         if (empty($findings)) {
@@ -75,7 +76,7 @@ class PostInlineThreads implements ShouldQueue
         // Fetch MR to get diff_refs for positioning
         try {
             $mr = $gitLab->getMergeRequest($projectId, $task->mr_iid);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('PostInlineThreads: failed to fetch MR', [
                 'task_id' => $this->taskId,
                 'error' => $e->getMessage(),
@@ -127,7 +128,7 @@ class PostInlineThreads implements ShouldQueue
                     'file' => $finding['file'],
                     'line' => $finding['line'],
                 ]);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 Log::warning('PostInlineThreads: failed to create thread', [
                     'task_id' => $this->taskId,
                     'finding_id' => $finding['id'],
@@ -148,7 +149,7 @@ class PostInlineThreads implements ShouldQueue
     {
         try {
             return $gitLab->listMergeRequestDiscussions($projectId, $mrIid);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('PostInlineThreads: failed to fetch discussions for dedup, proceeding without', [
                 'task_id' => $this->taskId,
                 'error' => $e->getMessage(),

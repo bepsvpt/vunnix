@@ -28,53 +28,6 @@ class GitLabClient
     }
 
     // ------------------------------------------------------------------
-    //  HTTP foundation
-    // ------------------------------------------------------------------
-
-    /**
-     * Build a pre-configured HTTP client with bot PAT authentication.
-     */
-    protected function request(): PendingRequest
-    {
-        return Http::withHeaders([
-            'PRIVATE-TOKEN' => $this->token,
-        ])->acceptJson();
-    }
-
-    /**
-     * Build the full API URL for a given path.
-     */
-    protected function url(string $path): string
-    {
-        return $this->baseUrl . '/api/v4/' . ltrim($path, '/');
-    }
-
-    /**
-     * Handle a GitLab API response — log and throw classified exception on errors.
-     *
-     * @throws GitLabApiException
-     */
-    protected function handleResponse(Response $response, string $context): Response
-    {
-        if ($response->successful()) {
-            return $response;
-        }
-
-        Log::warning("GitLab API error: {$context}", [
-            'status' => $response->status(),
-            'body' => $response->body(),
-        ]);
-
-        try {
-            $response->throw();
-        } catch (RequestException $e) {
-            throw GitLabApiException::fromRequestException($e, $context);
-        }
-
-        return $response; // unreachable, satisfies static analysis
-    }
-
-    // ------------------------------------------------------------------
     //  Files
     // ------------------------------------------------------------------
 
@@ -86,7 +39,7 @@ class GitLabClient
     public function getFile(int $projectId, string $filePath, string $ref = 'main'): array
     {
         $response = $this->request()->get(
-            $this->url("projects/{$projectId}/repository/files/" . urlencode($filePath)),
+            $this->url("projects/{$projectId}/repository/files/".urlencode($filePath)),
             ['ref' => $ref],
         );
 
@@ -678,12 +631,60 @@ class GitLabClient
      *
      * @param  int  $projectId  GitLab project ID
      * @param  int  $pipelineId  GitLab pipeline ID to cancel
-     * @throws GitLabApiException  If the API request fails
+     *
+     * @throws GitLabApiException If the API request fails
      */
     public function cancelPipeline(int $projectId, int $pipelineId): void
     {
         $this->request()->post(
             $this->url("projects/{$projectId}/pipelines/{$pipelineId}/cancel"),
         );
+    }
+
+    // ------------------------------------------------------------------
+    //  HTTP foundation
+    // ------------------------------------------------------------------
+
+    /**
+     * Build a pre-configured HTTP client with bot PAT authentication.
+     */
+    protected function request(): PendingRequest
+    {
+        return Http::withHeaders([
+            'PRIVATE-TOKEN' => $this->token,
+        ])->acceptJson();
+    }
+
+    /**
+     * Build the full API URL for a given path.
+     */
+    protected function url(string $path): string
+    {
+        return $this->baseUrl.'/api/v4/'.ltrim($path, '/');
+    }
+
+    /**
+     * Handle a GitLab API response — log and throw classified exception on errors.
+     *
+     * @throws GitLabApiException
+     */
+    protected function handleResponse(Response $response, string $context): Response
+    {
+        if ($response->successful()) {
+            return $response;
+        }
+
+        Log::warning("GitLab API error: {$context}", [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
+
+        try {
+            $response->throw();
+        } catch (RequestException $e) {
+            throw GitLabApiException::fromRequestException($e, $context);
+        }
+
+        return $response; // unreachable, satisfies static analysis
     }
 }

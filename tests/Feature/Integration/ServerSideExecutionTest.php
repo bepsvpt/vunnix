@@ -23,7 +23,7 @@ uses(RefreshDatabase::class);
 
 // ─── Full pipeline: TaskDispatcher → ProcessTaskResult → CreateGitLabIssue → GitLab API ─────
 
-it('executes the full server-side pipeline: dispatch → process → create GitLab Issue', function () {
+it('executes the full server-side pipeline: dispatch → process → create GitLab Issue', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 777]);
 
     $task = Task::factory()->queued()->create([
@@ -74,7 +74,7 @@ it('executes the full server-side pipeline: dispatch → process → create GitL
     });
 });
 
-it('completes full pipeline without assignee or labels when not provided', function () {
+it('completes full pipeline without assignee or labels when not provided', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 888]);
 
     $task = Task::factory()->queued()->create([
@@ -117,7 +117,7 @@ it('completes full pipeline without assignee or labels when not provided', funct
     });
 });
 
-it('does not trigger a CI pipeline for server-side PrdCreation tasks', function () {
+it('does not trigger a CI pipeline for server-side PrdCreation tasks', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 999]);
 
     $task = Task::factory()->queued()->create([

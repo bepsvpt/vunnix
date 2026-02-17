@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Http;
 
 uses(Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Http::fake([
         '*' => Http::response('ok', 200),
     ]);
@@ -24,7 +24,7 @@ beforeEach(function () {
 
 // ─── API Outage Detection ───────────────────────────────────────
 
-it('detects API outage with 3+ consecutive API failures', function () {
+it('detects API outage with 3+ consecutive API failures', function (): void {
     $project = Project::factory()->enabled()->create();
 
     // Create 3 consecutive failed tasks with API errors
@@ -49,7 +49,7 @@ it('detects API outage with 3+ consecutive API failures', function () {
     Http::assertSent(fn ($r) => str_contains($r['text'], 'API outage detected'));
 });
 
-it('does not trigger API outage with fewer than 3 failures', function () {
+it('does not trigger API outage with fewer than 3 failures', function (): void {
     $project = Project::factory()->enabled()->create();
 
     for ($i = 0; $i < 2; $i++) {
@@ -65,7 +65,7 @@ it('does not trigger API outage with fewer than 3 failures', function () {
     expect($service->evaluateApiOutage())->toBeNull();
 });
 
-it('does not duplicate API outage if already active', function () {
+it('does not duplicate API outage if already active', function (): void {
     AlertEvent::factory()->create([
         'alert_type' => 'api_outage',
         'status' => 'active',
@@ -86,7 +86,7 @@ it('does not duplicate API outage if already active', function () {
     expect(AlertEvent::where('alert_type', 'api_outage')->count())->toBe(1);
 });
 
-it('resolves API outage and sends recovery notification', function () {
+it('resolves API outage and sends recovery notification', function (): void {
     $alert = AlertEvent::factory()->create([
         'alert_type' => 'api_outage',
         'status' => 'active',
@@ -113,7 +113,7 @@ it('resolves API outage and sends recovery notification', function () {
 
 // ─── High Failure Rate Detection ────────────────────────────────
 
-it('detects high failure rate when >20% failing', function () {
+it('detects high failure rate when >20% failing', function (): void {
     $project = Project::factory()->enabled()->create();
 
     // 3 failed, 7 completed = 30% failure rate
@@ -140,7 +140,7 @@ it('detects high failure rate when >20% failing', function () {
     expect($alert->severity)->toBe('medium');
 });
 
-it('does not trigger high failure rate with low failure count', function () {
+it('does not trigger high failure rate with low failure count', function (): void {
     $project = Project::factory()->enabled()->create();
 
     // 1 failed, 9 completed = 10%
@@ -161,7 +161,7 @@ it('does not trigger high failure rate with low failure count', function () {
     expect($service->evaluateHighFailureRate())->toBeNull();
 });
 
-it('skips high failure rate with fewer than 5 total tasks', function () {
+it('skips high failure rate with fewer than 5 total tasks', function (): void {
     $project = Project::factory()->enabled()->create();
 
     // Only 3 tasks total
@@ -179,7 +179,7 @@ it('skips high failure rate with fewer than 5 total tasks', function () {
 
 // ─── Queue Depth Detection ──────────────────────────────────────
 
-it('detects queue depth exceeding threshold', function () {
+it('detects queue depth exceeding threshold', function (): void {
     config(['vunnix.queue_depth_threshold' => 5]);
 
     $project = Project::factory()->enabled()->create();
@@ -199,7 +199,7 @@ it('detects queue depth exceeding threshold', function () {
     expect($alert->severity)->toBe('medium');
 });
 
-it('resolves queue depth when back below threshold', function () {
+it('resolves queue depth when back below threshold', function (): void {
     config(['vunnix.queue_depth_threshold' => 50]);
 
     AlertEvent::factory()->create([
@@ -217,7 +217,7 @@ it('resolves queue depth when back below threshold', function () {
 
 // ─── Auth Failure Detection ─────────────────────────────────────
 
-it('detects auth failure from 401 errors', function () {
+it('detects auth failure from 401 errors', function (): void {
     $project = Project::factory()->enabled()->create();
 
     for ($i = 0; $i < 2; $i++) {
@@ -239,7 +239,7 @@ it('detects auth failure from 401 errors', function () {
 
 // ─── Alert Deduplication ────────────────────────────────────────
 
-it('deduplicates: ongoing condition does not re-trigger', function () {
+it('deduplicates: ongoing condition does not re-trigger', function (): void {
     $project = Project::factory()->enabled()->create();
 
     // Create active alert
@@ -269,7 +269,7 @@ it('deduplicates: ongoing condition does not re-trigger', function () {
     expect(AlertEvent::where('alert_type', 'high_failure_rate')->count())->toBe(1);
 });
 
-it('sends exactly one detection and one recovery notification', function () {
+it('sends exactly one detection and one recovery notification', function (): void {
     Http::fake(['*' => Http::response('ok', 200)]);
 
     $project = Project::factory()->enabled()->create();
@@ -304,7 +304,7 @@ it('sends exactly one detection and one recovery notification', function () {
 
 // ─── evaluateAll ────────────────────────────────────────────────
 
-it('evaluateAll runs all checks and returns events', function () {
+it('evaluateAll runs all checks and returns events', function (): void {
     config(['vunnix.queue_depth_threshold' => 2]);
 
     $project = Project::factory()->enabled()->create();
@@ -328,7 +328,7 @@ it('evaluateAll runs all checks and returns events', function () {
 
 // ─── Task Completion Notifications ──────────────────────────────
 
-it('sends code review completion notification', function () {
+it('sends code review completion notification', function (): void {
     $project = Project::factory()->enabled()->create(['name' => 'my-project']);
     $task = Task::factory()->completed()->create([
         'project_id' => $project->id,
@@ -352,7 +352,7 @@ it('sends code review completion notification', function () {
     });
 });
 
-it('sends feature dev completion notification', function () {
+it('sends feature dev completion notification', function (): void {
     $project = Project::factory()->enabled()->create(['name' => 'project-x']);
     $task = Task::factory()->completed()->create([
         'project_id' => $project->id,
@@ -373,7 +373,7 @@ it('sends feature dev completion notification', function () {
     });
 });
 
-it('sends UI adjustment completion notification', function () {
+it('sends UI adjustment completion notification', function (): void {
     $project = Project::factory()->enabled()->create(['name' => 'project-x']);
     $task = Task::factory()->completed()->create([
         'project_id' => $project->id,
@@ -393,7 +393,7 @@ it('sends UI adjustment completion notification', function () {
     });
 });
 
-it('sends PRD creation notification', function () {
+it('sends PRD creation notification', function (): void {
     $project = Project::factory()->enabled()->create(['name' => 'project-x']);
     $task = Task::factory()->completed()->create([
         'project_id' => $project->id,
@@ -414,7 +414,7 @@ it('sends PRD creation notification', function () {
     });
 });
 
-it('sends task failed notification with error reason', function () {
+it('sends task failed notification with error reason', function (): void {
     $project = Project::factory()->enabled()->create(['name' => 'project-x']);
     $task = Task::factory()->failed()->create([
         'project_id' => $project->id,
@@ -435,8 +435,8 @@ it('sends task failed notification with error reason', function () {
 
 // ─── Container Health Detection (T104) ─────────────────────────
 
-it('detects container health issue when health endpoint reports unhealthy', function () {
-    Http::swap(new \Illuminate\Http\Client\Factory());
+it('detects container health issue when health endpoint reports unhealthy', function (): void {
+    Http::swap(new \Illuminate\Http\Client\Factory);
     Http::fake([
         'http://127.0.0.1/health' => Http::response([
             'status' => 'unhealthy',
@@ -462,8 +462,8 @@ it('detects container health issue when health endpoint reports unhealthy', func
     expect($alert->message)->toContain('unhealthy');
 });
 
-it('does not trigger container health alert if unhealthy for less than 2 minutes', function () {
-    Http::swap(new \Illuminate\Http\Client\Factory());
+it('does not trigger container health alert if unhealthy for less than 2 minutes', function (): void {
+    Http::swap(new \Illuminate\Http\Client\Factory);
     Http::fake([
         'http://127.0.0.1/health' => Http::response(['status' => 'unhealthy', 'checks' => []], 503),
         '*' => Http::response('ok', 200),
@@ -474,8 +474,8 @@ it('does not trigger container health alert if unhealthy for less than 2 minutes
     expect($service->evaluateContainerHealth())->toBeNull();
 });
 
-it('resolves container health alert when health endpoint recovers', function () {
-    Http::swap(new \Illuminate\Http\Client\Factory());
+it('resolves container health alert when health endpoint recovers', function (): void {
+    Http::swap(new \Illuminate\Http\Client\Factory);
     Http::fake([
         'http://127.0.0.1/health' => Http::response(['status' => 'healthy', 'checks' => []], 200),
         '*' => Http::response('ok', 200),
@@ -496,7 +496,7 @@ it('resolves container health alert when health endpoint recovers', function () 
 
 // ─── CPU Usage Detection (T104) ────────────────────────────────
 
-it('detects high CPU usage when sustained above 90% for 5+ minutes', function () {
+it('detects high CPU usage when sustained above 90% for 5+ minutes', function (): void {
     Http::fake(['*' => Http::response('ok', 200)]);
     Cache::put('infra:cpu_first_high', now()->subMinutes(6)->toIso8601String(), 3600);
     Cache::put('infra:cpu_current', 95.2, 300);
@@ -510,7 +510,7 @@ it('detects high CPU usage when sustained above 90% for 5+ minutes', function ()
     expect($alert->message)->toContain('CPU');
 });
 
-it('does not trigger CPU alert if high for less than 5 minutes', function () {
+it('does not trigger CPU alert if high for less than 5 minutes', function (): void {
     Http::fake(['*' => Http::response('ok', 200)]);
     Cache::put('infra:cpu_first_high', now()->subMinutes(2)->toIso8601String(), 3600);
     Cache::put('infra:cpu_current', 95.0, 300);
@@ -519,7 +519,7 @@ it('does not trigger CPU alert if high for less than 5 minutes', function () {
     expect($service->evaluateCpuUsage())->toBeNull();
 });
 
-it('resolves CPU alert when usage drops below threshold', function () {
+it('resolves CPU alert when usage drops below threshold', function (): void {
     Http::fake(['*' => Http::response('ok', 200)]);
     AlertEvent::factory()->create([
         'alert_type' => 'cpu_usage',
@@ -538,7 +538,7 @@ it('resolves CPU alert when usage drops below threshold', function () {
 
 // ─── Memory Usage Detection (T104) ─────────────────────────────
 
-it('detects high memory usage when sustained above 85% for 5+ minutes', function () {
+it('detects high memory usage when sustained above 85% for 5+ minutes', function (): void {
     Http::fake(['*' => Http::response('ok', 200)]);
     Cache::put('infra:memory_first_high', now()->subMinutes(6)->toIso8601String(), 3600);
     Cache::put('infra:memory_current', 92.5, 300);
@@ -552,7 +552,7 @@ it('detects high memory usage when sustained above 85% for 5+ minutes', function
     expect($alert->message)->toContain('Memory');
 });
 
-it('does not trigger memory alert if high for less than 5 minutes', function () {
+it('does not trigger memory alert if high for less than 5 minutes', function (): void {
     Http::fake(['*' => Http::response('ok', 200)]);
     Cache::put('infra:memory_first_high', now()->subMinutes(2)->toIso8601String(), 3600);
     Cache::put('infra:memory_current', 92.5, 300);
@@ -561,7 +561,7 @@ it('does not trigger memory alert if high for less than 5 minutes', function () 
     expect($service->evaluateMemoryUsage())->toBeNull();
 });
 
-it('resolves memory alert when usage drops below threshold', function () {
+it('resolves memory alert when usage drops below threshold', function (): void {
     Http::fake(['*' => Http::response('ok', 200)]);
     AlertEvent::factory()->create([
         'alert_type' => 'memory_usage',
@@ -580,7 +580,7 @@ it('resolves memory alert when usage drops below threshold', function () {
 
 // ─── Cost Alert Notifications ───────────────────────────────────
 
-it('sends cost alert notification', function () {
+it('sends cost alert notification', function (): void {
     $costAlert = new \App\Models\CostAlert([
         'rule' => 'daily_spike',
         'severity' => 'critical',
@@ -600,7 +600,7 @@ it('sends cost alert notification', function () {
 
 // ─── T104 Integration: Queue Depth Alert Lifecycle ──────────────
 
-it('T104 integration: queue depth alert → dashboard + chat → recovery', function () {
+it('T104 integration: queue depth alert → dashboard + chat → recovery', function (): void {
     config(['vunnix.queue_depth_threshold' => 50]);
 
     $project = Project::factory()->enabled()->create();

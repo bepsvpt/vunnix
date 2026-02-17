@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Project;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Throwable;
 
 class ProjectEnablementService
 {
@@ -75,7 +76,7 @@ class ProjectEnablementService
                 'issues_events' => true,
                 'push_events' => true,
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return [
                 'success' => false,
                 'error' => 'Failed to create GitLab webhook: '.$e->getMessage(),
@@ -91,7 +92,7 @@ class ProjectEnablementService
                 'Vunnix task executor',
             );
             $triggerToken = $trigger['token'];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $warnings[] = 'Failed to create CI pipeline trigger token: '.$e->getMessage().'. You can create one manually in GitLab Settings > CI/CD > Pipeline trigger tokens.';
             Log::warning('Failed to create pipeline trigger', [
                 'project_id' => $project->gitlab_project_id,
@@ -108,7 +109,7 @@ class ProjectEnablementService
                     $label['color'],
                     $label['description'],
                 );
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 Log::warning("Failed to create label {$label['name']}", [
                     'project_id' => $project->gitlab_project_id,
                     'error' => $e->getMessage(),
@@ -155,7 +156,7 @@ class ProjectEnablementService
         if ($project->webhook_id) {
             try {
                 $this->gitLab->deleteWebhook($project->gitlab_project_id, $project->webhook_id);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 Log::warning('Failed to remove webhook during project disable', [
                     'project_id' => $project->id,
                     'webhook_id' => $project->webhook_id,
@@ -191,7 +192,7 @@ class ProjectEnablementService
             $response = $this->gitLab->getCurrentUser();
 
             return $response['id'] ?? null;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('Failed to resolve bot user ID', ['error' => $e->getMessage()]);
 
             return null;

@@ -79,24 +79,6 @@ class User extends Authenticatable
     ];
 
     /**
-     * @return array{
-     *   email_verified_at: 'datetime',
-     *   password: 'hashed',
-     *   gitlab_id: 'integer',
-     *   oauth_token_expires_at: 'datetime',
-     * }
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'gitlab_id' => 'integer',
-            'oauth_token_expires_at' => 'datetime',
-        ];
-    }
-
-    /**
      * Return empty string instead of null for OAuth users (no password).
      * Prevents hash_hmac() deprecation warning in SessionGuard::hashPasswordForCookie().
      */
@@ -251,5 +233,23 @@ class User extends Authenticatable
         // Sync replaces all existing pivot rows: adds new, updates existing, removes missing
         $this->projects()->sync($syncData);
         $this->unsetRelation('projects');
+    }
+
+    /**
+     * @return array{
+     *   email_verified_at: 'datetime',
+     *   password: 'hashed',
+     *   gitlab_id: 'integer',
+     *   oauth_token_expires_at: 'datetime',
+     * }
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'gitlab_id' => 'integer',
+            'oauth_token_expires_at' => 'datetime',
+        ];
     }
 }

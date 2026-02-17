@@ -9,10 +9,15 @@ use Illuminate\Support\Facades\DB;
 class OverrelianceDetectionService
 {
     private const ACCEPTANCE_RATE_THRESHOLD = 95.0;
+
     private const CRITICAL_ACCEPTANCE_THRESHOLD = 99.0;
+
     private const BULK_RESOLUTION_RATIO_THRESHOLD = 50.0; // >50% bulk-resolved
+
     private const MIN_FINDINGS_PER_WEEK = 5;
+
     private const MIN_FINDINGS_FOR_REACTIONS = 20;
+
     private const WEEKS_REQUIRED = 2;
 
     /**

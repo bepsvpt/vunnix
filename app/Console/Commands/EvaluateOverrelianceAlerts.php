@@ -16,7 +16,7 @@ class EvaluateOverrelianceAlerts extends Command
         $alerts = $service->evaluateAll();
 
         if (count($alerts) > 0) {
-            $this->info(count($alerts) . ' over-reliance alert(s) created.');
+            $this->info(count($alerts).' over-reliance alert(s) created.');
         } else {
             $this->info('No over-reliance alerts triggered.');
         }

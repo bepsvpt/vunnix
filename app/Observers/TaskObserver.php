@@ -11,6 +11,7 @@ use App\Services\AlertEventService;
 use App\Services\CostAlertService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class TaskObserver
 {
@@ -90,14 +91,14 @@ class TaskObserver
                     if ($costAlert) {
                         app(AlertEventService::class)->notifyCostAlert($costAlert);
                     }
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     Log::warning('TaskObserver: cost alert evaluation failed', [
                         'task_id' => $task->id,
                         'error' => $e->getMessage(),
                     ]);
                 }
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('TaskObserver: failed to record metrics', [
                 'task_id' => $task->id,
                 'error' => $e->getMessage(),

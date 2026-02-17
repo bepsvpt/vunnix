@@ -10,14 +10,14 @@ uses(RefreshDatabase::class);
 
 // ── Role model ──────────────────────────────────────────────
 
-it('belongs to a project', function () {
+it('belongs to a project', function (): void {
     $project = Project::factory()->create();
     $role = Role::factory()->create(['project_id' => $project->id]);
 
     expect($role->project->id)->toBe($project->id);
 });
 
-it('can have permissions assigned', function () {
+it('can have permissions assigned', function (): void {
     $role = Role::factory()->create();
     $permission = Permission::factory()->create(['name' => 'chat.access']);
 
@@ -27,7 +27,7 @@ it('can have permissions assigned', function () {
         ->and($role->permissions->first()->name)->toBe('chat.access');
 });
 
-it('checks if it has a specific permission', function () {
+it('checks if it has a specific permission', function (): void {
     $role = Role::factory()->create();
     $perm1 = Permission::factory()->create(['name' => 'review.view']);
     $perm2 = Permission::factory()->create(['name' => 'admin.roles']);
@@ -38,20 +38,20 @@ it('checks if it has a specific permission', function () {
         ->and($role->hasPermission('admin.roles'))->toBeFalse();
 });
 
-it('can be marked as default', function () {
+it('can be marked as default', function (): void {
     $role = Role::factory()->default()->create();
 
     expect($role->is_default)->toBeTrue();
 });
 
-it('enforces unique name per project', function () {
+it('enforces unique name per project', function (): void {
     $project = Project::factory()->create();
     Role::factory()->create(['project_id' => $project->id, 'name' => 'admin']);
 
     Role::factory()->create(['project_id' => $project->id, 'name' => 'admin']);
 })->throws(\Illuminate\Database\UniqueConstraintViolationException::class);
 
-it('allows same role name on different projects', function () {
+it('allows same role name on different projects', function (): void {
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
 
@@ -63,13 +63,13 @@ it('allows same role name on different projects', function () {
 
 // ── Permission model ────────────────────────────────────────
 
-it('has a unique name', function () {
+it('has a unique name', function (): void {
     Permission::factory()->create(['name' => 'chat.access']);
 
     Permission::factory()->create(['name' => 'chat.access']);
 })->throws(\Illuminate\Database\UniqueConstraintViolationException::class);
 
-it('can belong to multiple roles', function () {
+it('can belong to multiple roles', function (): void {
     $permission = Permission::factory()->create(['name' => 'review.view']);
     $roleA = Role::factory()->create();
     $roleB = Role::factory()->create();
@@ -82,14 +82,14 @@ it('can belong to multiple roles', function () {
 
 // ── Project roles ───────────────────────────────────────────
 
-it('project has many roles', function () {
+it('project has many roles', function (): void {
     $project = Project::factory()->create();
     Role::factory()->count(3)->create(['project_id' => $project->id]);
 
     expect($project->roles)->toHaveCount(3);
 });
 
-it('project returns its default role', function () {
+it('project returns its default role', function (): void {
     $project = Project::factory()->create();
     Role::factory()->create(['project_id' => $project->id, 'name' => 'viewer']);
     $defaultRole = Role::factory()->default()->create(['project_id' => $project->id, 'name' => 'developer']);
@@ -97,7 +97,7 @@ it('project returns its default role', function () {
     expect($project->defaultRole()->id)->toBe($defaultRole->id);
 });
 
-it('project returns null when no default role exists', function () {
+it('project returns null when no default role exists', function (): void {
     $project = Project::factory()->create();
     Role::factory()->create(['project_id' => $project->id, 'is_default' => false]);
 
@@ -106,7 +106,7 @@ it('project returns null when no default role exists', function () {
 
 // ── User RBAC methods ───────────────────────────────────────
 
-it('can be assigned a role on a project', function () {
+it('can be assigned a role on a project', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'developer']);
@@ -117,7 +117,7 @@ it('can be assigned a role on a project', function () {
         ->and($user->hasRole('developer', $project))->toBeTrue();
 });
 
-it('tracks who assigned a role', function () {
+it('tracks who assigned a role', function (): void {
     $admin = User::factory()->create();
     $user = User::factory()->create();
     $project = Project::factory()->create();
@@ -129,7 +129,7 @@ it('tracks who assigned a role', function () {
     expect($pivot->assigned_by)->toBe($admin->id);
 });
 
-it('can have different roles on different projects', function () {
+it('can have different roles on different projects', function (): void {
     $user = User::factory()->create();
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
@@ -145,7 +145,7 @@ it('can have different roles on different projects', function () {
         ->and($user->hasRole('viewer', $projectA))->toBeFalse();
 });
 
-it('checks permission through roles on a project', function () {
+it('checks permission through roles on a project', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $role = Role::factory()->create(['project_id' => $project->id]);
@@ -158,7 +158,7 @@ it('checks permission through roles on a project', function () {
         ->and($user->hasPermission('review.view', $project))->toBeFalse();
 });
 
-it('aggregates permissions across multiple roles on the same project', function () {
+it('aggregates permissions across multiple roles on the same project', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 
@@ -178,7 +178,7 @@ it('aggregates permissions across multiple roles on the same project', function 
         ->and($user->hasPermission('config.manage', $project))->toBeTrue();
 });
 
-it('does not leak permissions across projects', function () {
+it('does not leak permissions across projects', function (): void {
     $user = User::factory()->create();
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
@@ -193,7 +193,7 @@ it('does not leak permissions across projects', function () {
         ->and($user->hasPermission('admin.global_config', $projectB))->toBeFalse();
 });
 
-it('returns all permissions for a project', function () {
+it('returns all permissions for a project', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $role = Role::factory()->create(['project_id' => $project->id]);
@@ -209,7 +209,7 @@ it('returns all permissions for a project', function () {
         ->and($permissions->pluck('name')->toArray())->toContain('chat.access', 'review.view');
 });
 
-it('can remove a role from a user on a project', function () {
+it('can remove a role from a user on a project', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'developer']);
@@ -224,7 +224,7 @@ it('can remove a role from a user on a project', function () {
         ->and($user->hasRole('developer', $project))->toBeFalse();
 });
 
-it('returns roles for a specific project', function () {
+it('returns roles for a specific project', function (): void {
     $user = User::factory()->create();
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();

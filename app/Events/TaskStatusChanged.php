@@ -58,6 +58,11 @@ class TaskStatusChanged implements ShouldBroadcast
         return $payload;
     }
 
+    public function broadcastAs(): string
+    {
+        return 'task.status.changed';
+    }
+
     /**
      * Build result card data from the task result, based on task type.
      */
@@ -80,10 +85,5 @@ class TaskStatusChanged implements ShouldBroadcast
         }
 
         return $data;
-    }
-
-    public function broadcastAs(): string
-    {
-        return 'task.status.changed';
     }
 }

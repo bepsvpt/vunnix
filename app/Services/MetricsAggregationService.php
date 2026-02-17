@@ -6,6 +6,7 @@ use App\Events\MetricsUpdated;
 use App\Models\TaskMetric;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class MetricsAggregationService
 {
@@ -57,7 +58,7 @@ class MetricsAggregationService
             try {
                 DB::statement("REFRESH MATERIALIZED VIEW CONCURRENTLY {$view}");
                 $refreshed++;
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 Log::error("Failed to refresh materialized view: {$view}", [
                     'error' => $e->getMessage(),
                 ]);

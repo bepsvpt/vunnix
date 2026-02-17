@@ -12,7 +12,7 @@ return new class extends Migration
             return;
         }
 
-        Schema::table('finding_acceptances', function (Blueprint $table) {
+        Schema::table('finding_acceptances', function (Blueprint $table): void {
             $table->unsignedSmallInteger('emoji_positive_count')->default(0);
             $table->unsignedSmallInteger('emoji_negative_count')->default(0);
             $table->string('emoji_sentiment', 20)->default('neutral');
@@ -27,7 +27,7 @@ return new class extends Migration
             return;
         }
 
-        Schema::table('finding_acceptances', function (Blueprint $table) {
+        Schema::table('finding_acceptances', function (Blueprint $table): void {
             $table->dropIndex(['emoji_sentiment']);
             $table->dropColumn([
                 'emoji_positive_count',

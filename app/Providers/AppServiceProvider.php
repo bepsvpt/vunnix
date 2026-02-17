@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -60,7 +61,7 @@ class AppServiceProvider extends ServiceProvider
             $bearer = $request->bearerToken();
             $keyHash = $bearer ? hash('sha256', $bearer) : $request->ip();
 
-            return Limit::perMinute(60)->by('api_key:' . $keyHash);
+            return Limit::perMinute(60)->by('api_key:'.$keyHash);
         });
     }
 
@@ -78,7 +79,7 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $permissions = Permission::all();
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // Database not available (e.g., during tests, migrations, or before DB setup)
             return;
         }

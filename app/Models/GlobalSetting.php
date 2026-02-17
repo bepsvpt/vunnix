@@ -40,20 +40,6 @@ class GlobalSetting extends Model
     ];
 
     /**
-     * @return array{
-     *   value: 'json',
-     *   bot_pat_created_at: 'datetime',
-     * }
-     */
-    protected function casts(): array
-    {
-        return [
-            'value' => 'json',
-            'bot_pat_created_at' => 'datetime',
-        ];
-    }
-
-    /**
      * Default PRD template used when no project or global override exists.
      * Matches the template structure from docs/spec/vunnix-v1.md §4.4.
      */
@@ -176,12 +162,26 @@ TEMPLATE;
      */
     protected static function booted(): void
     {
-        static::saved(function (GlobalSetting $setting) {
+        static::saved(function (GlobalSetting $setting): void {
             Cache::forget(self::CACHE_PREFIX.$setting->key);
         });
 
-        static::deleted(function (GlobalSetting $setting) {
+        static::deleted(function (GlobalSetting $setting): void {
             Cache::forget(self::CACHE_PREFIX.$setting->key);
         });
+    }
+
+    /**
+     * @return array{
+     *   value: 'json',
+     *   bot_pat_created_at: 'datetime',
+     * }
+     */
+    protected function casts(): array
+    {
+        return [
+            'value' => 'json',
+            'bot_pat_created_at' => 'datetime',
+        ];
     }
 }

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('tasks', function (Blueprint $table) {
+        Schema::table('tasks', function (Blueprint $table): void {
             $table->unsignedInteger('input_tokens')->nullable()->after('tokens_used');
             $table->unsignedInteger('output_tokens')->nullable()->after('input_tokens');
             $table->unsignedInteger('duration_seconds')->nullable()->after('cost');
@@ -17,7 +17,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('tasks', function (Blueprint $table) {
+        Schema::table('tasks', function (Blueprint $table): void {
             $table->dropColumn(['input_tokens', 'output_tokens', 'duration_seconds']);
         });
     }

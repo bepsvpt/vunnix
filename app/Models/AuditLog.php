@@ -46,18 +46,6 @@ class AuditLog extends Model
         'user_agent',
     ];
 
-    /**
-     * @return array{
-     *   properties: 'array',
-     * }
-     */
-    protected function casts(): array
-    {
-        return [
-            'properties' => 'array',
-        ];
-    }
-
     // ─── Relationships ──────────────────────────────────────────────
 
     /** @return BelongsTo<User, $this> */
@@ -76,5 +64,17 @@ class AuditLog extends Model
     public function task(): BelongsTo
     {
         return $this->belongsTo(Task::class);
+    }
+
+    /**
+     * @return array{
+     *   properties: 'array',
+     * }
+     */
+    protected function casts(): array
+    {
+        return [
+            'properties' => 'array',
+        ];
     }
 }

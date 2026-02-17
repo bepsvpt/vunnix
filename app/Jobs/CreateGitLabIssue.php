@@ -9,6 +9,7 @@ use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Create a GitLab Issue for a PrdCreation task (server-side execution).
@@ -95,7 +96,7 @@ class CreateGitLabIssue implements ShouldQueue
                 'issue_iid' => $issueIid,
                 'project_id' => $gitlabProjectId,
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('CreateGitLabIssue: failed to create issue', [
                 'task_id' => $this->taskId,
                 'error' => $e->getMessage(),

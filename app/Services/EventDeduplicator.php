@@ -11,6 +11,7 @@ use App\Models\WebhookEventLog;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Prevents duplicate event processing and implements latest-wins superseding (D140).
@@ -51,7 +52,7 @@ class EventDeduplicator
      *
      * @param  string|null  $eventUuid  The X-Gitlab-Event-UUID header value
      * @param  RoutingResult  $routingResult  The routing decision from EventRouter
-     * @return DeduplicationResult  Whether to accept or reject the event
+     * @return DeduplicationResult Whether to accept or reject the event
      */
     public function process(?string $eventUuid, RoutingResult $routingResult): DeduplicationResult
     {
@@ -199,7 +200,7 @@ class EventDeduplicator
                         'gitlab_project_id' => $gitlabProjectId,
                         'pipeline_id' => $pipelineId,
                     ]);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     // Best-effort: log failure but don't block the superseding
                     Log::warning('EventDeduplicator: failed to cancel pipeline', [
                         'project_id' => $projectId,
@@ -291,7 +292,7 @@ class EventDeduplicator
             );
 
             return $mr ? (int) $mr['iid'] : null;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Best-effort: log failure but don't block event processing
             Log::warning('EventDeduplicator: failed to resolve MR IID from branch', [
                 'project_id' => $event->projectId,

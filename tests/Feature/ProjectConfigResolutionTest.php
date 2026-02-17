@@ -13,9 +13,9 @@ use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -25,14 +25,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -64,7 +64,7 @@ function createConfigAdmin(Project $project): User
     return $user;
 }
 
-it('API update → service resolution reflects new override', function () {
+it('API update → service resolution reflects new override', function (): void {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -85,7 +85,7 @@ it('API update → service resolution reflects new override', function () {
     expect($service->get($project, 'ai_model'))->toBe('sonnet');
 });
 
-it('global setting → project inherits when no override', function () {
+it('global setting → project inherits when no override', function (): void {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -98,7 +98,7 @@ it('global setting → project inherits when no override', function () {
     expect($service->get($project, 'ai_language'))->toBe('ja');
 });
 
-it('project override → takes precedence over global', function () {
+it('project override → takes precedence over global', function (): void {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -111,7 +111,7 @@ it('project override → takes precedence over global', function () {
     expect($service->get($project, 'ai_language'))->toBe('de');
 });
 
-it('remove override → falls back to global', function () {
+it('remove override → falls back to global', function (): void {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -128,7 +128,7 @@ it('remove override → falls back to global', function () {
     expect($service->get($project, 'ai_model'))->toBe('opus');
 });
 
-it('cache is invalidated on config update via API', function () {
+it('cache is invalidated on config update via API', function (): void {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -150,7 +150,7 @@ it('cache is invalidated on config update via API', function () {
 
 // ─── T92: 4-level config hierarchy with file layer ──────────────
 
-it('resolves config with 4-level hierarchy: default → global → file → project DB', function () {
+it('resolves config with 4-level hierarchy: default → global → file → project DB', function (): void {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create([
         'project_id' => $project->id,

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\GitLabApiException;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 use Yosymfony\Toml\Toml;
 
 class VunnixTomlService
@@ -79,7 +80,7 @@ class VunnixTomlService
     {
         try {
             $parsed = Toml::parse($tomlContent);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('VunnixTomlService: malformed .vunnix.toml', [
                 'project_id' => $gitlabProjectId,
                 'error' => $e->getMessage(),

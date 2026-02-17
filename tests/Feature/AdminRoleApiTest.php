@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -21,14 +21,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -77,7 +77,7 @@ function createNonRoleAdmin(Project $project): User
 
 // ─── List Roles ─────────────────────────────────────────────────
 
-it('returns role list for role admin', function () {
+it('returns role list for role admin', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
 
@@ -94,7 +94,7 @@ it('returns role list for role admin', function () {
         ]);
 });
 
-it('filters roles by project_id', function () {
+it('filters roles by project_id', function (): void {
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
     $admin = createRoleAdmin($projectA);
@@ -113,7 +113,7 @@ it('filters roles by project_id', function () {
     }
 });
 
-it('rejects role list for non-role-admin', function () {
+it('rejects role list for non-role-admin', function (): void {
     $project = Project::factory()->create();
     $user = createNonRoleAdmin($project);
 
@@ -122,14 +122,14 @@ it('rejects role list for non-role-admin', function () {
         ->assertForbidden();
 });
 
-it('rejects role list for unauthenticated users', function () {
+it('rejects role list for unauthenticated users', function (): void {
     $this->getJson('/api/v1/admin/roles')
         ->assertUnauthorized();
 });
 
 // ─── List Permissions ───────────────────────────────────────────
 
-it('returns all permissions for role admin', function () {
+it('returns all permissions for role admin', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
 
@@ -143,7 +143,7 @@ it('returns all permissions for role admin', function () {
 
 // ─── Create Role ────────────────────────────────────────────────
 
-it('creates a role with permissions', function () {
+it('creates a role with permissions', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
 
@@ -168,7 +168,7 @@ it('creates a role with permissions', function () {
         ->toBe(['chat.access', 'review.view']);
 });
 
-it('creates a role with empty permissions', function () {
+it('creates a role with empty permissions', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
 
@@ -182,7 +182,7 @@ it('creates a role with empty permissions', function () {
         ->assertJsonPath('data.permissions', []);
 });
 
-it('rejects creating role with invalid project', function () {
+it('rejects creating role with invalid project', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
 
@@ -197,7 +197,7 @@ it('rejects creating role with invalid project', function () {
 
 // ─── Update Role ────────────────────────────────────────────────
 
-it('updates a role name and permissions', function () {
+it('updates a role name and permissions', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
     $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'old-name']);
@@ -220,7 +220,7 @@ it('updates a role name and permissions', function () {
 
 // ─── Delete Role ────────────────────────────────────────────────
 
-it('deletes a role with no users', function () {
+it('deletes a role with no users', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
     $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'to-delete']);
@@ -233,7 +233,7 @@ it('deletes a role with no users', function () {
     expect(Role::find($role->id))->toBeNull();
 });
 
-it('rejects deleting a role with assigned users', function () {
+it('rejects deleting a role with assigned users', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
     $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'in-use']);
@@ -249,7 +249,7 @@ it('rejects deleting a role with assigned users', function () {
 
 // ─── Assignments ────────────────────────────────────────────────
 
-it('lists role assignments across all projects', function () {
+it('lists role assignments across all projects', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
 
@@ -261,7 +261,7 @@ it('lists role assignments across all projects', function () {
         ]);
 });
 
-it('filters assignments by project_id', function () {
+it('filters assignments by project_id', function (): void {
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
     $admin = createRoleAdmin($projectA);
@@ -277,7 +277,7 @@ it('filters assignments by project_id', function () {
     }
 });
 
-it('assigns a role to a user', function () {
+it('assigns a role to a user', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
     $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'developer']);
@@ -296,7 +296,7 @@ it('assigns a role to a user', function () {
     expect($user->hasRole('developer', $project))->toBeTrue();
 });
 
-it('rejects duplicate role assignment', function () {
+it('rejects duplicate role assignment', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
     $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'developer']);
@@ -314,7 +314,7 @@ it('rejects duplicate role assignment', function () {
         ->assertJsonPath('success', false);
 });
 
-it('rejects assigning role from wrong project', function () {
+it('rejects assigning role from wrong project', function (): void {
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
     $admin = createRoleAdmin($projectA);
@@ -332,7 +332,7 @@ it('rejects assigning role from wrong project', function () {
         ->assertJsonPath('success', false);
 });
 
-it('revokes a role assignment', function () {
+it('revokes a role assignment', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
     $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'developer']);
@@ -354,7 +354,7 @@ it('revokes a role assignment', function () {
 
 // ─── Users List ─────────────────────────────────────────────────
 
-it('returns user list for assignment dropdowns', function () {
+it('returns user list for assignment dropdowns', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
 
@@ -368,7 +368,7 @@ it('returns user list for assignment dropdowns', function () {
 
 // ─── Integration: Assign + Access ───────────────────────────────
 
-it('grants access after role assignment and denies after revocation', function () {
+it('grants access after role assignment and denies after revocation', function (): void {
     $project = Project::factory()->create();
     $admin = createRoleAdmin($project);
 

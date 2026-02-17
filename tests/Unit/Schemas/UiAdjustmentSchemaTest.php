@@ -32,21 +32,21 @@ function validUiAdjustmentResult(array $overrides = []): array
 
 // ─── Valid data passes ──────────────────────────────────────────
 
-it('validates a complete valid UI adjustment result', function () {
+it('validates a complete valid UI adjustment result', function (): void {
     $result = UiAdjustmentSchema::validate(validUiAdjustmentResult());
 
     expect($result['valid'])->toBeTrue();
     expect($result['errors'])->toBeEmpty();
 });
 
-it('validates when screenshot is null (capture failed)', function () {
+it('validates when screenshot is null (capture failed)', function (): void {
     $data = validUiAdjustmentResult(['screenshot' => null]);
     $result = UiAdjustmentSchema::validate($data);
 
     expect($result['valid'])->toBeTrue();
 });
 
-it('validates when screenshot_mobile is a base64 string', function () {
+it('validates when screenshot_mobile is a base64 string', function (): void {
     $data = validUiAdjustmentResult([
         'screenshot_mobile' => 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAA',
     ]);
@@ -55,7 +55,7 @@ it('validates when screenshot_mobile is a base64 string', function () {
     expect($result['valid'])->toBeTrue();
 });
 
-it('validates when both screenshots are null', function () {
+it('validates when both screenshots are null', function (): void {
     $data = validUiAdjustmentResult([
         'screenshot' => null,
         'screenshot_mobile' => null,
@@ -65,7 +65,7 @@ it('validates when both screenshots are null', function () {
     expect($result['valid'])->toBeTrue();
 });
 
-it('validates when both screenshots are base64 strings', function () {
+it('validates when both screenshots are base64 strings', function (): void {
     $data = validUiAdjustmentResult([
         'screenshot' => 'iVBORw0KGgoAAAANSUhEUgAAAAE=',
         'screenshot_mobile' => 'iVBORw0KGgoAAAANSUhEUgAAAAE=',
@@ -75,7 +75,7 @@ it('validates when both screenshots are base64 strings', function () {
     expect($result['valid'])->toBeTrue();
 });
 
-it('validates both file action values', function (string $action) {
+it('validates both file action values', function (string $action): void {
     $data = validUiAdjustmentResult();
     $data['files_changed'][0]['action'] = $action;
     $result = UiAdjustmentSchema::validate($data);
@@ -85,7 +85,7 @@ it('validates both file action values', function (string $action) {
 
 // ─── Missing required fields fail ───────────────────────────────
 
-it('fails when screenshot field is missing entirely', function () {
+it('fails when screenshot field is missing entirely', function (): void {
     $data = validUiAdjustmentResult();
     unset($data['screenshot']);
     $result = UiAdjustmentSchema::validate($data);
@@ -94,7 +94,7 @@ it('fails when screenshot field is missing entirely', function () {
     expect($result['errors'])->toHaveKey('screenshot');
 });
 
-it('fails when screenshot_mobile field is missing entirely', function () {
+it('fails when screenshot_mobile field is missing entirely', function (): void {
     $data = validUiAdjustmentResult();
     unset($data['screenshot_mobile']);
     $result = UiAdjustmentSchema::validate($data);
@@ -103,7 +103,7 @@ it('fails when screenshot_mobile field is missing entirely', function () {
     expect($result['errors'])->toHaveKey('screenshot_mobile');
 });
 
-it('fails when branch is missing', function () {
+it('fails when branch is missing', function (): void {
     $data = validUiAdjustmentResult();
     unset($data['branch']);
     $result = UiAdjustmentSchema::validate($data);
@@ -112,7 +112,7 @@ it('fails when branch is missing', function () {
     expect($result['errors'])->toHaveKey('branch');
 });
 
-it('fails when mr_title is missing', function () {
+it('fails when mr_title is missing', function (): void {
     $data = validUiAdjustmentResult();
     unset($data['mr_title']);
     $result = UiAdjustmentSchema::validate($data);
@@ -121,7 +121,7 @@ it('fails when mr_title is missing', function () {
     expect($result['errors'])->toHaveKey('mr_title');
 });
 
-it('fails when files_changed is missing', function () {
+it('fails when files_changed is missing', function (): void {
     $data = validUiAdjustmentResult();
     unset($data['files_changed']);
     $result = UiAdjustmentSchema::validate($data);
@@ -130,7 +130,7 @@ it('fails when files_changed is missing', function () {
     expect($result['errors'])->toHaveKey('files_changed');
 });
 
-it('fails when notes is missing', function () {
+it('fails when notes is missing', function (): void {
     $data = validUiAdjustmentResult();
     unset($data['notes']);
     $result = UiAdjustmentSchema::validate($data);
@@ -141,7 +141,7 @@ it('fails when notes is missing', function () {
 
 // ─── Invalid values fail ────────────────────────────────────────
 
-it('fails when file action has an invalid value', function () {
+it('fails when file action has an invalid value', function (): void {
     $data = validUiAdjustmentResult();
     $data['files_changed'][0]['action'] = 'deleted';
     $result = UiAdjustmentSchema::validate($data);
@@ -152,7 +152,7 @@ it('fails when file action has an invalid value', function () {
 
 // ─── Extra fields stripped ──────────────────────────────────────
 
-it('strips unknown top-level fields', function () {
+it('strips unknown top-level fields', function (): void {
     $data = validUiAdjustmentResult();
     $data['unknown_field'] = 'should be removed';
     $data['ai_reasoning'] = 'internal';
@@ -166,7 +166,7 @@ it('strips unknown top-level fields', function () {
     ]);
 });
 
-it('strips unknown fields from files_changed entries', function () {
+it('strips unknown fields from files_changed entries', function (): void {
     $data = validUiAdjustmentResult();
     $data['files_changed'][0]['diff'] = '+some code';
     $data['files_changed'][0]['lines_added'] = 42;
@@ -177,7 +177,7 @@ it('strips unknown fields from files_changed entries', function () {
     expect($stripped['files_changed'][0])->toHaveKeys(['path', 'action', 'summary']);
 });
 
-it('preserves screenshot fields through strip', function () {
+it('preserves screenshot fields through strip', function (): void {
     $data = validUiAdjustmentResult();
     $stripped = UiAdjustmentSchema::strip($data);
 
@@ -185,7 +185,7 @@ it('preserves screenshot fields through strip', function () {
     expect($stripped['screenshot_mobile'])->toBeNull();
 });
 
-it('preserves valid data through strip', function () {
+it('preserves valid data through strip', function (): void {
     $data = validUiAdjustmentResult();
     $stripped = UiAdjustmentSchema::strip($data);
 
@@ -194,7 +194,7 @@ it('preserves valid data through strip', function () {
 
 // ─── validateAndStrip ───────────────────────────────────────────
 
-it('returns stripped data when valid via validateAndStrip', function () {
+it('returns stripped data when valid via validateAndStrip', function (): void {
     $data = validUiAdjustmentResult();
     $data['extra'] = 'junk';
     $result = UiAdjustmentSchema::validateAndStrip($data);
@@ -208,7 +208,7 @@ it('returns stripped data when valid via validateAndStrip', function () {
     ]);
 });
 
-it('returns null data when invalid via validateAndStrip', function () {
+it('returns null data when invalid via validateAndStrip', function (): void {
     $data = validUiAdjustmentResult();
     unset($data['screenshot']);
     $result = UiAdjustmentSchema::validateAndStrip($data);
@@ -220,11 +220,11 @@ it('returns null data when invalid via validateAndStrip', function () {
 
 // ─── Constants ──────────────────────────────────────────────────
 
-it('exposes schema version constant', function () {
+it('exposes schema version constant', function (): void {
     expect(UiAdjustmentSchema::VERSION)->toBe('1.0');
 });
 
-it('returns rules as an array with screenshot fields', function () {
+it('returns rules as an array with screenshot fields', function (): void {
     $rules = UiAdjustmentSchema::rules();
 
     expect($rules)->toBeArray();
@@ -236,7 +236,7 @@ it('returns rules as an array with screenshot fields', function () {
     expect($rules)->toHaveKey('tests_added');
 });
 
-it('has more rules than FeatureDevSchema', function () {
+it('has more rules than FeatureDevSchema', function (): void {
     $featureRules = \App\Schemas\FeatureDevSchema::rules();
     $uiRules = UiAdjustmentSchema::rules();
 

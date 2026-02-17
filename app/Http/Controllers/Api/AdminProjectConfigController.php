@@ -11,6 +11,7 @@ use App\Services\ProjectConfigService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Throwable;
 
 class AdminProjectConfigController extends Controller
 {
@@ -52,7 +53,7 @@ class AdminProjectConfigController extends Controller
                         newValue: $value,
                         projectId: $project->id,
                     );
-                } catch (\Throwable) {
+                } catch (Throwable) {
                     // Audit logging should never break config update
                 }
             }

@@ -122,9 +122,9 @@ class PruneConversationHistory
             $provider,
             $provider->cheapestTextModel(),
             'You are a conversation summarizer. Summarize the following conversation history concisely. '
-            . 'Retain: user intent, decisions made, action items, and critical context. '
-            . 'Compress: verbose AI responses, repeated information, pleasantries. '
-            . 'Output a clear, structured summary in 2-4 paragraphs.',
+            .'Retain: user intent, decisions made, action items, and critical context. '
+            .'Compress: verbose AI responses, repeated information, pleasantries. '
+            .'Output a clear, structured summary in 2-4 paragraphs.',
             [new UserMessage($transcript)],
         );
 

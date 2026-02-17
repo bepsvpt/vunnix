@@ -58,7 +58,7 @@ function costResultPayload(array $overrides = []): array
 
 // ─── Cost calculation on result submission ───────────────────────
 
-test('calculates cost from tokens using default prices when result is submitted', function () {
+test('calculates cost from tokens using default prices when result is submitted', function (): void {
     Queue::fake();
 
     $task = Task::factory()->running()->create();
@@ -76,7 +76,7 @@ test('calculates cost from tokens using default prices when result is submitted'
     expect((float) $task->cost)->toBe(1.5);
 });
 
-test('calculates cost for failed result submission', function () {
+test('calculates cost for failed result submission', function (): void {
     $task = Task::factory()->running()->create();
     $token = costGenerateToken($task->id);
 
@@ -97,7 +97,7 @@ test('calculates cost for failed result submission', function () {
 
 // ─── Cost flows to TaskMetric via observer ───────────────────────
 
-test('cost propagates from task to task_metrics via observer', function () {
+test('cost propagates from task to task_metrics via observer', function (): void {
     Event::fake([\App\Events\TaskStatusChanged::class]);
 
     $task = Task::factory()->create([
@@ -132,7 +132,7 @@ test('cost propagates from task to task_metrics via observer', function () {
 
 // ─── Custom prices from GlobalSetting ────────────────────────────
 
-test('uses custom prices from GlobalSetting when configured', function () {
+test('uses custom prices from GlobalSetting when configured', function (): void {
     Queue::fake();
 
     // Set custom prices (e.g., a cheaper model)
@@ -155,7 +155,7 @@ test('uses custom prices from GlobalSetting when configured', function () {
 
 // ─── Zero/null tokens ────────────────────────────────────────────
 
-test('calculates zero cost when tokens are zero', function () {
+test('calculates zero cost when tokens are zero', function (): void {
     Queue::fake();
 
     $task = Task::factory()->running()->create();

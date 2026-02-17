@@ -9,7 +9,6 @@
  *   → ProcessTask → TaskDispatcher (strategy + placeholder + pipeline trigger)
  *   → [simulated runner result via API]
  *   → ProcessTaskResult → ResultProcessor → 3-layer output (same as code review)
- *
  * @ai ask "...":
  *   Webhook (Note Hook) → EventRouter (ask_command, normal priority)
  *   → Permission check (review.trigger) → TaskDispatchService (IssueDiscussion)
@@ -54,7 +53,7 @@ function grantReviewTriggerT42(User $user, Project $project): void
 //  @ai improve — full code review flow with normal priority
 // ──────────────────────────────────────────────────────────────
 
-it('completes full @ai improve flow with 3-layer code review output', function () {
+it('completes full @ai improve flow with 3-layer code review output', function (): void {
     // ── 1. Set up project, config, and user with permission ──────
 
     $project = Project::factory()->enabled()->create([
@@ -98,7 +97,7 @@ it('completes full @ai improve flow with 3-layer code review output', function (
         ], 201),
 
         // Update note in-place (summary comment)
-        '*/api/v4/projects/42001/merge_requests/10/notes/' . $placeholderNoteId => Http::response([
+        '*/api/v4/projects/42001/merge_requests/10/notes/'.$placeholderNoteId => Http::response([
             'id' => $placeholderNoteId,
             'body' => '(updated summary)',
         ], 200),
@@ -298,7 +297,7 @@ it('completes full @ai improve flow with 3-layer code review output', function (
     expect($task->tokens_used)->toBe(15000 + 2800 + 500);
 });
 
-it('rejects @ai improve from user without review.trigger permission', function () {
+it('rejects @ai improve from user without review.trigger permission', function (): void {
     $project = Project::factory()->enabled()->create([
         'gitlab_project_id' => 42002,
     ]);
@@ -342,7 +341,7 @@ it('rejects @ai improve from user without review.trigger permission', function (
 //  @ai ask — answer posted as MR comment
 // ──────────────────────────────────────────────────────────────
 
-it('completes full @ai ask flow with answer posted as MR comment', function () {
+it('completes full @ai ask flow with answer posted as MR comment', function (): void {
     // ── 1. Set up project, config, and user with permission ──────
 
     $project = Project::factory()->enabled()->create([
@@ -528,7 +527,7 @@ it('completes full @ai ask flow with answer posted as MR comment', function () {
     expect($task->comment_id)->toBe($answerNoteId);
 });
 
-it('extracts question text from @ai ask with surrounding context', function () {
+it('extracts question text from @ai ask with surrounding context', function (): void {
     $project = Project::factory()->enabled()->create([
         'gitlab_project_id' => 42004,
     ]);
@@ -578,7 +577,7 @@ it('extracts question text from @ai ask with surrounding context', function () {
     expect($task->result['question'])->toBe('can we simplify this error handling?');
 });
 
-it('rejects @ai ask from user without review.trigger permission', function () {
+it('rejects @ai ask from user without review.trigger permission', function (): void {
     $project = Project::factory()->enabled()->create([
         'gitlab_project_id' => 42005,
     ]);

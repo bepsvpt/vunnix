@@ -25,28 +25,28 @@ function validActionDispatch(array $overrides = []): array
 
 // ─── Valid data passes ──────────────────────────────────────────
 
-it('validates a complete valid action dispatch', function () {
+it('validates a complete valid action dispatch', function (): void {
     $result = ActionDispatchSchema::validate(validActionDispatch());
 
     expect($result['valid'])->toBeTrue();
     expect($result['errors'])->toBeEmpty();
 });
 
-it('validates all action types', function (string $actionType) {
+it('validates all action types', function (string $actionType): void {
     $data = validActionDispatch(['action_type' => $actionType]);
     $result = ActionDispatchSchema::validate($data);
 
     expect($result['valid'])->toBeTrue();
 })->with(['create_issue', 'implement_feature', 'ui_adjustment', 'create_mr', 'deep_analysis']);
 
-it('validates with empty labels array', function () {
+it('validates with empty labels array', function (): void {
     $data = validActionDispatch(['labels' => []]);
     $result = ActionDispatchSchema::validate($data);
 
     expect($result['valid'])->toBeTrue();
 });
 
-it('validates with nullable optional fields', function () {
+it('validates with nullable optional fields', function (): void {
     $data = validActionDispatch([
         'branch_name' => null,
         'target_branch' => null,
@@ -57,7 +57,7 @@ it('validates with nullable optional fields', function () {
     expect($result['valid'])->toBeTrue();
 });
 
-it('validates create_issue without branch fields', function () {
+it('validates create_issue without branch fields', function (): void {
     $data = validActionDispatch([
         'action_type' => 'create_issue',
         'branch_name' => null,
@@ -69,7 +69,7 @@ it('validates create_issue without branch fields', function () {
     expect($result['valid'])->toBeTrue();
 });
 
-it('validates deep_analysis with minimal fields', function () {
+it('validates deep_analysis with minimal fields', function (): void {
     $data = validActionDispatch([
         'action_type' => 'deep_analysis',
         'branch_name' => null,
@@ -84,7 +84,7 @@ it('validates deep_analysis with minimal fields', function () {
 
 // ─── Missing required fields fail ───────────────────────────────
 
-it('fails when action_type is missing', function () {
+it('fails when action_type is missing', function (): void {
     $data = validActionDispatch();
     unset($data['action_type']);
     $result = ActionDispatchSchema::validate($data);
@@ -93,7 +93,7 @@ it('fails when action_type is missing', function () {
     expect($result['errors'])->toHaveKey('action_type');
 });
 
-it('fails when project_id is missing', function () {
+it('fails when project_id is missing', function (): void {
     $data = validActionDispatch();
     unset($data['project_id']);
     $result = ActionDispatchSchema::validate($data);
@@ -102,7 +102,7 @@ it('fails when project_id is missing', function () {
     expect($result['errors'])->toHaveKey('project_id');
 });
 
-it('fails when title is missing', function () {
+it('fails when title is missing', function (): void {
     $data = validActionDispatch();
     unset($data['title']);
     $result = ActionDispatchSchema::validate($data);
@@ -111,7 +111,7 @@ it('fails when title is missing', function () {
     expect($result['errors'])->toHaveKey('title');
 });
 
-it('fails when description is missing', function () {
+it('fails when description is missing', function (): void {
     $data = validActionDispatch();
     unset($data['description']);
     $result = ActionDispatchSchema::validate($data);
@@ -120,7 +120,7 @@ it('fails when description is missing', function () {
     expect($result['errors'])->toHaveKey('description');
 });
 
-it('fails when labels is missing', function () {
+it('fails when labels is missing', function (): void {
     $data = validActionDispatch();
     unset($data['labels']);
     $result = ActionDispatchSchema::validate($data);
@@ -131,7 +131,7 @@ it('fails when labels is missing', function () {
 
 // ─── Invalid values fail ────────────────────────────────────────
 
-it('fails when action_type has an invalid value', function () {
+it('fails when action_type has an invalid value', function (): void {
     $data = validActionDispatch(['action_type' => 'delete_repo']);
     $result = ActionDispatchSchema::validate($data);
 
@@ -139,7 +139,7 @@ it('fails when action_type has an invalid value', function () {
     expect($result['errors'])->toHaveKey('action_type');
 });
 
-it('fails when project_id is zero', function () {
+it('fails when project_id is zero', function (): void {
     $data = validActionDispatch(['project_id' => 0]);
     $result = ActionDispatchSchema::validate($data);
 
@@ -147,7 +147,7 @@ it('fails when project_id is zero', function () {
     expect($result['errors'])->toHaveKey('project_id');
 });
 
-it('fails when project_id is negative', function () {
+it('fails when project_id is negative', function (): void {
     $data = validActionDispatch(['project_id' => -5]);
     $result = ActionDispatchSchema::validate($data);
 
@@ -155,7 +155,7 @@ it('fails when project_id is negative', function () {
     expect($result['errors'])->toHaveKey('project_id');
 });
 
-it('fails when title exceeds max length', function () {
+it('fails when title exceeds max length', function (): void {
     $data = validActionDispatch(['title' => str_repeat('a', 501)]);
     $result = ActionDispatchSchema::validate($data);
 
@@ -163,14 +163,14 @@ it('fails when title exceeds max length', function () {
     expect($result['errors'])->toHaveKey('title');
 });
 
-it('passes when title is exactly at max length', function () {
+it('passes when title is exactly at max length', function (): void {
     $data = validActionDispatch(['title' => str_repeat('a', 500)]);
     $result = ActionDispatchSchema::validate($data);
 
     expect($result['valid'])->toBeTrue();
 });
 
-it('fails when branch_name exceeds max length', function () {
+it('fails when branch_name exceeds max length', function (): void {
     $data = validActionDispatch(['branch_name' => str_repeat('a', 256)]);
     $result = ActionDispatchSchema::validate($data);
 
@@ -178,7 +178,7 @@ it('fails when branch_name exceeds max length', function () {
     expect($result['errors'])->toHaveKey('branch_name');
 });
 
-it('fails when target_branch exceeds max length', function () {
+it('fails when target_branch exceeds max length', function (): void {
     $data = validActionDispatch(['target_branch' => str_repeat('a', 256)]);
     $result = ActionDispatchSchema::validate($data);
 
@@ -186,7 +186,7 @@ it('fails when target_branch exceeds max length', function () {
     expect($result['errors'])->toHaveKey('target_branch');
 });
 
-it('fails when assignee_id is zero', function () {
+it('fails when assignee_id is zero', function (): void {
     $data = validActionDispatch(['assignee_id' => 0]);
     $result = ActionDispatchSchema::validate($data);
 
@@ -194,7 +194,7 @@ it('fails when assignee_id is zero', function () {
     expect($result['errors'])->toHaveKey('assignee_id');
 });
 
-it('fails when labels contains a non-string value', function () {
+it('fails when labels contains a non-string value', function (): void {
     $data = validActionDispatch(['labels' => ['valid-label', 123]]);
     $result = ActionDispatchSchema::validate($data);
 
@@ -204,7 +204,7 @@ it('fails when labels contains a non-string value', function () {
 
 // ─── Extra fields stripped ──────────────────────────────────────
 
-it('strips unknown top-level fields', function () {
+it('strips unknown top-level fields', function (): void {
     $data = validActionDispatch();
     $data['unknown_field'] = 'should be removed';
     $data['conversation_id'] = 'abc-123';
@@ -220,14 +220,14 @@ it('strips unknown top-level fields', function () {
     ]);
 });
 
-it('preserves valid data through strip', function () {
+it('preserves valid data through strip', function (): void {
     $data = validActionDispatch();
     $stripped = ActionDispatchSchema::strip($data);
 
     expect($stripped)->toEqual($data);
 });
 
-it('strips only extra fields, preserves all schema fields', function () {
+it('strips only extra fields, preserves all schema fields', function (): void {
     $data = validActionDispatch();
     $data['extra'] = 'junk';
     $stripped = ActionDispatchSchema::strip($data);
@@ -238,7 +238,7 @@ it('strips only extra fields, preserves all schema fields', function () {
 
 // ─── validateAndStrip ───────────────────────────────────────────
 
-it('returns stripped data when valid via validateAndStrip', function () {
+it('returns stripped data when valid via validateAndStrip', function (): void {
     $data = validActionDispatch();
     $data['extra'] = 'junk';
     $result = ActionDispatchSchema::validateAndStrip($data);
@@ -252,7 +252,7 @@ it('returns stripped data when valid via validateAndStrip', function () {
     ]);
 });
 
-it('returns null data when invalid via validateAndStrip', function () {
+it('returns null data when invalid via validateAndStrip', function (): void {
     $data = validActionDispatch();
     unset($data['action_type']);
     $result = ActionDispatchSchema::validateAndStrip($data);
@@ -264,11 +264,11 @@ it('returns null data when invalid via validateAndStrip', function () {
 
 // ─── Constants ──────────────────────────────────────────────────
 
-it('exposes schema version constant', function () {
+it('exposes schema version constant', function (): void {
     expect(ActionDispatchSchema::VERSION)->toBe('1.0');
 });
 
-it('exposes action types constant', function () {
+it('exposes action types constant', function (): void {
     expect(ActionDispatchSchema::ACTION_TYPES)->toBe([
         'create_issue',
         'implement_feature',
@@ -278,7 +278,7 @@ it('exposes action types constant', function () {
     ]);
 });
 
-it('action types match DispatchAction tool mapping', function () {
+it('action types match DispatchAction tool mapping', function (): void {
     $schemaTypes = ActionDispatchSchema::ACTION_TYPES;
     $toolTypes = array_keys(\App\Agents\Tools\DispatchAction::ACTION_TYPE_MAP);
 
@@ -288,7 +288,7 @@ it('action types match DispatchAction tool mapping', function () {
     }
 });
 
-it('returns rules as an array', function () {
+it('returns rules as an array', function (): void {
     $rules = ActionDispatchSchema::rules();
 
     expect($rules)->toBeArray();

@@ -8,13 +8,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('returns 401 for unauthenticated requests', function () {
+it('returns 401 for unauthenticated requests', function (): void {
     $response = $this->getJson('/api/v1/user');
 
     $response->assertStatus(401);
 });
 
-it('returns authenticated user profile', function () {
+it('returns authenticated user profile', function (): void {
     $user = User::factory()->create([
         'name' => 'Jane Dev',
         'email' => 'jane@example.com',
@@ -33,7 +33,7 @@ it('returns authenticated user profile', function () {
         ->assertJsonPath('data.projects', []);
 });
 
-it('does not expose sensitive fields', function () {
+it('does not expose sensitive fields', function (): void {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->getJson('/api/v1/user');
@@ -45,7 +45,7 @@ it('does not expose sensitive fields', function () {
         ->assertJsonMissingPath('data.oauth_refresh_token');
 });
 
-it('includes accessible projects with roles and permissions', function () {
+it('includes accessible projects with roles and permissions', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create(['name' => 'My Project']);
 
@@ -79,7 +79,7 @@ it('includes accessible projects with roles and permissions', function () {
         ->assertJsonPath('data.projects.0.permissions', ['chat.access']);
 });
 
-it('excludes disabled projects', function () {
+it('excludes disabled projects', function (): void {
     $user = User::factory()->create();
     $enabledProject = Project::factory()->enabled()->create(['name' => 'Enabled']);
     $disabledProject = Project::factory()->create(['name' => 'Disabled', 'enabled' => false]);
@@ -96,7 +96,7 @@ it('excludes disabled projects', function () {
         ->assertJsonPath('data.projects.0.name', 'Enabled');
 });
 
-it('includes multiple projects with different roles', function () {
+it('includes multiple projects with different roles', function (): void {
     $user = User::factory()->create();
     $projectA = Project::factory()->enabled()->create(['name' => 'Project A']);
     $projectB = Project::factory()->enabled()->create(['name' => 'Project B']);

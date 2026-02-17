@@ -14,9 +14,9 @@ uses(RefreshDatabase::class);
 
 // ─── Setup ─────────────────────────────────────────────────────
 
-beforeEach(function () {
+beforeEach(function (): void {
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -26,14 +26,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -103,12 +103,12 @@ function createDlqEntryWithTask(Project $project, array $overrides = []): DeadLe
 
 // ─── GET /api/v1/admin/dead-letter ─────────────────────────────
 
-it('returns 401 for unauthenticated users on DLQ index', function () {
+it('returns 401 for unauthenticated users on DLQ index', function (): void {
     $this->getJson('/api/v1/admin/dead-letter')
         ->assertUnauthorized();
 });
 
-it('returns 403 for non-admin users on DLQ index', function () {
+it('returns 403 for non-admin users on DLQ index', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createDlqRegularUser($project);
 
@@ -117,7 +117,7 @@ it('returns 403 for non-admin users on DLQ index', function () {
         ->assertForbidden();
 });
 
-it('returns active DLQ entries for admin users', function () {
+it('returns active DLQ entries for admin users', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createDlqAdmin($project);
 
@@ -153,7 +153,7 @@ it('returns active DLQ entries for admin users', function () {
         ->assertJsonPath('data.1.id', $entry1->id);
 });
 
-it('returns empty data array when no DLQ entries exist', function () {
+it('returns empty data array when no DLQ entries exist', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createDlqAdmin($project);
 
@@ -163,7 +163,7 @@ it('returns empty data array when no DLQ entries exist', function () {
         ->assertJsonCount(0, 'data');
 });
 
-it('filters DLQ entries by failure_reason', function () {
+it('filters DLQ entries by failure_reason', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createDlqAdmin($project);
 
@@ -179,7 +179,7 @@ it('filters DLQ entries by failure_reason', function () {
 
 // ─── GET /api/v1/admin/dead-letter/{id} ────────────────────────
 
-it('returns single DLQ entry with relationships for admin', function () {
+it('returns single DLQ entry with relationships for admin', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createDlqAdmin($project);
 
@@ -192,7 +192,7 @@ it('returns single DLQ entry with relationships for admin', function () {
         ->assertJsonPath('data.failure_reason', $entry->failure_reason);
 });
 
-it('returns 404 for non-existent DLQ entry', function () {
+it('returns 404 for non-existent DLQ entry', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createDlqAdmin($project);
 
@@ -203,7 +203,7 @@ it('returns 404 for non-existent DLQ entry', function () {
 
 // ─── POST /api/v1/admin/dead-letter/{id}/retry ─────────────────
 
-it('returns 401 for unauthenticated users on DLQ retry', function () {
+it('returns 401 for unauthenticated users on DLQ retry', function (): void {
     $project = Project::factory()->enabled()->create();
     $entry = createDlqEntryWithTask($project);
 
@@ -211,7 +211,7 @@ it('returns 401 for unauthenticated users on DLQ retry', function () {
         ->assertUnauthorized();
 });
 
-it('returns 403 for non-admin users on DLQ retry', function () {
+it('returns 403 for non-admin users on DLQ retry', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createDlqRegularUser($project);
     $entry = createDlqEntryWithTask($project);
@@ -221,7 +221,7 @@ it('returns 403 for non-admin users on DLQ retry', function () {
         ->assertForbidden();
 });
 
-it('retries a DLQ entry and returns new task', function () {
+it('retries a DLQ entry and returns new task', function (): void {
     Queue::fake();
 
     $project = Project::factory()->enabled()->create();
@@ -241,7 +241,7 @@ it('retries a DLQ entry and returns new task', function () {
     expect($entry->retried_task_id)->not->toBeNull();
 });
 
-it('returns 422 when retrying an already-retried DLQ entry', function () {
+it('returns 422 when retrying an already-retried DLQ entry', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createDlqAdmin($project);
     $entry = createDlqEntryWithTask($project, [
@@ -258,7 +258,7 @@ it('returns 422 when retrying an already-retried DLQ entry', function () {
 
 // ─── POST /api/v1/admin/dead-letter/{id}/dismiss ───────────────
 
-it('returns 401 for unauthenticated users on DLQ dismiss', function () {
+it('returns 401 for unauthenticated users on DLQ dismiss', function (): void {
     $project = Project::factory()->enabled()->create();
     $entry = createDlqEntryWithTask($project);
 
@@ -266,7 +266,7 @@ it('returns 401 for unauthenticated users on DLQ dismiss', function () {
         ->assertUnauthorized();
 });
 
-it('returns 403 for non-admin users on DLQ dismiss', function () {
+it('returns 403 for non-admin users on DLQ dismiss', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createDlqRegularUser($project);
     $entry = createDlqEntryWithTask($project);
@@ -276,7 +276,7 @@ it('returns 403 for non-admin users on DLQ dismiss', function () {
         ->assertForbidden();
 });
 
-it('dismisses a DLQ entry for admin users', function () {
+it('dismisses a DLQ entry for admin users', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createDlqAdmin($project);
     $entry = createDlqEntryWithTask($project);
@@ -292,7 +292,7 @@ it('dismisses a DLQ entry for admin users', function () {
     expect($entry->dismissed_by)->toBe($user->id);
 });
 
-it('returns 422 when dismissing an already-dismissed DLQ entry', function () {
+it('returns 422 when dismissing an already-dismissed DLQ entry', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createDlqAdmin($project);
     $entry = createDlqEntryWithTask($project, [

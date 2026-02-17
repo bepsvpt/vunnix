@@ -61,32 +61,6 @@ class DeadLetterEntry extends Model
         'dead_lettered_at',
     ];
 
-    /**
-     * @return array{
-     *   task_record: 'array',
-     *   attempts: 'array',
-     *   dismissed: 'boolean',
-     *   retried: 'boolean',
-     *   originally_queued_at: 'datetime',
-     *   dead_lettered_at: 'datetime',
-     *   dismissed_at: 'datetime',
-     *   retried_at: 'datetime',
-     * }
-     */
-    protected function casts(): array
-    {
-        return [
-            'task_record' => 'array',
-            'attempts' => 'array',
-            'dismissed' => 'boolean',
-            'retried' => 'boolean',
-            'originally_queued_at' => 'datetime',
-            'dead_lettered_at' => 'datetime',
-            'dismissed_at' => 'datetime',
-            'retried_at' => 'datetime',
-        ];
-    }
-
     // ─── Relationships ──────────────────────────────────────────────
 
     /** @return BelongsTo<Task, $this> */
@@ -121,5 +95,31 @@ class DeadLetterEntry extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('dismissed', false)->where('retried', false);
+    }
+
+    /**
+     * @return array{
+     *   task_record: 'array',
+     *   attempts: 'array',
+     *   dismissed: 'boolean',
+     *   retried: 'boolean',
+     *   originally_queued_at: 'datetime',
+     *   dead_lettered_at: 'datetime',
+     *   dismissed_at: 'datetime',
+     *   retried_at: 'datetime',
+     * }
+     */
+    protected function casts(): array
+    {
+        return [
+            'task_record' => 'array',
+            'attempts' => 'array',
+            'dismissed' => 'boolean',
+            'retried' => 'boolean',
+            'originally_queued_at' => 'datetime',
+            'dead_lettered_at' => 'datetime',
+            'dismissed_at' => 'datetime',
+            'retried_at' => 'datetime',
+        ];
     }
 }

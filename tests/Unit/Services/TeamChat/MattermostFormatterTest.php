@@ -2,8 +2,8 @@
 
 use App\Services\TeamChat\MattermostFormatter;
 
-it('formats notification with text and attachments', function () {
-    $formatter = new MattermostFormatter();
+it('formats notification with text and attachments', function (): void {
+    $formatter = new MattermostFormatter;
     $payload = $formatter->format('task_completed', 'Review complete');
 
     expect($payload)->toHaveKey('text', 'Review complete');
@@ -12,8 +12,8 @@ it('formats notification with text and attachments', function () {
     expect($payload['attachments'][0])->toHaveKey('text');
 });
 
-it('uses correct color for urgency levels', function () {
-    $formatter = new MattermostFormatter();
+it('uses correct color for urgency levels', function (): void {
+    $formatter = new MattermostFormatter;
 
     $high = $formatter->format('alert', 'Error', ['urgency' => 'high']);
     expect($high['attachments'][0]['color'])->toBe('#dc2626');
@@ -22,8 +22,8 @@ it('uses correct color for urgency levels', function () {
     expect($medium['attachments'][0]['color'])->toBe('#f59e0b');
 });
 
-it('includes project and urgency fields', function () {
-    $formatter = new MattermostFormatter();
+it('includes project and urgency fields', function (): void {
+    $formatter = new MattermostFormatter;
     $payload = $formatter->format('alert', 'Queue depth growing', [
         'urgency' => 'medium',
         'project' => 'my-app',
@@ -35,8 +35,8 @@ it('includes project and urgency fields', function () {
     expect($fields[0]['value'])->toBe('my-app');
 });
 
-it('appends action links as markdown', function () {
-    $formatter = new MattermostFormatter();
+it('appends action links as markdown', function (): void {
+    $formatter = new MattermostFormatter;
     $payload = $formatter->format('task_completed', 'Done', [
         'links' => [['label' => 'View MR', 'url' => 'https://example.com/mr/1']],
     ]);

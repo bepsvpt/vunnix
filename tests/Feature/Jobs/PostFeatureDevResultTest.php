@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
-it('updates existing MR instead of creating new one when existing_mr_iid is set', function () {
+it('updates existing MR instead of creating new one when existing_mr_iid is set', function (): void {
     $task = Task::factory()->running()->create([
         'type' => 'ui_adjustment',
         'mr_iid' => 456,
@@ -53,7 +53,7 @@ it('updates existing MR instead of creating new one when existing_mr_iid is set'
     });
 });
 
-it('skips issue summary when task has no issue_iid (conversation origin)', function () {
+it('skips issue summary when task has no issue_iid (conversation origin)', function (): void {
     $task = Task::factory()->running()->create([
         'type' => 'ui_adjustment',
         'mr_iid' => null,
@@ -86,7 +86,7 @@ it('skips issue summary when task has no issue_iid (conversation origin)', funct
     });
 });
 
-it('creates new MR when existing_mr_iid is not set', function () {
+it('creates new MR when existing_mr_iid is not set', function (): void {
     $task = Task::factory()->running()->create([
         'type' => 'feature_dev',
         'mr_iid' => null,

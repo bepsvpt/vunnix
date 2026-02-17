@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('has a users relationship via project_user pivot', function () {
+it('has a users relationship via project_user pivot', function (): void {
     $project = Project::factory()->create();
     $user = User::factory()->create();
 
@@ -21,7 +21,7 @@ it('has a users relationship via project_user pivot', function () {
         ->and($project->users->first()->id)->toBe($user->id);
 });
 
-it('includes pivot data on the users relationship', function () {
+it('includes pivot data on the users relationship', function (): void {
     $project = Project::factory()->create();
     $user = User::factory()->create();
 
@@ -35,7 +35,7 @@ it('includes pivot data on the users relationship', function () {
         ->and($pivotUser->pivot->synced_at)->not->toBeNull();
 });
 
-it('scopes enabled projects', function () {
+it('scopes enabled projects', function (): void {
     Project::factory()->create(['enabled' => true]);
     Project::factory()->create(['enabled' => false]);
     Project::factory()->create(['enabled' => true]);
@@ -43,7 +43,7 @@ it('scopes enabled projects', function () {
     expect(Project::enabled()->count())->toBe(2);
 });
 
-it('can find a project by gitlab_project_id', function () {
+it('can find a project by gitlab_project_id', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 42]);
 
     $found = Project::where('gitlab_project_id', 42)->first();

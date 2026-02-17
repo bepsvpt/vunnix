@@ -2,16 +2,17 @@
 
 namespace App\Jobs;
 
-use App\Jobs\Middleware\RetryWithBackoff;
-use App\Models\Task;
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
+use App\Jobs\Middleware\RetryWithBackoff;
+use App\Models\Task;
 use App\Services\GitLabClient;
 use App\Services\SummaryCommentFormatter;
 use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Post a summary comment (Layer 1) on a GitLab merge request.
@@ -64,7 +65,7 @@ class PostSummaryComment implements ShouldQueue
             return;
         }
 
-        $formatter = new SummaryCommentFormatter();
+        $formatter = new SummaryCommentFormatter;
 
         // T40: Detect incremental review — if this task's comment_id was inherited
         // from a previous task, include an "Updated" timestamp in the summary.
@@ -101,7 +102,7 @@ class PostSummaryComment implements ShouldQueue
                     'note_id' => $note['id'],
                 ]);
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('PostSummaryComment: failed to post comment', [
                 'task_id' => $this->taskId,
                 'error' => $e->getMessage(),

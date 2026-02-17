@@ -9,6 +9,7 @@ use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Create a merge request and post a summary comment for a feature dev task.
@@ -116,7 +117,7 @@ class PostFeatureDevResult implements ShouldQueue
             ]);
 
             return $mrIid;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('PostFeatureDevResult: failed to create merge request', [
                 'task_id' => $this->taskId,
                 'branch' => $branch,
@@ -154,7 +155,7 @@ class PostFeatureDevResult implements ShouldQueue
             ]);
 
             return $mrIid;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('PostFeatureDevResult: failed to update existing MR', [
                 'task_id' => $this->taskId,
                 'mr_iid' => $mrIid,
@@ -184,7 +185,7 @@ class PostFeatureDevResult implements ShouldQueue
                 'issue_iid' => $task->issue_iid,
                 'note_id' => $note['id'],
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('PostFeatureDevResult: failed to post issue summary', [
                 'task_id' => $this->taskId,
                 'error' => $e->getMessage(),
@@ -206,7 +207,7 @@ class PostFeatureDevResult implements ShouldQueue
         $filesChanged = $result['files_changed'] ?? [];
 
         $lines = [
-            "### 🤖 AI Feature Development Complete",
+            '### 🤖 AI Feature Development Complete',
             '',
             "**Merge Request:** !{$mrIid} — {$mrTitle}",
             "**Branch:** `{$branch}`",

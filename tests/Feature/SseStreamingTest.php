@@ -14,12 +14,12 @@ uses(RefreshDatabase::class);
 
 // ─── Setup ─────────────────────────────────────────────────────
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Ensure agent_conversations and agent_conversation_messages tables exist with all
     // custom columns. The SDK migration may have a 2026 timestamp that sorts after our
     // 2024 custom migrations, and PostgreSQL-only migrations skip on SQLite.
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -29,14 +29,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -73,7 +73,7 @@ function sseUser(Project $project): User
 
 // ─── SSE Streaming Endpoint ─────────────────────────────────────
 
-it('streams an AI response as SSE for a valid message', function () {
+it('streams an AI response as SSE for a valid message', function (): void {
     VunnixAgent::fake(['This is a streamed response from the AI assistant']);
 
     $project = Project::factory()->create();
@@ -102,7 +102,7 @@ it('streams an AI response as SSE for a valid message', function () {
     expect($content)->toContain('response');
 });
 
-it('persists the user message via SDK middleware after streaming', function () {
+it('persists the user message via SDK middleware after streaming', function (): void {
     VunnixAgent::fake(['AI response text']);
 
     $project = Project::factory()->create();
@@ -125,7 +125,7 @@ it('persists the user message via SDK middleware after streaming', function () {
     expect($userMessage->content)->toBe('Review my authentication code');
 });
 
-it('returns 403 when user is not a project member', function () {
+it('returns 403 when user is not a project member', function (): void {
     VunnixAgent::fake(['Should not reach this']);
 
     $project = Project::factory()->create();
@@ -141,7 +141,7 @@ it('returns 403 when user is not a project member', function () {
     VunnixAgent::assertNeverPrompted();
 });
 
-it('returns 422 when content is missing', function () {
+it('returns 422 when content is missing', function (): void {
     $project = Project::factory()->create();
     $user = sseUser($project);
     $conversation = Conversation::factory()->forUser($user)->forProject($project)->create();
@@ -152,7 +152,7 @@ it('returns 422 when content is missing', function () {
         ->assertJsonValidationErrors('content');
 });
 
-it('returns 422 when content exceeds max length', function () {
+it('returns 422 when content exceeds max length', function (): void {
     $project = Project::factory()->create();
     $user = sseUser($project);
     $conversation = Conversation::factory()->forUser($user)->forProject($project)->create();
@@ -165,7 +165,7 @@ it('returns 422 when content exceeds max length', function () {
         ->assertJsonValidationErrors('content');
 });
 
-it('returns redirect for unauthenticated requests', function () {
+it('returns redirect for unauthenticated requests', function (): void {
     $project = Project::factory()->create();
     $conversation = Conversation::factory()->forProject($project)->create();
 
@@ -174,7 +174,7 @@ it('returns redirect for unauthenticated requests', function () {
     ])->assertRedirect();
 });
 
-it('returns 404 for nonexistent conversation', function () {
+it('returns 404 for nonexistent conversation', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user)
@@ -184,7 +184,7 @@ it('returns 404 for nonexistent conversation', function () {
         ->assertNotFound();
 });
 
-it('includes all SSE event types in the stream', function () {
+it('includes all SSE event types in the stream', function (): void {
     VunnixAgent::fake(['Complete response with multiple words for delta events']);
 
     $project = Project::factory()->create();
@@ -222,7 +222,7 @@ it('includes all SSE event types in the stream', function () {
     }
 });
 
-it('sends the user prompt to the agent', function () {
+it('sends the user prompt to the agent', function (): void {
     VunnixAgent::fake(['Acknowledged']);
 
     $project = Project::factory()->create();

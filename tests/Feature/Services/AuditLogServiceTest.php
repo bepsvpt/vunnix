@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Ensure agent_conversations table exists (required by migrations ordering)
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -22,14 +22,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -46,9 +46,9 @@ beforeEach(function () {
     }
 });
 
-it('logs a conversation turn with full content', function () {
+it('logs a conversation turn with full content', function (): void {
     $user = User::factory()->create();
-    $service = new AuditLogService();
+    $service = new AuditLogService;
 
     $service->logConversationTurn(
         userId: $user->id,
@@ -72,10 +72,10 @@ it('logs a conversation turn with full content', function () {
     expect($log->properties['model'])->toBe('claude-opus-4-6');
 });
 
-it('logs a task execution with prompt, response, cost', function () {
+it('logs a task execution with prompt, response, cost', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $service = new AuditLogService();
+    $service = new AuditLogService;
 
     $service->logTaskExecution(
         taskId: 99,
@@ -104,9 +104,9 @@ it('logs a task execution with prompt, response, cost', function () {
     expect($log->properties['result_status'])->toBe('completed');
 });
 
-it('logs a configuration change with old and new values', function () {
+it('logs a configuration change with old and new values', function (): void {
     $user = User::factory()->create();
-    $service = new AuditLogService();
+    $service = new AuditLogService;
 
     $service->logConfigurationChange(
         userId: $user->id,
@@ -124,10 +124,10 @@ it('logs a configuration change with old and new values', function () {
     expect($log->properties['new_value'])->toBe('claude-sonnet-4-20250514');
 });
 
-it('logs an action dispatch', function () {
+it('logs an action dispatch', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $service = new AuditLogService();
+    $service = new AuditLogService;
 
     $service->logActionDispatch(
         userId: $user->id,
@@ -147,9 +147,9 @@ it('logs an action dispatch', function () {
     expect($log->properties['gitlab_artifact_url'])->toContain('merge_requests/42');
 });
 
-it('logs a webhook received event', function () {
+it('logs a webhook received event', function (): void {
     $project = Project::factory()->create();
-    $service = new AuditLogService();
+    $service = new AuditLogService;
 
     $service->logWebhookReceived(
         projectId: $project->id,
@@ -166,9 +166,9 @@ it('logs a webhook received event', function () {
     expect($log->properties['relevant_ids'])->toEqual(['mr_iid' => 42, 'action' => 'open']);
 });
 
-it('logs an auth event', function () {
+it('logs an auth event', function (): void {
     $user = User::factory()->create();
-    $service = new AuditLogService();
+    $service = new AuditLogService;
 
     $service->logAuthEvent(
         userId: $user->id,

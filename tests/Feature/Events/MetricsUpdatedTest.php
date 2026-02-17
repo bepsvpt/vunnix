@@ -3,7 +3,7 @@
 use App\Events\MetricsUpdated;
 use Illuminate\Broadcasting\PrivateChannel;
 
-test('MetricsUpdated broadcasts on the metrics channel for the given project', function () {
+test('MetricsUpdated broadcasts on the metrics channel for the given project', function (): void {
     $event = new MetricsUpdated(projectId: 10, data: ['tasks_today' => 5]);
 
     $channels = $event->broadcastOn();
@@ -13,7 +13,7 @@ test('MetricsUpdated broadcasts on the metrics channel for the given project', f
     expect($channels[0]->name)->toBe('private-metrics.10');
 });
 
-test('MetricsUpdated includes project_id, data, and timestamp in broadcast payload', function () {
+test('MetricsUpdated includes project_id, data, and timestamp in broadcast payload', function (): void {
     $event = new MetricsUpdated(projectId: 10, data: ['tasks_today' => 5]);
 
     $payload = $event->broadcastWith();
@@ -23,7 +23,7 @@ test('MetricsUpdated includes project_id, data, and timestamp in broadcast paylo
     expect($payload['data'])->toBe(['tasks_today' => 5]);
 });
 
-test('MetricsUpdated has the correct broadcast event name', function () {
+test('MetricsUpdated has the correct broadcast event name', function (): void {
     $event = new MetricsUpdated(projectId: 10, data: []);
 
     expect($event->broadcastAs())->toBe('metrics.updated');

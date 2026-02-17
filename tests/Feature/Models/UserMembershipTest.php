@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('has a projects relationship via project_user pivot', function () {
+it('has a projects relationship via project_user pivot', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 
@@ -21,7 +21,7 @@ it('has a projects relationship via project_user pivot', function () {
         ->and($user->projects->first()->id)->toBe($project->id);
 });
 
-it('includes pivot data on the projects relationship', function () {
+it('includes pivot data on the projects relationship', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 
@@ -35,7 +35,7 @@ it('includes pivot data on the projects relationship', function () {
         ->and($pivotProject->pivot->synced_at)->not->toBeNull();
 });
 
-it('returns accessible projects for a user', function () {
+it('returns accessible projects for a user', function (): void {
     $user = User::factory()->create();
     $projectA = Project::factory()->create(['enabled' => true]);
     $projectB = Project::factory()->create(['enabled' => true]);
@@ -51,7 +51,7 @@ it('returns accessible projects for a user', function () {
         ->and($accessible->pluck('id')->toArray())->toContain($projectA->id, $projectB->id);
 });
 
-it('returns the gitlab access level for a specific project', function () {
+it('returns the gitlab access level for a specific project', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 
@@ -63,7 +63,7 @@ it('returns the gitlab access level for a specific project', function () {
     expect($user->gitlabAccessLevel($project))->toBe(40);
 });
 
-it('returns null access level for a project the user does not belong to', function () {
+it('returns null access level for a project the user does not belong to', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 

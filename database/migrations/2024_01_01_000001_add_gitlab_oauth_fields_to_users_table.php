@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table): void {
             $table->unsignedBigInteger('gitlab_id')->unique()->after('id');
             $table->string('username')->index()->after('name');
             $table->string('avatar_url')->nullable()->after('email');
@@ -19,18 +19,18 @@ return new class extends Migration
         });
 
         // Make password nullable — login is OAuth-only
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table): void {
             $table->string('password')->nullable()->change();
         });
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table): void {
             $table->string('password')->nullable(false)->change();
         });
 
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table): void {
             $table->dropIndex(['gitlab_id']);
             $table->dropIndex(['username']);
             $table->dropColumn([

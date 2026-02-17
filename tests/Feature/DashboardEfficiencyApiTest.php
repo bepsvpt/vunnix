@@ -12,9 +12,9 @@ uses(RefreshDatabase::class);
 
 // ─── Setup ─────────────────────────────────────────────────────
 
-beforeEach(function () {
+beforeEach(function (): void {
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -24,14 +24,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -50,7 +50,7 @@ beforeEach(function () {
 
 // ─── Tests ─────────────────────────────────────────────────────
 
-it('returns efficiency stats scoped to user projects', function () {
+it('returns efficiency stats scoped to user projects', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -115,7 +115,7 @@ it('returns efficiency stats scoped to user projects', function () {
     $response->assertJsonPath('data.completion_rate_by_type.feature_dev', 50);
 });
 
-it('returns correct response structure', function () {
+it('returns correct response structure', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -132,7 +132,7 @@ it('returns correct response structure', function () {
     ]);
 });
 
-it('returns null time metrics when no completed reviews exist', function () {
+it('returns null time metrics when no completed reviews exist', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -145,12 +145,12 @@ it('returns null time metrics when no completed reviews exist', function () {
     $response->assertJsonPath('data.completion_rate_by_type', []);
 });
 
-it('returns 401 for unauthenticated users', function () {
+it('returns 401 for unauthenticated users', function (): void {
     $response = $this->getJson('/api/v1/dashboard/efficiency');
     $response->assertUnauthorized();
 });
 
-it('excludes tasks from disabled projects', function () {
+it('excludes tasks from disabled projects', function (): void {
     $user = User::factory()->create();
     $disabledProject = Project::factory()->create(['enabled' => false]);
     $disabledProject->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -172,7 +172,7 @@ it('excludes tasks from disabled projects', function () {
     $response->assertJsonPath('data.completion_rate_by_type', []);
 });
 
-it('only includes completed code reviews for time metrics', function () {
+it('only includes completed code reviews for time metrics', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -209,7 +209,7 @@ it('only includes completed code reviews for time metrics', function () {
     $response->assertJsonPath('data.completion_rate_by_type.code_review', 0);
 });
 
-it('computes completion rate for multiple types', function () {
+it('computes completion rate for multiple types', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -244,7 +244,7 @@ it('computes completion rate for multiple types', function () {
     $response->assertJsonPath('data.completion_rate_by_type.ui_adjustment', 100);
 });
 
-it('excludes superseded tasks from completion rate', function () {
+it('excludes superseded tasks from completion rate', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);

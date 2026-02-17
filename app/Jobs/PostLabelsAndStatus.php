@@ -10,6 +10,7 @@ use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Apply labels and set commit status (Layer 3) on a GitLab merge request.
@@ -63,7 +64,7 @@ class PostLabelsAndStatus implements ShouldQueue
             return;
         }
 
-        $mapper = new LabelMapper();
+        $mapper = new LabelMapper;
         $labels = $mapper->mapLabels($task->result);
         $commitStatus = $mapper->mapCommitStatus($task->result);
 
@@ -72,7 +73,7 @@ class PostLabelsAndStatus implements ShouldQueue
         // Fetch MR to get the head commit SHA for commit status
         try {
             $mr = $gitLab->getMergeRequest($projectId, $task->mr_iid);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('PostLabelsAndStatus: failed to fetch MR', [
                 'task_id' => $this->taskId,
                 'error' => $e->getMessage(),
@@ -95,7 +96,7 @@ class PostLabelsAndStatus implements ShouldQueue
                     'task_id' => $this->taskId,
                     'removed' => $labelsToRemove,
                 ]);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 Log::warning('PostLabelsAndStatus: failed to remove old labels', [
                     'task_id' => $this->taskId,
                     'error' => $e->getMessage(),
@@ -112,7 +113,7 @@ class PostLabelsAndStatus implements ShouldQueue
                 'task_id' => $this->taskId,
                 'labels' => $labels,
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('PostLabelsAndStatus: failed to apply labels', [
                 'task_id' => $this->taskId,
                 'error' => $e->getMessage(),
@@ -135,7 +136,7 @@ class PostLabelsAndStatus implements ShouldQueue
                 'sha' => $commitSha,
                 'status' => $commitStatus,
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('PostLabelsAndStatus: failed to set commit status', [
                 'task_id' => $this->taskId,
                 'error' => $e->getMessage(),

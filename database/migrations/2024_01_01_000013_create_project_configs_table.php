@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('project_configs', function (Blueprint $table) {
+        Schema::create('project_configs', function (Blueprint $table): void {
             $table->id();
 
             // One config per project

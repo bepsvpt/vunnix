@@ -14,10 +14,11 @@ function createQualityPromptVersionUser(): array
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+
     return [$user, $project];
 }
 
-it('filters quality metrics by prompt_version', function () {
+it('filters quality metrics by prompt_version', function (): void {
     [$user, $project] = createQualityPromptVersionUser();
 
     // v1.0 review: 1 critical, 1 major
@@ -60,7 +61,7 @@ it('filters quality metrics by prompt_version', function () {
         ->assertJsonPath('data.severity_distribution.minor', 0);
 });
 
-it('returns all reviews when no prompt_version filter is set', function () {
+it('returns all reviews when no prompt_version filter is set', function (): void {
     [$user, $project] = createQualityPromptVersionUser();
 
     Task::factory()->create([

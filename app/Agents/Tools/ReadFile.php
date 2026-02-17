@@ -75,7 +75,7 @@ class ReadFile implements Tool
         $content = base64_decode($fileData['content'] ?? '', true);
 
         if ($content === false) {
-            return "Error: Unable to decode file content (binary file or invalid encoding).";
+            return 'Error: Unable to decode file content (binary file or invalid encoding).';
         }
 
         $fileName = $fileData['file_name'] ?? $request->string('file_path');
@@ -83,7 +83,7 @@ class ReadFile implements Tool
         if (strlen($content) > self::MAX_FILE_SIZE) {
             $truncated = substr($content, 0, self::MAX_FILE_SIZE);
 
-            return "File: {$fileName}\n(Truncated — file is " . number_format(strlen($content)) . " bytes, showing first " . number_format(self::MAX_FILE_SIZE) . ")\n\n{$truncated}";
+            return "File: {$fileName}\n(Truncated — file is ".number_format(strlen($content)).' bytes, showing first '.number_format(self::MAX_FILE_SIZE).")\n\n{$truncated}";
         }
 
         return "File: {$fileName}\n\n{$content}";

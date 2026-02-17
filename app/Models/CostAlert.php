@@ -33,6 +33,11 @@ class CostAlert extends Model
         'acknowledged_at',
     ];
 
+    public function scopeActive($query)
+    {
+        return $query->where('acknowledged', false);
+    }
+
     /**
      * @return array{
      *   context: 'array',
@@ -47,10 +52,5 @@ class CostAlert extends Model
             'acknowledged' => 'boolean',
             'acknowledged_at' => 'datetime',
         ];
-    }
-
-    public function scopeActive($query)
-    {
-        return $query->where('acknowledged', false);
     }
 }

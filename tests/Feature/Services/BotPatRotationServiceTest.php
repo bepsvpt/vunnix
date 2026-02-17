@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Http;
 
 uses(Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Http::fake([
         '*' => Http::response('ok', 200),
     ]);
@@ -19,7 +19,7 @@ beforeEach(function () {
 
 // ─── Alert Triggering ───────────────────────────────────────────
 
-it('triggers alert when PAT is 5.5 months old', function () {
+it('triggers alert when PAT is 5.5 months old', function (): void {
     // 5.5 months ≈ 167 days
     GlobalSetting::updateOrCreate(
         ['key' => 'bot_pat_created_at'],
@@ -39,7 +39,7 @@ it('triggers alert when PAT is 5.5 months old', function () {
     expect($alert->context)->toHaveKey('pat_created_at');
 });
 
-it('does not trigger alert when PAT is only 5 months old', function () {
+it('does not trigger alert when PAT is only 5 months old', function (): void {
     // 5 months ≈ 152 days — below threshold
     GlobalSetting::updateOrCreate(
         ['key' => 'bot_pat_created_at'],
@@ -53,7 +53,7 @@ it('does not trigger alert when PAT is only 5 months old', function () {
     expect(AlertEvent::count())->toBe(0);
 });
 
-it('triggers alert when PAT is 6 months old', function () {
+it('triggers alert when PAT is 6 months old', function (): void {
     // 6 months ≈ 183 days — well past threshold
     GlobalSetting::updateOrCreate(
         ['key' => 'bot_pat_created_at'],
@@ -68,7 +68,7 @@ it('triggers alert when PAT is 6 months old', function () {
     expect($alert->context['age_days'])->toBe(183);
 });
 
-it('does not trigger when no PAT creation date is set', function () {
+it('does not trigger when no PAT creation date is set', function (): void {
     // No bot_pat_created_at in global settings
     $service = app(BotPatRotationService::class);
     $alert = $service->evaluate();
@@ -78,7 +78,7 @@ it('does not trigger when no PAT creation date is set', function () {
 
 // ─── Deduplication ──────────────────────────────────────────────
 
-it('does not create duplicate alert when one is already active', function () {
+it('does not create duplicate alert when one is already active', function (): void {
     GlobalSetting::updateOrCreate(
         ['key' => 'bot_pat_created_at'],
         ['bot_pat_created_at' => now()->subDays(180), 'value' => now()->subDays(180)->toIso8601String(), 'type' => 'string']
@@ -99,7 +99,7 @@ it('does not create duplicate alert when one is already active', function () {
 
 // ─── Acknowledgement ────────────────────────────────────────────
 
-it('stops repeating after acknowledgement within 7 days', function () {
+it('stops repeating after acknowledgement within 7 days', function (): void {
     GlobalSetting::updateOrCreate(
         ['key' => 'bot_pat_created_at'],
         ['bot_pat_created_at' => now()->subDays(180), 'value' => now()->subDays(180)->toIso8601String(), 'type' => 'string']
@@ -120,7 +120,7 @@ it('stops repeating after acknowledgement within 7 days', function () {
     expect($alert2)->toBeNull();
 });
 
-it('re-alerts after 7 days since acknowledgement', function () {
+it('re-alerts after 7 days since acknowledgement', function (): void {
     GlobalSetting::updateOrCreate(
         ['key' => 'bot_pat_created_at'],
         ['bot_pat_created_at' => now()->subDays(200), 'value' => now()->subDays(200)->toIso8601String(), 'type' => 'string']
@@ -144,7 +144,7 @@ it('re-alerts after 7 days since acknowledgement', function () {
 
 // ─── Team Chat Notification ─────────────────────────────────────
 
-it('sends team chat notification when alert is created', function () {
+it('sends team chat notification when alert is created', function (): void {
     GlobalSetting::updateOrCreate(
         ['key' => 'bot_pat_created_at'],
         ['bot_pat_created_at' => now()->subDays(170), 'value' => now()->subDays(170)->toIso8601String(), 'type' => 'string']

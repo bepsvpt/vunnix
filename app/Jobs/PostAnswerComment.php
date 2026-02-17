@@ -9,6 +9,7 @@ use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Post an answer comment on a GitLab merge request for @ai ask commands.
@@ -77,7 +78,7 @@ class PostAnswerComment implements ShouldQueue
                 'task_id' => $this->taskId,
                 'note_id' => $note['id'],
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('PostAnswerComment: failed to post comment', [
                 'task_id' => $this->taskId,
                 'error' => $e->getMessage(),
@@ -96,7 +97,7 @@ class PostAnswerComment implements ShouldQueue
         $answer = $result['answer'] ?? 'No answer available.';
 
         return "### 🤖 Answer\n\n"
-            . "> {$question}\n\n"
-            . $answer;
+            ."> {$question}\n\n"
+            .$answer;
     }
 }

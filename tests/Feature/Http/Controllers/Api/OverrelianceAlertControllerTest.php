@@ -12,9 +12,9 @@ uses(RefreshDatabase::class);
 
 // ─── Setup ─────────────────────────────────────────────────────
 
-beforeEach(function () {
+beforeEach(function (): void {
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -24,14 +24,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -88,12 +88,12 @@ function createOverrelianceRegularUser(Project $project): User
 
 // ─── GET /api/v1/dashboard/overreliance-alerts ─────────────────
 
-it('returns 401 for unauthenticated users on overreliance alerts index', function () {
+it('returns 401 for unauthenticated users on overreliance alerts index', function (): void {
     $this->getJson('/api/v1/dashboard/overreliance-alerts')
         ->assertUnauthorized();
 });
 
-it('returns 403 for non-admin users on overreliance alerts index', function () {
+it('returns 403 for non-admin users on overreliance alerts index', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createOverrelianceRegularUser($project);
 
@@ -102,7 +102,7 @@ it('returns 403 for non-admin users on overreliance alerts index', function () {
         ->assertForbidden();
 });
 
-it('returns active overreliance alerts for admin users', function () {
+it('returns active overreliance alerts for admin users', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createOverrelianceAdmin($project);
 
@@ -138,7 +138,7 @@ it('returns active overreliance alerts for admin users', function () {
         ->assertJsonPath('data.1.rule', 'high_acceptance_rate');
 });
 
-it('returns empty data array when no active overreliance alerts exist', function () {
+it('returns empty data array when no active overreliance alerts exist', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createOverrelianceAdmin($project);
 
@@ -150,7 +150,7 @@ it('returns empty data array when no active overreliance alerts exist', function
 
 // ─── PATCH /api/v1/dashboard/overreliance-alerts/{id}/acknowledge
 
-it('returns 401 for unauthenticated users on overreliance acknowledge', function () {
+it('returns 401 for unauthenticated users on overreliance acknowledge', function (): void {
     $alert = OverrelianceAlert::create([
         'rule' => 'high_acceptance_rate',
         'severity' => 'warning',
@@ -162,7 +162,7 @@ it('returns 401 for unauthenticated users on overreliance acknowledge', function
         ->assertUnauthorized();
 });
 
-it('returns 403 for non-admin users on overreliance acknowledge', function () {
+it('returns 403 for non-admin users on overreliance acknowledge', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createOverrelianceRegularUser($project);
 
@@ -178,7 +178,7 @@ it('returns 403 for non-admin users on overreliance acknowledge', function () {
         ->assertForbidden();
 });
 
-it('acknowledges an overreliance alert for admin users', function () {
+it('acknowledges an overreliance alert for admin users', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createOverrelianceAdmin($project);
 
@@ -200,7 +200,7 @@ it('acknowledges an overreliance alert for admin users', function () {
     expect($alert->acknowledged_at)->not->toBeNull();
 });
 
-it('returns 404 for non-existent overreliance alert on acknowledge', function () {
+it('returns 404 for non-existent overreliance alert on acknowledge', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createOverrelianceAdmin($project);
 

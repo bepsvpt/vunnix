@@ -100,7 +100,7 @@ function fakeGitLabDiscussions(): array
 
 // ─── MR merge final classification ───────────────────────────────
 
-it('classifies AI findings as accepted or dismissed on MR merge', function () {
+it('classifies AI findings as accepted or dismissed on MR merge', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::response(fakeGitLabDiscussions(), 200),
     ]);
@@ -128,7 +128,7 @@ it('classifies AI findings as accepted or dismissed on MR merge', function () {
     expect($dismissed->gitlab_discussion_id)->toBe('disc-ai-2');
 });
 
-it('skips if no completed review tasks exist for the MR', function () {
+it('skips if no completed review tasks exist for the MR', function (): void {
     Http::fake();
 
     $job = new ProcessAcceptanceTracking(
@@ -142,7 +142,7 @@ it('skips if no completed review tasks exist for the MR', function () {
     Http::assertNothingSent();
 });
 
-it('detects bulk resolution and flags acceptance records', function () {
+it('detects bulk resolution and flags acceptance records', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::response([
             // 3 AI threads all resolved within 30 seconds
@@ -196,7 +196,7 @@ it('detects bulk resolution and flags acceptance records', function () {
 
 // ─── Integration: acceptance rate calculation ────────────────────
 
-it('produces correct acceptance rate from stored records', function () {
+it('produces correct acceptance rate from stored records', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::response(fakeGitLabDiscussions(), 200),
     ]);

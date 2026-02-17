@@ -9,7 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('webhook_events', function (Blueprint $table) {
+        Schema::create('webhook_events', function (Blueprint $table): void {
             $table->id();
 
             // GitLab's unique event delivery identifier (X-Gitlab-Event-UUID header)
@@ -35,19 +35,19 @@ return new class extends Migration
 
         // Add superseded_by_id to tasks table for tracking which event superseded a task
         if (Schema::hasTable('tasks')) {
-            Schema::table('tasks', function (Blueprint $table) {
+            Schema::table('tasks', function (Blueprint $table): void {
                 $table->unsignedBigInteger('superseded_by_id')->nullable()->after('status');
             });
 
             // Add composite index for dedup lookups: find existing tasks for same commit/MR
             if (DB::connection()->getDriverName() === 'pgsql') {
-                Schema::table('tasks', function (Blueprint $table) {
+                Schema::table('tasks', function (Blueprint $table): void {
                     $table->index(['project_id', 'mr_iid', 'status']);
                     $table->index(['project_id', 'commit_sha']);
                 });
             } else {
                 // SQLite for tests
-                Schema::table('tasks', function (Blueprint $table) {
+                Schema::table('tasks', function (Blueprint $table): void {
                     $table->index(['project_id', 'mr_iid', 'status']);
                     $table->index(['project_id', 'commit_sha']);
                 });
@@ -58,7 +58,7 @@ return new class extends Migration
     public function down(): void
     {
         if (Schema::hasTable('tasks')) {
-            Schema::table('tasks', function (Blueprint $table) {
+            Schema::table('tasks', function (Blueprint $table): void {
                 $table->dropIndex(['project_id', 'mr_iid', 'status']);
                 $table->dropIndex(['project_id', 'commit_sha']);
                 $table->dropColumn('superseded_by_id');

@@ -9,6 +9,7 @@ use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Post an issue discussion response on a GitLab Issue.
@@ -78,7 +79,7 @@ class PostIssueComment implements ShouldQueue
                 'issue_iid' => $task->issue_iid,
                 'note_id' => $note['id'],
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('PostIssueComment: failed to post comment', [
                 'task_id' => $this->taskId,
                 'error' => $e->getMessage(),
@@ -98,6 +99,6 @@ class PostIssueComment implements ShouldQueue
     {
         $response = $result['response'] ?? 'No response available.';
 
-        return "### 🤖 AI Response\n\n" . $response;
+        return "### 🤖 AI Response\n\n".$response;
     }
 }

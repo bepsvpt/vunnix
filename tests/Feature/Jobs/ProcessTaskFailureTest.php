@@ -14,7 +14,7 @@ uses(RefreshDatabase::class);
 
 // ─── failed() creates DLQ entry ──────────────────────────────────
 
-it('creates a DLQ entry when ProcessTask fails permanently', function () {
+it('creates a DLQ entry when ProcessTask fails permanently', function (): void {
     Queue::fake();
 
     $task = Task::factory()->create([
@@ -46,7 +46,7 @@ it('creates a DLQ entry when ProcessTask fails permanently', function () {
 
 // ─── failed() classifies 400 as invalid_request ─────────────────
 
-it('classifies 400 errors as invalid_request in DLQ', function () {
+it('classifies 400 errors as invalid_request in DLQ', function (): void {
     Queue::fake();
 
     $task = Task::factory()->create([
@@ -72,7 +72,7 @@ it('classifies 400 errors as invalid_request in DLQ', function () {
 
 // ─── failed() dispatches PostFailureComment ──────────────────────
 
-it('dispatches PostFailureComment when task has MR', function () {
+it('dispatches PostFailureComment when task has MR', function (): void {
     Queue::fake();
 
     $task = Task::factory()->create([
@@ -99,7 +99,7 @@ it('dispatches PostFailureComment when task has MR', function () {
 
 // ─── failed() handles non-GitLabApiException ─────────────────────
 
-it('handles non-GitLabApiException in failed() method', function () {
+it('handles non-GitLabApiException in failed() method', function (): void {
     Queue::fake();
 
     $task = Task::factory()->create([
@@ -124,7 +124,7 @@ it('handles non-GitLabApiException in failed() method', function () {
 
 // ─── failed() skips if task not found ────────────────────────────
 
-it('does not throw if task does not exist', function () {
+it('does not throw if task does not exist', function (): void {
     Queue::fake();
 
     $job = new ProcessTask(999999);

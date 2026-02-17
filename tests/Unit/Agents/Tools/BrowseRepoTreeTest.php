@@ -7,7 +7,7 @@ use App\Services\ProjectAccessChecker;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Laravel\Ai\Tools\Request;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->gitLab = Mockery::mock(GitLabClient::class);
     $this->accessChecker = Mockery::mock(ProjectAccessChecker::class);
     $this->accessChecker->shouldReceive('check')->andReturn(null);
@@ -16,13 +16,13 @@ beforeEach(function () {
 
 // ─── Description ────────────────────────────────────────────────
 
-it('has a description', function () {
+it('has a description', function (): void {
     expect($this->tool->description())->toBeString()->not->toBeEmpty();
 });
 
 // ─── Schema ─────────────────────────────────────────────────────
 
-it('defines the expected schema parameters', function () {
+it('defines the expected schema parameters', function (): void {
     $schema = new JsonSchemaTypeFactory;
     $result = $this->tool->schema($schema);
 
@@ -31,7 +31,7 @@ it('defines the expected schema parameters', function () {
 
 // ─── Handle — success ───────────────────────────────────────────
 
-it('returns formatted file and directory list', function () {
+it('returns formatted file and directory list', function (): void {
     $this->gitLab
         ->shouldReceive('listTree')
         ->with(42, '', 'main', false)
@@ -52,7 +52,7 @@ it('returns formatted file and directory list', function () {
         ->toContain('[file] composer.json');
 });
 
-it('passes path and ref parameters to GitLab client', function () {
+it('passes path and ref parameters to GitLab client', function (): void {
     $this->gitLab
         ->shouldReceive('listTree')
         ->with(42, 'src/services', 'develop', false)
@@ -70,7 +70,7 @@ it('passes path and ref parameters to GitLab client', function () {
     expect($result)->toContain('[file] src/services/AuthService.php');
 });
 
-it('passes recursive flag to GitLab client', function () {
+it('passes recursive flag to GitLab client', function (): void {
     $this->gitLab
         ->shouldReceive('listTree')
         ->with(42, '', 'main', true)
@@ -92,7 +92,7 @@ it('passes recursive flag to GitLab client', function () {
 
 // ─── Handle — empty ─────────────────────────────────────────────
 
-it('returns a message when no files are found', function () {
+it('returns a message when no files are found', function (): void {
     $this->gitLab
         ->shouldReceive('listTree')
         ->once()
@@ -107,7 +107,7 @@ it('returns a message when no files are found', function () {
 
 // ─── Handle — error ─────────────────────────────────────────────
 
-it('returns error message instead of throwing on GitLab API failure', function () {
+it('returns error message instead of throwing on GitLab API failure', function (): void {
     $this->gitLab
         ->shouldReceive('listTree')
         ->once()
@@ -127,7 +127,7 @@ it('returns error message instead of throwing on GitLab API failure', function (
 
 // ─── Handle — access denied ────────────────────────────────────
 
-it('returns rejection when access checker denies access', function () {
+it('returns rejection when access checker denies access', function (): void {
     $checker = Mockery::mock(ProjectAccessChecker::class);
     $checker->shouldReceive('check')
         ->with(999)

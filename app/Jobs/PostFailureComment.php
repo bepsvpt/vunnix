@@ -8,12 +8,11 @@ use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PostFailureComment implements ShouldQueue
 {
     use Queueable;
-
-    public int $tries = 1;
 
     private const REASON_MESSAGES = [
         'max_retries_exceeded' => 'The service encountered repeated errors and could not complete after multiple retries.',
@@ -24,6 +23,8 @@ class PostFailureComment implements ShouldQueue
         'pipeline_trigger_failed' => 'Failed to trigger the CI pipeline for execution.',
         'missing_trigger_token' => 'The CI trigger token is not configured for this project.',
     ];
+
+    public int $tries = 1;
 
     public function __construct(
         public readonly int $taskId,
@@ -57,7 +58,7 @@ class PostFailureComment implements ShouldQueue
             } else {
                 $this->postToIssue($gitLab, $task, $body);
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Best-effort: log but don't re-throw.
             // The task is already in DLQ — we don't want the failure comment
             // itself to enter a retry loop.
@@ -108,8 +109,8 @@ class PostFailureComment implements ShouldQueue
             ?? "An unexpected error occurred ({$this->failureReason}).";
 
         return "🤖 AI review failed — {$reason}\n\n"
-            . "<details>\n<summary>Error details</summary>\n\n"
-            . "```\n{$this->errorDetails}\n```\n\n"
-            . "</details>";
+            ."<details>\n<summary>Error details</summary>\n\n"
+            ."```\n{$this->errorDetails}\n```\n\n"
+            .'</details>';
     }
 }

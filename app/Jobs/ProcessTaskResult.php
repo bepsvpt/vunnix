@@ -12,6 +12,7 @@ use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Process a completed task result through the Result Processor.
@@ -116,6 +117,41 @@ class ProcessTaskResult implements ShouldQueue
         }
     }
 
+    /**
+     * Handle permanent job failure.
+     *
+     * Called by Laravel when $job->fail() is invoked (by RetryWithBackoff middleware
+     * after max retries, or on non-retryable errors).
+     */
+    public function failed(?Throwable $exception): void
+    {
+        $task = Task::find($this->taskId);
+
+        if ($task === null) {
+            Log::warning('ProcessTaskResult::failed: task not found', ['task_id' => $this->taskId]);
+
+            return;
+        }
+
+        $failureReason = 'max_retries_exceeded';
+        $errorDetails = $exception?->getMessage() ?? 'Unknown error';
+
+        if ($exception instanceof GitLabApiException) {
+            $errorDetails = "HTTP {$exception->statusCode}: {$exception->responseBody}";
+
+            if ($exception->isInvalidRequest()) {
+                $failureReason = 'invalid_request';
+            }
+        }
+
+        app(FailureHandler::class)->handlePermanentFailure(
+            task: $task,
+            failureReason: $failureReason,
+            errorDetails: $errorDetails,
+            attempts: $this->attemptHistory,
+        );
+    }
+
     private function shouldPostSummaryComment(Task $task): bool
     {
         return $task->mr_iid !== null
@@ -181,40 +217,5 @@ class ProcessTaskResult implements ShouldQueue
     private function shouldCreateGitLabIssue(Task $task): bool
     {
         return $task->type === TaskType::PrdCreation;
-    }
-
-    /**
-     * Handle permanent job failure.
-     *
-     * Called by Laravel when $job->fail() is invoked (by RetryWithBackoff middleware
-     * after max retries, or on non-retryable errors).
-     */
-    public function failed(?\Throwable $exception): void
-    {
-        $task = Task::find($this->taskId);
-
-        if ($task === null) {
-            Log::warning('ProcessTaskResult::failed: task not found', ['task_id' => $this->taskId]);
-
-            return;
-        }
-
-        $failureReason = 'max_retries_exceeded';
-        $errorDetails = $exception?->getMessage() ?? 'Unknown error';
-
-        if ($exception instanceof GitLabApiException) {
-            $errorDetails = "HTTP {$exception->statusCode}: {$exception->responseBody}";
-
-            if ($exception->isInvalidRequest()) {
-                $failureReason = 'invalid_request';
-            }
-        }
-
-        app(FailureHandler::class)->handlePermanentFailure(
-            task: $task,
-            failureReason: $failureReason,
-            errorDetails: $errorDetails,
-            attempts: $this->attemptHistory,
-        );
     }
 }

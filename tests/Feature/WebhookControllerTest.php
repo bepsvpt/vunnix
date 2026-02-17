@@ -14,7 +14,7 @@ uses(RefreshDatabase::class);
 // T39: Fake the queue so ProcessTask jobs dispatched by TaskDispatchService
 // don't run inline. WebhookControllerTest tests webhook acceptance, not
 // downstream job execution — that's covered by CodeReviewEndToEndTest.
-beforeEach(function () {
+beforeEach(function (): void {
     Queue::fake();
 });
 
@@ -81,7 +81,7 @@ function postWebhook(
 //  Event type detection
 // ------------------------------------------------------------------
 
-it('returns 400 when X-Gitlab-Event header is missing', function () {
+it('returns 400 when X-Gitlab-Event header is missing', function (): void {
     [$project, $token] = webhookProject();
 
     $this->postJson('/webhook', [], ['X-Gitlab-Token' => $token])
@@ -92,7 +92,7 @@ it('returns 400 when X-Gitlab-Event header is missing', function () {
         ]);
 });
 
-it('returns 200 with ignored status for unsupported event types', function () {
+it('returns 200 with ignored status for unsupported event types', function (): void {
     [$project, $token] = webhookProject();
 
     postWebhook($this, $token, 'Pipeline Hook', ['object_kind' => 'pipeline'])
@@ -107,7 +107,7 @@ it('returns 200 with ignored status for unsupported event types', function () {
 //  Merge Request events
 // ------------------------------------------------------------------
 
-it('accepts merge request hook events', function () {
+it('accepts merge request hook events', function (): void {
     [$project, $token] = webhookProject();
 
     postWebhook($this, $token, 'Merge Request Hook', [
@@ -128,7 +128,7 @@ it('accepts merge request hook events', function () {
         ]);
 });
 
-it('accepts merge request update events', function () {
+it('accepts merge request update events', function (): void {
     [$project, $token] = webhookProject();
 
     postWebhook($this, $token, 'Merge Request Hook', [
@@ -152,7 +152,7 @@ it('accepts merge request update events', function () {
 //  Note events (MR and Issue comments)
 // ------------------------------------------------------------------
 
-it('accepts note hook events on merge requests', function () {
+it('accepts note hook events on merge requests', function (): void {
     [$project, $token] = webhookProject();
 
     postWebhook($this, $token, 'Note Hook', [
@@ -172,7 +172,7 @@ it('accepts note hook events on merge requests', function () {
         ]);
 });
 
-it('accepts note hook events on issues', function () {
+it('accepts note hook events on issues', function (): void {
     [$project, $token] = webhookProject();
 
     postWebhook($this, $token, 'Note Hook', [
@@ -196,7 +196,7 @@ it('accepts note hook events on issues', function () {
 //  Issue events
 // ------------------------------------------------------------------
 
-it('accepts issue hook events', function () {
+it('accepts issue hook events', function (): void {
     [$project, $token] = webhookProject();
 
     postWebhook($this, $token, 'Issue Hook', [
@@ -221,7 +221,7 @@ it('accepts issue hook events', function () {
 //  Push events
 // ------------------------------------------------------------------
 
-it('accepts push hook events', function () {
+it('accepts push hook events', function (): void {
     [$project, $token] = webhookProject();
 
     postWebhook($this, $token, 'Push Hook', [
@@ -245,7 +245,7 @@ it('accepts push hook events', function () {
 //  Response structure
 // ------------------------------------------------------------------
 
-it('includes the project_id in accepted responses', function () {
+it('includes the project_id in accepted responses', function (): void {
     [$project, $token] = webhookProject();
 
     postWebhook($this, $token, 'Merge Request Hook', [
@@ -271,7 +271,7 @@ it('includes the project_id in accepted responses', function () {
 //  T14: Deduplication via webhook endpoint
 // ------------------------------------------------------------------
 
-it('logs event UUID and returns superseded_count in response', function () {
+it('logs event UUID and returns superseded_count in response', function (): void {
     [$project, $token] = webhookProject();
 
     postWebhook($this, $token, 'Merge Request Hook', [
@@ -296,7 +296,7 @@ it('logs event UUID and returns superseded_count in response', function () {
     expect(WebhookEventLog::where('gitlab_event_uuid', 'e2d4f6a8-1234-5678-9abc-def012345678')->exists())->toBeTrue();
 });
 
-it('rejects duplicate webhook by X-Gitlab-Event-UUID', function () {
+it('rejects duplicate webhook by X-Gitlab-Event-UUID', function (): void {
     [$project, $token] = webhookProject();
 
     $payload = [
@@ -331,7 +331,7 @@ it('rejects duplicate webhook by X-Gitlab-Event-UUID', function () {
 //  T39: Task dispatch wiring
 // ------------------------------------------------------------------
 
-it('dispatches ProcessTask job and returns task_id for MR open events', function () {
+it('dispatches ProcessTask job and returns task_id for MR open events', function (): void {
     [$project, $token] = webhookProject();
 
     $response = postWebhook($this, $token, 'Merge Request Hook', [
@@ -367,7 +367,7 @@ it('dispatches ProcessTask job and returns task_id for MR open events', function
     Queue::assertPushed(\App\Jobs\ProcessTask::class, fn ($job) => $job->taskId === $taskId);
 });
 
-it('returns null task_id for non-dispatchable events', function () {
+it('returns null task_id for non-dispatchable events', function (): void {
     [$project, $token] = webhookProject();
 
     // MR close action is not routable — EventRouter returns null,
@@ -391,7 +391,7 @@ it('returns null task_id for non-dispatchable events', function () {
     Queue::assertNothingPushed();
 });
 
-it('accepts webhooks without X-Gitlab-Event-UUID header', function () {
+it('accepts webhooks without X-Gitlab-Event-UUID header', function (): void {
     [$project, $token] = webhookProject();
 
     postWebhook($this, $token, 'Merge Request Hook', [
@@ -413,7 +413,7 @@ it('accepts webhooks without X-Gitlab-Event-UUID header', function () {
 //  T41: Permission check for @ai commands
 // ------------------------------------------------------------------
 
-it('drops @ai review from user without review.trigger permission', function () {
+it('drops @ai review from user without review.trigger permission', function (): void {
     // Create project without granting review.trigger to the user
     $project = Project::factory()->enabled()->create();
     $token = 'perm-test-secret';
@@ -443,7 +443,7 @@ it('drops @ai review from user without review.trigger permission', function () {
     Queue::assertNothingPushed();
 });
 
-it('drops @ai review from unknown GitLab user (no Vunnix account)', function () {
+it('drops @ai review from unknown GitLab user (no Vunnix account)', function (): void {
     $project = Project::factory()->enabled()->create();
     $token = 'unknown-user-secret';
     ProjectConfig::factory()->create([
@@ -470,7 +470,7 @@ it('drops @ai review from unknown GitLab user (no Vunnix account)', function () 
     Queue::assertNothingPushed();
 });
 
-it('allows auto_review without review.trigger permission', function () {
+it('allows auto_review without review.trigger permission', function (): void {
     // Create project without granting review.trigger
     $project = Project::factory()->enabled()->create();
     $token = 'auto-review-perm-secret';
@@ -502,7 +502,7 @@ it('allows auto_review without review.trigger permission', function () {
     Queue::assertPushed(\App\Jobs\ProcessTask::class);
 });
 
-it('dispatches task for @ai review when user has review.trigger permission', function () {
+it('dispatches task for @ai review when user has review.trigger permission', function (): void {
     [$project, $token] = webhookProject();
 
     postWebhook($this, $token, 'Note Hook', [
@@ -524,7 +524,7 @@ it('dispatches task for @ai review when user has review.trigger permission', fun
     Queue::assertPushed(\App\Jobs\ProcessTask::class);
 });
 
-it('drops ai::develop label trigger from user without review.trigger', function () {
+it('drops ai::develop label trigger from user without review.trigger', function (): void {
     $project = Project::factory()->enabled()->create();
     $token = 'label-perm-secret';
     ProjectConfig::factory()->create([

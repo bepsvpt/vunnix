@@ -21,7 +21,7 @@ uses(Tests\TestCase::class);
 
 // ─── Interface Implementation ───────────────────────────────────
 
-it('implements all required AI SDK interfaces', function () {
+it('implements all required AI SDK interfaces', function (): void {
     $agent = new VunnixAgent;
 
     expect($agent)->toBeInstanceOf(Agent::class);
@@ -32,7 +32,7 @@ it('implements all required AI SDK interfaces', function () {
 
 // ─── Provider ───────────────────────────────────────────────────
 
-it('uses the anthropic provider', function () {
+it('uses the anthropic provider', function (): void {
     $agent = new VunnixAgent;
 
     expect($agent->provider())->toBe('anthropic');
@@ -40,7 +40,7 @@ it('uses the anthropic provider', function () {
 
 // ─── Tools ──────────────────────────────────────────────────────
 
-it('returns the T50 repo browsing tools', function () {
+it('returns the T50 repo browsing tools', function (): void {
     $agent = new VunnixAgent;
     $tools = iterator_to_array($agent->tools());
 
@@ -49,7 +49,7 @@ it('returns the T50 repo browsing tools', function () {
     expect($tools[2])->toBeInstanceOf(SearchCode::class);
 });
 
-it('returns the T51 issue tools', function () {
+it('returns the T51 issue tools', function (): void {
     $agent = new VunnixAgent;
     $tools = iterator_to_array($agent->tools());
 
@@ -57,7 +57,7 @@ it('returns the T51 issue tools', function () {
     expect($tools[4])->toBeInstanceOf(ReadIssue::class);
 });
 
-it('returns the T52 merge request tools', function () {
+it('returns the T52 merge request tools', function (): void {
     $agent = new VunnixAgent;
     $tools = iterator_to_array($agent->tools());
 
@@ -66,7 +66,7 @@ it('returns the T52 merge request tools', function () {
     expect($tools[7])->toBeInstanceOf(ReadMRDiff::class);
 });
 
-it('returns the T55 dispatch action tool', function () {
+it('returns the T55 dispatch action tool', function (): void {
     $agent = new VunnixAgent;
     $tools = iterator_to_array($agent->tools());
 
@@ -74,7 +74,7 @@ it('returns the T55 dispatch action tool', function () {
     expect($tools[8])->toBeInstanceOf(DispatchAction::class);
 });
 
-it('returns tools that implement the Tool interface', function () {
+it('returns tools that implement the Tool interface', function (): void {
     $agent = new VunnixAgent;
     $tools = iterator_to_array($agent->tools());
 
@@ -85,7 +85,7 @@ it('returns tools that implement the Tool interface', function () {
 
 // ─── Middleware ──────────────────────────────────────────────────
 
-it('returns the T58 conversation pruning middleware', function () {
+it('returns the T58 conversation pruning middleware', function (): void {
     $agent = new VunnixAgent;
     $middleware = $agent->middleware();
 
@@ -95,7 +95,7 @@ it('returns the T58 conversation pruning middleware', function () {
 
 // ─── Pruned Messages ────────────────────────────────────────────
 
-it('returns pruned messages when set via setPrunedMessages', function () {
+it('returns pruned messages when set via setPrunedMessages', function (): void {
     $agent = new VunnixAgent;
     $messages = [
         new \Laravel\Ai\Messages\UserMessage('summary'),
@@ -107,7 +107,7 @@ it('returns pruned messages when set via setPrunedMessages', function () {
     expect($agent->messages())->toBe($messages);
 });
 
-it('returns empty messages when no conversation and no pruned messages set', function () {
+it('returns empty messages when no conversation and no pruned messages set', function (): void {
     $agent = new VunnixAgent;
 
     expect($agent->messages())->toBe([]);

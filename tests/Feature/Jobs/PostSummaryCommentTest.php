@@ -52,7 +52,7 @@ function completedCodeReviewTask(): Task
 
 // ─── Creates new comment when no placeholder exists ─────────────
 
-it('posts the summary comment to GitLab and stores the note ID', function () {
+it('posts the summary comment to GitLab and stores the note ID', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes' => Http::response([
             'id' => 9876,
@@ -76,7 +76,7 @@ it('posts the summary comment to GitLab and stores the note ID', function () {
 
 // ─── Skips if task not found ────────────────────────────────────
 
-it('returns early if the task does not exist', function () {
+it('returns early if the task does not exist', function (): void {
     Http::fake();
 
     $job = new PostSummaryComment(999999);
@@ -87,7 +87,7 @@ it('returns early if the task does not exist', function () {
 
 // ─── Skips if task has no MR IID ────────────────────────────────
 
-it('returns early if the task has no mr_iid', function () {
+it('returns early if the task has no mr_iid', function (): void {
     Http::fake();
 
     $task = Task::factory()->create([
@@ -107,7 +107,7 @@ it('returns early if the task has no mr_iid', function () {
 
 // ─── Skips if task has no result ────────────────────────────────
 
-it('returns early if the task has no result', function () {
+it('returns early if the task has no result', function (): void {
     Http::fake();
 
     $task = Task::factory()->create([
@@ -126,7 +126,7 @@ it('returns early if the task has no result', function () {
 
 // ─── T36: Updates placeholder comment in-place ──────────────────
 
-it('updates existing placeholder comment in-place when comment_id exists', function () {
+it('updates existing placeholder comment in-place when comment_id exists', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes/*' => Http::response([
             'id' => 5555,
@@ -155,7 +155,7 @@ it('updates existing placeholder comment in-place when comment_id exists', funct
 
 // ─── T40: Includes updated timestamp for incremental reviews ─────
 
-it('includes updated timestamp when task reuses a previous comment_id', function () {
+it('includes updated timestamp when task reuses a previous comment_id', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes/*' => Http::response([
             'id' => 5555,
@@ -190,7 +190,7 @@ it('includes updated timestamp when task reuses a previous comment_id', function
     });
 });
 
-it('does not include timestamp when no previous task shares the comment_id', function () {
+it('does not include timestamp when no previous task shares the comment_id', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes/*' => Http::response([
             'id' => 5555,
@@ -213,7 +213,7 @@ it('does not include timestamp when no previous task shares the comment_id', fun
     });
 });
 
-it('does not POST a new comment when updating placeholder in-place', function () {
+it('does not POST a new comment when updating placeholder in-place', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes/*' => Http::response([
             'id' => 5555,

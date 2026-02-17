@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\TaskStatus;
 use App\Enums\TaskType;
 use App\Jobs\PostInlineThreads;
 use App\Jobs\PostLabelsAndStatus;
@@ -12,7 +11,7 @@ use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
-it('dispatches PostSummaryComment after successful code review processing', function () {
+it('dispatches PostSummaryComment after successful code review processing', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -42,7 +41,7 @@ it('dispatches PostSummaryComment after successful code review processing', func
     });
 });
 
-it('dispatches PostSummaryComment after successful security audit processing', function () {
+it('dispatches PostSummaryComment after successful security audit processing', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -70,7 +69,7 @@ it('dispatches PostSummaryComment after successful security audit processing', f
     Queue::assertPushed(PostSummaryComment::class);
 });
 
-it('does not dispatch PostSummaryComment for non-review task types', function () {
+it('does not dispatch PostSummaryComment for non-review task types', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -94,7 +93,7 @@ it('does not dispatch PostSummaryComment for non-review task types', function ()
     Queue::assertNotPushed(PostSummaryComment::class);
 });
 
-it('does not dispatch PostSummaryComment when validation fails', function () {
+it('does not dispatch PostSummaryComment when validation fails', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -109,7 +108,7 @@ it('does not dispatch PostSummaryComment when validation fails', function () {
     Queue::assertNotPushed(PostSummaryComment::class);
 });
 
-it('does not dispatch PostSummaryComment for tasks without mr_iid', function () {
+it('does not dispatch PostSummaryComment for tasks without mr_iid', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -139,7 +138,7 @@ it('does not dispatch PostSummaryComment for tasks without mr_iid', function () 
 
 // ─── PostInlineThreads dispatch tests ───────────────────────────
 
-it('dispatches PostInlineThreads after successful code review processing', function () {
+it('dispatches PostInlineThreads after successful code review processing', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -169,7 +168,7 @@ it('dispatches PostInlineThreads after successful code review processing', funct
     });
 });
 
-it('dispatches PostInlineThreads after successful security audit processing', function () {
+it('dispatches PostInlineThreads after successful security audit processing', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -197,7 +196,7 @@ it('dispatches PostInlineThreads after successful security audit processing', fu
     Queue::assertPushed(PostInlineThreads::class);
 });
 
-it('does not dispatch PostInlineThreads for non-review task types', function () {
+it('does not dispatch PostInlineThreads for non-review task types', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -221,7 +220,7 @@ it('does not dispatch PostInlineThreads for non-review task types', function () 
     Queue::assertNotPushed(PostInlineThreads::class);
 });
 
-it('does not dispatch PostInlineThreads when validation fails', function () {
+it('does not dispatch PostInlineThreads when validation fails', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -236,7 +235,7 @@ it('does not dispatch PostInlineThreads when validation fails', function () {
     Queue::assertNotPushed(PostInlineThreads::class);
 });
 
-it('does not dispatch PostInlineThreads for tasks without mr_iid', function () {
+it('does not dispatch PostInlineThreads for tasks without mr_iid', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -266,7 +265,7 @@ it('does not dispatch PostInlineThreads for tasks without mr_iid', function () {
 
 // ─── PostLabelsAndStatus dispatch tests ──────────────────────────
 
-it('dispatches PostLabelsAndStatus after successful code review processing', function () {
+it('dispatches PostLabelsAndStatus after successful code review processing', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -296,7 +295,7 @@ it('dispatches PostLabelsAndStatus after successful code review processing', fun
     });
 });
 
-it('dispatches PostLabelsAndStatus after successful security audit processing', function () {
+it('dispatches PostLabelsAndStatus after successful security audit processing', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -324,7 +323,7 @@ it('dispatches PostLabelsAndStatus after successful security audit processing', 
     Queue::assertPushed(PostLabelsAndStatus::class);
 });
 
-it('does not dispatch PostLabelsAndStatus for non-review task types', function () {
+it('does not dispatch PostLabelsAndStatus for non-review task types', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -348,7 +347,7 @@ it('does not dispatch PostLabelsAndStatus for non-review task types', function (
     Queue::assertNotPushed(PostLabelsAndStatus::class);
 });
 
-it('does not dispatch PostLabelsAndStatus when validation fails', function () {
+it('does not dispatch PostLabelsAndStatus when validation fails', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -363,7 +362,7 @@ it('does not dispatch PostLabelsAndStatus when validation fails', function () {
     Queue::assertNotPushed(PostLabelsAndStatus::class);
 });
 
-it('does not dispatch PostLabelsAndStatus for tasks without mr_iid', function () {
+it('does not dispatch PostLabelsAndStatus for tasks without mr_iid', function (): void {
     Queue::fake([PostSummaryComment::class, PostInlineThreads::class, PostLabelsAndStatus::class]);
 
     $task = Task::factory()->running()->create([
@@ -393,7 +392,7 @@ it('does not dispatch PostLabelsAndStatus for tasks without mr_iid', function ()
 
 // ─── T56: CreateGitLabIssue dispatch for PrdCreation ─────────
 
-it('dispatches CreateGitLabIssue after successful PrdCreation processing', function () {
+it('dispatches CreateGitLabIssue after successful PrdCreation processing', function (): void {
     Queue::fake([\App\Jobs\CreateGitLabIssue::class]);
 
     $task = Task::factory()->running()->create([
@@ -417,7 +416,7 @@ it('dispatches CreateGitLabIssue after successful PrdCreation processing', funct
     });
 });
 
-it('does not dispatch CreateGitLabIssue for non-PrdCreation task types', function () {
+it('does not dispatch CreateGitLabIssue for non-PrdCreation task types', function (): void {
     Queue::fake([\App\Jobs\CreateGitLabIssue::class]);
 
     $task = Task::factory()->running()->create([
@@ -445,7 +444,7 @@ it('does not dispatch CreateGitLabIssue for non-PrdCreation task types', functio
     Queue::assertNotPushed(\App\Jobs\CreateGitLabIssue::class);
 });
 
-it('does not dispatch CreateGitLabIssue when PrdCreation result is null', function () {
+it('does not dispatch CreateGitLabIssue when PrdCreation result is null', function (): void {
     Queue::fake([\App\Jobs\CreateGitLabIssue::class]);
 
     $task = Task::factory()->running()->create([

@@ -5,12 +5,12 @@ namespace App\Services;
 use App\Enums\TaskOrigin;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
-use App\Enums\TaskType;
 use App\Jobs\ProcessTask;
 use App\Models\DeadLetterEntry;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use LogicException;
 
 class DeadLetterService
 {
@@ -21,16 +21,16 @@ class DeadLetterService
      * to Queued, and dispatches a ProcessTask job. The DLQ entry is marked
      * as retried with a reference to the new task.
      *
-     * @throws \LogicException if the entry has already been retried or dismissed
+     * @throws LogicException if the entry has already been retried or dismissed
      */
     public function retry(DeadLetterEntry $entry, User $admin): Task
     {
         if ($entry->retried) {
-            throw new \LogicException('This DLQ entry has already been retried.');
+            throw new LogicException('This DLQ entry has already been retried.');
         }
 
         if ($entry->dismissed) {
-            throw new \LogicException('Cannot retry a dismissed DLQ entry.');
+            throw new LogicException('Cannot retry a dismissed DLQ entry.');
         }
 
         $taskData = $entry->task_record;
@@ -80,16 +80,16 @@ class DeadLetterService
      * Removes it from the active DLQ view but retains in database
      * per D96 indefinite retention.
      *
-     * @throws \LogicException if the entry is already dismissed or retried
+     * @throws LogicException if the entry is already dismissed or retried
      */
     public function dismiss(DeadLetterEntry $entry, User $admin): void
     {
         if ($entry->dismissed) {
-            throw new \LogicException('This DLQ entry has already been dismissed.');
+            throw new LogicException('This DLQ entry has already been dismissed.');
         }
 
         if ($entry->retried) {
-            throw new \LogicException('Cannot dismiss a retried DLQ entry.');
+            throw new LogicException('Cannot dismiss a retried DLQ entry.');
         }
 
         $entry->update([

@@ -18,6 +18,7 @@ use App\Jobs\ProcessTask;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class TaskDispatchService
 {
@@ -169,7 +170,7 @@ class TaskDispatchService
             }
 
             return (int) $mr['iid'];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('TaskDispatchService: failed to resolve MR for push event', [
                 'branch' => $event->branchName(),
                 'error' => $e->getMessage(),

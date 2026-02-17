@@ -2,8 +2,8 @@
 
 use App\Services\TeamChat\GoogleChatFormatter;
 
-it('formats notification with text and cardsV2', function () {
-    $formatter = new GoogleChatFormatter();
+it('formats notification with text and cardsV2', function (): void {
+    $formatter = new GoogleChatFormatter;
     $payload = $formatter->format('task_completed', 'Review done');
 
     expect($payload)->toHaveKey('text', 'Review done');
@@ -11,22 +11,22 @@ it('formats notification with text and cardsV2', function () {
     expect($payload['cardsV2'][0]['card']['header']['title'])->toBe('Vunnix Notification');
 });
 
-it('uses Alert header for alert type', function () {
-    $formatter = new GoogleChatFormatter();
+it('uses Alert header for alert type', function (): void {
+    $formatter = new GoogleChatFormatter;
     $payload = $formatter->format('alert', 'API outage detected');
 
     expect($payload['cardsV2'][0]['card']['header']['title'])->toBe('Vunnix Alert');
 });
 
-it('uses Task Failed header for task_failed type', function () {
-    $formatter = new GoogleChatFormatter();
+it('uses Task Failed header for task_failed type', function (): void {
+    $formatter = new GoogleChatFormatter;
     $payload = $formatter->format('task_failed', 'Task failed');
 
     expect($payload['cardsV2'][0]['card']['header']['title'])->toBe('Task Failed');
 });
 
-it('includes action link buttons', function () {
-    $formatter = new GoogleChatFormatter();
+it('includes action link buttons', function (): void {
+    $formatter = new GoogleChatFormatter;
     $payload = $formatter->format('task_completed', 'Done', [
         'links' => [['label' => 'View MR', 'url' => 'https://example.com/mr/1']],
     ]);

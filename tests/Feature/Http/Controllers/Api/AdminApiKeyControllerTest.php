@@ -28,7 +28,7 @@ function createApiKeyAdminUser(): User
 
 // ─── Index ─────────────────────────────────────────────────────
 
-it('admin can list all API keys', function () {
+it('admin can list all API keys', function (): void {
     $admin = createApiKeyAdminUser();
     ApiKey::factory()->count(5)->create();
 
@@ -38,7 +38,7 @@ it('admin can list all API keys', function () {
         ->assertJsonCount(5, 'data');
 });
 
-it('admin index includes user info', function () {
+it('admin index includes user info', function (): void {
     $admin = createApiKeyAdminUser();
     $otherUser = User::factory()->create(['name' => 'John Doe', 'email' => 'john@example.com']);
     ApiKey::factory()->create(['user_id' => $otherUser->id]);
@@ -53,7 +53,7 @@ it('admin index includes user info', function () {
 
 // ─── Destroy ──────────────────────────────────────────────────
 
-it('admin can revoke any user\'s API key', function () {
+it('admin can revoke any user\'s API key', function (): void {
     $admin = createApiKeyAdminUser();
     $otherKey = ApiKey::factory()->create();
 
@@ -69,7 +69,7 @@ it('admin can revoke any user\'s API key', function () {
 
 // ─── Authorization ────────────────────────────────────────────
 
-it('non-admin cannot list all API keys', function () {
+it('non-admin cannot list all API keys', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user)
@@ -77,7 +77,7 @@ it('non-admin cannot list all API keys', function () {
         ->assertStatus(403);
 });
 
-it('non-admin cannot revoke API keys via admin endpoint', function () {
+it('non-admin cannot revoke API keys via admin endpoint', function (): void {
     $user = User::factory()->create();
     $otherKey = ApiKey::factory()->create();
 
@@ -88,7 +88,7 @@ it('non-admin cannot revoke API keys via admin endpoint', function () {
 
 // ─── Auth required ─────────────────────────────────────────────
 
-it('requires authentication for admin endpoints', function () {
+it('requires authentication for admin endpoints', function (): void {
     $this->getJson('/api/v1/admin/api-keys')->assertStatus(401);
     $this->deleteJson('/api/v1/admin/api-keys/1')->assertStatus(401);
 });

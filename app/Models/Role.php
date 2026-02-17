@@ -39,18 +39,6 @@ class Role extends Model
         'is_default',
     ];
 
-    /**
-     * @return array{
-     *   is_default: 'boolean',
-     * }
-     */
-    protected function casts(): array
-    {
-        return [
-            'is_default' => 'boolean',
-        ];
-    }
-
     /** @return BelongsTo<Project, $this> */
     public function project(): BelongsTo
     {
@@ -74,5 +62,17 @@ class Role extends Model
     public function hasPermission(string $permissionName): bool
     {
         return $this->permissions()->where('name', $permissionName)->exists();
+    }
+
+    /**
+     * @return array{
+     *   is_default: 'boolean',
+     * }
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_default' => 'boolean',
+        ];
     }
 }

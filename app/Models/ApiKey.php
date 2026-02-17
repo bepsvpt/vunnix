@@ -44,24 +44,6 @@ class ApiKey extends Model
         'revoked_at',
     ];
 
-    /**
-     * @return array{
-     *   last_used_at: 'datetime',
-     *   expires_at: 'datetime',
-     *   revoked: 'boolean',
-     *   revoked_at: 'datetime',
-     * }
-     */
-    protected function casts(): array
-    {
-        return [
-            'last_used_at' => 'datetime',
-            'expires_at' => 'datetime',
-            'revoked' => 'boolean',
-            'revoked_at' => 'datetime',
-        ];
-    }
-
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
@@ -90,7 +72,7 @@ class ApiKey extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('revoked', false)
-            ->where(function (Builder $q) {
+            ->where(function (Builder $q): void {
                 $q->whereNull('expires_at')
                     ->orWhere('expires_at', '>', now());
             });
@@ -102,5 +84,23 @@ class ApiKey extends Model
             'last_used_at' => now(),
             'last_ip' => $ip,
         ]);
+    }
+
+    /**
+     * @return array{
+     *   last_used_at: 'datetime',
+     *   expires_at: 'datetime',
+     *   revoked: 'boolean',
+     *   revoked_at: 'datetime',
+     * }
+     */
+    protected function casts(): array
+    {
+        return [
+            'last_used_at' => 'datetime',
+            'expires_at' => 'datetime',
+            'revoked' => 'boolean',
+            'revoked_at' => 'datetime',
+        ];
     }
 }

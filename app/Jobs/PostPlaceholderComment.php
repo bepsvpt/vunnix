@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Enums\TaskStatus;
 use App\Enums\TaskType;
 use App\Jobs\Middleware\RetryWithBackoff;
 use App\Models\Task;
@@ -11,6 +10,7 @@ use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Post a placeholder comment on a GitLab merge request when a task is dispatched.
@@ -89,7 +89,7 @@ class PostPlaceholderComment implements ShouldQueue
                 ]);
 
                 return;
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 Log::warning('PostPlaceholderComment: failed to update previous comment, creating new', [
                     'task_id' => $this->taskId,
                     'error' => $e->getMessage(),
@@ -112,7 +112,7 @@ class PostPlaceholderComment implements ShouldQueue
                 'task_id' => $this->taskId,
                 'note_id' => $note['id'],
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Best-effort: log the failure but don't re-throw.
             // The review should still proceed even if the placeholder fails.
             Log::warning('PostPlaceholderComment: failed to post placeholder', [

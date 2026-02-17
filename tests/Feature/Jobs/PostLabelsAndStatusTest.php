@@ -102,7 +102,7 @@ function fakeMrForLabels(): array
 
 // ─── Applies correct labels for high risk + security ────────────
 
-it('adds risk-high and security labels for critical security findings', function () {
+it('adds risk-high and security labels for critical security findings', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
             ->push(fakeMrForLabels(), 200)   // getMergeRequest
@@ -134,7 +134,7 @@ it('adds risk-high and security labels for critical security findings', function
 
 // ─── Sets commit status to failed for critical findings ─────────
 
-it('sets commit status to failed when critical findings exist', function () {
+it('sets commit status to failed when critical findings exist', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
             ->push(fakeMrForLabels(), 200)
@@ -160,7 +160,7 @@ it('sets commit status to failed when critical findings exist', function () {
 
 // ─── Applies low risk labels and success status for no findings ──
 
-it('adds risk-low label and success status for clean review', function () {
+it('adds risk-low label and success status for clean review', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
             ->push(fakeMrForLabels(), 200)
@@ -199,7 +199,7 @@ it('adds risk-low label and success status for clean review', function () {
 
 // ─── Uses SHA from MR response for commit status ────────────────
 
-it('uses the SHA from the MR response when setting commit status', function () {
+it('uses the SHA from the MR response when setting commit status', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
             ->push(fakeMrForLabels(), 200)
@@ -220,7 +220,7 @@ it('uses the SHA from the MR response when setting commit status', function () {
 
 // ─── Skips if task not found ────────────────────────────────────
 
-it('returns early if the task does not exist', function () {
+it('returns early if the task does not exist', function (): void {
     Http::fake();
 
     $job = new PostLabelsAndStatus(999999);
@@ -231,7 +231,7 @@ it('returns early if the task does not exist', function () {
 
 // ─── Skips if task has no MR IID ────────────────────────────────
 
-it('returns early if the task has no mr_iid', function () {
+it('returns early if the task has no mr_iid', function (): void {
     Http::fake();
 
     $task = Task::factory()->create([
@@ -251,7 +251,7 @@ it('returns early if the task has no mr_iid', function () {
 
 // ─── Skips if task has no result ────────────────────────────────
 
-it('returns early if the task has no result', function () {
+it('returns early if the task has no result', function (): void {
     Http::fake();
 
     $task = Task::factory()->create([
@@ -270,7 +270,7 @@ it('returns early if the task has no result', function () {
 
 // ─── T40: Removes old AI risk labels on incremental review (D56) ──
 
-it('removes stale AI risk labels when review risk level changes', function () {
+it('removes stale AI risk labels when review risk level changes', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
             ->push(fakeMrForLabels(), 200)                         // getMergeRequest
@@ -303,7 +303,7 @@ it('removes stale AI risk labels when review risk level changes', function () {
     });
 });
 
-it('removes other risk labels even when current risk level is high', function () {
+it('removes other risk labels even when current risk level is high', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
             ->push(fakeMrForLabels(), 200)                         // getMergeRequest
@@ -334,7 +334,7 @@ it('removes other risk labels even when current risk level is high', function ()
     });
 });
 
-it('continues adding labels when remove old labels fails', function () {
+it('continues adding labels when remove old labels fails', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/42' => Http::sequence()
             ->push(fakeMrForLabels(), 200)                         // getMergeRequest

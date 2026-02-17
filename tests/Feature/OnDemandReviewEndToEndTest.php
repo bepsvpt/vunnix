@@ -123,7 +123,7 @@ function onDemandRunnerPayload(array $result): array
 //  Main E2E test — happy path
 // ──────────────────────────────────────────────────────────────
 
-it('completes full on-demand review flow from @ai review comment to 3-layer GitLab comments', function () {
+it('completes full on-demand review flow from @ai review comment to 3-layer GitLab comments', function (): void {
     // ── 1. Set up project, config, and user with permission ──────
 
     $project = Project::factory()->enabled()->create([
@@ -166,7 +166,7 @@ it('completes full on-demand review flow from @ai review comment to 3-layer GitL
         ], 201),
 
         // Update note in-place
-        '*/api/v4/projects/77777/merge_requests/30/notes/' . $placeholderNoteId => Http::response([
+        '*/api/v4/projects/77777/merge_requests/30/notes/'.$placeholderNoteId => Http::response([
             'id' => $placeholderNoteId,
             'body' => '(updated summary)',
         ], 200),
@@ -331,7 +331,7 @@ it('completes full on-demand review flow from @ai review comment to 3-layer GitL
 //  Permission denied — no task created
 // ──────────────────────────────────────────────────────────────
 
-it('rejects @ai review from user without review.trigger permission', function () {
+it('rejects @ai review from user without review.trigger permission', function (): void {
     $project = Project::factory()->enabled()->create([
         'gitlab_project_id' => 88888,
     ]);
@@ -376,7 +376,7 @@ it('rejects @ai review from user without review.trigger permission', function ()
 //  @ai review with surrounding text
 // ──────────────────────────────────────────────────────────────
 
-it('recognizes @ai review embedded in a longer comment', function () {
+it('recognizes @ai review embedded in a longer comment', function (): void {
     $project = Project::factory()->enabled()->create([
         'gitlab_project_id' => 99999,
     ]);

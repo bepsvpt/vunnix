@@ -1,15 +1,11 @@
 <?php
 
-use App\Enums\ReviewStrategy;
-use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
 use App\Jobs\PostPlaceholderComment;
 use App\Models\Project;
 use App\Models\ProjectConfig;
 use App\Models\Task;
-use App\Services\GitLabClient;
-use App\Services\StrategyResolver;
 use App\Services\TaskDispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -19,7 +15,7 @@ uses(RefreshDatabase::class);
 
 // ─── Execution mode routing ─────────────────────────────────────
 
-it('routes server-side task (PrdCreation) without GitLab API call', function () {
+it('routes server-side task (PrdCreation) without GitLab API call', function (): void {
     Queue::fake([\App\Jobs\ProcessTaskResult::class]);
     Http::fake();
 
@@ -38,7 +34,7 @@ it('routes server-side task (PrdCreation) without GitLab API call', function () 
     Http::assertNothingSent();
 });
 
-it('routes runner task (CodeReview) and transitions to running', function () {
+it('routes runner task (CodeReview) and transitions to running', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -72,7 +68,7 @@ it('routes runner task (CodeReview) and transitions to running', function () {
     expect($task->status)->toBe(TaskStatus::Running);
 });
 
-it('routes runner FeatureDev task to running', function () {
+it('routes runner FeatureDev task to running', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -103,7 +99,7 @@ it('routes runner FeatureDev task to running', function () {
 
 // ─── Strategy selection — code review ───────────────────────────
 
-it('selects frontend-review strategy for .vue files', function () {
+it('selects frontend-review strategy for .vue files', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -138,7 +134,7 @@ it('selects frontend-review strategy for .vue files', function () {
     expect($task->result['strategy'])->toBe('frontend-review');
 });
 
-it('selects backend-review strategy for .php files', function () {
+it('selects backend-review strategy for .php files', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -173,7 +169,7 @@ it('selects backend-review strategy for .php files', function () {
     expect($task->result['strategy'])->toBe('backend-review');
 });
 
-it('selects mixed-review strategy for frontend + backend files', function () {
+it('selects mixed-review strategy for frontend + backend files', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -208,7 +204,7 @@ it('selects mixed-review strategy for frontend + backend files', function () {
     expect($task->result['strategy'])->toBe('mixed-review');
 });
 
-it('selects security-audit strategy for security-sensitive files', function () {
+it('selects security-audit strategy for security-sensitive files', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -245,7 +241,7 @@ it('selects security-audit strategy for security-sensitive files', function () {
 
 // ─── Strategy selection — non-review task types ─────────────────
 
-it('uses security-audit strategy for SecurityAudit task type', function () {
+it('uses security-audit strategy for SecurityAudit task type', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -274,7 +270,7 @@ it('uses security-audit strategy for SecurityAudit task type', function () {
     expect($task->result['strategy'])->toBe('security-audit');
 });
 
-it('uses frontend-review strategy for UiAdjustment task type', function () {
+it('uses frontend-review strategy for UiAdjustment task type', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -303,7 +299,7 @@ it('uses frontend-review strategy for UiAdjustment task type', function () {
     expect($task->result['strategy'])->toBe('frontend-review');
 });
 
-it('uses backend-review strategy for IssueDiscussion task type', function () {
+it('uses backend-review strategy for IssueDiscussion task type', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -332,7 +328,7 @@ it('uses backend-review strategy for IssueDiscussion task type', function () {
     expect($task->result['strategy'])->toBe('backend-review');
 });
 
-it('uses backend-review strategy for DeepAnalysis task type', function () {
+it('uses backend-review strategy for DeepAnalysis task type', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -361,7 +357,7 @@ it('uses backend-review strategy for DeepAnalysis task type', function () {
     expect($task->result['strategy'])->toBe('backend-review');
 });
 
-it('uses backend-review strategy for FeatureDev task type', function () {
+it('uses backend-review strategy for FeatureDev task type', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -392,7 +388,7 @@ it('uses backend-review strategy for FeatureDev task type', function () {
 
 // ─── Error handling ─────────────────────────────────────────────
 
-it('falls back to mixed-review when GitLab API fails', function () {
+it('falls back to mixed-review when GitLab API fails', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -425,7 +421,7 @@ it('falls back to mixed-review when GitLab API fails', function () {
 
 // ─── Server-side does not store strategy ────────────────────────
 
-it('does not store strategy for server-side tasks', function () {
+it('does not store strategy for server-side tasks', function (): void {
     Http::fake();
 
     $task = Task::factory()->queued()->create([
@@ -444,7 +440,7 @@ it('does not store strategy for server-side tasks', function () {
 
 // ─── T36: Placeholder dispatch ──────────────────────────────────
 
-it('dispatches PostPlaceholderComment for CodeReview with mr_iid', function () {
+it('dispatches PostPlaceholderComment for CodeReview with mr_iid', function (): void {
     Queue::fake();
 
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
@@ -479,7 +475,7 @@ it('dispatches PostPlaceholderComment for CodeReview with mr_iid', function () {
     });
 });
 
-it('dispatches PostPlaceholderComment for SecurityAudit with mr_iid', function () {
+it('dispatches PostPlaceholderComment for SecurityAudit with mr_iid', function (): void {
     Queue::fake();
 
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
@@ -509,7 +505,7 @@ it('dispatches PostPlaceholderComment for SecurityAudit with mr_iid', function (
     });
 });
 
-it('does not dispatch PostPlaceholderComment for tasks without mr_iid', function () {
+it('does not dispatch PostPlaceholderComment for tasks without mr_iid', function (): void {
     Queue::fake();
 
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
@@ -538,7 +534,7 @@ it('does not dispatch PostPlaceholderComment for tasks without mr_iid', function
     Queue::assertNotPushed(PostPlaceholderComment::class);
 });
 
-it('does not dispatch PostPlaceholderComment for non-review task types', function () {
+it('does not dispatch PostPlaceholderComment for non-review task types', function (): void {
     Http::fake();
 
     $task = Task::factory()->queued()->create([
@@ -556,7 +552,7 @@ it('does not dispatch PostPlaceholderComment for non-review task types', functio
 
 // ─── T56: Server-side dispatches ProcessTaskResult ──────────
 
-it('dispatches ProcessTaskResult for server-side PrdCreation tasks', function () {
+it('dispatches ProcessTaskResult for server-side PrdCreation tasks', function (): void {
     Queue::fake([\App\Jobs\ProcessTaskResult::class]);
     Http::fake();
 
@@ -586,7 +582,7 @@ it('dispatches ProcessTaskResult for server-side PrdCreation tasks', function ()
 
 // ─── T92: .vunnix.toml file config ──────────────────────────────
 
-it('reads .vunnix.toml from repo and stores file_config in task result', function () {
+it('reads .vunnix.toml from repo and stores file_config in task result', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -625,7 +621,7 @@ it('reads .vunnix.toml from repo and stores file_config in task result', functio
     ]);
 });
 
-it('gracefully handles missing .vunnix.toml (404)', function () {
+it('gracefully handles missing .vunnix.toml (404)', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -658,7 +654,7 @@ it('gracefully handles missing .vunnix.toml (404)', function () {
 
 // ─── Pipeline ref resolution ────────────────────────────────────
 
-it('triggers pipeline with MR source branch name, not commit SHA', function () {
+it('triggers pipeline with MR source branch name, not commit SHA', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -692,13 +688,12 @@ it('triggers pipeline with MR source branch name, not commit SHA', function () {
     $dispatcher->dispatch($task);
 
     // Verify pipeline was triggered with branch name, not commit SHA
-    Http::assertSent(fn ($req) =>
-        str_contains($req->url(), '/trigger/pipeline') &&
+    Http::assertSent(fn ($req) => str_contains($req->url(), '/trigger/pipeline') &&
         ($req->data()['ref'] ?? null) === 'feat/my-feature'
     );
 });
 
-it('triggers pipeline with main when task has no MR', function () {
+it('triggers pipeline with main when task has no MR', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -724,13 +719,12 @@ it('triggers pipeline with main when task has no MR', function () {
     $dispatcher->dispatch($task);
 
     // Verify pipeline was triggered with 'main', not commit SHA
-    Http::assertSent(fn ($req) =>
-        str_contains($req->url(), '/trigger/pipeline') &&
+    Http::assertSent(fn ($req) => str_contains($req->url(), '/trigger/pipeline') &&
         ($req->data()['ref'] ?? null) === 'main'
     );
 });
 
-it('falls back to main when MR source branch lookup fails', function () {
+it('falls back to main when MR source branch lookup fails', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -759,8 +753,7 @@ it('falls back to main when MR source branch lookup fails', function () {
     $dispatcher->dispatch($task);
 
     // Should fall back to 'main' and still succeed
-    Http::assertSent(fn ($req) =>
-        str_contains($req->url(), '/trigger/pipeline') &&
+    Http::assertSent(fn ($req) => str_contains($req->url(), '/trigger/pipeline') &&
         ($req->data()['ref'] ?? null) === 'main'
     );
 
@@ -768,7 +761,7 @@ it('falls back to main when MR source branch lookup fails', function () {
     expect($task->status)->toBe(TaskStatus::Running);
 });
 
-it('does not read .vunnix.toml for server-side tasks', function () {
+it('does not read .vunnix.toml for server-side tasks', function (): void {
     Queue::fake([\App\Jobs\ProcessTaskResult::class]);
     Http::fake();
 

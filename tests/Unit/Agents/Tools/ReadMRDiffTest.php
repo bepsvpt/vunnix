@@ -7,7 +7,7 @@ use App\Services\ProjectAccessChecker;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Laravel\Ai\Tools\Request;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->gitLab = Mockery::mock(GitLabClient::class);
     $this->accessChecker = Mockery::mock(ProjectAccessChecker::class);
     $this->accessChecker->shouldReceive('check')->andReturn(null);
@@ -16,13 +16,13 @@ beforeEach(function () {
 
 // ─── Description ────────────────────────────────────────────────
 
-it('has a description', function () {
+it('has a description', function (): void {
     expect($this->tool->description())->toBeString()->not->toBeEmpty();
 });
 
 // ─── Schema ─────────────────────────────────────────────────────
 
-it('defines the expected schema parameters', function () {
+it('defines the expected schema parameters', function (): void {
     $schema = new JsonSchemaTypeFactory;
     $result = $this->tool->schema($schema);
 
@@ -31,7 +31,7 @@ it('defines the expected schema parameters', function () {
 
 // ─── Handle — success ───────────────────────────────────────────
 
-it('returns formatted diff with file headers', function () {
+it('returns formatted diff with file headers', function (): void {
     $this->gitLab
         ->shouldReceive('getMergeRequestChanges')
         ->with(42, 7)
@@ -70,7 +70,7 @@ it('returns formatted diff with file headers', function () {
         ->toContain('use App\\Services\\Auth');
 });
 
-it('shows deleted file header', function () {
+it('shows deleted file header', function (): void {
     $this->gitLab
         ->shouldReceive('getMergeRequestChanges')
         ->with(42, 3)
@@ -98,7 +98,7 @@ it('shows deleted file header', function () {
         ->toContain('MR diff — 1 file(s) changed');
 });
 
-it('shows renamed file header', function () {
+it('shows renamed file header', function (): void {
     $this->gitLab
         ->shouldReceive('getMergeRequestChanges')
         ->with(42, 4)
@@ -124,7 +124,7 @@ it('shows renamed file header', function () {
     expect($result)->toContain('── Renamed: src/OldName.php → src/NewName.php ──');
 });
 
-it('truncates large diffs and shows remaining file count', function () {
+it('truncates large diffs and shows remaining file count', function (): void {
     // First file is small enough to fit, second exceeds MAX_OUTPUT_SIZE (100KB)
     $smallDiff = "@@ -1,3 +1,5 @@\n <?php\n \n+use App\\Auth;\n+\n class Controller {}";
     $largeDiff = str_repeat("+// line of code\n", 7000); // ~112KB
@@ -178,7 +178,7 @@ it('truncates large diffs and shows remaining file count', function () {
 
 // ─── Handle — empty ─────────────────────────────────────────────
 
-it('returns a message when no changes are found', function () {
+it('returns a message when no changes are found', function (): void {
     $this->gitLab
         ->shouldReceive('getMergeRequestChanges')
         ->with(42, 1)
@@ -197,7 +197,7 @@ it('returns a message when no changes are found', function () {
 
 // ─── Handle — error ─────────────────────────────────────────────
 
-it('returns error message instead of throwing on GitLab API failure', function () {
+it('returns error message instead of throwing on GitLab API failure', function (): void {
     $this->gitLab
         ->shouldReceive('getMergeRequestChanges')
         ->once()
@@ -218,7 +218,7 @@ it('returns error message instead of throwing on GitLab API failure', function (
 
 // ─── Handle — access denied ────────────────────────────────────
 
-it('returns rejection when access checker denies access', function () {
+it('returns rejection when access checker denies access', function (): void {
     $checker = Mockery::mock(ProjectAccessChecker::class);
     $checker->shouldReceive('check')
         ->with(999)

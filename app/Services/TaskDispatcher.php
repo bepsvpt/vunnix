@@ -9,6 +9,7 @@ use App\Jobs\PostPlaceholderComment;
 use App\Jobs\ProcessTaskResult;
 use App\Models\Task;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Task Dispatcher — picks tasks from the queue, selects a review strategy
@@ -176,7 +177,7 @@ class TaskDispatcher
                 'task_id' => $task->id,
                 'pipeline_id' => $pipelineResult['id'],
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('TaskDispatcher: pipeline trigger failed', [
                 'task_id' => $task->id,
                 'error' => $e->getMessage(),
@@ -251,7 +252,7 @@ class TaskDispatcher
             $filePaths = array_filter($filePaths);
 
             return $this->strategyResolver->resolve($filePaths);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('TaskDispatcher: failed to fetch MR changes, defaulting to mixed-review', [
                 'task_id' => $task->id,
                 'error' => $e->getMessage(),
@@ -278,7 +279,7 @@ class TaskDispatcher
                 );
 
                 return $mr['source_branch'] ?? 'main';
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 Log::warning('TaskDispatcher: failed to resolve MR source branch, falling back to main', [
                     'task_id' => $task->id,
                     'mr_iid' => $task->mr_iid,

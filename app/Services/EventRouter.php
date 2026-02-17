@@ -52,7 +52,7 @@ class EventRouter
      * Route a webhook event context to an AI action intent.
      *
      * @param  array  $context  The normalized event context from WebhookController::buildEventContext()
-     * @return RoutingResult|null  Null if the event should be ignored (bot event, unsupported, etc.)
+     * @return RoutingResult|null Null if the event should be ignored (bot event, unsupported, etc.)
      */
     public function route(array $context): ?RoutingResult
     {
@@ -278,7 +278,7 @@ class EventRouter
 
         // Check recognized commands: @ai review, @ai improve
         foreach (self::COMMANDS as $command => $intent) {
-            if (preg_match('/@ai\s+' . preg_quote($command, '/') . '\b/i', $note)) {
+            if (preg_match('/@ai\s+'.preg_quote($command, '/').'\b/i', $note)) {
                 $priority = $intent === 'on_demand_review' ? 'high' : 'normal';
 
                 return new RoutingResult($intent, $priority, $event);
@@ -334,7 +334,7 @@ class EventRouter
     private function extractUnrecognizedCommand(string $note): string
     {
         if (preg_match('/@ai\s+(\S+)/', $note, $matches)) {
-            return '@ai ' . $matches[1];
+            return '@ai '.$matches[1];
         }
 
         return '@ai';

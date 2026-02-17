@@ -28,7 +28,7 @@ function routerContext(string $eventType, array $overrides = []): array
 //  MR → auto_review
 // ------------------------------------------------------------------
 
-it('routes MR opened to auto_review with normal priority', function () {
+it('routes MR opened to auto_review with normal priority', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('merge_request', [
@@ -46,7 +46,7 @@ it('routes MR opened to auto_review with normal priority', function () {
         ->and($result->event)->toBeInstanceOf(MergeRequestOpened::class);
 });
 
-it('routes MR updated to auto_review with normal priority', function () {
+it('routes MR updated to auto_review with normal priority', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('merge_request', [
@@ -68,7 +68,7 @@ it('routes MR updated to auto_review with normal priority', function () {
 //  MR merged → acceptance_tracking
 // ------------------------------------------------------------------
 
-it('routes MR merged to acceptance_tracking', function () {
+it('routes MR merged to acceptance_tracking', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('merge_request', [
@@ -89,7 +89,7 @@ it('routes MR merged to acceptance_tracking', function () {
 //  Note on MR — @ai commands
 // ------------------------------------------------------------------
 
-it('routes @ai review to on_demand_review with high priority', function () {
+it('routes @ai review to on_demand_review with high priority', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('note', [
@@ -105,7 +105,7 @@ it('routes @ai review to on_demand_review with high priority', function () {
         ->and($result->event)->toBeInstanceOf(NoteOnMR::class);
 });
 
-it('routes @ai improve to improve with normal priority', function () {
+it('routes @ai improve to improve with normal priority', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('note', [
@@ -120,7 +120,7 @@ it('routes @ai improve to improve with normal priority', function () {
         ->and($result->priority)->toBe('normal');
 });
 
-it('routes @ai ask "question" to ask_command with normal priority', function () {
+it('routes @ai ask "question" to ask_command with normal priority', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('note', [
@@ -135,7 +135,7 @@ it('routes @ai ask "question" to ask_command with normal priority', function () 
         ->and($result->priority)->toBe('normal');
 });
 
-it('routes @ai review with surrounding text', function () {
+it('routes @ai review with surrounding text', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('note', [
@@ -149,7 +149,7 @@ it('routes @ai review with surrounding text', function () {
         ->and($result->intent)->toBe('on_demand_review');
 });
 
-it('ignores MR note without @ai mention', function () {
+it('ignores MR note without @ai mention', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('note', [
@@ -166,7 +166,7 @@ it('ignores MR note without @ai mention', function () {
 //  D155: Unrecognized @ai command → help response
 // ------------------------------------------------------------------
 
-it('dispatches help response for unrecognized @ai command', function () {
+it('dispatches help response for unrecognized @ai command', function (): void {
     Queue::fake();
 
     $router = new EventRouter;
@@ -188,7 +188,7 @@ it('dispatches help response for unrecognized @ai command', function () {
     });
 });
 
-it('dispatches help response for bare @ai mention on MR', function () {
+it('dispatches help response for bare @ai mention on MR', function (): void {
     Queue::fake();
 
     $router = new EventRouter;
@@ -210,7 +210,7 @@ it('dispatches help response for bare @ai mention on MR', function () {
 //  D154: Bot event filtering
 // ------------------------------------------------------------------
 
-it('discards Note on MR from bot account (D154)', function () {
+it('discards Note on MR from bot account (D154)', function (): void {
     $router = new EventRouter(botAccountId: 999);
 
     $result = $router->route(routerContext('note', [
@@ -223,7 +223,7 @@ it('discards Note on MR from bot account (D154)', function () {
     expect($result)->toBeNull();
 });
 
-it('discards Note on Issue from bot account (D154)', function () {
+it('discards Note on Issue from bot account (D154)', function (): void {
     $router = new EventRouter(botAccountId: 999);
 
     $result = $router->route(routerContext('note', [
@@ -236,7 +236,7 @@ it('discards Note on Issue from bot account (D154)', function () {
     expect($result)->toBeNull();
 });
 
-it('does NOT filter MR open events from bot account (D154/D100)', function () {
+it('does NOT filter MR open events from bot account (D154/D100)', function (): void {
     $router = new EventRouter(botAccountId: 999);
 
     $result = $router->route(routerContext('merge_request', [
@@ -252,7 +252,7 @@ it('does NOT filter MR open events from bot account (D154/D100)', function () {
         ->and($result->intent)->toBe('auto_review');
 });
 
-it('does NOT filter MR update events from bot account (D154/D100)', function () {
+it('does NOT filter MR update events from bot account (D154/D100)', function (): void {
     $router = new EventRouter(botAccountId: 999);
 
     $result = $router->route(routerContext('merge_request', [
@@ -268,7 +268,7 @@ it('does NOT filter MR update events from bot account (D154/D100)', function () 
         ->and($result->intent)->toBe('auto_review');
 });
 
-it('passes Note events when bot_account_id is not configured', function () {
+it('passes Note events when bot_account_id is not configured', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('note', [
@@ -286,7 +286,7 @@ it('passes Note events when bot_account_id is not configured', function () {
 //  Note on Issue → issue_discussion
 // ------------------------------------------------------------------
 
-it('routes @ai mention on Issue to issue_discussion', function () {
+it('routes @ai mention on Issue to issue_discussion', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('note', [
@@ -302,7 +302,7 @@ it('routes @ai mention on Issue to issue_discussion', function () {
         ->and($result->event)->toBeInstanceOf(NoteOnIssue::class);
 });
 
-it('ignores Issue note without @ai mention', function () {
+it('ignores Issue note without @ai mention', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('note', [
@@ -319,7 +319,7 @@ it('ignores Issue note without @ai mention', function () {
 //  Issue label change → feature_dev
 // ------------------------------------------------------------------
 
-it('routes ai::develop label to feature_dev with low priority', function () {
+it('routes ai::develop label to feature_dev with low priority', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('issue', [
@@ -335,7 +335,7 @@ it('routes ai::develop label to feature_dev with low priority', function () {
         ->and($result->event)->toBeInstanceOf(IssueLabelChanged::class);
 });
 
-it('ignores Issue label change without ai::develop', function () {
+it('ignores Issue label change without ai::develop', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('issue', [
@@ -352,7 +352,7 @@ it('ignores Issue label change without ai::develop', function () {
 //  Push → incremental_review
 // ------------------------------------------------------------------
 
-it('routes push event to incremental_review', function () {
+it('routes push event to incremental_review', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(routerContext('push', [
@@ -374,7 +374,7 @@ it('routes push event to incremental_review', function () {
 //  Edge cases
 // ------------------------------------------------------------------
 
-it('returns null for unparseable event context', function () {
+it('returns null for unparseable event context', function (): void {
     $router = new EventRouter;
 
     $result = $router->route(['event_type' => 'merge_request', 'project_id' => 1]);

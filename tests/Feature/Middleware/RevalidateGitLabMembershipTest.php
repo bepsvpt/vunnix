@@ -10,14 +10,14 @@ use Illuminate\Support\Facades\Route;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Register test route under /api/ prefix to avoid SPA catch-all route (/{any})
     // which intercepts all non-excluded GET paths and returns the Vue app shell
     Route::middleware(['web', RevalidateGitLabMembership::class])
         ->get('/api/test-revalidate', fn () => response('ok'));
 });
 
-it('revalidates membership on authenticated request when cache is empty', function () {
+it('revalidates membership on authenticated request when cache is empty', function (): void {
     $user = User::factory()->create(['oauth_token' => 'test-token']);
     $project = Project::factory()->create(['gitlab_project_id' => 101]);
 
@@ -45,7 +45,7 @@ it('revalidates membership on authenticated request when cache is empty', functi
     expect(Cache::has("membership_revalidated:{$user->id}"))->toBeTrue();
 });
 
-it('skips revalidation when cache key exists (within 15 min window)', function () {
+it('skips revalidation when cache key exists (within 15 min window)', function (): void {
     $user = User::factory()->create(['oauth_token' => 'test-token']);
 
     // Set cache as if recently revalidated
@@ -62,7 +62,7 @@ it('skips revalidation when cache key exists (within 15 min window)', function (
     Http::assertNothingSent();
 });
 
-it('revalidates again after cache expires', function () {
+it('revalidates again after cache expires', function (): void {
     $user = User::factory()->create(['oauth_token' => 'test-token']);
     $project = Project::factory()->create(['gitlab_project_id' => 101]);
 
@@ -87,7 +87,7 @@ it('revalidates again after cache expires', function () {
     Http::assertSentCount(1);
 });
 
-it('does not revalidate for unauthenticated requests', function () {
+it('does not revalidate for unauthenticated requests', function (): void {
     Http::fake([
         '*/api/v4/projects*' => Http::response([], 200),
     ]);

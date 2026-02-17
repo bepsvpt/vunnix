@@ -73,10 +73,10 @@ class SearchCode implements Tool
             // Trim excessive whitespace from snippets
             $snippet = trim($data);
             if (strlen($snippet) > 500) {
-                $snippet = substr($snippet, 0, 500) . '…';
+                $snippet = substr($snippet, 0, 500).'…';
             }
 
-            $lines[] = "--- {$path}" . ($startLine ? ":L{$startLine}" : '') . " ---\n{$snippet}";
+            $lines[] = "--- {$path}".($startLine ? ":L{$startLine}" : '')." ---\n{$snippet}";
         }
 
         return implode("\n\n", $lines);

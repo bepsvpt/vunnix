@@ -7,11 +7,11 @@ use App\Services\VunnixTomlService;
 // Uses TestCase because error-path tests trigger Log::warning() which needs the facade root.
 uses(Tests\TestCase::class);
 
-afterEach(function () {
+afterEach(function (): void {
     Mockery::close();
 });
 
-it('parses valid .vunnix.toml and returns flattened settings', function () {
+it('parses valid .vunnix.toml and returns flattened settings', function (): void {
     $tomlContent = <<<'TOML'
 [general]
 model = "sonnet"
@@ -50,7 +50,7 @@ TOML;
     ]);
 });
 
-it('maps [general] keys to top-level config keys', function () {
+it('maps [general] keys to top-level config keys', function (): void {
     $tomlContent = <<<'TOML'
 [general]
 model = "haiku"
@@ -75,7 +75,7 @@ TOML;
     ]);
 });
 
-it('ignores unknown keys not in settingKeys()', function () {
+it('ignores unknown keys not in settingKeys()', function (): void {
     $tomlContent = <<<'TOML'
 [general]
 model = "opus"
@@ -106,7 +106,7 @@ TOML;
     ]);
 });
 
-it('returns empty array when file does not exist (404)', function () {
+it('returns empty array when file does not exist (404)', function (): void {
     $gitLabClient = Mockery::mock(GitLabClient::class);
     $gitLabClient->shouldReceive('getFile')
         ->once()
@@ -118,7 +118,7 @@ it('returns empty array when file does not exist (404)', function () {
     expect($result)->toBe([]);
 });
 
-it('returns empty array when TOML is malformed', function () {
+it('returns empty array when TOML is malformed', function (): void {
     $gitLabClient = Mockery::mock(GitLabClient::class);
     $gitLabClient->shouldReceive('getFile')
         ->once()
@@ -133,7 +133,7 @@ it('returns empty array when TOML is malformed', function () {
     expect($result)->toBe([]);
 });
 
-it('returns empty array on GitLab API error (non-404)', function () {
+it('returns empty array on GitLab API error (non-404)', function (): void {
     $gitLabClient = Mockery::mock(GitLabClient::class);
     $gitLabClient->shouldReceive('getFile')
         ->once()
@@ -145,7 +145,7 @@ it('returns empty array on GitLab API error (non-404)', function () {
     expect($result)->toBe([]);
 });
 
-it('handles all supported setting keys from TOML sections', function () {
+it('handles all supported setting keys from TOML sections', function (): void {
     $tomlContent = <<<'TOML'
 [general]
 model = "opus"

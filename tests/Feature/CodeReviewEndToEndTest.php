@@ -124,7 +124,7 @@ function runnerResultPayload(array $result): array
 //  Main E2E test
 // ──────────────────────────────────────────────────────────────
 
-it('completes full code review flow from webhook to 3-layer GitLab comments', function () {
+it('completes full code review flow from webhook to 3-layer GitLab comments', function (): void {
     // ── 1. Set up project, config, and user ──────────────────────
 
     $project = Project::factory()->enabled()->create([
@@ -180,7 +180,7 @@ it('completes full code review flow from webhook to 3-layer GitLab comments', fu
         ], 201),
 
         // (d) Update note in-place (PUT) — matches the note update endpoint
-        '*/api/v4/projects/12345/merge_requests/42/notes/' . $placeholderNoteId => Http::response([
+        '*/api/v4/projects/12345/merge_requests/42/notes/'.$placeholderNoteId => Http::response([
             'id' => $placeholderNoteId,
             'body' => '(updated summary)',
         ], 200),
@@ -373,7 +373,7 @@ it('completes full code review flow from webhook to 3-layer GitLab comments', fu
 //  Placeholder-then-update pattern test
 // ──────────────────────────────────────────────────────────────
 
-it('uses placeholder-then-update pattern: creates placeholder then updates in-place', function () {
+it('uses placeholder-then-update pattern: creates placeholder then updates in-place', function (): void {
     $project = Project::factory()->enabled()->create([
         'gitlab_project_id' => 55555,
     ]);
@@ -404,7 +404,7 @@ it('uses placeholder-then-update pattern: creates placeholder then updates in-pl
             'id' => 90001, 'status' => 'created',
         ], 201),
 
-        '*/api/v4/projects/55555/merge_requests/10/notes/' . $placeholderNoteId => Http::response([
+        '*/api/v4/projects/55555/merge_requests/10/notes/'.$placeholderNoteId => Http::response([
             'id' => $placeholderNoteId,
             'body' => '(summary)',
         ], 200),
@@ -489,7 +489,7 @@ it('uses placeholder-then-update pattern: creates placeholder then updates in-pl
 //  Clean review (no critical findings) test
 // ──────────────────────────────────────────────────────────────
 
-it('sets commit status to success when no critical findings exist', function () {
+it('sets commit status to success when no critical findings exist', function (): void {
     $project = Project::factory()->enabled()->create([
         'gitlab_project_id' => 66666,
     ]);

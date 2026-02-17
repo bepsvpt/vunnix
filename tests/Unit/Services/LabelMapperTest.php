@@ -135,8 +135,8 @@ function securityFindingNonCriticalResult(): array
 
 // ─── mapLabels: high risk → ai::reviewed + ai::risk-high ────────
 
-it('maps high risk level to ai::risk-high label', function () {
-    $mapper = new LabelMapper();
+it('maps high risk level to ai::risk-high label', function (): void {
+    $mapper = new LabelMapper;
     $labels = $mapper->mapLabels(highRiskResult());
 
     expect($labels)->toContain('ai::reviewed')
@@ -147,8 +147,8 @@ it('maps high risk level to ai::risk-high label', function () {
 
 // ─── mapLabels: medium risk → ai::reviewed + ai::risk-medium ────
 
-it('maps medium risk level to ai::risk-medium label', function () {
-    $mapper = new LabelMapper();
+it('maps medium risk level to ai::risk-medium label', function (): void {
+    $mapper = new LabelMapper;
     $labels = $mapper->mapLabels(mediumRiskResult());
 
     expect($labels)->toContain('ai::reviewed')
@@ -159,8 +159,8 @@ it('maps medium risk level to ai::risk-medium label', function () {
 
 // ─── mapLabels: low risk → ai::reviewed + ai::risk-low ──────────
 
-it('maps low risk level to ai::risk-low label', function () {
-    $mapper = new LabelMapper();
+it('maps low risk level to ai::risk-low label', function (): void {
+    $mapper = new LabelMapper;
     $labels = $mapper->mapLabels(lowRiskResult());
 
     expect($labels)->toContain('ai::reviewed')
@@ -171,8 +171,8 @@ it('maps low risk level to ai::risk-low label', function () {
 
 // ─── mapLabels: no findings → ai::reviewed + ai::risk-low ───────
 
-it('maps no findings to ai::reviewed and ai::risk-low', function () {
-    $mapper = new LabelMapper();
+it('maps no findings to ai::reviewed and ai::risk-low', function (): void {
+    $mapper = new LabelMapper;
     $labels = $mapper->mapLabels(noFindingsResult());
 
     expect($labels)->toContain('ai::reviewed')
@@ -181,8 +181,8 @@ it('maps no findings to ai::reviewed and ai::risk-low', function () {
 
 // ─── mapLabels: security finding → ai::security ─────────────────
 
-it('adds ai::security label when security category findings exist', function () {
-    $mapper = new LabelMapper();
+it('adds ai::security label when security category findings exist', function (): void {
+    $mapper = new LabelMapper;
     $labels = $mapper->mapLabels(highRiskResult());
 
     expect($labels)->toContain('ai::security');
@@ -190,8 +190,8 @@ it('adds ai::security label when security category findings exist', function () 
 
 // ─── mapLabels: non-security finding → no ai::security ──────────
 
-it('does not add ai::security when no security findings exist', function () {
-    $mapper = new LabelMapper();
+it('does not add ai::security when no security findings exist', function (): void {
+    $mapper = new LabelMapper;
     $labels = $mapper->mapLabels(mediumRiskResult());
 
     expect($labels)->not->toContain('ai::security');
@@ -199,8 +199,8 @@ it('does not add ai::security when no security findings exist', function () {
 
 // ─── mapLabels: security finding at non-critical severity ────────
 
-it('adds ai::security for security category regardless of severity', function () {
-    $mapper = new LabelMapper();
+it('adds ai::security for security category regardless of severity', function (): void {
+    $mapper = new LabelMapper;
     $labels = $mapper->mapLabels(securityFindingNonCriticalResult());
 
     expect($labels)->toContain('ai::security')
@@ -209,8 +209,8 @@ it('adds ai::security for security category regardless of severity', function ()
 
 // ─── mapLabels: always includes ai::reviewed ─────────────────────
 
-it('always includes ai::reviewed label', function () {
-    $mapper = new LabelMapper();
+it('always includes ai::reviewed label', function (): void {
+    $mapper = new LabelMapper;
 
     expect($mapper->mapLabels(highRiskResult()))->toContain('ai::reviewed')
         ->and($mapper->mapLabels(mediumRiskResult()))->toContain('ai::reviewed')
@@ -220,8 +220,8 @@ it('always includes ai::reviewed label', function () {
 
 // ─── mapCommitStatus: critical findings → failed ─────────────────
 
-it('returns failed commit status when critical findings exist', function () {
-    $mapper = new LabelMapper();
+it('returns failed commit status when critical findings exist', function (): void {
+    $mapper = new LabelMapper;
     $status = $mapper->mapCommitStatus(highRiskResult());
 
     expect($status)->toBe('failed');
@@ -229,8 +229,8 @@ it('returns failed commit status when critical findings exist', function () {
 
 // ─── mapCommitStatus: no critical findings → success ─────────────
 
-it('returns success commit status when no critical findings exist', function () {
-    $mapper = new LabelMapper();
+it('returns success commit status when no critical findings exist', function (): void {
+    $mapper = new LabelMapper;
 
     expect($mapper->mapCommitStatus(mediumRiskResult()))->toBe('success')
         ->and($mapper->mapCommitStatus(lowRiskResult()))->toBe('success')
@@ -239,8 +239,8 @@ it('returns success commit status when no critical findings exist', function () 
 
 // ─── mapCommitStatus: security finding without critical → success ─
 
-it('returns success for security findings without critical severity', function () {
-    $mapper = new LabelMapper();
+it('returns success for security findings without critical severity', function (): void {
+    $mapper = new LabelMapper;
     $status = $mapper->mapCommitStatus(securityFindingNonCriticalResult());
 
     expect($status)->toBe('success');

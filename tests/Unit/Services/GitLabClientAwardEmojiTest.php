@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Http;
 
 uses(Tests\TestCase::class);
 
-it('fetches award emoji for a merge request discussion note', function () {
+it('fetches award emoji for a merge request discussion note', function (): void {
     Http::fake([
         '*/api/v4/projects/42/merge_requests/10/discussions/disc-1/notes/100/award_emoji*' => Http::response([
             ['id' => 1, 'name' => 'thumbsup', 'user' => ['id' => 5, 'username' => 'engineer1']],
@@ -21,7 +21,7 @@ it('fetches award emoji for a merge request discussion note', function () {
     expect($emoji[1]['name'])->toBe('thumbsdown');
 });
 
-it('returns empty array when note has no award emoji', function () {
+it('returns empty array when note has no award emoji', function (): void {
     Http::fake([
         '*/api/v4/projects/42/merge_requests/10/discussions/disc-1/notes/100/award_emoji*' => Http::response([], 200),
     ]);

@@ -147,7 +147,7 @@ function incrementalRunnerPayload(array $result): array
 //  Main E2E incremental review test
 // ──────────────────────────────────────────────────────────────
 
-it('updates summary in-place with timestamp and deduplicates threads on incremental review', function () {
+it('updates summary in-place with timestamp and deduplicates threads on incremental review', function (): void {
     // ── 1. Set up project, config, and user ──────────────────────
 
     $project = Project::factory()->enabled()->create([
@@ -191,7 +191,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
         ], 201),
 
         // Update note in-place (summary comment)
-        '*/api/v4/projects/44444/merge_requests/15/notes/' . $placeholderNoteId => Http::response([
+        '*/api/v4/projects/44444/merge_requests/15/notes/'.$placeholderNoteId => Http::response([
             'id' => $placeholderNoteId, 'body' => '(summary)',
         ], 200),
 
@@ -270,7 +270,7 @@ it('updates summary in-place with timestamp and deduplicates threads on incremen
     // Reset the Http client entirely to clear phase 1's exhausted sequences.
     // Http::fake() merges into stubCallbacks rather than replacing, so stale
     // pattern stubs from phase 1 would match first and throw OutOfBounds.
-    Http::swap(new \Illuminate\Http\Client\Factory());
+    Http::swap(new \Illuminate\Http\Client\Factory);
 
     $phase2DiscussionSeq = Http::sequence()
         // GET existing discussions — includes the "Missing null check" thread from phase 1

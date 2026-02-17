@@ -2,14 +2,12 @@
 
 use App\Agents\Tools\DispatchAction;
 use App\Enums\TaskType;
-use App\Models\Project;
-use App\Models\User;
 use App\Services\ProjectAccessChecker;
 use App\Services\TaskDispatcher;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Laravel\Ai\Tools\Request;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->accessChecker = Mockery::mock(ProjectAccessChecker::class);
     $this->taskDispatcher = Mockery::mock(TaskDispatcher::class);
     $this->tool = new DispatchAction($this->accessChecker, $this->taskDispatcher);
@@ -19,13 +17,13 @@ afterEach(fn () => Mockery::close());
 
 // ─── Description ────────────────────────────────────────────────
 
-it('has a description', function () {
+it('has a description', function (): void {
     expect($this->tool->description())->toBeString()->not->toBeEmpty();
 });
 
 // ─── Schema ─────────────────────────────────────────────────────
 
-it('defines the expected schema parameters', function () {
+it('defines the expected schema parameters', function (): void {
     $schema = new JsonSchemaTypeFactory;
     $params = $this->tool->schema($schema);
 
@@ -45,7 +43,7 @@ it('defines the expected schema parameters', function () {
 
 // ─── Handle — access denied ────────────────────────────────────
 
-it('returns rejection when access checker denies access', function () {
+it('returns rejection when access checker denies access', function (): void {
     $this->accessChecker
         ->shouldReceive('check')
         ->with(42)
@@ -68,7 +66,7 @@ it('returns rejection when access checker denies access', function () {
 
 // ─── Handle — invalid action type ──────────────────────────────
 
-it('returns error for invalid action type', function () {
+it('returns error for invalid action type', function (): void {
     $this->accessChecker
         ->shouldReceive('check')
         ->with(42)
@@ -91,7 +89,7 @@ it('returns error for invalid action type', function () {
 
 // ─── Action type mapping ───────────────────────────────────────
 
-it('includes existing_mr_iid in schema parameters', function () {
+it('includes existing_mr_iid in schema parameters', function (): void {
     $schema = new JsonSchemaTypeFactory;
     $params = $this->tool->schema($schema);
 
@@ -100,7 +98,7 @@ it('includes existing_mr_iid in schema parameters', function () {
 
 // ─── Action type mapping ───────────────────────────────────────
 
-it('maps action types to TaskType enum correctly', function () {
+it('maps action types to TaskType enum correctly', function (): void {
     $mapping = DispatchAction::ACTION_TYPE_MAP;
 
     expect($mapping)->toHaveKeys([

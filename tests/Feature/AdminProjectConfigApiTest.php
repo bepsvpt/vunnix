@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\GlobalSetting;
 use App\Models\Permission;
 use App\Models\Project;
 use App\Models\ProjectConfig;
@@ -11,9 +10,9 @@ use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -23,14 +22,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -79,7 +78,7 @@ function createProjectConfigNonAdmin(Project $project): User
 
 // ─── GET /admin/projects/{project}/config ────────────────────
 
-it('returns effective config for a project', function () {
+it('returns effective config for a project', function (): void {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -105,7 +104,7 @@ it('returns effective config for a project', function () {
     expect($effective['ai_model']['value'])->toBe('sonnet');
 });
 
-it('returns global defaults when no project overrides', function () {
+it('returns global defaults when no project overrides', function (): void {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -123,7 +122,7 @@ it('returns global defaults when no project overrides', function () {
     expect($effective['ai_model']['value'])->toBe('opus');
 });
 
-it('rejects config read for non-admin', function () {
+it('rejects config read for non-admin', function (): void {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create(['project_id' => $project->id]);
     $user = createProjectConfigNonAdmin($project);
@@ -133,7 +132,7 @@ it('rejects config read for non-admin', function () {
         ->assertForbidden();
 });
 
-it('rejects config read for unauthenticated user', function () {
+it('rejects config read for unauthenticated user', function (): void {
     $project = Project::factory()->create();
 
     $this->getJson("/api/v1/admin/projects/{$project->id}/config")
@@ -142,7 +141,7 @@ it('rejects config read for unauthenticated user', function () {
 
 // ─── PUT /admin/projects/{project}/config ────────────────────
 
-it('updates project config overrides', function () {
+it('updates project config overrides', function (): void {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -166,7 +165,7 @@ it('updates project config overrides', function () {
     expect($config->settings['timeout_minutes'])->toBe(20);
 });
 
-it('removes overrides when value is null', function () {
+it('removes overrides when value is null', function (): void {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -185,7 +184,7 @@ it('removes overrides when value is null', function () {
     expect($config->settings)->not->toHaveKey('ai_model');
 });
 
-it('returns updated effective config after update', function () {
+it('returns updated effective config after update', function (): void {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -203,7 +202,7 @@ it('returns updated effective config after update', function () {
         ->assertJsonPath('data.effective.ai_model.source', 'project');
 });
 
-it('creates ProjectConfig if it does not exist', function () {
+it('creates ProjectConfig if it does not exist', function (): void {
     $project = Project::factory()->create();
     $admin = createProjectConfigAdmin($project);
 
@@ -219,7 +218,7 @@ it('creates ProjectConfig if it does not exist', function () {
     expect($config->settings['ai_model'])->toBe('haiku');
 });
 
-it('rejects config update for non-admin', function () {
+it('rejects config update for non-admin', function (): void {
     $project = Project::factory()->create();
     ProjectConfig::factory()->create(['project_id' => $project->id]);
     $user = createProjectConfigNonAdmin($project);
@@ -231,7 +230,7 @@ it('rejects config update for non-admin', function () {
         ->assertForbidden();
 });
 
-it('validates settings is required', function () {
+it('validates settings is required', function (): void {
     $project = Project::factory()->create();
     $admin = createProjectConfigAdmin($project);
 
@@ -240,7 +239,7 @@ it('validates settings is required', function () {
         ->assertUnprocessable();
 });
 
-it('validates settings must be an array', function () {
+it('validates settings must be an array', function (): void {
     $project = Project::factory()->create();
     $admin = createProjectConfigAdmin($project);
 

@@ -142,7 +142,7 @@ class AcceptanceTrackingService
      *
      * @param  array  $finding  Finding from task result
      * @param  array<int, array>  $discussions  GitLab discussions
-     * @return string|null  The discussion ID if found, null otherwise
+     * @return string|null The discussion ID if found, null otherwise
      */
     public function matchFindingToDiscussion(array $finding, array $discussions): ?string
     {
@@ -170,7 +170,7 @@ class AcceptanceTrackingService
     /**
      * Parse unified diff hunk headers to extract modified line ranges.
      *
-     * @return array<int, array{0: int, 1: int}>  [[startLine, endLine], ...]
+     * @return array<int, array{0: int, 1: int}> [[startLine, endLine], ...]
      */
     private function parseHunkRanges(string $diff): array
     {

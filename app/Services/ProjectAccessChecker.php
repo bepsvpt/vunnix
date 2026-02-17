@@ -28,8 +28,8 @@ class ProjectAccessChecker
      * if access is denied. This follows the tool convention of returning
      * error strings rather than throwing exceptions.
      *
-     * @param  int        $gitlabProjectId  The GitLab project ID to check access for.
-     * @param  User|null  $user             The user to check. Falls back to Auth::user() if null.
+     * @param  int  $gitlabProjectId  The GitLab project ID to check access for.
+     * @param  User|null  $user  The user to check. Falls back to Auth::user() if null.
      */
     public function check(int $gitlabProjectId, ?User $user = null): ?string
     {
@@ -52,7 +52,7 @@ class ProjectAccessChecker
         $isMember = $user->projects()->where('projects.id', $project->id)->exists();
 
         if (! $isMember) {
-            return "Access denied: you do not have access to this project.";
+            return 'Access denied: you do not have access to this project.';
         }
 
         return null;

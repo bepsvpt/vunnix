@@ -7,6 +7,7 @@ use App\Services\GitLabClient;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Posts a help response on a GitLab MR when an unrecognized @ai command is used (D155).
@@ -16,16 +17,6 @@ use Illuminate\Support\Facades\Log;
 class PostHelpResponse implements ShouldQueue
 {
     use Queueable;
-
-    public int $tries = 4;
-
-    /**
-     * @return array<int, object>
-     */
-    public function middleware(): array
-    {
-        return [new RetryWithBackoff];
-    }
 
     private const HELP_MESSAGE = <<<'MD'
         **Available commands:**
@@ -39,6 +30,8 @@ class PostHelpResponse implements ShouldQueue
         Use any of the above commands in a comment on this merge request.
         MD;
 
+    public int $tries = 4;
+
     public function __construct(
         public readonly int $gitlabProjectId,
         public readonly int $mergeRequestIid,
@@ -47,9 +40,17 @@ class PostHelpResponse implements ShouldQueue
         $this->onQueue(\App\Support\QueueNames::SERVER);
     }
 
+    /**
+     * @return array<int, object>
+     */
+    public function middleware(): array
+    {
+        return [new RetryWithBackoff];
+    }
+
     public function handle(GitLabClient $gitLab): void
     {
-        $body = "I didn't recognize the command `{$this->unrecognizedCommand}`.\n\n" . self::HELP_MESSAGE;
+        $body = "I didn't recognize the command `{$this->unrecognizedCommand}`.\n\n".self::HELP_MESSAGE;
 
         try {
             $gitLab->createMergeRequestNote(
@@ -57,7 +58,7 @@ class PostHelpResponse implements ShouldQueue
                 $this->mergeRequestIid,
                 $body,
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('Failed to post help response on MR', [
                 'project_id' => $this->gitlabProjectId,
                 'mr_iid' => $this->mergeRequestIid,

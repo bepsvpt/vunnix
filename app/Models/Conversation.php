@@ -43,9 +43,9 @@ class Conversation extends Model
 {
     use HasFactory;
 
-    protected $table = 'agent_conversations';
-
     public $incrementing = false;
+
+    protected $table = 'agent_conversations';
 
     protected $keyType = 'string';
 
@@ -56,21 +56,9 @@ class Conversation extends Model
         'archived_at',
     ];
 
-    /**
-     * @return array{
-     *   archived_at: 'datetime',
-     * }
-     */
-    protected function casts(): array
-    {
-        return [
-            'archived_at' => 'datetime',
-        ];
-    }
-
     protected static function booted(): void
     {
-        static::creating(function (Conversation $conversation) {
+        static::creating(function (Conversation $conversation): void {
             if (! $conversation->id) {
                 $conversation->id = (string) Str::uuid7();
             }
@@ -145,9 +133,9 @@ class Conversation extends Model
     {
         $projectIds = $user->projects()->pluck('projects.id');
 
-        return $query->where(function (Builder $q) use ($projectIds) {
+        return $query->where(function (Builder $q) use ($projectIds): void {
             $q->whereIn('project_id', $projectIds)
-                ->orWhereHas('projects', function (Builder $sub) use ($projectIds) {
+                ->orWhereHas('projects', function (Builder $sub) use ($projectIds): void {
                     $sub->whereIn('projects.id', $projectIds);
                 });
         });
@@ -156,5 +144,17 @@ class Conversation extends Model
     public function isArchived(): bool
     {
         return $this->archived_at !== null;
+    }
+
+    /**
+     * @return array{
+     *   archived_at: 'datetime',
+     * }
+     */
+    protected function casts(): array
+    {
+        return [
+            'archived_at' => 'datetime',
+        ];
     }
 }

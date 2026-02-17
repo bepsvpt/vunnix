@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('TaskStatusChanged broadcasts on private task channel', function () {
+test('TaskStatusChanged broadcasts on private task channel', function (): void {
     $task = Task::factory()->create(['status' => 'completed']);
 
     $event = new TaskStatusChanged($task);
@@ -23,7 +23,7 @@ test('TaskStatusChanged broadcasts on private task channel', function () {
     expect($channels[1]->name)->toBe("private-project.{$task->project_id}.activity");
 });
 
-test('TaskStatusChanged payload includes status and task summary', function () {
+test('TaskStatusChanged payload includes status and task summary', function (): void {
     $task = Task::factory()->create([
         'status' => 'completed',
         'type' => 'code_review',
@@ -41,7 +41,7 @@ test('TaskStatusChanged payload includes status and task summary', function () {
     expect($data['pipeline_id'])->toBe(12345);
 });
 
-test('TaskStatusChanged event name is task.status.changed', function () {
+test('TaskStatusChanged event name is task.status.changed', function (): void {
     $task = Task::factory()->create();
 
     $event = new TaskStatusChanged($task);
@@ -51,7 +51,7 @@ test('TaskStatusChanged event name is task.status.changed', function () {
 
 // -- T70: Result card data in broadcast payload --
 
-test('includes result_data in broadcast payload for completed feature_dev task', function () {
+test('includes result_data in broadcast payload for completed feature_dev task', function (): void {
     $task = Task::factory()->create([
         'type' => 'feature_dev',
         'status' => 'completed',
@@ -79,7 +79,7 @@ test('includes result_data in broadcast payload for completed feature_dev task',
     expect($payload['result_data'])->not->toHaveKey('screenshot');
 });
 
-test('includes screenshot in broadcast payload for completed ui_adjustment task', function () {
+test('includes screenshot in broadcast payload for completed ui_adjustment task', function (): void {
     $task = Task::factory()->create([
         'type' => 'ui_adjustment',
         'status' => 'completed',
@@ -104,7 +104,7 @@ test('includes screenshot in broadcast payload for completed ui_adjustment task'
     expect($payload['result_data'])->toHaveKey('screenshot', 'iVBORw0KGgoAAAANSUhEUg==');
 });
 
-test('includes error_reason in broadcast payload for failed task', function () {
+test('includes error_reason in broadcast payload for failed task', function (): void {
     $task = Task::factory()->create([
         'type' => 'feature_dev',
         'status' => 'failed',
@@ -118,7 +118,7 @@ test('includes error_reason in broadcast payload for failed task', function () {
     expect($payload)->toHaveKey('error_reason', 'Schema validation failed');
 });
 
-test('omits result_data for non-terminal tasks', function () {
+test('omits result_data for non-terminal tasks', function (): void {
     $task = Task::factory()->create([
         'type' => 'feature_dev',
         'status' => 'running',

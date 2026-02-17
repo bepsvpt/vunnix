@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Register test routes under /api/ prefix to avoid SPA catch-all route (/{any})
     // which intercepts all non-excluded GET paths and returns the Vue app shell
     Route::middleware(['auth', 'permission:review.view'])->get(
@@ -23,7 +23,7 @@ beforeEach(function () {
     );
 });
 
-it('returns 200 when user has the required permission', function () {
+it('returns 200 when user has the required permission', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $role = Role::factory()->create(['project_id' => $project->id]);
@@ -37,7 +37,7 @@ it('returns 200 when user has the required permission', function () {
         ->assertJson(['ok' => true]);
 });
 
-it('returns 403 when user lacks the required permission', function () {
+it('returns 403 when user lacks the required permission', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 
@@ -47,7 +47,7 @@ it('returns 403 when user lacks the required permission', function () {
         ->assertForbidden();
 });
 
-it('returns 403 when user has the permission on a different project', function () {
+it('returns 403 when user has the permission on a different project', function (): void {
     $user = User::factory()->create();
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
@@ -63,14 +63,14 @@ it('returns 403 when user has the permission on a different project', function (
         ->assertForbidden();
 });
 
-it('returns 401 when user is not authenticated', function () {
+it('returns 401 when user is not authenticated', function (): void {
     $project = Project::factory()->create();
 
     $this->getJson("/api/test-permission/{$project->id}")
         ->assertUnauthorized();
 });
 
-it('returns 200 when admin permission grants access to admin endpoints', function () {
+it('returns 200 when admin permission grants access to admin endpoints', function (): void {
     Route::middleware(['auth', 'permission:admin.global_config'])->get(
         '/api/test-admin/{project}',
         fn () => response()->json(['admin' => true])
@@ -89,7 +89,7 @@ it('returns 200 when admin permission grants access to admin endpoints', functio
         ->assertJson(['admin' => true]);
 });
 
-it('resolves project from project_id query parameter', function () {
+it('resolves project from project_id query parameter', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $role = Role::factory()->create(['project_id' => $project->id]);
@@ -102,7 +102,7 @@ it('resolves project from project_id query parameter', function () {
         ->assertOk();
 });
 
-it('returns 403 when no project context is provided', function () {
+it('returns 403 when no project context is provided', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user)

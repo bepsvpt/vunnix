@@ -9,6 +9,7 @@ use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Correlate push event code changes with existing AI findings.
@@ -55,7 +56,7 @@ class ProcessCodeChangeCorrelation implements ShouldQueue
                 $this->beforeSha,
                 $this->afterSha,
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('ProcessCodeChangeCorrelation: failed to compare branches', [
                 'project_id' => $this->projectId,
                 'error' => $e->getMessage(),
@@ -65,7 +66,7 @@ class ProcessCodeChangeCorrelation implements ShouldQueue
         }
 
         $diffs = $compare['diffs'] ?? [];
-        $service = new AcceptanceTrackingService();
+        $service = new AcceptanceTrackingService;
 
         foreach ($acceptances as $acceptance) {
             $finding = [

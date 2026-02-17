@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('returns overview stats scoped to user projects', function () {
+it('returns overview stats scoped to user projects', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -53,7 +53,7 @@ it('returns overview stats scoped to user projects', function () {
     $response->assertJsonPath('data.success_rate', 50);
 });
 
-it('returns correct response structure', function () {
+it('returns correct response structure', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -73,7 +73,7 @@ it('returns correct response structure', function () {
     ]);
 });
 
-it('returns null success rate when no completed or failed tasks', function () {
+it('returns null success rate when no completed or failed tasks', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -85,12 +85,12 @@ it('returns null success rate when no completed or failed tasks', function () {
     $response->assertJsonPath('data.active_tasks', 0);
 });
 
-it('returns 401 for unauthenticated users', function () {
+it('returns 401 for unauthenticated users', function (): void {
     $response = $this->getJson('/api/v1/dashboard/overview');
     $response->assertUnauthorized();
 });
 
-it('excludes tasks from disabled projects', function () {
+it('excludes tasks from disabled projects', function (): void {
     $user = User::factory()->create();
     $disabledProject = Project::factory()->create(['enabled' => false]);
     $disabledProject->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -109,7 +109,7 @@ it('excludes tasks from disabled projects', function () {
     $response->assertJsonPath('data.total_completed', 0);
 });
 
-it('includes queued and running tasks in active count', function () {
+it('includes queued and running tasks in active count', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -136,7 +136,7 @@ it('includes queued and running tasks in active count', function () {
     $response->assertJsonPath('data.active_tasks', 2);
 });
 
-it('returns recent activity timestamp', function () {
+it('returns recent activity timestamp', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);

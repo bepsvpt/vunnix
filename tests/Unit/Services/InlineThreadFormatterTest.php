@@ -54,8 +54,8 @@ function minorFinding(): array
 
 // ─── Formats a critical finding with correct structure ──────────
 
-it('formats a critical finding with severity tag, description, and suggestion', function () {
-    $formatter = new InlineThreadFormatter();
+it('formats a critical finding with severity tag, description, and suggestion', function (): void {
+    $formatter = new InlineThreadFormatter;
     $markdown = $formatter->format(criticalFinding());
 
     expect($markdown)->toContain('🔴 **Critical**')
@@ -67,8 +67,8 @@ it('formats a critical finding with severity tag, description, and suggestion', 
 
 // ─── Formats a major finding ────────────────────────────────────
 
-it('formats a major finding with correct severity tag', function () {
-    $formatter = new InlineThreadFormatter();
+it('formats a major finding with correct severity tag', function (): void {
+    $formatter = new InlineThreadFormatter;
     $markdown = $formatter->format(majorFinding());
 
     expect($markdown)->toContain('🟡 **Major**')
@@ -78,8 +78,8 @@ it('formats a major finding with correct severity tag', function () {
 
 // ─── Includes suggestion block ──────────────────────────────────
 
-it('includes the suggestion in the formatted output', function () {
-    $formatter = new InlineThreadFormatter();
+it('includes the suggestion in the formatted output', function (): void {
+    $formatter = new InlineThreadFormatter;
     $markdown = $formatter->format(criticalFinding());
 
     expect($markdown)->toContain('**Suggested fix:**')
@@ -88,8 +88,8 @@ it('includes the suggestion in the formatted output', function () {
 
 // ─── filterHighMedium returns only critical/major ───────────────
 
-it('filters findings to only critical and major severity', function () {
-    $formatter = new InlineThreadFormatter();
+it('filters findings to only critical and major severity', function (): void {
+    $formatter = new InlineThreadFormatter;
     $findings = [criticalFinding(), majorFinding(), minorFinding()];
 
     $filtered = $formatter->filterHighMedium($findings);
@@ -101,8 +101,8 @@ it('filters findings to only critical and major severity', function () {
 
 // ─── filterHighMedium with no qualifying findings ───────────────
 
-it('returns empty array when no high/medium findings exist', function () {
-    $formatter = new InlineThreadFormatter();
+it('returns empty array when no high/medium findings exist', function (): void {
+    $formatter = new InlineThreadFormatter;
     $filtered = $formatter->filterHighMedium([minorFinding()]);
 
     expect($filtered)->toBeEmpty();
@@ -110,8 +110,8 @@ it('returns empty array when no high/medium findings exist', function () {
 
 // ─── filterHighMedium with empty input ──────────────────────────
 
-it('returns empty array for empty findings input', function () {
-    $formatter = new InlineThreadFormatter();
+it('returns empty array for empty findings input', function (): void {
+    $formatter = new InlineThreadFormatter;
     $filtered = $formatter->filterHighMedium([]);
 
     expect($filtered)->toBeEmpty();

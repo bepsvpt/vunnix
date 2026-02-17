@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 
 // ─── Posts placeholder and stores note ID ────────────────────────
 
-it('posts placeholder comment to GitLab and stores the note ID', function () {
+it('posts placeholder comment to GitLab and stores the note ID', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes' => Http::response([
             'id' => 5555,
@@ -42,7 +42,7 @@ it('posts placeholder comment to GitLab and stores the note ID', function () {
 
 // ─── Skips if task not found ────────────────────────────────────
 
-it('returns early if the task does not exist', function () {
+it('returns early if the task does not exist', function (): void {
     Http::fake();
 
     $job = new PostPlaceholderComment(999999);
@@ -53,7 +53,7 @@ it('returns early if the task does not exist', function () {
 
 // ─── Skips if task has no MR IID ────────────────────────────────
 
-it('returns early if the task has no mr_iid', function () {
+it('returns early if the task has no mr_iid', function (): void {
     Http::fake();
 
     $task = Task::factory()->create([
@@ -71,7 +71,7 @@ it('returns early if the task has no mr_iid', function () {
 
 // ─── Skips if comment_id already exists (idempotent) ────────────
 
-it('skips posting if task already has a comment_id', function () {
+it('skips posting if task already has a comment_id', function (): void {
     Http::fake();
 
     $task = Task::factory()->create([
@@ -93,7 +93,7 @@ it('skips posting if task already has a comment_id', function () {
 
 // ─── Incremental review: reuse previous comment_id (T40) ────────
 
-it('reuses previous review comment_id for incremental review on same MR', function () {
+it('reuses previous review comment_id for incremental review on same MR', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes/*' => Http::response([
             'id' => 99001,
@@ -136,7 +136,7 @@ it('reuses previous review comment_id for incremental review on same MR', functi
     });
 });
 
-it('falls back to creating new placeholder when updating previous comment fails', function () {
+it('falls back to creating new placeholder when updating previous comment fails', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes/99001' => Http::response([], 404),
         '*/api/v4/projects/*/merge_requests/*/notes' => Http::response([
@@ -172,7 +172,7 @@ it('falls back to creating new placeholder when updating previous comment fails'
 
 // ─── Best-effort: failure does not throw ────────────────────────
 
-it('logs warning but does not throw when GitLab API fails', function () {
+it('logs warning but does not throw when GitLab API fails', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes' => Http::response([], 500),
     ]);

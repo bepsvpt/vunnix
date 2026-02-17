@@ -17,7 +17,7 @@ return new class extends Migration
         }
 
         // Add project_id to agent_conversations (spec requires project-scoped conversations)
-        Schema::table('agent_conversations', function (Blueprint $table) {
+        Schema::table('agent_conversations', function (Blueprint $table): void {
             $table->foreignId('project_id')->nullable()->after('user_id')->constrained()->nullOnDelete();
         });
 
@@ -34,11 +34,11 @@ return new class extends Migration
             END;
             $$ LANGUAGE plpgsql;
         ");
-        DB::statement("
+        DB::statement('
             CREATE TRIGGER agent_conversations_title_search_trigger
             BEFORE INSERT OR UPDATE OF title ON agent_conversations
             FOR EACH ROW EXECUTE FUNCTION agent_conversations_title_search_update();
-        ");
+        ');
 
         // Backfill existing rows (if any)
         DB::statement("UPDATE agent_conversations SET title_search = to_tsvector('english', COALESCE(title, ''))");
@@ -56,11 +56,11 @@ return new class extends Migration
             END;
             $$ LANGUAGE plpgsql;
         ");
-        DB::statement("
+        DB::statement('
             CREATE TRIGGER agent_conversation_messages_content_search_trigger
             BEFORE INSERT OR UPDATE OF content ON agent_conversation_messages
             FOR EACH ROW EXECUTE FUNCTION agent_conversation_messages_content_search_update();
-        ");
+        ');
 
         // Backfill existing rows (if any)
         DB::statement("UPDATE agent_conversation_messages SET content_search = to_tsvector('english', COALESCE(content, ''))");
@@ -85,7 +85,7 @@ return new class extends Migration
         DB::statement('ALTER TABLE agent_conversations DROP COLUMN IF EXISTS title_search');
 
         // Drop project_id from agent_conversations
-        Schema::table('agent_conversations', function (Blueprint $table) {
+        Schema::table('agent_conversations', function (Blueprint $table): void {
             $table->dropConstrainedForeignId('project_id');
         });
     }

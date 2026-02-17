@@ -11,13 +11,13 @@ uses(RefreshDatabase::class);
 
 // ─── Setup ─────────────────────────────────────────────────────
 
-beforeEach(function () {
+beforeEach(function (): void {
     // The SDK migration creates agent_conversations and agent_conversation_messages,
     // but our custom columns (project_id, archived_at) are added by PostgreSQL-only
     // migrations that skip on SQLite. Create the tables with all columns if they
     // don't exist yet (SDK migration may have a 2026 timestamp sorting after ours).
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -27,14 +27,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -53,7 +53,7 @@ beforeEach(function () {
 
 // ─── Creation ──────────────────────────────────────────────────
 
-it('creates a conversation with a primary project', function () {
+it('creates a conversation with a primary project', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 
@@ -69,7 +69,7 @@ it('creates a conversation with a primary project', function () {
     expect($conversation->title)->toBe('Test conversation');
 });
 
-it('generates a UUID7 on creation', function () {
+it('generates a UUID7 on creation', function (): void {
     $conversation = Conversation::factory()->create();
 
     expect($conversation->id)->toBeString();
@@ -78,28 +78,28 @@ it('generates a UUID7 on creation', function () {
 
 // ─── Relationships ─────────────────────────────────────────────
 
-it('belongs to a user', function () {
+it('belongs to a user', function (): void {
     $user = User::factory()->create();
     $conversation = Conversation::factory()->forUser($user)->create();
 
     expect($conversation->user->id)->toBe($user->id);
 });
 
-it('belongs to a project', function () {
+it('belongs to a project', function (): void {
     $project = Project::factory()->create();
     $conversation = Conversation::factory()->forProject($project)->create();
 
     expect($conversation->project->id)->toBe($project->id);
 });
 
-it('has many messages', function () {
+it('has many messages', function (): void {
     $conversation = Conversation::factory()->create();
     Message::factory()->count(3)->forConversation($conversation)->create();
 
     expect($conversation->messages)->toHaveCount(3);
 });
 
-it('loads latest message', function () {
+it('loads latest message', function (): void {
     $conversation = Conversation::factory()->create();
 
     $firstMessage = Message::factory()->forConversation($conversation)->create([
@@ -118,7 +118,7 @@ it('loads latest message', function () {
 
 // ─── Scopes ────────────────────────────────────────────────────
 
-it('notArchived scope excludes archived conversations', function () {
+it('notArchived scope excludes archived conversations', function (): void {
     Conversation::factory()->count(2)->create();
     Conversation::factory()->count(1)->archived()->create();
 
@@ -126,7 +126,7 @@ it('notArchived scope excludes archived conversations', function () {
     expect($results)->toHaveCount(2);
 });
 
-it('archived scope includes only archived conversations', function () {
+it('archived scope includes only archived conversations', function (): void {
     Conversation::factory()->count(2)->create();
     Conversation::factory()->count(1)->archived()->create();
 
@@ -134,7 +134,7 @@ it('archived scope includes only archived conversations', function () {
     expect($results)->toHaveCount(1);
 });
 
-it('accessibleBy scope returns only conversations for user projects', function () {
+it('accessibleBy scope returns only conversations for user projects', function (): void {
     $user = User::factory()->create();
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
@@ -152,7 +152,7 @@ it('accessibleBy scope returns only conversations for user projects', function (
     expect($results)->toHaveCount(2);
 });
 
-it('forProject scope filters by project', function () {
+it('forProject scope filters by project', function (): void {
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
 
@@ -165,12 +165,12 @@ it('forProject scope filters by project', function () {
 
 // ─── Archive ───────────────────────────────────────────────────
 
-it('isArchived returns true when archived_at is set', function () {
+it('isArchived returns true when archived_at is set', function (): void {
     $conversation = Conversation::factory()->archived()->create();
     expect($conversation->isArchived())->toBeTrue();
 });
 
-it('isArchived returns false when archived_at is null', function () {
+it('isArchived returns false when archived_at is null', function (): void {
     $conversation = Conversation::factory()->create();
     expect($conversation->isArchived())->toBeFalse();
 });

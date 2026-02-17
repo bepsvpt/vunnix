@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 uses(RefreshDatabase::class);
 
 // Create shared fixtures: a user and project for FK constraints
-beforeEach(function () {
+beforeEach(function (): void {
     $this->user = User::factory()->create();
     $this->project = Project::factory()->enabled()->create();
 });
@@ -83,7 +83,7 @@ function insertTask(int $projectId, int $userId, array $overrides = []): int
 //  Event UUID deduplication
 // ------------------------------------------------------------------
 
-it('accepts an event with a new UUID', function () {
+it('accepts an event with a new UUID', function (): void {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id);
     $result = $dedup->process('00000000-0000-0000-0000-000000000001', dedupRouting('auto_review', 'normal', $event));
@@ -92,7 +92,7 @@ it('accepts an event with a new UUID', function () {
         ->and($result->outcome)->toBe(EventDeduplicator::ACCEPT);
 });
 
-it('rejects an event with a duplicate UUID', function () {
+it('rejects an event with a duplicate UUID', function (): void {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id);
 
@@ -106,7 +106,7 @@ it('rejects an event with a duplicate UUID', function () {
         ->and($result->outcome)->toBe(EventDeduplicator::DUPLICATE_UUID);
 });
 
-it('accepts events with different UUIDs for the same project', function () {
+it('accepts events with different UUIDs for the same project', function (): void {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id);
 
@@ -117,7 +117,7 @@ it('accepts events with different UUIDs for the same project', function () {
         ->and($result2->accepted())->toBeTrue();
 });
 
-it('accepts same UUID for different projects', function () {
+it('accepts same UUID for different projects', function (): void {
     $project2 = Project::factory()->enabled()->create();
 
     $dedup = new EventDeduplicator;
@@ -131,7 +131,7 @@ it('accepts same UUID for different projects', function () {
         ->and($result2->accepted())->toBeTrue();
 });
 
-it('accepts events when UUID is null (no header sent)', function () {
+it('accepts events when UUID is null (no header sent)', function (): void {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id);
 
@@ -140,7 +140,7 @@ it('accepts events when UUID is null (no header sent)', function () {
     expect($result->accepted())->toBeTrue();
 });
 
-it('logs accepted events to the webhook_events table', function () {
+it('logs accepted events to the webhook_events table', function (): void {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id, mrIid: 42, commitSha: 'abc123');
     $dedup->process('00000000-0000-0000-0000-000000000001', dedupRouting('auto_review', 'normal', $event));
@@ -155,7 +155,7 @@ it('logs accepted events to the webhook_events table', function () {
         ->and($log->commit_sha)->toBe('abc123');
 });
 
-it('does not log events when UUID is null', function () {
+it('does not log events when UUID is null', function (): void {
     $dedup = new EventDeduplicator;
     $event = dedupMrOpenedEvent($this->project->id);
 
@@ -168,7 +168,7 @@ it('does not log events when UUID is null', function () {
 //  Commit SHA deduplication
 // ------------------------------------------------------------------
 
-it('rejects duplicate commit SHA for same MR in active state', function () {
+it('rejects duplicate commit SHA for same MR in active state', function (): void {
     insertTask($this->project->id, $this->user->id, [
         'mr_iid' => 42,
         'commit_sha' => 'abc123',
@@ -184,7 +184,7 @@ it('rejects duplicate commit SHA for same MR in active state', function () {
         ->and($result->outcome)->toBe(EventDeduplicator::DUPLICATE_COMMIT);
 });
 
-it('rejects duplicate commit SHA in running state', function () {
+it('rejects duplicate commit SHA in running state', function (): void {
     insertTask($this->project->id, $this->user->id, [
         'mr_iid' => 42,
         'commit_sha' => 'abc123',
@@ -200,7 +200,7 @@ it('rejects duplicate commit SHA in running state', function () {
         ->and($result->outcome)->toBe(EventDeduplicator::DUPLICATE_COMMIT);
 });
 
-it('allows same commit SHA when previous task is completed', function () {
+it('allows same commit SHA when previous task is completed', function (): void {
     insertTask($this->project->id, $this->user->id, [
         'mr_iid' => 42,
         'commit_sha' => 'abc123',
@@ -215,7 +215,7 @@ it('allows same commit SHA when previous task is completed', function () {
     expect($result->accepted())->toBeTrue();
 });
 
-it('allows same commit SHA when previous task is failed', function () {
+it('allows same commit SHA when previous task is failed', function (): void {
     insertTask($this->project->id, $this->user->id, [
         'mr_iid' => 42,
         'commit_sha' => 'abc123',
@@ -230,7 +230,7 @@ it('allows same commit SHA when previous task is failed', function () {
     expect($result->accepted())->toBeTrue();
 });
 
-it('allows same commit SHA when previous task was superseded', function () {
+it('allows same commit SHA when previous task was superseded', function (): void {
     insertTask($this->project->id, $this->user->id, [
         'mr_iid' => 42,
         'commit_sha' => 'abc123',
@@ -245,7 +245,7 @@ it('allows same commit SHA when previous task was superseded', function () {
     expect($result->accepted())->toBeTrue();
 });
 
-it('skips commit SHA dedup for Note events (no commit SHA)', function () {
+it('skips commit SHA dedup for Note events (no commit SHA)', function (): void {
     $dedup = new EventDeduplicator;
     $event = dedupNoteOnMrEvent($this->project->id);
 
@@ -254,7 +254,7 @@ it('skips commit SHA dedup for Note events (no commit SHA)', function () {
     expect($result->accepted())->toBeTrue();
 });
 
-it('skips commit SHA dedup for Issue events (no commit SHA)', function () {
+it('skips commit SHA dedup for Issue events (no commit SHA)', function (): void {
     $dedup = new EventDeduplicator;
     $event = dedupIssueLabelEvent($this->project->id);
 
@@ -267,7 +267,7 @@ it('skips commit SHA dedup for Issue events (no commit SHA)', function () {
 //  Latest-wins superseding (D140)
 // ------------------------------------------------------------------
 
-it('supersedes queued tasks when new MR update arrives (D140)', function () {
+it('supersedes queued tasks when new MR update arrives (D140)', function (): void {
     insertTask($this->project->id, $this->user->id, [
         'mr_iid' => 42,
         'commit_sha' => 'old-sha',
@@ -287,7 +287,7 @@ it('supersedes queued tasks when new MR update arrives (D140)', function () {
     expect($oldTask->status)->toBe('superseded');
 });
 
-it('supersedes running tasks when new MR update arrives (D140)', function () {
+it('supersedes running tasks when new MR update arrives (D140)', function (): void {
     insertTask($this->project->id, $this->user->id, [
         'mr_iid' => 42,
         'commit_sha' => 'old-sha',
@@ -306,7 +306,7 @@ it('supersedes running tasks when new MR update arrives (D140)', function () {
     expect($oldTask->status)->toBe('superseded');
 });
 
-it('supersedes queued tasks when new MR opened arrives (D140)', function () {
+it('supersedes queued tasks when new MR opened arrives (D140)', function (): void {
     insertTask($this->project->id, $this->user->id, [
         'mr_iid' => 42,
         'commit_sha' => 'old-sha',
@@ -322,7 +322,7 @@ it('supersedes queued tasks when new MR opened arrives (D140)', function () {
         ->and($result->supersededCount)->toBe(1);
 });
 
-it('supersedes multiple active tasks for same MR (D140)', function () {
+it('supersedes multiple active tasks for same MR (D140)', function (): void {
     foreach (['queued', 'running'] as $status) {
         insertTask($this->project->id, $this->user->id, [
             'mr_iid' => 42,
@@ -347,7 +347,7 @@ it('supersedes multiple active tasks for same MR (D140)', function () {
     expect($remaining)->toBe(0);
 });
 
-it('does not supersede tasks for different MR (D140)', function () {
+it('does not supersede tasks for different MR (D140)', function (): void {
     insertTask($this->project->id, $this->user->id, [
         'mr_iid' => 99,
         'commit_sha' => 'other-sha',
@@ -365,7 +365,7 @@ it('does not supersede tasks for different MR (D140)', function () {
     expect($otherTask->status)->toBe('queued');
 });
 
-it('does not supersede tasks for different project (D140)', function () {
+it('does not supersede tasks for different project (D140)', function (): void {
     $project2 = Project::factory()->enabled()->create();
 
     insertTask($project2->id, $this->user->id, [
@@ -382,7 +382,7 @@ it('does not supersede tasks for different project (D140)', function () {
     expect($result->supersededCount)->toBe(0);
 });
 
-it('does not supersede completed, failed, or already superseded tasks (D140)', function () {
+it('does not supersede completed, failed, or already superseded tasks (D140)', function (): void {
     foreach (['completed', 'failed', 'superseded'] as $status) {
         insertTask($this->project->id, $this->user->id, [
             'mr_iid' => 42,
@@ -399,7 +399,7 @@ it('does not supersede completed, failed, or already superseded tasks (D140)', f
     expect($result->supersededCount)->toBe(0);
 });
 
-it('does not supersede on Note events (D140 — only push/update trigger)', function () {
+it('does not supersede on Note events (D140 — only push/update trigger)', function (): void {
     insertTask($this->project->id, $this->user->id, [
         'mr_iid' => 42,
         'commit_sha' => 'old-sha',
@@ -417,7 +417,7 @@ it('does not supersede on Note events (D140 — only push/update trigger)', func
     expect($oldTask->status)->toBe('queued');
 });
 
-it('does not supersede on Issue label events (D140)', function () {
+it('does not supersede on Issue label events (D140)', function (): void {
     insertTask($this->project->id, $this->user->id, [
         'mr_iid' => null,
         'commit_sha' => null,
@@ -439,7 +439,7 @@ it('does not supersede on Issue label events (D140)', function () {
 //  DeduplicationResult value object
 // ------------------------------------------------------------------
 
-it('reports accepted state correctly', function () {
+it('reports accepted state correctly', function (): void {
     $result = new DeduplicationResult(EventDeduplicator::ACCEPT, supersededCount: 0);
 
     expect($result->accepted())->toBeTrue()
@@ -447,14 +447,14 @@ it('reports accepted state correctly', function () {
         ->and($result->didSupersede())->toBeFalse();
 });
 
-it('reports rejected state correctly', function () {
+it('reports rejected state correctly', function (): void {
     $result = new DeduplicationResult(EventDeduplicator::DUPLICATE_UUID, supersededCount: 0);
 
     expect($result->accepted())->toBeFalse()
         ->and($result->rejected())->toBeTrue();
 });
 
-it('reports superseding correctly', function () {
+it('reports superseding correctly', function (): void {
     $result = new DeduplicationResult(EventDeduplicator::ACCEPT, supersededCount: 3);
 
     expect($result->accepted())->toBeTrue()

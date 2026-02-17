@@ -2,10 +2,9 @@
 
 use App\Exceptions\GitLabApiException;
 use App\Services\GitLabClient;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config([
         'services.gitlab.host' => 'https://gitlab.example.com',
         'services.gitlab.bot_token' => 'test-bot-pat',
@@ -16,7 +15,7 @@ beforeEach(function () {
 //  Auth & URL construction
 // ------------------------------------------------------------------
 
-it('sends PRIVATE-TOKEN header with bot PAT', function () {
+it('sends PRIVATE-TOKEN header with bot PAT', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/issues*' => Http::response([], 200),
     ]);
@@ -29,7 +28,7 @@ it('sends PRIVATE-TOKEN header with bot PAT', function () {
     });
 });
 
-it('constructs URLs using configured gitlab host', function () {
+it('constructs URLs using configured gitlab host', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/42/issues*' => Http::response([], 200),
     ]);
@@ -42,7 +41,7 @@ it('constructs URLs using configured gitlab host', function () {
     });
 });
 
-it('defaults to gitlab.com when no host is configured', function () {
+it('defaults to gitlab.com when no host is configured', function (): void {
     config(['services.gitlab.host' => null]);
 
     Http::fake([
@@ -57,7 +56,7 @@ it('defaults to gitlab.com when no host is configured', function () {
     });
 });
 
-it('sends Accept: application/json header', function () {
+it('sends Accept: application/json header', function (): void {
     Http::fake([
         'gitlab.example.com/*' => Http::response([], 200),
     ]);
@@ -74,7 +73,7 @@ it('sends Accept: application/json header', function () {
 //  Files
 // ------------------------------------------------------------------
 
-it('reads a file from repository', function () {
+it('reads a file from repository', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/repository/files/src%2Fapp.php*' => Http::response([
             'file_name' => 'app.php',
@@ -93,7 +92,7 @@ it('reads a file from repository', function () {
         ->toHaveKey('encoding', 'base64');
 });
 
-it('lists repository tree', function () {
+it('lists repository tree', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/repository/tree*' => Http::response([
             ['id' => 'abc', 'name' => 'src', 'type' => 'tree', 'path' => 'src', 'mode' => '040000'],
@@ -113,7 +112,7 @@ it('lists repository tree', function () {
 //  Issues
 // ------------------------------------------------------------------
 
-it('lists issues with default pagination', function () {
+it('lists issues with default pagination', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/issues*' => Http::response([
             ['iid' => 1, 'title' => 'Bug report'],
@@ -131,7 +130,7 @@ it('lists issues with default pagination', function () {
     });
 });
 
-it('lists issues with custom filters', function () {
+it('lists issues with custom filters', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/issues*' => Http::response([], 200),
     ]);
@@ -145,7 +144,7 @@ it('lists issues with custom filters', function () {
     });
 });
 
-it('gets a single issue', function () {
+it('gets a single issue', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/issues/5' => Http::response([
             'iid' => 5,
@@ -163,7 +162,7 @@ it('gets a single issue', function () {
         ->toHaveKey('title', 'Test issue');
 });
 
-it('creates an issue', function () {
+it('creates an issue', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/issues' => Http::response([
             'iid' => 10,
@@ -189,7 +188,7 @@ it('creates an issue', function () {
 //  Merge Requests
 // ------------------------------------------------------------------
 
-it('lists merge requests', function () {
+it('lists merge requests', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests*' => Http::response([
             ['iid' => 1, 'title' => 'Fix bug'],
@@ -203,7 +202,7 @@ it('lists merge requests', function () {
         ->and($result[0]['title'])->toBe('Fix bug');
 });
 
-it('gets a single merge request', function () {
+it('gets a single merge request', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests/3' => Http::response([
             'iid' => 3,
@@ -218,7 +217,7 @@ it('gets a single merge request', function () {
     expect($result)->toHaveKey('iid', 3);
 });
 
-it('gets merge request changes', function () {
+it('gets merge request changes', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests/3/changes' => Http::response([
             'iid' => 3,
@@ -235,7 +234,7 @@ it('gets merge request changes', function () {
         ->and($result['changes'])->toHaveCount(1);
 });
 
-it('creates a merge request', function () {
+it('creates a merge request', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests' => Http::response([
             'iid' => 7,
@@ -258,7 +257,7 @@ it('creates a merge request', function () {
     });
 });
 
-it('sends PUT request to update merge request', function () {
+it('sends PUT request to update merge request', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/42/merge_requests/123' => Http::response([
             'iid' => 123,
@@ -283,7 +282,7 @@ it('sends PUT request to update merge request', function () {
     });
 });
 
-it('finds an open merge request for a branch', function () {
+it('finds an open merge request for a branch', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests*' => Http::response([
             ['iid' => 42, 'source_branch' => 'feature/login', 'state' => 'opened'],
@@ -303,7 +302,7 @@ it('finds an open merge request for a branch', function () {
     });
 });
 
-it('returns null when no open merge request exists for branch', function () {
+it('returns null when no open merge request exists for branch', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests*' => Http::response([], 200),
     ]);
@@ -318,7 +317,7 @@ it('returns null when no open merge request exists for branch', function () {
 //  Comments (Notes)
 // ------------------------------------------------------------------
 
-it('creates a merge request note', function () {
+it('creates a merge request note', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests/3/notes' => Http::response([
             'id' => 100,
@@ -333,7 +332,7 @@ it('creates a merge request note', function () {
         ->toHaveKey('body', 'Review comment');
 });
 
-it('updates a merge request note', function () {
+it('updates a merge request note', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests/3/notes/100' => Http::response([
             'id' => 100,
@@ -351,7 +350,7 @@ it('updates a merge request note', function () {
     });
 });
 
-it('creates an issue note', function () {
+it('creates an issue note', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/issues/5/notes' => Http::response([
             'id' => 200,
@@ -365,7 +364,7 @@ it('creates an issue note', function () {
     expect($result)->toHaveKey('body', 'Issue comment');
 });
 
-it('lists merge request discussions', function () {
+it('lists merge request discussions', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests/5/discussions*' => Http::response([
             ['id' => 'disc-1', 'notes' => [['body' => 'Thread 1']]],
@@ -387,7 +386,7 @@ it('lists merge request discussions', function () {
     });
 });
 
-it('creates a merge request discussion thread', function () {
+it('creates a merge request discussion thread', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests/3/discussions' => Http::response([
             'id' => 'abc123',
@@ -417,7 +416,7 @@ it('creates a merge request discussion thread', function () {
 //  Branches
 // ------------------------------------------------------------------
 
-it('creates a branch', function () {
+it('creates a branch', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/repository/branches' => Http::response([
             'name' => 'ai/feature-123',
@@ -437,7 +436,7 @@ it('creates a branch', function () {
     });
 });
 
-it('compares two commits and returns diffs', function () {
+it('compares two commits and returns diffs', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/repository/compare*' => Http::response([
             'diffs' => [
@@ -463,7 +462,7 @@ it('compares two commits and returns diffs', function () {
 //  Labels
 // ------------------------------------------------------------------
 
-it('sets merge request labels', function () {
+it('sets merge request labels', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests/3' => Http::response([
             'iid' => 3,
@@ -482,7 +481,7 @@ it('sets merge request labels', function () {
     });
 });
 
-it('adds merge request labels without removing existing ones', function () {
+it('adds merge request labels without removing existing ones', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests/3' => Http::response([
             'iid' => 3,
@@ -499,7 +498,7 @@ it('adds merge request labels without removing existing ones', function () {
     });
 });
 
-it('removes specific labels from a merge request', function () {
+it('removes specific labels from a merge request', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/merge_requests/3' => Http::response([
             'iid' => 3,
@@ -522,7 +521,7 @@ it('removes specific labels from a merge request', function () {
 //  Commit Status
 // ------------------------------------------------------------------
 
-it('sets commit status', function () {
+it('sets commit status', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/statuses/abc123*' => Http::response([
             'id' => 1,
@@ -550,7 +549,7 @@ it('sets commit status', function () {
 //  Webhooks
 // ------------------------------------------------------------------
 
-it('creates a webhook', function () {
+it('creates a webhook', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/hooks' => Http::response([
             'id' => 50,
@@ -576,7 +575,7 @@ it('creates a webhook', function () {
     });
 });
 
-it('deletes a webhook', function () {
+it('deletes a webhook', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/hooks/50' => Http::response('', 204),
     ]);
@@ -594,7 +593,7 @@ it('deletes a webhook', function () {
 //  Pipelines
 // ------------------------------------------------------------------
 
-it('triggers a pipeline', function () {
+it('triggers a pipeline', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/trigger/pipeline' => Http::response([
             'id' => 999,
@@ -622,7 +621,7 @@ it('triggers a pipeline', function () {
 //  Error handling
 // ------------------------------------------------------------------
 
-it('throws GitLabApiException on 404 response', function () {
+it('throws GitLabApiException on 404 response', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/issues/999' => Http::response([
             'message' => '404 Not Found',
@@ -633,7 +632,7 @@ it('throws GitLabApiException on 404 response', function () {
     $client->getIssue(1, 999);
 })->throws(GitLabApiException::class);
 
-it('throws GitLabApiException on 500 response', function () {
+it('throws GitLabApiException on 500 response', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/issues*' => Http::response('Internal Server Error', 500),
     ]);
@@ -642,7 +641,7 @@ it('throws GitLabApiException on 500 response', function () {
     $client->listIssues(1);
 })->throws(GitLabApiException::class);
 
-it('throws GitLabApiException on 429 rate limit response', function () {
+it('throws GitLabApiException on 429 rate limit response', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/issues*' => Http::response([
             'message' => '429 Too Many Requests',
@@ -653,7 +652,7 @@ it('throws GitLabApiException on 429 rate limit response', function () {
     $client->listIssues(1);
 })->throws(GitLabApiException::class);
 
-it('logs warning on error responses', function () {
+it('logs warning on error responses', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/1/issues*' => Http::response('Server Error', 500),
     ]);

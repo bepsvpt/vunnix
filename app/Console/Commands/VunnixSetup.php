@@ -10,6 +10,7 @@ use Database\Seeders\RbacSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
+use Throwable;
 
 class VunnixSetup extends Command
 {
@@ -113,7 +114,7 @@ class VunnixSetup extends Command
 
         try {
             $project = $this->gitLab->getProjectByPath($path);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->error("  Failed to look up GitLab project '{$path}': {$e->getMessage()}");
             $this->error('  Check that GITLAB_BOT_TOKEN has access to this project.');
 

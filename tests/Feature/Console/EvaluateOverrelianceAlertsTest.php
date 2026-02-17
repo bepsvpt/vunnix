@@ -9,13 +9,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('evaluates overreliance rules and reports results', function () {
+it('evaluates overreliance rules and reports results', function (): void {
     $this->artisan('overreliance:evaluate')
         ->expectsOutput('No over-reliance alerts triggered.')
         ->assertExitCode(0);
 });
 
-it('reports created alerts count', function () {
+it('reports created alerts count', function (): void {
     $project = Project::factory()->enabled()->create();
     $now = Carbon::parse('2026-02-15 12:00:00');
 

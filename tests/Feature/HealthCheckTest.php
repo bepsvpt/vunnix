@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
-it('returns 200 with all checks passing when all services are healthy', function () {
+it('returns 200 with all checks passing when all services are healthy', function (): void {
     // DB is already available in test environment (SQLite in-memory)
 
     // Set a high disk threshold so the test passes regardless of actual disk usage
@@ -54,7 +54,7 @@ it('returns 200 with all checks passing when all services are healthy', function
         ]);
 });
 
-it('returns 503 when postgresql is down', function () {
+it('returns 503 when postgresql is down', function (): void {
     // Swap to a broken database connection
     config(['database.connections.broken' => [
         'driver' => 'pgsql',
@@ -104,7 +104,7 @@ it('returns 503 when postgresql is down', function () {
         ]);
 });
 
-it('returns 503 when redis is down', function () {
+it('returns 503 when redis is down', function (): void {
     // Redis check fails
     Cache::shouldReceive('store')
         ->with('redis')
@@ -134,7 +134,7 @@ it('returns 503 when redis is down', function () {
         ]);
 });
 
-it('returns 503 when queue worker heartbeat is missing', function () {
+it('returns 503 when queue worker heartbeat is missing', function (): void {
     Cache::shouldReceive('store')
         ->with('redis')
         ->once()
@@ -173,7 +173,7 @@ it('returns 503 when queue worker heartbeat is missing', function () {
         ]);
 });
 
-it('returns 503 when reverb is not responding', function () {
+it('returns 503 when reverb is not responding', function (): void {
     Cache::shouldReceive('store')
         ->with('redis')
         ->once()

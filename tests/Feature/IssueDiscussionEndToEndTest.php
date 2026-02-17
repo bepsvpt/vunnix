@@ -47,7 +47,7 @@ function grantReviewTriggerT43(User $user, Project $project): void
 //  @ai on Issue — full issue discussion flow
 // ──────────────────────────────────────────────────────────────
 
-it('completes full @ai issue discussion flow with response posted as Issue comment', function () {
+it('completes full @ai issue discussion flow with response posted as Issue comment', function (): void {
     // ── 1. Set up project, config, and user with permission ──────
 
     $project = Project::factory()->enabled()->create([
@@ -253,7 +253,7 @@ it('completes full @ai issue discussion flow with response posted as Issue comme
 //  Permission denied — user without review.trigger
 // ──────────────────────────────────────────────────────────────
 
-it('rejects @ai on Issue from user without review.trigger permission', function () {
+it('rejects @ai on Issue from user without review.trigger permission', function (): void {
     $project = Project::factory()->enabled()->create([
         'gitlab_project_id' => 43002,
     ]);
@@ -297,7 +297,7 @@ it('rejects @ai on Issue from user without review.trigger permission', function 
 //  Bot event filtering — bot's own Issue comments are ignored
 // ──────────────────────────────────────────────────────────────
 
-it('ignores bot-authored @ai notes on Issues (D154)', function () {
+it('ignores bot-authored @ai notes on Issues (D154)', function (): void {
     $project = Project::factory()->enabled()->create([
         'gitlab_project_id' => 43003,
     ]);
@@ -340,7 +340,7 @@ it('ignores bot-authored @ai notes on Issues (D154)', function () {
 //  Issue note without @ai mention — ignored
 // ──────────────────────────────────────────────────────────────
 
-it('ignores Issue notes without @ai mention', function () {
+it('ignores Issue notes without @ai mention', function (): void {
     $project = Project::factory()->enabled()->create([
         'gitlab_project_id' => 43004,
     ]);

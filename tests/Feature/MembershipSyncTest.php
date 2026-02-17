@@ -14,7 +14,7 @@ function fakeGitLabProjects(array $projects): void
             collect($projects)->map(fn ($p) => [
                 'id' => $p['gitlab_id'],
                 'name' => $p['name'],
-                'path_with_namespace' => $p['path'] ?? 'group/' . strtolower($p['name']),
+                'path_with_namespace' => $p['path'] ?? 'group/'.strtolower($p['name']),
                 'description' => $p['description'] ?? null,
                 'permissions' => [
                     'project_access' => isset($p['access_level'])
@@ -28,7 +28,7 @@ function fakeGitLabProjects(array $projects): void
     ]);
 }
 
-it('syncs memberships for projects registered in vunnix', function () {
+it('syncs memberships for projects registered in vunnix', function (): void {
     $user = User::factory()->create(['oauth_token' => 'test-token']);
 
     // Create some projects in Vunnix that match GitLab
@@ -55,7 +55,7 @@ it('syncs memberships for projects registered in vunnix', function () {
     expect($pivotB->pivot->gitlab_access_level)->toBe(40);
 });
 
-it('updates access level on re-sync', function () {
+it('updates access level on re-sync', function (): void {
     $user = User::factory()->create(['oauth_token' => 'test-token']);
     $project = Project::factory()->create(['gitlab_project_id' => 101]);
 
@@ -77,7 +77,7 @@ it('updates access level on re-sync', function () {
     expect($pivot->pivot->gitlab_access_level)->toBe(40);
 });
 
-it('removes memberships for projects no longer in gitlab', function () {
+it('removes memberships for projects no longer in gitlab', function (): void {
     $user = User::factory()->create(['oauth_token' => 'test-token']);
     $projectA = Project::factory()->create(['gitlab_project_id' => 101]);
     $projectB = Project::factory()->create(['gitlab_project_id' => 202]);
@@ -98,7 +98,7 @@ it('removes memberships for projects no longer in gitlab', function () {
         ->and($user->projects->first()->id)->toBe($projectA->id);
 });
 
-it('handles empty gitlab response gracefully', function () {
+it('handles empty gitlab response gracefully', function (): void {
     $user = User::factory()->create(['oauth_token' => 'test-token']);
     $project = Project::factory()->create(['gitlab_project_id' => 101]);
 

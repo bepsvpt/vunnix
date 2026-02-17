@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 
 // ─── Posts failure comment on MR ─────────────────────────────────
 
-it('posts a failure comment on the MR', function () {
+it('posts a failure comment on the MR', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes' => Http::response([
             'id' => 1234,
@@ -43,7 +43,7 @@ it('posts a failure comment on the MR', function () {
 
 // ─── Updates placeholder comment in-place on failure ─────────────
 
-it('updates placeholder comment in-place when comment_id exists', function () {
+it('updates placeholder comment in-place when comment_id exists', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes/*' => Http::response([
             'id' => 5555,
@@ -76,7 +76,7 @@ it('updates placeholder comment in-place when comment_id exists', function () {
 
 // ─── Posts failure comment on Issue ──────────────────────────────
 
-it('posts a failure comment on an Issue when task has issue_iid', function () {
+it('posts a failure comment on an Issue when task has issue_iid', function (): void {
     Http::fake([
         '*/api/v4/projects/*/issues/*/notes' => Http::response([
             'id' => 5678,
@@ -108,7 +108,7 @@ it('posts a failure comment on an Issue when task has issue_iid', function () {
 
 // ─── Skips if task not found ─────────────────────────────────────
 
-it('returns early if the task does not exist', function () {
+it('returns early if the task does not exist', function (): void {
     Http::fake();
 
     $job = new PostFailureComment(
@@ -123,7 +123,7 @@ it('returns early if the task does not exist', function () {
 
 // ─── Skips if no MR and no Issue ─────────────────────────────────
 
-it('returns early if task has no MR and no Issue', function () {
+it('returns early if task has no MR and no Issue', function (): void {
     Http::fake();
 
     $task = Task::factory()->create([
@@ -145,7 +145,7 @@ it('returns early if task has no MR and no Issue', function () {
 
 // ─── Failure comment includes human-readable reason ──────────────
 
-it('formats the failure reason as human-readable text', function () {
+it('formats the failure reason as human-readable text', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes' => Http::response([
             'id' => 1234,
@@ -168,6 +168,7 @@ it('formats the failure reason as human-readable text', function () {
 
     Http::assertSent(function ($request) {
         $body = $request['body'];
+
         return str_contains($body, 'too large')
             || str_contains($body, 'context window');
     });
@@ -175,7 +176,7 @@ it('formats the failure reason as human-readable text', function () {
 
 // ─── Best-effort: logs but does not re-throw on GitLab API error ─
 
-it('catches and logs GitLab API errors without re-throwing', function () {
+it('catches and logs GitLab API errors without re-throwing', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes' => Http::response('Server Error', 500),
     ]);

@@ -14,7 +14,7 @@ uses(RefreshDatabase::class);
 
 // ─── Pipeline trigger API call ──────────────────────────────────
 
-it('triggers GitLab pipeline with correct variables for runner task', function () {
+it('triggers GitLab pipeline with correct variables for runner task', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 200]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -62,7 +62,7 @@ it('triggers GitLab pipeline with correct variables for runner task', function (
     });
 });
 
-it('passes correct pipeline variable values', function () {
+it('passes correct pipeline variable values', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 200]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -105,7 +105,7 @@ it('passes correct pipeline variable values', function () {
     });
 });
 
-it('uses MR source branch as pipeline ref', function () {
+it('uses MR source branch as pipeline ref', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 200]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -147,7 +147,7 @@ it('uses MR source branch as pipeline ref', function () {
 
 // ─── Pipeline ID storage ────────────────────────────────────────
 
-it('stores pipeline_id on task after successful trigger', function () {
+it('stores pipeline_id on task after successful trigger', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 200]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -180,7 +180,7 @@ it('stores pipeline_id on task after successful trigger', function () {
 
 // ─── Task token generation ──────────────────────────────────────
 
-it('generates a valid task token as pipeline variable', function () {
+it('generates a valid task token as pipeline variable', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 200]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -229,7 +229,7 @@ it('generates a valid task token as pipeline variable', function () {
 
 // ─── Missing trigger token ──────────────────────────────────────
 
-it('fails task when project has no ci_trigger_token', function () {
+it('fails task when project has no ci_trigger_token', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 200]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -261,7 +261,7 @@ it('fails task when project has no ci_trigger_token', function () {
     });
 });
 
-it('fails task when project has no config at all', function () {
+it('fails task when project has no config at all', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 200]);
     // No ProjectConfig created at all
 
@@ -288,7 +288,7 @@ it('fails task when project has no config at all', function () {
 
 // ─── Pipeline trigger failure ───────────────────────────────────
 
-it('fails task when GitLab pipeline trigger API returns error', function () {
+it('fails task when GitLab pipeline trigger API returns error', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 200]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -322,7 +322,7 @@ it('fails task when GitLab pipeline trigger API returns error', function () {
 
 // ─── Multi-skill strategy ───────────────────────────────────────
 
-it('passes comma-separated skills for mixed-review strategy', function () {
+it('passes comma-separated skills for mixed-review strategy', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 200]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -365,7 +365,7 @@ it('passes comma-separated skills for mixed-review strategy', function () {
 
 // ─── Server-side tasks skip pipeline trigger ────────────────────
 
-it('does not trigger pipeline for server-side tasks', function () {
+it('does not trigger pipeline for server-side tasks', function (): void {
     Http::fake();
 
     $task = Task::factory()->queued()->create([

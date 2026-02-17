@@ -9,11 +9,10 @@ use App\Models\Task;
 use App\Services\TaskDispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
 
-it('delegates to TaskDispatcher for queued runner tasks', function () {
+it('delegates to TaskDispatcher for queued runner tasks', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 100]);
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
@@ -47,7 +46,7 @@ it('delegates to TaskDispatcher for queued runner tasks', function () {
         ->and($task->result['strategy'])->toBe('backend-review');
 });
 
-it('delegates to TaskDispatcher for queued server-side tasks', function () {
+it('delegates to TaskDispatcher for queued server-side tasks', function (): void {
     $project = Project::factory()->create(['gitlab_project_id' => 200]);
 
     Http::fake([
@@ -83,7 +82,7 @@ it('delegates to TaskDispatcher for queued server-side tasks', function () {
     expect($task->issue_iid)->toBe(10);
 });
 
-it('skips tasks already in terminal state', function () {
+it('skips tasks already in terminal state', function (): void {
     $task = Task::factory()->completed()->create();
 
     $mock = Mockery::mock(TaskDispatcher::class);
@@ -94,7 +93,7 @@ it('skips tasks already in terminal state', function () {
     app()->call([$job, 'handle']);
 });
 
-it('skips tasks that no longer exist', function () {
+it('skips tasks that no longer exist', function (): void {
     $mock = Mockery::mock(TaskDispatcher::class);
     $mock->shouldNotReceive('dispatch');
     app()->instance(TaskDispatcher::class, $mock);

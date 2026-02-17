@@ -4,9 +4,9 @@ use App\Enums\TaskOrigin;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
+use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
-use App\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -20,7 +20,7 @@ function createTask(array $overrides = []): Task
 
 // ─── Valid state transitions ────────────────────────────────────────
 
-it('transitions from received to queued', function () {
+it('transitions from received to queued', function (): void {
     $task = createTask(['status' => TaskStatus::Received]);
 
     $task->transitionTo(TaskStatus::Queued);
@@ -28,7 +28,7 @@ it('transitions from received to queued', function () {
     expect($task->fresh()->status)->toBe(TaskStatus::Queued);
 });
 
-it('transitions from queued to running', function () {
+it('transitions from queued to running', function (): void {
     $task = createTask(['status' => TaskStatus::Queued]);
 
     $task->transitionTo(TaskStatus::Running);
@@ -36,7 +36,7 @@ it('transitions from queued to running', function () {
     expect($task->fresh()->status)->toBe(TaskStatus::Running);
 });
 
-it('transitions from running to completed', function () {
+it('transitions from running to completed', function (): void {
     $task = createTask(['status' => TaskStatus::Running]);
 
     $task->transitionTo(TaskStatus::Completed);
@@ -46,7 +46,7 @@ it('transitions from running to completed', function () {
         ->and($fresh->completed_at)->not->toBeNull();
 });
 
-it('transitions from running to failed', function () {
+it('transitions from running to failed', function (): void {
     $task = createTask(['status' => TaskStatus::Running]);
 
     $task->transitionTo(TaskStatus::Failed);
@@ -54,7 +54,7 @@ it('transitions from running to failed', function () {
     expect($task->fresh()->status)->toBe(TaskStatus::Failed);
 });
 
-it('transitions from running to superseded', function () {
+it('transitions from running to superseded', function (): void {
     $task = createTask(['status' => TaskStatus::Running]);
 
     $task->transitionTo(TaskStatus::Superseded);
@@ -62,7 +62,7 @@ it('transitions from running to superseded', function () {
     expect($task->fresh()->status)->toBe(TaskStatus::Superseded);
 });
 
-it('transitions from queued to superseded', function () {
+it('transitions from queued to superseded', function (): void {
     $task = createTask(['status' => TaskStatus::Queued]);
 
     $task->transitionTo(TaskStatus::Superseded);
@@ -70,7 +70,7 @@ it('transitions from queued to superseded', function () {
     expect($task->fresh()->status)->toBe(TaskStatus::Superseded);
 });
 
-it('transitions from failed to queued on retry', function () {
+it('transitions from failed to queued on retry', function (): void {
     $task = createTask(['status' => TaskStatus::Failed, 'retry_count' => 1]);
 
     $task->transitionTo(TaskStatus::Queued);
@@ -79,7 +79,7 @@ it('transitions from failed to queued on retry', function () {
     expect($fresh->status)->toBe(TaskStatus::Queued);
 });
 
-it('transitions from queued to failed for scheduling timeout', function () {
+it('transitions from queued to failed for scheduling timeout', function (): void {
     $task = createTask(['status' => TaskStatus::Queued]);
 
     $task->transitionTo(TaskStatus::Failed, 'scheduling_timeout');
@@ -89,7 +89,7 @@ it('transitions from queued to failed for scheduling timeout', function () {
         ->and($fresh->error_reason)->toBe('scheduling_timeout');
 });
 
-it('sets started_at when transitioning to running', function () {
+it('sets started_at when transitioning to running', function (): void {
     $task = createTask(['status' => TaskStatus::Queued]);
 
     expect($task->started_at)->toBeNull();
@@ -99,7 +99,7 @@ it('sets started_at when transitioning to running', function () {
     expect($task->fresh()->started_at)->not->toBeNull();
 });
 
-it('sets completed_at when transitioning to completed', function () {
+it('sets completed_at when transitioning to completed', function (): void {
     $task = createTask(['status' => TaskStatus::Running]);
 
     expect($task->completed_at)->toBeNull();
@@ -111,43 +111,43 @@ it('sets completed_at when transitioning to completed', function () {
 
 // ─── Invalid state transitions ──────────────────────────────────────
 
-it('throws exception for completed to running', function () {
+it('throws exception for completed to running', function (): void {
     $task = createTask(['status' => TaskStatus::Completed]);
 
     $task->transitionTo(TaskStatus::Running);
 })->throws(\App\Exceptions\InvalidTaskTransitionException::class);
 
-it('throws exception for completed to queued', function () {
+it('throws exception for completed to queued', function (): void {
     $task = createTask(['status' => TaskStatus::Completed]);
 
     $task->transitionTo(TaskStatus::Queued);
 })->throws(\App\Exceptions\InvalidTaskTransitionException::class);
 
-it('throws exception for superseded to running', function () {
+it('throws exception for superseded to running', function (): void {
     $task = createTask(['status' => TaskStatus::Superseded]);
 
     $task->transitionTo(TaskStatus::Running);
 })->throws(\App\Exceptions\InvalidTaskTransitionException::class);
 
-it('throws exception for superseded to queued', function () {
+it('throws exception for superseded to queued', function (): void {
     $task = createTask(['status' => TaskStatus::Superseded]);
 
     $task->transitionTo(TaskStatus::Queued);
 })->throws(\App\Exceptions\InvalidTaskTransitionException::class);
 
-it('throws exception for failed to completed', function () {
+it('throws exception for failed to completed', function (): void {
     $task = createTask(['status' => TaskStatus::Failed]);
 
     $task->transitionTo(TaskStatus::Completed);
 })->throws(\App\Exceptions\InvalidTaskTransitionException::class);
 
-it('throws exception for received to running (must go through queued)', function () {
+it('throws exception for received to running (must go through queued)', function (): void {
     $task = createTask(['status' => TaskStatus::Received]);
 
     $task->transitionTo(TaskStatus::Running);
 })->throws(\App\Exceptions\InvalidTaskTransitionException::class);
 
-it('throws exception for received to completed', function () {
+it('throws exception for received to completed', function (): void {
     $task = createTask(['status' => TaskStatus::Received]);
 
     $task->transitionTo(TaskStatus::Completed);
@@ -155,7 +155,7 @@ it('throws exception for received to completed', function () {
 
 // ─── Observer fires on transitions ──────────────────────────────────
 
-it('fires TaskObserver on state transition', function () {
+it('fires TaskObserver on state transition', function (): void {
     $task = createTask(['status' => TaskStatus::Received]);
     $task->transitionTo(TaskStatus::Queued);
 
@@ -168,7 +168,7 @@ it('fires TaskObserver on state transition', function () {
     ]);
 });
 
-it('logs all transitions through full lifecycle', function () {
+it('logs all transitions through full lifecycle', function (): void {
     $task = createTask(['status' => TaskStatus::Received]);
 
     $task->transitionTo(TaskStatus::Queued);
@@ -189,7 +189,7 @@ it('logs all transitions through full lifecycle', function () {
         ->and($logs[2]->to_status)->toBe('completed');
 });
 
-it('includes task_id and timestamp in transition logs', function () {
+it('includes task_id and timestamp in transition logs', function (): void {
     $task = createTask(['status' => TaskStatus::Received]);
 
     $task->transitionTo(TaskStatus::Queued);
@@ -205,7 +205,7 @@ it('includes task_id and timestamp in transition logs', function () {
 
 // ─── Superseding behavior ───────────────────────────────────────────
 
-it('supersedes queued tasks for same MR on new push', function () {
+it('supersedes queued tasks for same MR on new push', function (): void {
     $project = Project::factory()->create();
     $user = User::factory()->create();
 
@@ -234,7 +234,7 @@ it('supersedes queued tasks for same MR on new push', function () {
         ->and($taskA->fresh()->superseded_by_id)->toBe($taskB->id);
 });
 
-it('supersedes running tasks for same MR on new push', function () {
+it('supersedes running tasks for same MR on new push', function (): void {
     $project = Project::factory()->create();
     $user = User::factory()->create();
 
@@ -260,7 +260,7 @@ it('supersedes running tasks for same MR on new push', function () {
         ->and($taskA->fresh()->superseded_by_id)->toBe($taskB->id);
 });
 
-it('does not supersede already completed tasks', function () {
+it('does not supersede already completed tasks', function (): void {
     $project = Project::factory()->create();
     $user = User::factory()->create();
 
@@ -285,7 +285,7 @@ it('does not supersede already completed tasks', function () {
 
 // ─── All fields persisted correctly ─────────────────────────────────
 
-it('persists all required fields', function () {
+it('persists all required fields', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 
@@ -330,39 +330,39 @@ it('persists all required fields', function () {
         ->and($fresh->error_reason)->toBeNull();
 });
 
-it('casts type to TaskType enum', function () {
+it('casts type to TaskType enum', function (): void {
     $task = createTask(['type' => TaskType::CodeReview]);
     expect($task->fresh()->type)->toBeInstanceOf(TaskType::class);
 });
 
-it('casts origin to TaskOrigin enum', function () {
+it('casts origin to TaskOrigin enum', function (): void {
     $task = createTask(['origin' => TaskOrigin::Webhook]);
     expect($task->fresh()->origin)->toBeInstanceOf(TaskOrigin::class);
 });
 
-it('casts priority to TaskPriority enum', function () {
+it('casts priority to TaskPriority enum', function (): void {
     $task = createTask(['priority' => TaskPriority::High]);
     expect($task->fresh()->priority)->toBeInstanceOf(TaskPriority::class);
 });
 
-it('casts status to TaskStatus enum', function () {
+it('casts status to TaskStatus enum', function (): void {
     $task = createTask(['status' => TaskStatus::Received]);
     expect($task->fresh()->status)->toBeInstanceOf(TaskStatus::class);
 });
 
-it('casts result to array', function () {
+it('casts result to array', function (): void {
     $task = createTask(['result' => ['key' => 'value']]);
     expect($task->fresh()->result)->toBe(['key' => 'value']);
 });
 
-it('casts prompt_version to array', function () {
+it('casts prompt_version to array', function (): void {
     $task = createTask(['prompt_version' => ['version' => '1.0']]);
     expect($task->fresh()->prompt_version)->toBe(['version' => '1.0']);
 });
 
 // ─── Relationships ──────────────────────────────────────────────────
 
-it('belongs to a user', function () {
+it('belongs to a user', function (): void {
     $user = User::factory()->create();
     $task = createTask(['user_id' => $user->id]);
 
@@ -370,7 +370,7 @@ it('belongs to a user', function () {
         ->and($task->user->id)->toBe($user->id);
 });
 
-it('belongs to a project', function () {
+it('belongs to a project', function (): void {
     $project = Project::factory()->create();
     $task = createTask(['project_id' => $project->id]);
 
@@ -380,39 +380,39 @@ it('belongs to a project', function () {
 
 // ─── Terminal state checks ──────────────────────────────────────────
 
-it('reports completed as terminal', function () {
+it('reports completed as terminal', function (): void {
     $task = createTask(['status' => TaskStatus::Completed]);
     expect($task->isTerminal())->toBeTrue();
 });
 
-it('reports failed as terminal', function () {
+it('reports failed as terminal', function (): void {
     $task = createTask(['status' => TaskStatus::Failed]);
     expect($task->isTerminal())->toBeTrue();
 });
 
-it('reports superseded as terminal', function () {
+it('reports superseded as terminal', function (): void {
     $task = createTask(['status' => TaskStatus::Superseded]);
     expect($task->isTerminal())->toBeTrue();
 });
 
-it('reports received as not terminal', function () {
+it('reports received as not terminal', function (): void {
     $task = createTask(['status' => TaskStatus::Received]);
     expect($task->isTerminal())->toBeFalse();
 });
 
-it('reports queued as not terminal', function () {
+it('reports queued as not terminal', function (): void {
     $task = createTask(['status' => TaskStatus::Queued]);
     expect($task->isTerminal())->toBeFalse();
 });
 
-it('reports running as not terminal', function () {
+it('reports running as not terminal', function (): void {
     $task = createTask(['status' => TaskStatus::Running]);
     expect($task->isTerminal())->toBeFalse();
 });
 
 // ─── Scopes ─────────────────────────────────────────────────────────
 
-it('scopes active tasks (queued or running)', function () {
+it('scopes active tasks (queued or running)', function (): void {
     createTask(['status' => TaskStatus::Queued]);
     createTask(['status' => TaskStatus::Running]);
     createTask(['status' => TaskStatus::Completed]);
@@ -422,7 +422,7 @@ it('scopes active tasks (queued or running)', function () {
     expect(Task::active()->count())->toBe(2);
 });
 
-it('scopes tasks by project and MR', function () {
+it('scopes tasks by project and MR', function (): void {
     $project = Project::factory()->create();
     $user = User::factory()->create();
 
@@ -434,7 +434,7 @@ it('scopes tasks by project and MR', function () {
 
 // ─── Retry increment ────────────────────────────────────────────────
 
-it('increments retry_count when transitioning from failed to queued', function () {
+it('increments retry_count when transitioning from failed to queued', function (): void {
     $task = createTask(['status' => TaskStatus::Failed, 'retry_count' => 1]);
 
     $task->transitionTo(TaskStatus::Queued);

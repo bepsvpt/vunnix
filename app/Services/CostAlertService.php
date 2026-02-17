@@ -58,7 +58,7 @@ class CostAlertService
         $monthsWithData = DB::table('task_metrics')
             ->where('created_at', '>=', $threeMonthsAgo)
             ->where('created_at', '<', $currentMonthStart)
-            ->selectRaw('COUNT(DISTINCT ' . $this->monthExpression() . ') as months')
+            ->selectRaw('COUNT(DISTINCT '.$this->monthExpression().') as months')
             ->value('months');
 
         if ($monthsWithData < 1) {
@@ -115,7 +115,7 @@ class CostAlertService
         $daysWithData = DB::table('task_metrics')
             ->where('created_at', '>=', $thirtyDaysAgo)
             ->where('created_at', '<', $todayStart)
-            ->selectRaw('COUNT(DISTINCT ' . $this->dateExpression() . ') as days')
+            ->selectRaw('COUNT(DISTINCT '.$this->dateExpression().') as days')
             ->value('days');
 
         if ($daysWithData < 1) {
@@ -267,6 +267,7 @@ class CostAlertService
     private function monthExpression(): string
     {
         $driver = DB::connection()->getDriverName();
+
         return $driver === 'sqlite'
             ? "strftime('%Y-%m', created_at)"
             : "TO_CHAR(created_at, 'YYYY-MM')";
@@ -278,8 +279,9 @@ class CostAlertService
     private function dateExpression(): string
     {
         $driver = DB::connection()->getDriverName();
+
         return $driver === 'sqlite'
-            ? "date(created_at)"
-            : "DATE(created_at)";
+            ? 'date(created_at)'
+            : 'DATE(created_at)';
     }
 }

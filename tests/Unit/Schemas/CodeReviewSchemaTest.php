@@ -55,14 +55,14 @@ function validCodeReviewResult(array $overrides = []): array
 
 // ─── Valid data passes ──────────────────────────────────────────
 
-it('validates a complete valid code review result', function () {
+it('validates a complete valid code review result', function (): void {
     $result = CodeReviewSchema::validate(validCodeReviewResult());
 
     expect($result['valid'])->toBeTrue();
     expect($result['errors'])->toBeEmpty();
 });
 
-it('validates a result with zero findings', function () {
+it('validates a result with zero findings', function (): void {
     $data = validCodeReviewResult([
         'summary' => [
             'total_findings' => 0,
@@ -78,14 +78,14 @@ it('validates a result with zero findings', function () {
     expect($result['valid'])->toBeTrue();
 });
 
-it('validates all three risk levels', function (string $riskLevel) {
+it('validates all three risk levels', function (string $riskLevel): void {
     $data = validCodeReviewResult(['summary' => ['risk_level' => $riskLevel]]);
     $result = CodeReviewSchema::validate($data);
 
     expect($result['valid'])->toBeTrue();
 })->with(['high', 'medium', 'low']);
 
-it('validates all severity values in findings', function (string $severity) {
+it('validates all severity values in findings', function (string $severity): void {
     $data = validCodeReviewResult();
     $data['findings'][0]['severity'] = $severity;
     $result = CodeReviewSchema::validate($data);
@@ -93,7 +93,7 @@ it('validates all severity values in findings', function (string $severity) {
     expect($result['valid'])->toBeTrue();
 })->with(['critical', 'major', 'minor']);
 
-it('validates all category values in findings', function (string $category) {
+it('validates all category values in findings', function (string $category): void {
     $data = validCodeReviewResult();
     $data['findings'][0]['category'] = $category;
     $result = CodeReviewSchema::validate($data);
@@ -101,7 +101,7 @@ it('validates all category values in findings', function (string $category) {
     expect($result['valid'])->toBeTrue();
 })->with(['security', 'bug', 'performance', 'style', 'convention', 'prompt-injection']);
 
-it('validates both commit status values', function (string $status) {
+it('validates both commit status values', function (string $status): void {
     $data = validCodeReviewResult(['commit_status' => $status]);
     $result = CodeReviewSchema::validate($data);
 
@@ -110,7 +110,7 @@ it('validates both commit status values', function (string $status) {
 
 // ─── Missing required fields fail ───────────────────────────────
 
-it('fails when summary is missing', function () {
+it('fails when summary is missing', function (): void {
     $data = validCodeReviewResult();
     unset($data['summary']);
     $result = CodeReviewSchema::validate($data);
@@ -119,7 +119,7 @@ it('fails when summary is missing', function () {
     expect($result['errors'])->toHaveKey('summary');
 });
 
-it('fails when version is missing', function () {
+it('fails when version is missing', function (): void {
     $data = validCodeReviewResult();
     unset($data['version']);
     $result = CodeReviewSchema::validate($data);
@@ -128,7 +128,7 @@ it('fails when version is missing', function () {
     expect($result['errors'])->toHaveKey('version');
 });
 
-it('fails when findings is missing', function () {
+it('fails when findings is missing', function (): void {
     $data = validCodeReviewResult();
     unset($data['findings']);
     $result = CodeReviewSchema::validate($data);
@@ -137,7 +137,7 @@ it('fails when findings is missing', function () {
     expect($result['errors'])->toHaveKey('findings');
 });
 
-it('fails when labels is missing', function () {
+it('fails when labels is missing', function (): void {
     $data = validCodeReviewResult();
     unset($data['labels']);
     $result = CodeReviewSchema::validate($data);
@@ -146,7 +146,7 @@ it('fails when labels is missing', function () {
     expect($result['errors'])->toHaveKey('labels');
 });
 
-it('fails when commit_status is missing', function () {
+it('fails when commit_status is missing', function (): void {
     $data = validCodeReviewResult();
     unset($data['commit_status']);
     $result = CodeReviewSchema::validate($data);
@@ -155,7 +155,7 @@ it('fails when commit_status is missing', function () {
     expect($result['errors'])->toHaveKey('commit_status');
 });
 
-it('fails when summary.risk_level is missing', function () {
+it('fails when summary.risk_level is missing', function (): void {
     $data = validCodeReviewResult();
     unset($data['summary']['risk_level']);
     $result = CodeReviewSchema::validate($data);
@@ -164,7 +164,7 @@ it('fails when summary.risk_level is missing', function () {
     expect($result['errors'])->toHaveKey('summary.risk_level');
 });
 
-it('fails when summary.findings_by_severity is missing', function () {
+it('fails when summary.findings_by_severity is missing', function (): void {
     $data = validCodeReviewResult();
     unset($data['summary']['findings_by_severity']);
     $result = CodeReviewSchema::validate($data);
@@ -173,7 +173,7 @@ it('fails when summary.findings_by_severity is missing', function () {
     expect($result['errors'])->toHaveKey('summary.findings_by_severity');
 });
 
-it('fails when a finding is missing required fields', function () {
+it('fails when a finding is missing required fields', function (): void {
     $data = validCodeReviewResult();
     unset($data['findings'][0]['title']);
     $result = CodeReviewSchema::validate($data);
@@ -184,7 +184,7 @@ it('fails when a finding is missing required fields', function () {
 
 // ─── Invalid values fail ────────────────────────────────────────
 
-it('fails when severity has an invalid value', function () {
+it('fails when severity has an invalid value', function (): void {
     $data = validCodeReviewResult();
     $data['findings'][0]['severity'] = 'warning';
     $result = CodeReviewSchema::validate($data);
@@ -193,7 +193,7 @@ it('fails when severity has an invalid value', function () {
     expect($result['errors'])->toHaveKey('findings.0.severity');
 });
 
-it('fails when risk_level has an invalid value', function () {
+it('fails when risk_level has an invalid value', function (): void {
     $data = validCodeReviewResult(['summary' => ['risk_level' => 'extreme']]);
     $result = CodeReviewSchema::validate($data);
 
@@ -201,7 +201,7 @@ it('fails when risk_level has an invalid value', function () {
     expect($result['errors'])->toHaveKey('summary.risk_level');
 });
 
-it('fails when category has an invalid value', function () {
+it('fails when category has an invalid value', function (): void {
     $data = validCodeReviewResult();
     $data['findings'][0]['category'] = 'readability';
     $result = CodeReviewSchema::validate($data);
@@ -210,7 +210,7 @@ it('fails when category has an invalid value', function () {
     expect($result['errors'])->toHaveKey('findings.0.category');
 });
 
-it('fails when commit_status has an invalid value', function () {
+it('fails when commit_status has an invalid value', function (): void {
     $data = validCodeReviewResult(['commit_status' => 'pending']);
     $result = CodeReviewSchema::validate($data);
 
@@ -218,7 +218,7 @@ it('fails when commit_status has an invalid value', function () {
     expect($result['errors'])->toHaveKey('commit_status');
 });
 
-it('fails when finding line is zero', function () {
+it('fails when finding line is zero', function (): void {
     $data = validCodeReviewResult();
     $data['findings'][0]['line'] = 0;
     $result = CodeReviewSchema::validate($data);
@@ -227,7 +227,7 @@ it('fails when finding line is zero', function () {
     expect($result['errors'])->toHaveKey('findings.0.line');
 });
 
-it('fails when finding id is zero', function () {
+it('fails when finding id is zero', function (): void {
     $data = validCodeReviewResult();
     $data['findings'][0]['id'] = 0;
     $result = CodeReviewSchema::validate($data);
@@ -236,7 +236,7 @@ it('fails when finding id is zero', function () {
     expect($result['errors'])->toHaveKey('findings.0.id');
 });
 
-it('fails when total_findings is negative', function () {
+it('fails when total_findings is negative', function (): void {
     $data = validCodeReviewResult(['summary' => ['total_findings' => -1]]);
     $result = CodeReviewSchema::validate($data);
 
@@ -246,7 +246,7 @@ it('fails when total_findings is negative', function () {
 
 // ─── Extra fields stripped ──────────────────────────────────────
 
-it('strips unknown top-level fields', function () {
+it('strips unknown top-level fields', function (): void {
     $data = validCodeReviewResult();
     $data['unknown_field'] = 'should be removed';
     $data['another_extra'] = 42;
@@ -257,7 +257,7 @@ it('strips unknown top-level fields', function () {
     expect($stripped)->toHaveKeys(['version', 'summary', 'findings', 'labels', 'commit_status']);
 });
 
-it('strips unknown fields from summary', function () {
+it('strips unknown fields from summary', function (): void {
     $data = validCodeReviewResult();
     $data['summary']['extra_summary_field'] = 'should go';
     $stripped = CodeReviewSchema::strip($data);
@@ -266,7 +266,7 @@ it('strips unknown fields from summary', function () {
     expect($stripped['summary'])->toHaveKeys(['risk_level', 'total_findings', 'findings_by_severity', 'walkthrough']);
 });
 
-it('strips unknown fields from findings_by_severity', function () {
+it('strips unknown fields from findings_by_severity', function (): void {
     $data = validCodeReviewResult();
     $data['summary']['findings_by_severity']['info'] = 5;
     $stripped = CodeReviewSchema::strip($data);
@@ -275,7 +275,7 @@ it('strips unknown fields from findings_by_severity', function () {
     expect($stripped['summary']['findings_by_severity'])->toHaveKeys(['critical', 'major', 'minor']);
 });
 
-it('strips unknown fields from walkthrough entries', function () {
+it('strips unknown fields from walkthrough entries', function (): void {
     $data = validCodeReviewResult();
     $data['summary']['walkthrough'][0]['extra'] = 'nope';
     $stripped = CodeReviewSchema::strip($data);
@@ -284,7 +284,7 @@ it('strips unknown fields from walkthrough entries', function () {
     expect($stripped['summary']['walkthrough'][0])->toHaveKeys(['file', 'change_summary']);
 });
 
-it('strips unknown fields from findings', function () {
+it('strips unknown fields from findings', function (): void {
     $data = validCodeReviewResult();
     $data['findings'][0]['confidence'] = 0.95;
     $data['findings'][0]['ai_reasoning'] = 'internal';
@@ -298,7 +298,7 @@ it('strips unknown fields from findings', function () {
     ]);
 });
 
-it('preserves valid data through strip', function () {
+it('preserves valid data through strip', function (): void {
     $data = validCodeReviewResult();
     $stripped = CodeReviewSchema::strip($data);
 
@@ -307,7 +307,7 @@ it('preserves valid data through strip', function () {
 
 // ─── validateAndStrip ───────────────────────────────────────────
 
-it('returns stripped data when valid via validateAndStrip', function () {
+it('returns stripped data when valid via validateAndStrip', function (): void {
     $data = validCodeReviewResult();
     $data['extra'] = 'junk';
     $result = CodeReviewSchema::validateAndStrip($data);
@@ -318,7 +318,7 @@ it('returns stripped data when valid via validateAndStrip', function () {
     expect($result['data'])->toHaveKeys(['version', 'summary', 'findings', 'labels', 'commit_status']);
 });
 
-it('returns null data when invalid via validateAndStrip', function () {
+it('returns null data when invalid via validateAndStrip', function (): void {
     $data = validCodeReviewResult();
     unset($data['summary']);
     $result = CodeReviewSchema::validateAndStrip($data);
@@ -330,25 +330,25 @@ it('returns null data when invalid via validateAndStrip', function () {
 
 // ─── Constants ──────────────────────────────────────────────────
 
-it('exposes schema version constant', function () {
+it('exposes schema version constant', function (): void {
     expect(CodeReviewSchema::VERSION)->toBe('1.0');
 });
 
-it('exposes severity constants', function () {
+it('exposes severity constants', function (): void {
     expect(CodeReviewSchema::SEVERITIES)->toBe(['critical', 'major', 'minor']);
 });
 
-it('exposes category constants', function () {
+it('exposes category constants', function (): void {
     expect(CodeReviewSchema::CATEGORIES)->toBe(['security', 'bug', 'performance', 'style', 'convention', 'prompt-injection']);
 });
 
-it('exposes risk level constants', function () {
+it('exposes risk level constants', function (): void {
     expect(CodeReviewSchema::RISK_LEVELS)->toBe(['high', 'medium', 'low']);
 });
 
 // ─── Prompt injection finding (T60 / §14.7) ─────────────────────
 
-it('validates a prompt injection finding with critical severity', function () {
+it('validates a prompt injection finding with critical severity', function (): void {
     $data = validCodeReviewResult([
         'summary' => [
             'risk_level' => 'high',
@@ -381,7 +381,7 @@ it('validates a prompt injection finding with critical severity', function () {
     expect($result['errors'])->toBeEmpty();
 });
 
-it('returns rules as an array', function () {
+it('returns rules as an array', function (): void {
     $rules = CodeReviewSchema::rules();
 
     expect($rules)->toBeArray();

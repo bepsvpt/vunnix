@@ -7,7 +7,7 @@ use App\Services\ProjectAccessChecker;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Laravel\Ai\Tools\Request;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->gitLab = Mockery::mock(GitLabClient::class);
     $this->accessChecker = Mockery::mock(ProjectAccessChecker::class);
     $this->accessChecker->shouldReceive('check')->andReturn(null);
@@ -16,13 +16,13 @@ beforeEach(function () {
 
 // ─── Description ────────────────────────────────────────────────
 
-it('has a description', function () {
+it('has a description', function (): void {
     expect($this->tool->description())->toBeString()->not->toBeEmpty();
 });
 
 // ─── Schema ─────────────────────────────────────────────────────
 
-it('defines the expected schema parameters', function () {
+it('defines the expected schema parameters', function (): void {
     $schema = new JsonSchemaTypeFactory;
     $result = $this->tool->schema($schema);
 
@@ -31,7 +31,7 @@ it('defines the expected schema parameters', function () {
 
 // ─── Handle — success ───────────────────────────────────────────
 
-it('returns formatted search results with file paths and snippets', function () {
+it('returns formatted search results with file paths and snippets', function (): void {
     $this->gitLab
         ->shouldReceive('searchCode')
         ->with(42, 'authenticate')
@@ -48,7 +48,7 @@ it('returns formatted search results with file paths and snippets', function () 
             ],
             [
                 'basename' => 'LoginController.php',
-                'data' => "    \$this->authService->authenticate(\$request->validated());",
+                'data' => '    $this->authService->authenticate($request->validated());',
                 'path' => 'src/Http/Controllers/LoginController.php',
                 'filename' => 'LoginController.php',
                 'ref' => 'main',
@@ -70,7 +70,7 @@ it('returns formatted search results with file paths and snippets', function () 
         ->toContain(':L28');
 });
 
-it('passes the query string correctly to GitLab client', function () {
+it('passes the query string correctly to GitLab client', function (): void {
     $this->gitLab
         ->shouldReceive('searchCode')
         ->with(42, 'class PaymentGateway')
@@ -97,7 +97,7 @@ it('passes the query string correctly to GitLab client', function () {
 
 // ─── Handle — long snippets truncated ───────────────────────────
 
-it('truncates long code snippets to 500 characters', function () {
+it('truncates long code snippets to 500 characters', function (): void {
     $longSnippet = str_repeat('a', 600);
 
     $this->gitLab
@@ -128,7 +128,7 @@ it('truncates long code snippets to 500 characters', function () {
 
 // ─── Handle — empty ─────────────────────────────────────────────
 
-it('returns a message when no matches are found', function () {
+it('returns a message when no matches are found', function (): void {
     $this->gitLab
         ->shouldReceive('searchCode')
         ->once()
@@ -144,7 +144,7 @@ it('returns a message when no matches are found', function () {
 
 // ─── Handle — error ─────────────────────────────────────────────
 
-it('returns error message instead of throwing on GitLab API failure', function () {
+it('returns error message instead of throwing on GitLab API failure', function (): void {
     $this->gitLab
         ->shouldReceive('searchCode')
         ->once()
@@ -165,7 +165,7 @@ it('returns error message instead of throwing on GitLab API failure', function (
 
 // ─── Handle — access denied ────────────────────────────────────
 
-it('returns rejection when access checker denies access', function () {
+it('returns rejection when access checker denies access', function (): void {
     $checker = Mockery::mock(ProjectAccessChecker::class);
     $checker->shouldReceive('check')
         ->with(999)

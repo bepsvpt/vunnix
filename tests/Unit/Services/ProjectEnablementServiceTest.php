@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     config(['services.gitlab.host' => 'https://gitlab.example.com']);
     config(['services.gitlab.bot_token' => 'test-bot-token']);
     config(['services.gitlab.bot_account_id' => null]); // not pre-configured
@@ -47,7 +47,7 @@ function fakeGitLabForEnable(): void
     ]);
 }
 
-it('enables a project successfully', function () {
+it('enables a project successfully', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => false,
@@ -71,7 +71,7 @@ it('enables a project successfully', function () {
     expect($project->projectConfig->ci_trigger_token)->toBe('trigger-token-abc123');
 });
 
-it('fails to enable when bot is not a project member', function () {
+it('fails to enable when bot is not a project member', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => false,
@@ -96,7 +96,7 @@ it('fails to enable when bot is not a project member', function () {
     expect($project->enabled)->toBeFalse();
 });
 
-it('fails to enable when bot has insufficient permissions', function () {
+it('fails to enable when bot has insufficient permissions', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => false,
@@ -121,7 +121,7 @@ it('fails to enable when bot has insufficient permissions', function () {
     expect($project->enabled)->toBeFalse();
 });
 
-it('creates all 6 ai:: labels on enable', function () {
+it('creates all 6 ai:: labels on enable', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => false,
@@ -135,15 +135,14 @@ it('creates all 6 ai:: labels on enable', function () {
 
     // Verify 6 label creation requests were sent
     $labelRequests = collect(Http::recorded())
-        ->filter(fn ($pair) =>
-            str_contains($pair[0]->url(), '/labels') &&
+        ->filter(fn ($pair) => str_contains($pair[0]->url(), '/labels') &&
             $pair[0]->method() === 'POST'
         );
 
     expect($labelRequests)->toHaveCount(6);
 });
 
-it('skips existing labels without error (idempotent)', function () {
+it('skips existing labels without error (idempotent)', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => false,
@@ -176,7 +175,7 @@ it('skips existing labels without error (idempotent)', function () {
     expect($result['success'])->toBeTrue();
 });
 
-it('disables a project and removes the webhook', function () {
+it('disables a project and removes the webhook', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => true,
@@ -199,7 +198,7 @@ it('disables a project and removes the webhook', function () {
     expect($project->webhook_id)->toBeNull();
 });
 
-it('disables a project without webhook_id gracefully', function () {
+it('disables a project without webhook_id gracefully', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => true,

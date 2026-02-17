@@ -10,6 +10,6 @@ enum TaskPriority: string
 
     public function runnerQueueName(): string
     {
-        return 'vunnix-runner-' . $this->value;
+        return 'vunnix-runner-'.$this->value;
     }
 }

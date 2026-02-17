@@ -1,0 +1,49 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "global_namespace_import": {
+            "import_classes": true,
+            "import_constants": false,
+            "import_functions": false
+        },
+        "no_superfluous_phpdoc_tags": {
+            "allow_mixed": true,
+            "remove_inheritdoc": true
+        },
+        "ordered_class_elements": {
+            "order": [
+                "use_trait",
+                "case",
+                "constant_public",
+                "constant_protected",
+                "constant_private",
+                "property_public",
+                "property_protected",
+                "property_private",
+                "construct",
+                "destruct",
+                "magic",
+                "phpunit",
+                "method_public_abstract",
+                "method_protected_abstract",
+                "method_private_abstract",
+                "method_public_static",
+                "method_protected_static",
+                "method_private_static",
+                "method_public",
+                "method_protected",
+                "method_private"
+            ]
+        },
+        "ordered_types": {
+            "null_adjustment": "always_last",
+            "sort_algorithm": "none"
+        },
+        "strict_comparison": true,
+        "void_return": true
+    },
+    "exclude": [
+        "bootstrap/cache",
+        "storage"
+    ]
+}

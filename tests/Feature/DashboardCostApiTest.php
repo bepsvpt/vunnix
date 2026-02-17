@@ -14,9 +14,9 @@ uses(RefreshDatabase::class);
 
 // ─── Setup ─────────────────────────────────────────────────────
 
-beforeEach(function () {
+beforeEach(function (): void {
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -26,14 +26,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -90,12 +90,12 @@ function createRegularUser(Project $project): User
 
 // ─── Authorization Tests ──────────────────────────────────────
 
-it('returns 401 for unauthenticated users', function () {
+it('returns 401 for unauthenticated users', function (): void {
     $response = $this->getJson('/api/v1/dashboard/cost');
     $response->assertUnauthorized();
 });
 
-it('returns 403 for non-admin users', function () {
+it('returns 403 for non-admin users', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createRegularUser($project);
 
@@ -103,7 +103,7 @@ it('returns 403 for non-admin users', function () {
     $response->assertForbidden();
 });
 
-it('allows admin users to access cost data', function () {
+it('allows admin users to access cost data', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAdminUser($project);
 
@@ -113,7 +113,7 @@ it('allows admin users to access cost data', function () {
 
 // ─── Response Structure ───────────────────────────────────────
 
-it('returns correct response structure', function () {
+it('returns correct response structure', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAdminUser($project);
 
@@ -132,7 +132,7 @@ it('returns correct response structure', function () {
     ]);
 });
 
-it('returns empty data when no tasks exist', function () {
+it('returns empty data when no tasks exist', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAdminUser($project);
 
@@ -149,7 +149,7 @@ it('returns empty data when no tasks exist', function () {
 
 // ─── Token Usage by Type ──────────────────────────────────────
 
-it('returns token usage grouped by task type', function () {
+it('returns token usage grouped by task type', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAdminUser($project);
 
@@ -186,7 +186,7 @@ it('returns token usage grouped by task type', function () {
 
 // ─── Cost per Type ────────────────────────────────────────────
 
-it('returns cost per task type with avg and total', function () {
+it('returns cost per task type with avg and total', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAdminUser($project);
 
@@ -217,7 +217,7 @@ it('returns cost per task type with avg and total', function () {
 
 // ─── Cost per Project ─────────────────────────────────────────
 
-it('returns cost grouped by project', function () {
+it('returns cost grouped by project', function (): void {
     $projectA = Project::factory()->enabled()->create(['name' => 'Project Alpha']);
     $projectB = Project::factory()->enabled()->create(['name' => 'Project Beta']);
     $user = createAdminUser($projectA);
@@ -254,7 +254,7 @@ it('returns cost grouped by project', function () {
 
 // ─── Project Scoping ──────────────────────────────────────────
 
-it('excludes tasks from projects the user does not have access to', function () {
+it('excludes tasks from projects the user does not have access to', function (): void {
     $project = Project::factory()->enabled()->create();
     $otherProject = Project::factory()->enabled()->create();
     $user = createAdminUser($project);
@@ -283,7 +283,7 @@ it('excludes tasks from projects the user does not have access to', function () 
     $response->assertJsonPath('data.total_tokens', 10000);
 });
 
-it('excludes tasks from disabled projects', function () {
+it('excludes tasks from disabled projects', function (): void {
     $project = Project::factory()->enabled()->create();
     $disabledProject = Project::factory()->create(['enabled' => false]);
     $user = createAdminUser($project);
@@ -311,7 +311,7 @@ it('excludes tasks from disabled projects', function () {
 
 // ─── Total Summaries ──────────────────────────────────────────
 
-it('computes total cost and tokens correctly', function () {
+it('computes total cost and tokens correctly', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAdminUser($project);
 
@@ -351,7 +351,7 @@ it('computes total cost and tokens correctly', function () {
 
 // ─── Null Cost/Token Handling ─────────────────────────────────
 
-it('ignores tasks with null tokens_used in token aggregation', function () {
+it('ignores tasks with null tokens_used in token aggregation', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = createAdminUser($project);
 

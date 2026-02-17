@@ -97,29 +97,25 @@ class Task extends Model
     ];
 
     /**
-     * @return array{
-     *   type: 'App\Enums\TaskType',
-     *   origin: 'App\Enums\TaskOrigin',
-     *   priority: 'App\Enums\TaskPriority',
-     *   status: 'App\Enums\TaskStatus',
-     *   result: 'array',
-     *   prompt_version: 'array',
-     *   started_at: 'datetime',
-     *   completed_at: 'datetime',
-     * }
+     * Supersede all queued/running tasks for a given MR, marking them
+     * as superseded by the given new task ID.
      */
-    protected function casts(): array
+    public static function supersedeForMergeRequest(int $projectId, int $mrIid, int $excludeTaskId): int
     {
-        return [
-            'type' => TaskType::class,
-            'origin' => TaskOrigin::class,
-            'priority' => TaskPriority::class,
-            'status' => TaskStatus::class,
-            'result' => 'array',
-            'prompt_version' => 'array',
-            'started_at' => 'datetime',
-            'completed_at' => 'datetime',
-        ];
+        $tasks = static::where('project_id', $projectId)
+            ->where('mr_iid', $mrIid)
+            ->where('id', '!=', $excludeTaskId)
+            ->whereIn('status', [TaskStatus::Queued, TaskStatus::Running])
+            ->get();
+
+        $count = 0;
+        foreach ($tasks as $task) {
+            $task->superseded_by_id = $excludeTaskId;
+            $task->transitionTo(TaskStatus::Superseded);
+            $count++;
+        }
+
+        return $count;
     }
 
     // ─── Relationships ──────────────────────────────────────────────
@@ -195,28 +191,6 @@ class Task extends Model
         return $this->status->isTerminal();
     }
 
-    /**
-     * Supersede all queued/running tasks for a given MR, marking them
-     * as superseded by the given new task ID.
-     */
-    public static function supersedeForMergeRequest(int $projectId, int $mrIid, int $excludeTaskId): int
-    {
-        $tasks = static::where('project_id', $projectId)
-            ->where('mr_iid', $mrIid)
-            ->where('id', '!=', $excludeTaskId)
-            ->whereIn('status', [TaskStatus::Queued, TaskStatus::Running])
-            ->get();
-
-        $count = 0;
-        foreach ($tasks as $task) {
-            $task->superseded_by_id = $excludeTaskId;
-            $task->transitionTo(TaskStatus::Superseded);
-            $count++;
-        }
-
-        return $count;
-    }
-
     // ─── Scopes ─────────────────────────────────────────────────────
 
     /**
@@ -233,5 +207,31 @@ class Task extends Model
     public function scopeForMergeRequest(Builder $query, int $projectId, int $mrIid): Builder
     {
         return $query->where('project_id', $projectId)->where('mr_iid', $mrIid);
+    }
+
+    /**
+     * @return array{
+     *   type: 'App\Enums\TaskType',
+     *   origin: 'App\Enums\TaskOrigin',
+     *   priority: 'App\Enums\TaskPriority',
+     *   status: 'App\Enums\TaskStatus',
+     *   result: 'array',
+     *   prompt_version: 'array',
+     *   started_at: 'datetime',
+     *   completed_at: 'datetime',
+     * }
+     */
+    protected function casts(): array
+    {
+        return [
+            'type' => TaskType::class,
+            'origin' => TaskOrigin::class,
+            'priority' => TaskPriority::class,
+            'status' => TaskStatus::class,
+            'result' => 'array',
+            'prompt_version' => 'array',
+            'started_at' => 'datetime',
+            'completed_at' => 'datetime',
+        ];
     }
 }

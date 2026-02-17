@@ -6,11 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdatePrdTemplateRequest;
 use App\Models\GlobalSetting;
 use App\Models\Project;
-use App\Models\ProjectConfig;
 use App\Services\ProjectConfigService;
-use Illuminate\Support\Arr;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class PrdTemplateController extends Controller
 {

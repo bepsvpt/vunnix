@@ -16,7 +16,7 @@ use Laravel\Ai\Tools\Request;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Mock TaskDispatcher as a no-op — these tests verify task creation,
     // not the dispatch pipeline (which has its own test suite).
     $this->mockDispatcher = Mockery::mock(TaskDispatcher::class);
@@ -62,7 +62,7 @@ function dispatchTestUser(Project $project, bool $withDispatchPermission = true)
 
 // ─── Task Creation with conversation origin ─────────────────────
 
-it('creates a task with conversation origin when dispatching implement_feature', function () {
+it('creates a task with conversation origin when dispatching implement_feature', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = dispatchTestUser($project);
     Auth::login($user);
@@ -100,7 +100,7 @@ it('creates a task with conversation origin when dispatching implement_feature',
     expect($task->result['dispatched_from'])->toBe('conversation');
 });
 
-it('creates a task for deep_analysis action type', function () {
+it('creates a task for deep_analysis action type', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = dispatchTestUser($project);
     Auth::login($user);
@@ -132,7 +132,7 @@ it('creates a task for deep_analysis action type', function () {
 
 // ─── Permission denial ──────────────────────────────────────────
 
-it('returns permission error when user lacks chat.dispatch_task', function () {
+it('returns permission error when user lacks chat.dispatch_task', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = dispatchTestUser($project, withDispatchPermission: false);
     Auth::login($user);
@@ -160,7 +160,7 @@ it('returns permission error when user lacks chat.dispatch_task', function () {
 
 // ─── Invalid action type ────────────────────────────────────────
 
-it('returns error for invalid action type', function () {
+it('returns error for invalid action type', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = dispatchTestUser($project);
     Auth::login($user);
@@ -189,7 +189,7 @@ it('returns error for invalid action type', function () {
 
 // ─── Designer iteration flow (T72) ──────────────────────────
 
-it('stores existing_mr_iid on task when dispatching ui_adjustment correction', function () {
+it('stores existing_mr_iid on task when dispatching ui_adjustment correction', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = dispatchTestUser($project);
     Auth::login($user);
@@ -222,7 +222,7 @@ it('stores existing_mr_iid on task when dispatching ui_adjustment correction', f
     expect($task->result['branch_name'])->toBe('ai/fix-card-padding');
 });
 
-it('does not set mr_iid when existing_mr_iid is absent', function () {
+it('does not set mr_iid when existing_mr_iid is absent', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = dispatchTestUser($project);
     Auth::login($user);
@@ -252,7 +252,7 @@ it('does not set mr_iid when existing_mr_iid is absent', function () {
 
 // ─── Action type mapping ────────────────────────────────────────
 
-it('maps create_issue to PrdCreation task type', function () {
+it('maps create_issue to PrdCreation task type', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = dispatchTestUser($project);
     Auth::login($user);

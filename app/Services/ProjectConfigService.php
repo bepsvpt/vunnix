@@ -4,13 +4,13 @@ namespace App\Services;
 
 use App\Models\GlobalSetting;
 use App\Models\Project;
-use App\Models\ProjectConfig;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 
 class ProjectConfigService
 {
     private const CACHE_PREFIX = 'project_config:';
+
     private const CACHE_TTL_MINUTES = 60;
 
     /**
@@ -83,7 +83,7 @@ class ProjectConfigService
 
         $config->update(['settings' => $settings]);
 
-        Cache::forget(self::CACHE_PREFIX . $project->id);
+        Cache::forget(self::CACHE_PREFIX.$project->id);
     }
 
     /**
@@ -109,14 +109,14 @@ class ProjectConfigService
 
         $config->update(['settings' => $settings]);
 
-        Cache::forget(self::CACHE_PREFIX . $project->id);
+        Cache::forget(self::CACHE_PREFIX.$project->id);
     }
 
     /**
      * Get a resolved config value with file config layer:
      * project override → file config → global → default.
      *
-     * @param array<string, mixed> $fileConfig Pre-fetched flat .vunnix.toml settings
+     * @param  array<string, mixed>  $fileConfig  Pre-fetched flat .vunnix.toml settings
      */
     public function getWithFileConfig(Project $project, string $key, array $fileConfig, mixed $default = null): mixed
     {
@@ -146,7 +146,7 @@ class ProjectConfigService
      * Get all effective settings for a project with source indicators.
      * Returns: ['key' => ['value' => mixed, 'source' => 'project'|'file'|'global'|'default']]
      *
-     * @param array<string, mixed> $fileConfig Pre-fetched flat .vunnix.toml settings
+     * @param  array<string, mixed>  $fileConfig  Pre-fetched flat .vunnix.toml settings
      */
     public function allEffective(Project $project, array $fileConfig = []): array
     {
@@ -186,7 +186,7 @@ class ProjectConfigService
     private function getProjectSettings(Project $project): array
     {
         return Cache::remember(
-            self::CACHE_PREFIX . $project->id,
+            self::CACHE_PREFIX.$project->id,
             now()->addMinutes(self::CACHE_TTL_MINUTES),
             function () use ($project) {
                 return $project->projectConfig?->settings ?? [];

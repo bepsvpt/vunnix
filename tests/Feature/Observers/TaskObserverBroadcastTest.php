@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Event;
 
 uses(RefreshDatabase::class);
 
-test('TaskObserver dispatches TaskStatusChanged on status transition', function () {
+test('TaskObserver dispatches TaskStatusChanged on status transition', function (): void {
     Event::fake([TaskStatusChanged::class]);
 
     $task = Task::factory()->create(['status' => TaskStatus::Queued]);
@@ -21,7 +21,7 @@ test('TaskObserver dispatches TaskStatusChanged on status transition', function 
     });
 });
 
-test('TaskObserver does not dispatch TaskStatusChanged when non-status field changes', function () {
+test('TaskObserver does not dispatch TaskStatusChanged when non-status field changes', function (): void {
     Event::fake([TaskStatusChanged::class]);
 
     $task = Task::factory()->create(['status' => TaskStatus::Running]);
@@ -31,7 +31,7 @@ test('TaskObserver does not dispatch TaskStatusChanged when non-status field cha
     Event::assertNotDispatched(TaskStatusChanged::class);
 });
 
-test('TaskObserver dispatches on terminal transitions with result data', function () {
+test('TaskObserver dispatches on terminal transitions with result data', function (): void {
     Event::fake([TaskStatusChanged::class]);
 
     $task = Task::factory()->create(['status' => TaskStatus::Running]);

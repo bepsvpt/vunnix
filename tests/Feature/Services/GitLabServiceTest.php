@@ -3,7 +3,7 @@
 use App\Services\GitLabService;
 use Illuminate\Support\Facades\Http;
 
-it('fetches user projects from gitlab api', function () {
+it('fetches user projects from gitlab api', function (): void {
     Http::fake([
         '*/api/v4/projects?membership=true&per_page=100&page=1' => Http::response([
             [
@@ -38,7 +38,7 @@ it('fetches user projects from gitlab api', function () {
         ->and($projects[1]['id'])->toBe(202);
 });
 
-it('resolves access level from project_access or group_access', function () {
+it('resolves access level from project_access or group_access', function (): void {
     Http::fake([
         '*/api/v4/projects?membership=true&per_page=100&page=1' => Http::response([
             [
@@ -72,7 +72,7 @@ it('resolves access level from project_access or group_access', function () {
         ->and($service->resolveAccessLevel($projects[1]))->toBe(40);
 });
 
-it('paginates through all gitlab project pages', function () {
+it('paginates through all gitlab project pages', function (): void {
     Http::fake([
         '*/api/v4/projects?membership=true&per_page=100&page=1' => Http::response(
             array_fill(0, 100, [
@@ -102,7 +102,7 @@ it('paginates through all gitlab project pages', function () {
     expect($projects)->toHaveCount(101);
 });
 
-it('returns empty array when gitlab api returns error', function () {
+it('returns empty array when gitlab api returns error', function (): void {
     Http::fake([
         '*/api/v4/projects*' => Http::response('Unauthorized', 401),
     ]);
@@ -113,7 +113,7 @@ it('returns empty array when gitlab api returns error', function () {
     expect($projects)->toBeArray()->toBeEmpty();
 });
 
-it('uses the configured gitlab url as base', function () {
+it('uses the configured gitlab url as base', function (): void {
     config(['services.gitlab.host' => 'https://my-gitlab.example.com']);
 
     Http::fake([

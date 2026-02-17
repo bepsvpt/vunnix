@@ -14,7 +14,7 @@ uses(RefreshDatabase::class);
 
 // ─── failed() creates DLQ entry ──────────────────────────────────
 
-it('creates a DLQ entry when ProcessTaskResult fails permanently', function () {
+it('creates a DLQ entry when ProcessTaskResult fails permanently', function (): void {
     Queue::fake();
 
     $task = Task::factory()->create([
@@ -44,7 +44,7 @@ it('creates a DLQ entry when ProcessTaskResult fails permanently', function () {
 
 // ─── failed() dispatches PostFailureComment ──────────────────────
 
-it('dispatches PostFailureComment when ProcessTaskResult fails', function () {
+it('dispatches PostFailureComment when ProcessTaskResult fails', function (): void {
     Queue::fake();
 
     $task = Task::factory()->create([
@@ -64,7 +64,7 @@ it('dispatches PostFailureComment when ProcessTaskResult fails', function () {
 
 // ─── failed() classifies 400 as invalid_request ─────────────────
 
-it('classifies 400 errors as invalid_request', function () {
+it('classifies 400 errors as invalid_request', function (): void {
     Queue::fake();
 
     $task = Task::factory()->create([
@@ -90,7 +90,7 @@ it('classifies 400 errors as invalid_request', function () {
 
 // ─── failed() skips if task not found ────────────────────────────
 
-it('does not throw if task does not exist', function () {
+it('does not throw if task does not exist', function (): void {
     Queue::fake();
 
     $job = new ProcessTaskResult(999999);

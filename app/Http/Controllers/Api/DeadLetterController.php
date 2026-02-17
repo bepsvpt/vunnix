@@ -8,6 +8,7 @@ use App\Services\DeadLetterService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use LogicException;
 
 class DeadLetterController extends Controller
 {
@@ -29,7 +30,7 @@ class DeadLetterController extends Controller
         if ($request->filled('project_id')) {
             $projectId = (int) $request->input('project_id');
             if (DB::connection()->getDriverName() === 'sqlite') {
-                $query->where('task_record', 'like', '%"project_id":' . $projectId . '%');
+                $query->where('task_record', 'like', '%"project_id":'.$projectId.'%');
             } else {
                 $query->whereRaw("(task_record->>'project_id')::int = ?", [$projectId]);
             }
@@ -53,8 +54,9 @@ class DeadLetterController extends Controller
 
         try {
             $newTask = $this->service->retry($deadLetterEntry, $request->user());
+
             return response()->json(['success' => true, 'data' => $newTask]);
-        } catch (\LogicException $e) {
+        } catch (LogicException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
     }
@@ -65,8 +67,9 @@ class DeadLetterController extends Controller
 
         try {
             $this->service->dismiss($deadLetterEntry, $request->user());
+
             return response()->json(['success' => true]);
-        } catch (\LogicException $e) {
+        } catch (LogicException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
     }

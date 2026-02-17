@@ -6,14 +6,14 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
 });
 
 // ─── Index ─────────────────────────────────────────────────────
 
-it('lists the authenticated user\'s API keys', function () {
+it('lists the authenticated user\'s API keys', function (): void {
     ApiKey::factory()->count(3)->create(['user_id' => $this->user->id]);
     ApiKey::factory()->create(); // another user's key
 
@@ -23,7 +23,7 @@ it('lists the authenticated user\'s API keys', function () {
         ->assertJsonStructure(['data' => [['id', 'name', 'last_used_at', 'last_ip', 'expires_at', 'revoked', 'created_at']]]);
 });
 
-it('does not expose the key hash in index response', function () {
+it('does not expose the key hash in index response', function (): void {
     ApiKey::factory()->create(['user_id' => $this->user->id]);
 
     $response = $this->getJson('/api/v1/api-keys')->assertOk();
@@ -33,7 +33,7 @@ it('does not expose the key hash in index response', function () {
 
 // ─── Store ─────────────────────────────────────────────────────
 
-it('creates a new API key and returns plaintext', function () {
+it('creates a new API key and returns plaintext', function (): void {
     $response = $this->postJson('/api/v1/api-keys', [
         'name' => 'My CI Key',
     ]);
@@ -48,13 +48,13 @@ it('creates a new API key and returns plaintext', function () {
     expect(ApiKey::where('user_id', $this->user->id)->count())->toBe(1);
 });
 
-it('validates name is required', function () {
+it('validates name is required', function (): void {
     $this->postJson('/api/v1/api-keys', [])
         ->assertStatus(422)
         ->assertJsonValidationErrors('name');
 });
 
-it('validates name max length', function () {
+it('validates name max length', function (): void {
     $this->postJson('/api/v1/api-keys', ['name' => str_repeat('a', 256)])
         ->assertStatus(422)
         ->assertJsonValidationErrors('name');
@@ -62,7 +62,7 @@ it('validates name max length', function () {
 
 // ─── Revoke ────────────────────────────────────────────────────
 
-it('revokes the user\'s own API key', function () {
+it('revokes the user\'s own API key', function (): void {
     $apiKey = ApiKey::factory()->create(['user_id' => $this->user->id]);
 
     $this->deleteJson("/api/v1/api-keys/{$apiKey->id}")
@@ -74,7 +74,7 @@ it('revokes the user\'s own API key', function () {
     expect($apiKey->revoked_at)->not->toBeNull();
 });
 
-it('cannot revoke another user\'s API key', function () {
+it('cannot revoke another user\'s API key', function (): void {
     $otherKey = ApiKey::factory()->create();
 
     $this->deleteJson("/api/v1/api-keys/{$otherKey->id}")
@@ -83,7 +83,7 @@ it('cannot revoke another user\'s API key', function () {
 
 // ─── Auth required ─────────────────────────────────────────────
 
-it('requires authentication for all endpoints', function () {
+it('requires authentication for all endpoints', function (): void {
     // Logout
     auth()->logout();
 

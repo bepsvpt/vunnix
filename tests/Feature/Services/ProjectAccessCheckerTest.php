@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->checker = new ProjectAccessChecker;
     $this->user = User::factory()->create();
     $this->project = Project::factory()->enabled()->create();
@@ -15,7 +15,7 @@ beforeEach(function () {
 
 // ─── Access granted ────────────────────────────────────────────
 
-it('returns null when user has access to the project', function () {
+it('returns null when user has access to the project', function (): void {
     $this->user->projects()->attach($this->project->id, [
         'gitlab_access_level' => 30,
         'synced_at' => now(),
@@ -28,7 +28,7 @@ it('returns null when user has access to the project', function () {
 
 // ─── Access denied — no membership ─────────────────────────────
 
-it('returns rejection when user is not a member of the project', function () {
+it('returns rejection when user is not a member of the project', function (): void {
     // User exists but is not attached to the project
     $result = $this->checker->check($this->project->gitlab_project_id, $this->user);
 
@@ -40,7 +40,7 @@ it('returns rejection when user is not a member of the project', function () {
 
 // ─── Access denied — null user ─────────────────────────────────
 
-it('returns rejection when user is null', function () {
+it('returns rejection when user is null', function (): void {
     $result = $this->checker->check($this->project->gitlab_project_id, null);
 
     expect($result)
@@ -51,7 +51,7 @@ it('returns rejection when user is null', function () {
 
 // ─── Access denied — unregistered project ──────────────────────
 
-it('returns rejection when gitlab project ID is not registered in Vunnix', function () {
+it('returns rejection when gitlab project ID is not registered in Vunnix', function (): void {
     $result = $this->checker->check(999999, $this->user);
 
     expect($result)
@@ -62,7 +62,7 @@ it('returns rejection when gitlab project ID is not registered in Vunnix', funct
 
 // ─── Access denied — disabled project ──────────────────────────
 
-it('returns rejection when project is disabled', function () {
+it('returns rejection when project is disabled', function (): void {
     $disabledProject = Project::factory()->create(['enabled' => false]);
     $this->user->projects()->attach($disabledProject->id, [
         'gitlab_access_level' => 30,
@@ -79,7 +79,7 @@ it('returns rejection when project is disabled', function () {
 
 // ─── Cross-project isolation ───────────────────────────────────
 
-it('allows access to project A but denies access to project B', function () {
+it('allows access to project A but denies access to project B', function (): void {
     $projectA = $this->project;
     $projectB = Project::factory()->enabled()->create();
 
@@ -98,7 +98,7 @@ it('allows access to project A but denies access to project B', function () {
 
 // ─── No data leakage ──────────────────────────────────────────
 
-it('does not reveal project names or internal IDs in rejection messages', function () {
+it('does not reveal project names or internal IDs in rejection messages', function (): void {
     $project = Project::factory()->enabled()->create(['name' => 'SecretProject']);
 
     $result = $this->checker->check($project->gitlab_project_id, $this->user);

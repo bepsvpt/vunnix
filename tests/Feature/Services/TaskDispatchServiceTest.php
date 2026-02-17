@@ -29,7 +29,7 @@ function makeRoutingResult(string $intent, string $priority, $event): RoutingRes
 
 // ─── Intent → TaskType mapping ─────────────────────────────────────
 
-it('maps auto_review intent to CodeReview type', function () {
+it('maps auto_review intent to CodeReview type', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -43,7 +43,7 @@ it('maps auto_review intent to CodeReview type', function () {
     expect($task->type)->toBe(TaskType::CodeReview);
 });
 
-it('maps on_demand_review intent to CodeReview type', function () {
+it('maps on_demand_review intent to CodeReview type', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -58,7 +58,7 @@ it('maps on_demand_review intent to CodeReview type', function () {
         ->and($task->priority)->toBe(TaskPriority::High);
 });
 
-it('maps issue_discussion intent to IssueDiscussion type', function () {
+it('maps issue_discussion intent to IssueDiscussion type', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -72,7 +72,7 @@ it('maps issue_discussion intent to IssueDiscussion type', function () {
     expect($task->type)->toBe(TaskType::IssueDiscussion);
 });
 
-it('maps feature_dev intent to FeatureDev type', function () {
+it('maps feature_dev intent to FeatureDev type', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -89,7 +89,7 @@ it('maps feature_dev intent to FeatureDev type', function () {
 
 // ─── Task lifecycle ────────────────────────────────────────────────
 
-it('creates task in queued status (received → queued transition)', function () {
+it('creates task in queued status (received → queued transition)', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -103,7 +103,7 @@ it('creates task in queued status (received → queued transition)', function ()
     expect($task->status)->toBe(TaskStatus::Queued);
 });
 
-it('sets origin to webhook', function () {
+it('sets origin to webhook', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -117,7 +117,7 @@ it('sets origin to webhook', function () {
     expect($task->origin)->toBe(TaskOrigin::Webhook);
 });
 
-it('persists correct GitLab context for MR events', function () {
+it('persists correct GitLab context for MR events', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -133,7 +133,7 @@ it('persists correct GitLab context for MR events', function () {
         ->and($task->commit_sha)->toBe('deadbeef');
 });
 
-it('persists correct GitLab context for Issue events', function () {
+it('persists correct GitLab context for Issue events', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -150,7 +150,7 @@ it('persists correct GitLab context for Issue events', function () {
 
 // ─── Job dispatch ──────────────────────────────────────────────────
 
-it('dispatches ProcessTask job to vunnix-runner-normal for code review', function () {
+it('dispatches ProcessTask job to vunnix-runner-normal for code review', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -164,7 +164,7 @@ it('dispatches ProcessTask job to vunnix-runner-normal for code review', functio
     Queue::assertPushedOn('vunnix-runner-normal', ProcessTask::class);
 });
 
-it('dispatches ProcessTask job to vunnix-runner-high for on-demand review', function () {
+it('dispatches ProcessTask job to vunnix-runner-high for on-demand review', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -178,7 +178,7 @@ it('dispatches ProcessTask job to vunnix-runner-high for on-demand review', func
     Queue::assertPushedOn('vunnix-runner-high', ProcessTask::class);
 });
 
-it('dispatches ProcessTask job to vunnix-runner-low for feature dev', function () {
+it('dispatches ProcessTask job to vunnix-runner-low for feature dev', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -194,7 +194,7 @@ it('dispatches ProcessTask job to vunnix-runner-low for feature dev', function (
 
 // ─── Transition logging ────────────────────────────────────────────
 
-it('logs received → queued transition', function () {
+it('logs received → queued transition', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -214,7 +214,7 @@ it('logs received → queued transition', function () {
 
 // ─── Skips non-dispatchable intents ────────────────────────────────
 
-it('returns null for help_response intent (already handled by PostHelpResponse)', function () {
+it('returns null for help_response intent (already handled by PostHelpResponse)', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -229,7 +229,7 @@ it('returns null for help_response intent (already handled by PostHelpResponse)'
     Queue::assertNothingPushed();
 });
 
-it('returns null for acceptance_tracking intent (not a task)', function () {
+it('returns null for acceptance_tracking intent (not a task)', function (): void {
     Queue::fake();
     $project = Project::factory()->create();
     $user = User::factory()->create();
@@ -246,7 +246,7 @@ it('returns null for acceptance_tracking intent (not a task)', function () {
 
 // ─── Push → MR resolution (T40) ──────────────────────────────────
 
-it('resolves mr_iid from push event via GitLab API', function () {
+it('resolves mr_iid from push event via GitLab API', function (): void {
     Queue::fake();
     Http::fake([
         '*/api/v4/projects/*/merge_requests*' => Http::response([
@@ -273,7 +273,7 @@ it('resolves mr_iid from push event via GitLab API', function () {
         ->and($task->type)->toBe(TaskType::CodeReview);
 });
 
-it('skips dispatch for incremental_review when no open MR exists for branch', function () {
+it('skips dispatch for incremental_review when no open MR exists for branch', function (): void {
     Queue::fake();
     Http::fake([
         '*/api/v4/projects/*/merge_requests*' => Http::response([], 200),

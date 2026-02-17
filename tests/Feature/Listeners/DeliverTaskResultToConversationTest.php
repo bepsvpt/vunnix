@@ -10,12 +10,12 @@ use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     // The SDK migration creates agent_conversations and agent_conversation_messages,
     // but with a 2026 timestamp that may sort after our migrations. Create the tables
     // with all columns if they don't exist yet.
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -25,14 +25,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -49,7 +49,7 @@ beforeEach(function () {
     }
 });
 
-test('inserts system message into conversation when task completes', function () {
+test('inserts system message into conversation when task completes', function (): void {
     $conversation = Conversation::factory()->create();
     $task = Task::factory()->create([
         'conversation_id' => $conversation->id,
@@ -58,7 +58,7 @@ test('inserts system message into conversation when task completes', function ()
         'result' => ['mr_title' => 'Add payment'],
     ]);
 
-    $listener = new DeliverTaskResultToConversation();
+    $listener = new DeliverTaskResultToConversation;
     $listener->handle(new TaskStatusChanged($task));
 
     $systemMsg = Message::where('conversation_id', $conversation->id)
@@ -71,7 +71,7 @@ test('inserts system message into conversation when task completes', function ()
     expect($systemMsg->content)->toContain("Task #{$task->id}");
 });
 
-test('does not insert message for non-terminal tasks', function () {
+test('does not insert message for non-terminal tasks', function (): void {
     $conversation = Conversation::factory()->create();
     $task = Task::factory()->create([
         'conversation_id' => $conversation->id,
@@ -80,7 +80,7 @@ test('does not insert message for non-terminal tasks', function () {
         'started_at' => now(),
     ]);
 
-    $listener = new DeliverTaskResultToConversation();
+    $listener = new DeliverTaskResultToConversation;
     $listener->handle(new TaskStatusChanged($task));
 
     $count = Message::where('conversation_id', $conversation->id)
@@ -90,7 +90,7 @@ test('does not insert message for non-terminal tasks', function () {
     expect($count)->toBe(0);
 });
 
-test('does not insert message for tasks without a conversation', function () {
+test('does not insert message for tasks without a conversation', function (): void {
     $task = Task::factory()->create([
         'conversation_id' => null,
         'type' => 'code_review',
@@ -98,7 +98,7 @@ test('does not insert message for tasks without a conversation', function () {
         'result' => ['summary' => 'Looks good'],
     ]);
 
-    $listener = new DeliverTaskResultToConversation();
+    $listener = new DeliverTaskResultToConversation;
     $listener->handle(new TaskStatusChanged($task));
 
     $count = Message::where('role', 'system')
@@ -107,7 +107,7 @@ test('does not insert message for tasks without a conversation', function () {
     expect($count)->toBe(0);
 });
 
-test('includes MR link and branch info in system message for feature_dev tasks', function () {
+test('includes MR link and branch info in system message for feature_dev tasks', function (): void {
     $conversation = Conversation::factory()->create();
     $task = Task::factory()->create([
         'conversation_id' => $conversation->id,
@@ -124,7 +124,7 @@ test('includes MR link and branch info in system message for feature_dev tasks',
         ],
     ]);
 
-    $listener = new DeliverTaskResultToConversation();
+    $listener = new DeliverTaskResultToConversation;
     $listener->handle(new TaskStatusChanged($task));
 
     $systemMsg = Message::where('conversation_id', $conversation->id)
@@ -137,7 +137,7 @@ test('includes MR link and branch info in system message for feature_dev tasks',
     expect($systemMsg->content)->toContain('[System: Task result delivered]');
 });
 
-test('includes result summary and files count in system message', function () {
+test('includes result summary and files count in system message', function (): void {
     $conversation = Conversation::factory()->create();
     $task = Task::factory()->create([
         'conversation_id' => $conversation->id,
@@ -155,7 +155,7 @@ test('includes result summary and files count in system message', function () {
         ],
     ]);
 
-    $listener = new DeliverTaskResultToConversation();
+    $listener = new DeliverTaskResultToConversation;
     $listener->handle(new TaskStatusChanged($task));
 
     $systemMsg = Message::where('conversation_id', $conversation->id)
@@ -166,7 +166,7 @@ test('includes result summary and files count in system message', function () {
     expect($systemMsg->content)->toContain('2 files changed');
 });
 
-test('includes task title in system message for failed tasks', function () {
+test('includes task title in system message for failed tasks', function (): void {
     $conversation = Conversation::factory()->create();
     $task = Task::factory()->create([
         'conversation_id' => $conversation->id,
@@ -176,7 +176,7 @@ test('includes task title in system message for failed tasks', function () {
         'result' => ['mr_title' => 'Implement auth'],
     ]);
 
-    $listener = new DeliverTaskResultToConversation();
+    $listener = new DeliverTaskResultToConversation;
     $listener->handle(new TaskStatusChanged($task));
 
     $systemMsg = Message::where('conversation_id', $conversation->id)

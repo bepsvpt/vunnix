@@ -10,13 +10,13 @@ use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Http::fake([
         'hooks.slack.com/*' => Http::response('ok', 200),
     ]);
 
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -26,14 +26,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -65,7 +65,7 @@ function createWebhookAdmin(Project $project): User
     return $user;
 }
 
-it('sends test webhook successfully', function () {
+it('sends test webhook successfully', function (): void {
     $project = Project::factory()->create();
     $user = createWebhookAdmin($project);
 
@@ -83,7 +83,7 @@ it('sends test webhook successfully', function () {
     });
 });
 
-it('returns failure for bad webhook URL', function () {
+it('returns failure for bad webhook URL', function (): void {
     Http::fake([
         'failing-webhook.example.com/*' => Http::response('not found', 404),
     ]);
@@ -100,7 +100,7 @@ it('returns failure for bad webhook URL', function () {
         ->assertJsonPath('success', false);
 });
 
-it('validates webhook_url is required', function () {
+it('validates webhook_url is required', function (): void {
     $project = Project::factory()->create();
     $user = createWebhookAdmin($project);
 
@@ -111,7 +111,7 @@ it('validates webhook_url is required', function () {
     $response->assertUnprocessable();
 });
 
-it('validates platform must be valid', function () {
+it('validates platform must be valid', function (): void {
     $project = Project::factory()->create();
     $user = createWebhookAdmin($project);
 
@@ -123,7 +123,7 @@ it('validates platform must be valid', function () {
     $response->assertUnprocessable();
 });
 
-it('returns 403 for non-admin', function () {
+it('returns 403 for non-admin', function (): void {
     $project = Project::factory()->create();
     $user = User::factory()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);

@@ -11,6 +11,7 @@ use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ProcessTask implements ShouldQueue
 {
@@ -95,7 +96,7 @@ class ProcessTask implements ShouldQueue
      * Called by Laravel when $job->fail() is invoked (by RetryWithBackoff middleware
      * after max retries, or on non-retryable errors).
      */
-    public function failed(?\Throwable $exception): void
+    public function failed(?Throwable $exception): void
     {
         $task = Task::find($this->taskId);
 
@@ -120,7 +121,7 @@ class ProcessTask implements ShouldQueue
         );
     }
 
-    private function classifyFailureReason(?\Throwable $exception): string
+    private function classifyFailureReason(?Throwable $exception): string
     {
         if ($exception instanceof GitLabApiException) {
             if ($exception->isInvalidRequest()) {

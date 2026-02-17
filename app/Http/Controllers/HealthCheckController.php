@@ -6,6 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Throwable;
 
 class HealthCheckController extends Controller
 {
@@ -34,7 +35,7 @@ class HealthCheckController extends Controller
             DB::select('SELECT 1');
 
             return ['status' => 'ok'];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return ['status' => 'fail', 'error' => $e->getMessage()];
         }
     }
@@ -49,7 +50,7 @@ class HealthCheckController extends Controller
             }
 
             return ['status' => 'fail', 'error' => 'Redis ping returned falsy'];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return ['status' => 'fail', 'error' => $e->getMessage()];
         }
     }
@@ -72,7 +73,7 @@ class HealthCheckController extends Controller
             }
 
             return ['status' => 'ok'];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return ['status' => 'fail', 'error' => $e->getMessage()];
         }
     }
@@ -90,7 +91,7 @@ class HealthCheckController extends Controller
             }
 
             return ['status' => 'fail', 'error' => "Reverb returned HTTP {$response->status()}"];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return ['status' => 'fail', 'error' => $e->getMessage()];
         }
     }
@@ -120,7 +121,7 @@ class HealthCheckController extends Controller
                 'status' => 'ok',
                 'usage_percent' => $usedPercent,
             ];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return ['status' => 'fail', 'error' => $e->getMessage()];
         }
     }

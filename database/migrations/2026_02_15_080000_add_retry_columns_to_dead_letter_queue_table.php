@@ -15,7 +15,7 @@ return new class extends Migration
 
         $isPgsql = DB::connection()->getDriverName() === 'pgsql';
 
-        Schema::table('dead_letter_queue', function (Blueprint $table) use ($isPgsql) {
+        Schema::table('dead_letter_queue', function (Blueprint $table) use ($isPgsql): void {
             // Direct FK to the original task for easy lookup
             if ($isPgsql) {
                 $table->foreignId('task_id')->nullable()->after('id')->constrained('tasks')->nullOnDelete();
@@ -49,7 +49,7 @@ return new class extends Migration
 
         $isPgsql = DB::connection()->getDriverName() === 'pgsql';
 
-        Schema::table('dead_letter_queue', function (Blueprint $table) use ($isPgsql) {
+        Schema::table('dead_letter_queue', function (Blueprint $table) use ($isPgsql): void {
             if ($isPgsql) {
                 $table->dropForeign(['task_id']);
                 $table->dropForeign(['retried_by']);

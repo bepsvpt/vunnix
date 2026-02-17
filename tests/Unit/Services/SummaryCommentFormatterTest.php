@@ -62,8 +62,8 @@ function mixedReviewResult(): array
 
 // ─── Happy path: mixed severities ───────────────────────────────
 
-it('formats a mixed-severity review into correct markdown', function () {
-    $formatter = new SummaryCommentFormatter();
+it('formats a mixed-severity review into correct markdown', function (): void {
+    $formatter = new SummaryCommentFormatter;
     $markdown = $formatter->format(mixedReviewResult());
 
     // Header
@@ -95,8 +95,8 @@ it('formats a mixed-severity review into correct markdown', function () {
         ->and($markdown)->toContain('Unused import');
 });
 
-it('includes the correct severity emojis in findings rows', function () {
-    $formatter = new SummaryCommentFormatter();
+it('includes the correct severity emojis in findings rows', function (): void {
+    $formatter = new SummaryCommentFormatter;
     $markdown = $formatter->format(mixedReviewResult());
 
     // Each finding should have: | # | emoji Severity | Category | `file:line` | Title |
@@ -107,7 +107,7 @@ it('includes the correct severity emojis in findings rows', function () {
 
 // ─── Edge: zero findings ────────────────────────────────────────
 
-it('formats a zero-findings review correctly', function () {
+it('formats a zero-findings review correctly', function (): void {
     $result = [
         'version' => '1.0',
         'summary' => [
@@ -123,7 +123,7 @@ it('formats a zero-findings review correctly', function () {
         'commit_status' => 'success',
     ];
 
-    $formatter = new SummaryCommentFormatter();
+    $formatter = new SummaryCommentFormatter;
     $markdown = $formatter->format($result);
 
     expect($markdown)->toContain('## 🤖 AI Code Review')
@@ -137,7 +137,7 @@ it('formats a zero-findings review correctly', function () {
 
 // ─── Edge: all critical findings ────────────────────────────────
 
-it('formats an all-critical review with high risk correctly', function () {
+it('formats an all-critical review with high risk correctly', function (): void {
     $result = [
         'version' => '1.0',
         'summary' => [
@@ -179,7 +179,7 @@ it('formats an all-critical review with high risk correctly', function () {
         'commit_status' => 'failed',
     ];
 
-    $formatter = new SummaryCommentFormatter();
+    $formatter = new SummaryCommentFormatter;
     $markdown = $formatter->format($result);
 
     expect($markdown)->toContain('🔴 High')
@@ -191,8 +191,8 @@ it('formats an all-critical review with high risk correctly', function () {
 
 // ─── T40: Incremental review timestamp ──────────────────────────
 
-it('appends updated timestamp for incremental reviews', function () {
-    $formatter = new SummaryCommentFormatter();
+it('appends updated timestamp for incremental reviews', function (): void {
+    $formatter = new SummaryCommentFormatter;
     $result = mixedReviewResult();
 
     $markdown = $formatter->format($result, new \DateTimeImmutable('2026-02-14 14:32'));
@@ -201,8 +201,8 @@ it('appends updated timestamp for incremental reviews', function () {
         ->and($markdown)->toContain('📝 Updated: 2026-02-14 14:32');
 });
 
-it('does not include timestamp for initial reviews', function () {
-    $formatter = new SummaryCommentFormatter();
+it('does not include timestamp for initial reviews', function (): void {
+    $formatter = new SummaryCommentFormatter;
     $result = mixedReviewResult();
 
     $markdown = $formatter->format($result);
@@ -212,10 +212,10 @@ it('does not include timestamp for initial reviews', function () {
 
 // ─── Edge: category display uses title case ─────────────────────
 
-it('capitalizes category names in the findings table', function () {
+it('capitalizes category names in the findings table', function (): void {
     $result = mixedReviewResult();
 
-    $formatter = new SummaryCommentFormatter();
+    $formatter = new SummaryCommentFormatter;
     $markdown = $formatter->format($result);
 
     expect($markdown)->toContain('| Security |')

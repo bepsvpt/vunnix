@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
-test('cost-alerts:evaluate command runs aggregate rules', function () {
+test('cost-alerts:evaluate command runs aggregate rules', function (): void {
     $project = Project::factory()->enabled()->create();
 
     // Seed historical data: $50/month avg over 2 months
@@ -74,7 +74,7 @@ test('cost-alerts:evaluate command runs aggregate rules', function () {
     expect(CostAlert::where('rule', 'monthly_anomaly')->count())->toBe(1);
 });
 
-test('cost-alerts:evaluate reports no alerts when none triggered', function () {
+test('cost-alerts:evaluate reports no alerts when none triggered', function (): void {
     // No data at all → no alerts
     $this->artisan('cost-alerts:evaluate')
         ->expectsOutputToContain('No cost alerts triggered')

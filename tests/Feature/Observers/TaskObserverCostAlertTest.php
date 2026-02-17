@@ -11,13 +11,13 @@ use Illuminate\Support\Facades\Event;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     Event::fake([TaskStatusChanged::class]);
 });
 
 // ─── Single-task outlier fires on completion ─────────────────────────
 
-test('creates cost alert when completed task cost exceeds 3x type average', function () {
+test('creates cost alert when completed task cost exceeds 3x type average', function (): void {
     $project = \App\Models\Project::factory()->enabled()->create();
 
     // Seed 5 historical code_review metrics with avg cost $0.50
@@ -74,7 +74,7 @@ test('creates cost alert when completed task cost exceeds 3x type average', func
         ->and($alert->context['task_type'])->toBe('code_review');
 });
 
-test('does not create cost alert when task cost is within 3x type average', function () {
+test('does not create cost alert when task cost is within 3x type average', function (): void {
     $project = \App\Models\Project::factory()->enabled()->create();
 
     // Seed 5 historical code_review metrics with avg cost $0.50
@@ -125,7 +125,7 @@ test('does not create cost alert when task cost is within 3x type average', func
     expect(CostAlert::where('rule', 'single_task_outlier')->count())->toBe(0);
 });
 
-test('does not create cost alert when task has zero cost', function () {
+test('does not create cost alert when task has zero cost', function (): void {
     $task = Task::factory()->create([
         'status' => TaskStatus::Running,
         'type' => TaskType::CodeReview,

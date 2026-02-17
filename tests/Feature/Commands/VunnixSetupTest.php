@@ -2,15 +2,13 @@
 
 use App\Models\Permission;
 use App\Models\Project;
-use App\Models\ProjectConfig;
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     config(['services.gitlab.host' => 'https://gitlab.example.com']);
     config(['services.gitlab.bot_token' => 'test-bot-token']);
     config(['services.gitlab.bot_account_id' => 99]);
@@ -52,7 +50,7 @@ function fakeGitLabForSetup(): void
     ]);
 }
 
-it('runs full setup successfully', function () {
+it('runs full setup successfully', function (): void {
     $user = User::factory()->create(['email' => 'admin@example.com']);
 
     fakeGitLabForSetup();
@@ -84,7 +82,7 @@ it('runs full setup successfully', function () {
     expect($user->permissionsForProject($project)->count())->toBe(7);
 });
 
-it('fails when GITLAB_BOT_TOKEN is missing', function () {
+it('fails when GITLAB_BOT_TOKEN is missing', function (): void {
     config(['services.gitlab.bot_token' => '']);
 
     $this->artisan('vunnix:setup', [
@@ -94,7 +92,7 @@ it('fails when GITLAB_BOT_TOKEN is missing', function () {
         ->expectsOutputToContain('GITLAB_BOT_TOKEN');
 });
 
-it('fails when GitLab project is not found', function () {
+it('fails when GitLab project is not found', function (): void {
     Http::fake([
         'gitlab.example.com/api/v4/projects/mygroup%2Fnotfound' => Http::response(
             ['message' => '404 Project Not Found'],
@@ -109,7 +107,7 @@ it('fails when GitLab project is not found', function () {
         ->expectsOutputToContain('Failed to look up');
 });
 
-it('fails when admin email user does not exist', function () {
+it('fails when admin email user does not exist', function (): void {
     fakeGitLabForSetup();
 
     $this->artisan('vunnix:setup', [
@@ -121,7 +119,7 @@ it('fails when admin email user does not exist', function () {
         ->expectsOutputToContain('not found');
 });
 
-it('skips enablement when project already enabled', function () {
+it('skips enablement when project already enabled', function (): void {
     $project = Project::factory()->create([
         'gitlab_project_id' => 42,
         'enabled' => true,
@@ -149,7 +147,7 @@ it('skips enablement when project already enabled', function () {
     Http::assertNotSent(fn ($req) => str_contains($req->url(), '/hooks'));
 });
 
-it('is idempotent for permissions and roles', function () {
+it('is idempotent for permissions and roles', function (): void {
     fakeGitLabForSetup();
 
     // Run setup twice

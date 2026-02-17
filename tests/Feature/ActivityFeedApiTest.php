@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('returns activity feed scoped to user projects', function () {
+it('returns activity feed scoped to user projects', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -40,7 +40,7 @@ it('returns activity feed scoped to user projects', function () {
     $response->assertJsonPath('data.0.project_name', $project->name);
 });
 
-it('filters activity by type', function () {
+it('filters activity by type', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -63,7 +63,7 @@ it('filters activity by type', function () {
     $response->assertJsonPath('data.0.type', 'code_review');
 });
 
-it('returns cursor pagination metadata', function () {
+it('returns cursor pagination metadata', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -81,12 +81,12 @@ it('returns cursor pagination metadata', function () {
     $response->assertJsonStructure(['data', 'meta' => ['per_page', 'next_cursor'], 'links']);
 });
 
-it('returns 401 for unauthenticated users', function () {
+it('returns 401 for unauthenticated users', function (): void {
     $response = $this->getJson('/api/v1/activity');
     $response->assertUnauthorized();
 });
 
-it('returns activity items with correct structure', function () {
+it('returns activity items with correct structure', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -124,7 +124,7 @@ it('returns activity items with correct structure', function () {
     $response->assertJsonPath('data.0.mr_iid', 42);
 });
 
-it('excludes tasks from disabled projects', function () {
+it('excludes tasks from disabled projects', function (): void {
     $user = User::factory()->create();
     $disabledProject = Project::factory()->create(['enabled' => false]);
     $disabledProject->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -141,7 +141,7 @@ it('excludes tasks from disabled projects', function () {
     $response->assertJsonCount(0, 'data');
 });
 
-it('orders activity by most recent first', function () {
+it('orders activity by most recent first', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);

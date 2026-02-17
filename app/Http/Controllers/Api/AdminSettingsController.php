@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UpdateSettingsRequest;
 use App\Http\Resources\GlobalSettingResource;
 use App\Models\GlobalSetting;
 use App\Services\AuditLogService;
 use App\Services\TeamChat\TeamChatNotificationService;
 use Illuminate\Http\JsonResponse;
-use App\Http\Requests\Admin\UpdateSettingsRequest;
 use Illuminate\Http\Request;
+use Throwable;
 
 class AdminSettingsController extends Controller
 {
@@ -55,7 +56,7 @@ class AdminSettingsController extends Controller
                         oldValue: $oldValue,
                         newValue: $value,
                     );
-                } catch (\Throwable) {
+                } catch (Throwable) {
                     // Audit logging should never break settings update
                 }
             }
@@ -78,7 +79,7 @@ class AdminSettingsController extends Controller
             'platform' => ['required', 'string', 'in:slack,mattermost,google_chat,generic'],
         ]);
 
-        $service = new TeamChatNotificationService();
+        $service = new TeamChatNotificationService;
         $success = $service->sendTest($request->input('webhook_url'), $request->input('platform'));
 
         return response()->json([

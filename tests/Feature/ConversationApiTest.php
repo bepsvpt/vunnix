@@ -13,13 +13,13 @@ uses(RefreshDatabase::class);
 
 // ─── Setup ─────────────────────────────────────────────────────
 
-beforeEach(function () {
+beforeEach(function (): void {
     // The SDK migration creates agent_conversations and agent_conversation_messages,
     // but our custom columns (project_id, archived_at) are added by PostgreSQL-only
     // migrations that skip on SQLite. Create the tables with all columns if they
     // don't exist yet (SDK migration may have a 2026 timestamp sorting after ours).
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -29,14 +29,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -93,7 +93,7 @@ function userWithoutChatAccess(Project $project): User
 
 // ─── POST /api/v1/conversations ─────────────────────────────────
 
-it('creates a conversation when user has chat.access', function () {
+it('creates a conversation when user has chat.access', function (): void {
     $project = Project::factory()->create();
     $user = userWithChatAccess($project);
 
@@ -108,7 +108,7 @@ it('creates a conversation when user has chat.access', function () {
         ->assertJsonPath('data.user_id', $user->id);
 });
 
-it('creates a conversation with default title when none provided', function () {
+it('creates a conversation with default title when none provided', function (): void {
     $project = Project::factory()->create();
     $user = userWithChatAccess($project);
 
@@ -120,7 +120,7 @@ it('creates a conversation with default title when none provided', function () {
         ->assertJsonPath('data.title', 'New conversation');
 });
 
-it('returns 403 when user lacks chat.access on create', function () {
+it('returns 403 when user lacks chat.access on create', function (): void {
     $project = Project::factory()->create();
     $user = userWithoutChatAccess($project);
 
@@ -131,7 +131,7 @@ it('returns 403 when user lacks chat.access on create', function () {
         ->assertForbidden();
 });
 
-it('returns 422 when project_id is missing on create', function () {
+it('returns 422 when project_id is missing on create', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user)
@@ -140,7 +140,7 @@ it('returns 422 when project_id is missing on create', function () {
         ->assertJsonValidationErrors('project_id');
 });
 
-it('returns 422 when project_id does not exist on create', function () {
+it('returns 422 when project_id does not exist on create', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user)
@@ -153,7 +153,7 @@ it('returns 422 when project_id does not exist on create', function () {
 
 // ─── GET /api/v1/conversations ─────────────────────────────────
 
-it('lists conversations accessible by the user', function () {
+it('lists conversations accessible by the user', function (): void {
     $project = Project::factory()->create();
     $user = userWithChatAccess($project);
 
@@ -169,7 +169,7 @@ it('lists conversations accessible by the user', function () {
         ->assertJsonCount(3, 'data');
 });
 
-it('filters conversations by project_id', function () {
+it('filters conversations by project_id', function (): void {
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
     $user = userWithChatAccess($projectA);
@@ -186,12 +186,12 @@ it('filters conversations by project_id', function () {
     Conversation::factory()->count(1)->forUser($user)->forProject($projectB)->create();
 
     $this->actingAs($user)
-        ->getJson('/api/v1/conversations?project_id=' . $projectA->id)
+        ->getJson('/api/v1/conversations?project_id='.$projectA->id)
         ->assertOk()
         ->assertJsonCount(2, 'data');
 });
 
-it('filters conversations by archived status', function () {
+it('filters conversations by archived status', function (): void {
     $project = Project::factory()->create();
     $user = userWithChatAccess($project);
 
@@ -211,7 +211,7 @@ it('filters conversations by archived status', function () {
         ->assertJsonCount(1, 'data');
 });
 
-it('searches conversations by keyword in title', function () {
+it('searches conversations by keyword in title', function (): void {
     $project = Project::factory()->create();
     $user = userWithChatAccess($project);
 
@@ -225,7 +225,7 @@ it('searches conversations by keyword in title', function () {
         ->assertJsonCount(2, 'data');
 });
 
-it('returns cursor-paginated results', function () {
+it('returns cursor-paginated results', function (): void {
     $project = Project::factory()->create();
     $user = userWithChatAccess($project);
 
@@ -242,7 +242,7 @@ it('returns cursor-paginated results', function () {
     expect($json['meta'])->toHaveKey('per_page', 2);
 });
 
-it('includes last_message preview in list', function () {
+it('includes last_message preview in list', function (): void {
     $project = Project::factory()->create();
     $user = userWithChatAccess($project);
 
@@ -262,7 +262,7 @@ it('includes last_message preview in list', function () {
 
 // ─── GET /api/v1/conversations/{conversation} ────────────────────
 
-it('loads a conversation with messages', function () {
+it('loads a conversation with messages', function (): void {
     $project = Project::factory()->create();
     $user = userWithChatAccess($project);
 
@@ -278,7 +278,7 @@ it('loads a conversation with messages', function () {
         ->assertJsonCount(3, 'data.messages');
 });
 
-it('returns 403 when user cannot view conversation', function () {
+it('returns 403 when user cannot view conversation', function (): void {
     $project = Project::factory()->create();
     $otherUser = User::factory()->create();
 
@@ -290,7 +290,7 @@ it('returns 403 when user cannot view conversation', function () {
         ->assertForbidden();
 });
 
-it('returns 404 for nonexistent conversation', function () {
+it('returns 404 for nonexistent conversation', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user)
@@ -300,7 +300,7 @@ it('returns 404 for nonexistent conversation', function () {
 
 // ─── POST /api/v1/conversations/{conversation}/messages ────────
 
-it('sends a user message to a conversation', function () {
+it('sends a user message to a conversation', function (): void {
     $project = Project::factory()->create();
     $user = userWithChatAccess($project);
 
@@ -319,7 +319,7 @@ it('sends a user message to a conversation', function () {
     expect($conversation->messages()->count())->toBe(1);
 });
 
-it('returns 403 when user cannot send message to conversation', function () {
+it('returns 403 when user cannot send message to conversation', function (): void {
     $project = Project::factory()->create();
     $otherUser = User::factory()->create();
 
@@ -332,7 +332,7 @@ it('returns 403 when user cannot send message to conversation', function () {
         ->assertForbidden();
 });
 
-it('returns 422 when message content is missing', function () {
+it('returns 422 when message content is missing', function (): void {
     $project = Project::factory()->create();
     $user = userWithChatAccess($project);
 
@@ -344,7 +344,7 @@ it('returns 422 when message content is missing', function () {
         ->assertJsonValidationErrors('content');
 });
 
-it('returns 422 when message content exceeds max length', function () {
+it('returns 422 when message content exceeds max length', function (): void {
     $project = Project::factory()->create();
     $user = userWithChatAccess($project);
 
@@ -360,7 +360,7 @@ it('returns 422 when message content exceeds max length', function () {
 
 // ─── PATCH /api/v1/conversations/{conversation}/archive ────────
 
-it('archives an active conversation', function () {
+it('archives an active conversation', function (): void {
     $project = Project::factory()->create();
     $user = userWithChatAccess($project);
 
@@ -376,7 +376,7 @@ it('archives an active conversation', function () {
     expect($conversation->isArchived())->toBeTrue();
 });
 
-it('unarchives an archived conversation', function () {
+it('unarchives an archived conversation', function (): void {
     $project = Project::factory()->create();
     $user = userWithChatAccess($project);
 
@@ -391,7 +391,7 @@ it('unarchives an archived conversation', function () {
     expect($conversation->isArchived())->toBeFalse();
 });
 
-it('returns 403 when user cannot archive conversation', function () {
+it('returns 403 when user cannot archive conversation', function (): void {
     $project = Project::factory()->create();
     $otherUser = User::factory()->create();
 
@@ -404,12 +404,12 @@ it('returns 403 when user cannot archive conversation', function () {
 
 // ─── Authentication ────────────────────────────────────────────
 
-it('returns 302 redirect for unauthenticated requests to list', function () {
+it('returns 302 redirect for unauthenticated requests to list', function (): void {
     $this->get('/api/v1/conversations')
         ->assertRedirect();
 });
 
-it('returns 302 redirect for unauthenticated requests to create', function () {
+it('returns 302 redirect for unauthenticated requests to create', function (): void {
     $this->post('/api/v1/conversations')
         ->assertRedirect();
 });

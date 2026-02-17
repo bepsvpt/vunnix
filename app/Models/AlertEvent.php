@@ -46,6 +46,22 @@ class AlertEvent extends Model
     ];
 
     /**
+     * Scope: currently active (unresolved) alert events.
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', 'active');
+    }
+
+    /**
+     * Scope: alerts of a specific type.
+     */
+    public function scopeOfType(Builder $query, string $type): Builder
+    {
+        return $query->where('alert_type', $type);
+    }
+
+    /**
      * @return array{
      *   context: 'array',
      *   detected_at: 'datetime',
@@ -63,21 +79,5 @@ class AlertEvent extends Model
             'notified_at' => 'datetime',
             'recovery_notified_at' => 'datetime',
         ];
-    }
-
-    /**
-     * Scope: currently active (unresolved) alert events.
-     */
-    public function scopeActive(Builder $query): Builder
-    {
-        return $query->where('status', 'active');
-    }
-
-    /**
-     * Scope: alerts of a specific type.
-     */
-    public function scopeOfType(Builder $query, string $type): Builder
-    {
-        return $query->where('alert_type', $type);
     }
 }

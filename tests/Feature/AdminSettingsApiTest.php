@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     if (! Schema::hasTable('agent_conversations')) {
-        Schema::create('agent_conversations', function ($table) {
+        Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();
             $table->foreignId('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
@@ -22,14 +22,14 @@ beforeEach(function () {
             $table->index(['user_id', 'updated_at']);
         });
     } elseif (! Schema::hasColumn('agent_conversations', 'project_id')) {
-        Schema::table('agent_conversations', function ($table) {
+        Schema::table('agent_conversations', function ($table): void {
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamp('archived_at')->nullable();
         });
     }
 
     if (! Schema::hasTable('agent_conversation_messages')) {
-        Schema::create('agent_conversation_messages', function ($table) {
+        Schema::create('agent_conversation_messages', function ($table): void {
             $table->string('id', 36)->primary();
             $table->string('conversation_id', 36)->index();
             $table->foreignId('user_id');
@@ -78,7 +78,7 @@ function createNonSettingsAdmin(Project $project): User
 
 // ─── GET /admin/settings ────────────────────────────────────────
 
-it('returns settings list for admin', function () {
+it('returns settings list for admin', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 
@@ -97,7 +97,7 @@ it('returns settings list for admin', function () {
         ]);
 });
 
-it('includes api_key_configured status', function () {
+it('includes api_key_configured status', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 
@@ -107,7 +107,7 @@ it('includes api_key_configured status', function () {
         ->assertJsonPath('api_key_configured', fn ($v) => is_bool($v));
 });
 
-it('includes defaults for reference', function () {
+it('includes defaults for reference', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 
@@ -120,7 +120,7 @@ it('includes defaults for reference', function () {
         ->assertJsonPath('defaults.max_tokens', 8192);
 });
 
-it('returns 403 for non-admin user', function () {
+it('returns 403 for non-admin user', function (): void {
     $project = Project::factory()->create();
     $user = createNonSettingsAdmin($project);
 
@@ -129,7 +129,7 @@ it('returns 403 for non-admin user', function () {
     $response->assertForbidden();
 });
 
-it('returns 401 for unauthenticated request', function () {
+it('returns 401 for unauthenticated request', function (): void {
     $response = $this->getJson('/api/v1/admin/settings');
 
     $response->assertUnauthorized();
@@ -137,7 +137,7 @@ it('returns 401 for unauthenticated request', function () {
 
 // ─── PUT /admin/settings ────────────────────────────────────────
 
-it('updates a single setting', function () {
+it('updates a single setting', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 
@@ -153,7 +153,7 @@ it('updates a single setting', function () {
     expect(GlobalSetting::get('ai_model'))->toBe('sonnet');
 });
 
-it('updates multiple settings at once', function () {
+it('updates multiple settings at once', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 
@@ -173,7 +173,7 @@ it('updates multiple settings at once', function () {
     expect(GlobalSetting::get('ai_language'))->toBe('ja');
 });
 
-it('updates json-type settings', function () {
+it('updates json-type settings', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 
@@ -191,7 +191,7 @@ it('updates json-type settings', function () {
     expect($prices['output'])->toEqual(15.0);
 });
 
-it('updates bot_pat_created_at via settings', function () {
+it('updates bot_pat_created_at via settings', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 
@@ -207,7 +207,7 @@ it('updates bot_pat_created_at via settings', function () {
     expect($setting)->not->toBeNull();
 });
 
-it('updates team chat webhook settings', function () {
+it('updates team chat webhook settings', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 
@@ -223,7 +223,7 @@ it('updates team chat webhook settings', function () {
     expect(GlobalSetting::get('team_chat_platform'))->toBe('slack');
 });
 
-it('rejects update with empty settings array', function () {
+it('rejects update with empty settings array', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 
@@ -234,7 +234,7 @@ it('rejects update with empty settings array', function () {
     $response->assertUnprocessable();
 });
 
-it('rejects update without settings key', function () {
+it('rejects update without settings key', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 
@@ -243,7 +243,7 @@ it('rejects update without settings key', function () {
     $response->assertUnprocessable();
 });
 
-it('returns 403 for non-admin on update', function () {
+it('returns 403 for non-admin on update', function (): void {
     $project = Project::factory()->create();
     $user = createNonSettingsAdmin($project);
 
@@ -256,7 +256,7 @@ it('returns 403 for non-admin on update', function () {
     $response->assertForbidden();
 });
 
-it('returns updated settings list after update', function () {
+it('returns updated settings list after update', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 
@@ -278,7 +278,7 @@ it('returns updated settings list after update', function () {
 
 // ─── Integration: settings update → config reads ────────────────
 
-it('change AI model → GlobalSetting::get returns new value', function () {
+it('change AI model → GlobalSetting::get returns new value', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 
@@ -296,7 +296,7 @@ it('change AI model → GlobalSetting::get returns new value', function () {
     expect(GlobalSetting::get('ai_model'))->toBe('sonnet');
 });
 
-it('change language → GlobalSetting::get returns new language', function () {
+it('change language → GlobalSetting::get returns new language', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 
@@ -311,7 +311,7 @@ it('change language → GlobalSetting::get returns new language', function () {
     expect(GlobalSetting::get('ai_language'))->toBe('ja');
 });
 
-it('settings persist across index calls', function () {
+it('settings persist across index calls', function (): void {
     $project = Project::factory()->create();
     $user = createSettingsAdmin($project);
 

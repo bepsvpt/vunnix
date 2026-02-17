@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->user = User::factory()->create();
     $this->project = Project::factory()->create(['enabled' => true]);
     $this->project->users()->attach($this->user->id, [
@@ -30,7 +30,7 @@ beforeEach(function () {
 
 // ─── GET /tasks — list with filters ─────────────────────────
 
-it('lists tasks scoped to accessible projects', function () {
+it('lists tasks scoped to accessible projects', function (): void {
     Task::factory()->create(['project_id' => $this->project->id]);
     Task::factory()->create(['project_id' => $this->otherProject->id]);
 
@@ -40,7 +40,7 @@ it('lists tasks scoped to accessible projects', function () {
         ->assertJsonCount(1, 'data');
 });
 
-it('filters tasks by type', function () {
+it('filters tasks by type', function (): void {
     Task::factory()->create([
         'project_id' => $this->project->id,
         'type' => TaskType::CodeReview,
@@ -57,7 +57,7 @@ it('filters tasks by type', function () {
         ->assertJsonPath('data.0.type', 'code_review');
 });
 
-it('filters tasks by status', function () {
+it('filters tasks by status', function (): void {
     Task::factory()->completed()->create(['project_id' => $this->project->id]);
     Task::factory()->failed()->create(['project_id' => $this->project->id]);
 
@@ -68,7 +68,7 @@ it('filters tasks by status', function () {
         ->assertJsonPath('data.0.status', 'completed');
 });
 
-it('filters tasks by project_id', function () {
+it('filters tasks by project_id', function (): void {
     $secondProject = Project::factory()->create(['enabled' => true]);
     $secondProject->users()->attach($this->user->id, [
         'gitlab_access_level' => 30,
@@ -85,7 +85,7 @@ it('filters tasks by project_id', function () {
         ->assertJsonPath('data.0.project_id', $secondProject->id);
 });
 
-it('returns empty when filtering by inaccessible project', function () {
+it('returns empty when filtering by inaccessible project', function (): void {
     Task::factory()->create(['project_id' => $this->project->id]);
 
     $response = $this->getJson('/api/v1/ext/tasks?project_id='.$this->otherProject->id, $this->headers);
@@ -94,7 +94,7 @@ it('returns empty when filtering by inaccessible project', function () {
         ->assertJsonCount(0, 'data');
 });
 
-it('filters tasks by date range', function () {
+it('filters tasks by date range', function (): void {
     Task::factory()->create([
         'project_id' => $this->project->id,
         'created_at' => '2026-01-15 10:00:00',
@@ -110,7 +110,7 @@ it('filters tasks by date range', function () {
         ->assertJsonCount(1, 'data');
 });
 
-it('validates invalid filter values', function () {
+it('validates invalid filter values', function (): void {
     $this->getJson('/api/v1/ext/tasks?type=invalid_type', $this->headers)
         ->assertStatus(422);
 
@@ -118,7 +118,7 @@ it('validates invalid filter values', function () {
         ->assertStatus(422);
 });
 
-it('paginates tasks with cursor', function () {
+it('paginates tasks with cursor', function (): void {
     Task::factory()->count(3)->create(['project_id' => $this->project->id]);
 
     $response = $this->getJson('/api/v1/ext/tasks?per_page=2', $this->headers);
@@ -128,7 +128,7 @@ it('paginates tasks with cursor', function () {
         ->assertJsonStructure(['data', 'meta', 'links']);
 });
 
-it('returns correct ExternalTaskResource shape', function () {
+it('returns correct ExternalTaskResource shape', function (): void {
     Task::factory()->completed()->create([
         'project_id' => $this->project->id,
         'cost' => 0.05,
@@ -143,7 +143,7 @@ it('returns correct ExternalTaskResource shape', function () {
 
 // ─── GET /tasks/:id — show ──────────────────────────────────
 
-it('shows a single task', function () {
+it('shows a single task', function (): void {
     $task = Task::factory()->completed()->create([
         'project_id' => $this->project->id,
         'cost' => 0.05,
@@ -156,7 +156,7 @@ it('shows a single task', function () {
         ->assertJsonPath('data.status', 'completed');
 });
 
-it('returns 403 for task in inaccessible project', function () {
+it('returns 403 for task in inaccessible project', function (): void {
     $task = Task::factory()->create(['project_id' => $this->otherProject->id]);
 
     $this->getJson('/api/v1/ext/tasks/'.$task->id, $this->headers)
@@ -165,7 +165,7 @@ it('returns 403 for task in inaccessible project', function () {
 
 // ─── POST /tasks/review — trigger on-demand review ──────────
 
-it('triggers an on-demand review', function () {
+it('triggers an on-demand review', function (): void {
     Queue::fake([ProcessTask::class]);
 
     $response = $this->postJson('/api/v1/ext/tasks/review', [
@@ -181,14 +181,14 @@ it('triggers an on-demand review', function () {
     Queue::assertPushed(ProcessTask::class);
 });
 
-it('rejects review for inaccessible project', function () {
+it('rejects review for inaccessible project', function (): void {
     $this->postJson('/api/v1/ext/tasks/review', [
         'project_id' => $this->otherProject->id,
         'mr_iid' => 42,
     ], $this->headers)->assertStatus(403);
 });
 
-it('validates required fields for review trigger', function () {
+it('validates required fields for review trigger', function (): void {
     $this->postJson('/api/v1/ext/tasks/review', [], $this->headers)
         ->assertStatus(422);
 
@@ -199,7 +199,7 @@ it('validates required fields for review trigger', function () {
 
 // ─── prompt_version in task responses ────────────────────────
 
-it('includes prompt_version in task detail response', function () {
+it('includes prompt_version in task detail response', function (): void {
     $task = Task::factory()->create([
         'project_id' => $this->project->id,
         'status' => TaskStatus::Completed,
@@ -217,7 +217,7 @@ it('includes prompt_version in task detail response', function () {
         ->assertJsonPath('data.prompt_version.schema', 'review:1.0');
 });
 
-it('filters tasks by prompt_version skill', function () {
+it('filters tasks by prompt_version skill', function (): void {
     Task::factory()->create([
         'project_id' => $this->project->id,
         'status' => TaskStatus::Completed,
@@ -245,7 +245,7 @@ it('filters tasks by prompt_version skill', function () {
 
 // ─── GET /metrics/summary ───────────────────────────────────
 
-it('returns metrics summary', function () {
+it('returns metrics summary', function (): void {
     Task::factory()->completed()->create([
         'project_id' => $this->project->id,
         'cost' => 0.10,
@@ -273,14 +273,14 @@ it('returns metrics summary', function () {
         ->assertJsonPath('data.success_rate', 50);
 });
 
-it('returns null acceptance_rate when no findings exist', function () {
+it('returns null acceptance_rate when no findings exist', function (): void {
     $response = $this->getJson('/api/v1/ext/metrics/summary', $this->headers);
 
     $response->assertOk()
         ->assertJsonPath('data.acceptance_rate', null);
 });
 
-it('calculates acceptance rate from finding acceptances', function () {
+it('calculates acceptance rate from finding acceptances', function (): void {
     $task = Task::factory()->completed()->create([
         'project_id' => $this->project->id,
     ]);
@@ -314,7 +314,7 @@ it('calculates acceptance rate from finding acceptances', function () {
         ->assertJsonPath('data.acceptance_rate', 50);
 });
 
-it('scopes metrics to accessible projects only', function () {
+it('scopes metrics to accessible projects only', function (): void {
     Task::factory()->completed()->create([
         'project_id' => $this->project->id,
         'cost' => 0.10,
@@ -332,7 +332,7 @@ it('scopes metrics to accessible projects only', function () {
 
 // ─── GET /activity — activity feed ──────────────────────────
 
-it('returns activity feed scoped to accessible projects', function () {
+it('returns activity feed scoped to accessible projects', function (): void {
     Task::factory()->create(['project_id' => $this->project->id]);
     Task::factory()->create(['project_id' => $this->otherProject->id]);
 
@@ -342,7 +342,7 @@ it('returns activity feed scoped to accessible projects', function () {
         ->assertJsonCount(1, 'data');
 });
 
-it('filters activity by type', function () {
+it('filters activity by type', function (): void {
     Task::factory()->create([
         'project_id' => $this->project->id,
         'type' => TaskType::CodeReview,
@@ -359,7 +359,7 @@ it('filters activity by type', function () {
         ->assertJsonPath('data.0.type', 'feature_dev');
 });
 
-it('filters activity by project_id', function () {
+it('filters activity by project_id', function (): void {
     $secondProject = Project::factory()->create(['enabled' => true]);
     $secondProject->users()->attach($this->user->id, [
         'gitlab_access_level' => 30,
@@ -375,7 +375,7 @@ it('filters activity by project_id', function () {
         ->assertJsonCount(1, 'data');
 });
 
-it('paginates activity with cursor', function () {
+it('paginates activity with cursor', function (): void {
     Task::factory()->count(3)->create(['project_id' => $this->project->id]);
 
     $response = $this->getJson('/api/v1/ext/activity?per_page=2', $this->headers);
@@ -384,7 +384,7 @@ it('paginates activity with cursor', function () {
         ->assertJsonCount(2, 'data');
 });
 
-it('returns ActivityResource shape for activity feed', function () {
+it('returns ActivityResource shape for activity feed', function (): void {
     Task::factory()->completed()->create(['project_id' => $this->project->id]);
 
     $response = $this->getJson('/api/v1/ext/activity', $this->headers);
@@ -395,14 +395,14 @@ it('returns ActivityResource shape for activity feed', function () {
 
 // ─── GET /projects — list enabled projects ──────────────────
 
-it('lists accessible projects via API key', function () {
+it('lists accessible projects via API key', function (): void {
     $response = $this->getJson('/api/v1/ext/projects', $this->headers);
 
     $response->assertOk()
         ->assertJsonCount(1, 'data');
 });
 
-it('does not include projects the user cannot access', function () {
+it('does not include projects the user cannot access', function (): void {
     $response = $this->getJson('/api/v1/ext/projects', $this->headers);
 
     $response->assertOk();
@@ -413,7 +413,7 @@ it('does not include projects the user cannot access', function () {
 
 // ─── Session auth on external endpoints ─────────────────────
 
-it('allows session auth on all external endpoints', function () {
+it('allows session auth on all external endpoints', function (): void {
     Task::factory()->create(['project_id' => $this->project->id]);
 
     $this->actingAs($this->user)

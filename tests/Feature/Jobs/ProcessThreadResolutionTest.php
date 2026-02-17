@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('updates finding acceptance to accepted when thread is resolved', function () {
+it('updates finding acceptance to accepted when thread is resolved', function (): void {
     $task = Task::factory()->create([
         'type' => TaskType::CodeReview,
         'status' => TaskStatus::Completed,
@@ -48,7 +48,7 @@ it('updates finding acceptance to accepted when thread is resolved', function ()
     expect($acceptance->resolved_at)->not->toBeNull();
 });
 
-it('reverts acceptance to pending when thread is unresolved', function () {
+it('reverts acceptance to pending when thread is unresolved', function (): void {
     $task = Task::factory()->create([
         'type' => TaskType::CodeReview,
         'status' => TaskStatus::Completed,
@@ -82,7 +82,7 @@ it('reverts acceptance to pending when thread is unresolved', function () {
     expect($acceptance->resolved_at)->toBeNull();
 });
 
-it('does nothing when no matching acceptance record exists', function () {
+it('does nothing when no matching acceptance record exists', function (): void {
     $job = new ProcessThreadResolution(
         projectId: 1,
         mrIid: 999,

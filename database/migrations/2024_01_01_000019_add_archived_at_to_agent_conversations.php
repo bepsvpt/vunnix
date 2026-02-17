@@ -14,7 +14,7 @@ return new class extends Migration
             return;
         }
 
-        Schema::table('agent_conversations', function (Blueprint $table) {
+        Schema::table('agent_conversations', function (Blueprint $table): void {
             $table->timestamp('archived_at')->nullable()->after('updated_at');
         });
     }
@@ -25,7 +25,7 @@ return new class extends Migration
             return;
         }
 
-        Schema::table('agent_conversations', function (Blueprint $table) {
+        Schema::table('agent_conversations', function (Blueprint $table): void {
             $table->dropColumn('archived_at');
         });
     }

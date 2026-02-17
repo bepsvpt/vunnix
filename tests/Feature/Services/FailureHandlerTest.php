@@ -13,7 +13,7 @@ uses(RefreshDatabase::class);
 
 // ─── Creates DLQ entry on permanent failure ──────────────────────
 
-it('creates a DLQ entry when a task fails permanently', function () {
+it('creates a DLQ entry when a task fails permanently', function (): void {
     Queue::fake();
 
     $task = Task::factory()->create([
@@ -22,7 +22,7 @@ it('creates a DLQ entry when a task fails permanently', function () {
         'retry_count' => 3,
     ]);
 
-    $handler = new FailureHandler();
+    $handler = new FailureHandler;
     $handler->handlePermanentFailure(
         task: $task,
         failureReason: 'max_retries_exceeded',
@@ -53,7 +53,7 @@ it('creates a DLQ entry when a task fails permanently', function () {
 
 // ─── Dispatches failure comment job ──────────────────────────────
 
-it('dispatches PostFailureComment job on permanent failure', function () {
+it('dispatches PostFailureComment job on permanent failure', function (): void {
     Queue::fake();
 
     $task = Task::factory()->create([
@@ -62,7 +62,7 @@ it('dispatches PostFailureComment job on permanent failure', function () {
         'mr_iid' => 42,
     ]);
 
-    $handler = new FailureHandler();
+    $handler = new FailureHandler;
     $handler->handlePermanentFailure(
         task: $task,
         failureReason: 'max_retries_exceeded',
@@ -79,7 +79,7 @@ it('dispatches PostFailureComment job on permanent failure', function () {
 
 // ─── Skips failure comment for tasks with no MR and no Issue ─────
 
-it('does not dispatch PostFailureComment for tasks without MR or Issue', function () {
+it('does not dispatch PostFailureComment for tasks without MR or Issue', function (): void {
     Queue::fake();
 
     $task = Task::factory()->create([
@@ -89,7 +89,7 @@ it('does not dispatch PostFailureComment for tasks without MR or Issue', functio
         'issue_iid' => null,
     ]);
 
-    $handler = new FailureHandler();
+    $handler = new FailureHandler;
     $handler->handlePermanentFailure(
         task: $task,
         failureReason: 'max_retries_exceeded',
@@ -105,7 +105,7 @@ it('does not dispatch PostFailureComment for tasks without MR or Issue', functio
 
 // ─── Handles task already in terminal state ──────────────────────
 
-it('does not transition or DLQ a task already in terminal state', function () {
+it('does not transition or DLQ a task already in terminal state', function (): void {
     Queue::fake();
 
     $task = Task::factory()->create([
@@ -114,7 +114,7 @@ it('does not transition or DLQ a task already in terminal state', function () {
         'completed_at' => now(),
     ]);
 
-    $handler = new FailureHandler();
+    $handler = new FailureHandler;
     $handler->handlePermanentFailure(
         task: $task,
         failureReason: 'max_retries_exceeded',
@@ -133,7 +133,7 @@ it('does not transition or DLQ a task already in terminal state', function () {
 
 // ─── Snapshots full task record ──────────────────────────────────
 
-it('snapshots the full task record including relationships', function () {
+it('snapshots the full task record including relationships', function (): void {
     Queue::fake();
 
     $task = Task::factory()->create([
@@ -145,7 +145,7 @@ it('snapshots the full task record including relationships', function () {
         'retry_count' => 3,
     ]);
 
-    $handler = new FailureHandler();
+    $handler = new FailureHandler;
     $handler->handlePermanentFailure(
         task: $task,
         failureReason: 'max_retries_exceeded',

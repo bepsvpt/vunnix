@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\TaskStatus;
-use App\Enums\TaskType;
 use App\Models\Task;
 use App\Services\TaskTokenService;
 use Carbon\Carbon;
@@ -65,7 +64,7 @@ function generateToken(int $taskId): string
 
 // ─── Happy path: completed result ────────────────────────────────
 
-it('accepts a completed result and transitions task to completed via Result Processor', function () {
+it('accepts a completed result and transitions task to completed via Result Processor', function (): void {
     // Fake GitLab API — all 3 layers run inline on sync queue
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1, 'body' => 'mocked'], 201),
@@ -114,7 +113,7 @@ it('accepts a completed result and transitions task to completed via Result Proc
         ]);
 });
 
-it('dispatches ProcessTaskResult job for completed results', function () {
+it('dispatches ProcessTaskResult job for completed results', function (): void {
     Queue::fake();
 
     $task = Task::factory()->running()->create();
@@ -135,7 +134,7 @@ it('dispatches ProcessTaskResult job for completed results', function () {
 
 // ─── Happy path: failed result ───────────────────────────────────
 
-it('accepts a failed result and transitions task to failed immediately', function () {
+it('accepts a failed result and transitions task to failed immediately', function (): void {
     $task = Task::factory()->running()->create();
     $token = generateToken($task->id);
 
@@ -160,7 +159,7 @@ it('accepts a failed result and transitions task to failed immediately', functio
         ->and($task->tokens_used)->toBe(185000);
 });
 
-it('does not dispatch ProcessTaskResult for failed results', function () {
+it('does not dispatch ProcessTaskResult for failed results', function (): void {
     Queue::fake();
 
     $task = Task::factory()->running()->create();
@@ -179,7 +178,7 @@ it('does not dispatch ProcessTaskResult for failed results', function () {
 
 // ─── 401: Missing bearer token ───────────────────────────────────
 
-it('returns 401 when bearer token is missing', function () {
+it('returns 401 when bearer token is missing', function (): void {
     $task = Task::factory()->running()->create();
 
     $response = $this->postJson(resultUrl($task), validResultPayload());
@@ -190,7 +189,7 @@ it('returns 401 when bearer token is missing', function () {
 
 // ─── 401: Invalid bearer token ───────────────────────────────────
 
-it('returns 401 when bearer token is invalid', function () {
+it('returns 401 when bearer token is invalid', function (): void {
     $task = Task::factory()->running()->create();
 
     $response = $this->postJson(resultUrl($task), validResultPayload(), [
@@ -203,7 +202,7 @@ it('returns 401 when bearer token is invalid', function () {
 
 // ─── 401: Token for wrong task ID (security — task scoping) ──────
 
-it('returns 401 when token belongs to a different task', function () {
+it('returns 401 when token belongs to a different task', function (): void {
     $taskA = Task::factory()->running()->create();
     $taskB = Task::factory()->running()->create();
 
@@ -220,7 +219,7 @@ it('returns 401 when token belongs to a different task', function () {
 
 // ─── 401: Expired token ──────────────────────────────────────────
 
-it('returns 401 when bearer token is expired', function () {
+it('returns 401 when bearer token is expired', function (): void {
     Carbon::setTestNow(Carbon::create(2026, 2, 14, 12, 0, 0));
 
     $task = Task::factory()->running()->create();
@@ -241,7 +240,7 @@ it('returns 401 when bearer token is expired', function () {
 
 // ─── 404: Non-existent task ──────────────────────────────────────
 
-it('returns 404 when task does not exist', function () {
+it('returns 404 when task does not exist', function (): void {
     $token = generateToken(99999);
 
     $response = $this->postJson('/api/v1/tasks/99999/result', validResultPayload(), [
@@ -253,7 +252,7 @@ it('returns 404 when task does not exist', function () {
 
 // ─── 409: Task not in running state ──────────────────────────────
 
-it('returns 409 when task is already completed', function () {
+it('returns 409 when task is already completed', function (): void {
     $task = Task::factory()->completed()->create();
     $token = generateToken($task->id);
 
@@ -265,7 +264,7 @@ it('returns 409 when task is already completed', function () {
         ->assertJsonFragment(['error' => 'Task is not in running state (current: completed).']);
 });
 
-it('returns 409 when task is in queued state', function () {
+it('returns 409 when task is in queued state', function (): void {
     $task = Task::factory()->queued()->create();
     $token = generateToken($task->id);
 
@@ -279,7 +278,7 @@ it('returns 409 when task is in queued state', function () {
 
 // ─── 422: Validation errors ──────────────────────────────────────
 
-it('returns 422 when status field is missing', function () {
+it('returns 422 when status field is missing', function (): void {
     $task = Task::factory()->running()->create();
     $token = generateToken($task->id);
 
@@ -294,7 +293,7 @@ it('returns 422 when status field is missing', function () {
         ->assertJsonValidationErrors(['status']);
 });
 
-it('returns 422 when status is not a valid value', function () {
+it('returns 422 when status is not a valid value', function (): void {
     $task = Task::factory()->running()->create();
     $token = generateToken($task->id);
 
@@ -308,7 +307,7 @@ it('returns 422 when status is not a valid value', function () {
         ->assertJsonValidationErrors(['status']);
 });
 
-it('returns 422 when tokens are missing', function () {
+it('returns 422 when tokens are missing', function (): void {
     $task = Task::factory()->running()->create();
     $token = generateToken($task->id);
 
@@ -323,7 +322,7 @@ it('returns 422 when tokens are missing', function () {
         ->assertJsonValidationErrors(['tokens']);
 });
 
-it('returns 422 when result is missing for completed status', function () {
+it('returns 422 when result is missing for completed status', function (): void {
     $task = Task::factory()->running()->create();
     $token = generateToken($task->id);
 
@@ -338,7 +337,7 @@ it('returns 422 when result is missing for completed status', function () {
         ->assertJsonValidationErrors(['result']);
 });
 
-it('returns 422 when prompt_version is missing', function () {
+it('returns 422 when prompt_version is missing', function (): void {
     $task = Task::factory()->running()->create();
     $token = generateToken($task->id);
 
@@ -353,7 +352,7 @@ it('returns 422 when prompt_version is missing', function () {
         ->assertJsonValidationErrors(['prompt_version']);
 });
 
-it('returns 422 when duration_seconds is missing', function () {
+it('returns 422 when duration_seconds is missing', function (): void {
     $task = Task::factory()->running()->create();
     $token = generateToken($task->id);
 
@@ -370,7 +369,7 @@ it('returns 422 when duration_seconds is missing', function () {
 
 // ─── Security: Token scoping (D127 — per M2 verification) ───────
 
-it('prevents cross-task token reuse — token for task A cannot access task B', function () {
+it('prevents cross-task token reuse — token for task A cannot access task B', function (): void {
     Queue::fake();
 
     $taskA = Task::factory()->running()->create();
@@ -397,7 +396,7 @@ it('prevents cross-task token reuse — token for task A cannot access task B', 
 
 // ─── Sync pipeline: all 3 layers posted in sync queue ─────────────
 
-it('posts all 3 layers (summary, threads, labels+status) in sync queue pipeline', function () {
+it('posts all 3 layers (summary, threads, labels+status) in sync queue pipeline', function (): void {
     Http::fake([
         '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['id' => 1, 'body' => 'mocked'], 201),
         '*/api/v4/projects/*/merge_requests/*/discussions' => Http::response([

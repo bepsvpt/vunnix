@@ -13,6 +13,7 @@ use App\Support\QueueNames;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Process acceptance tracking on MR merge.
@@ -40,8 +41,8 @@ class ProcessAcceptanceTracking implements ShouldQueue
 
     public function handle(GitLabClient $gitLab): void
     {
-        $acceptanceService = new AcceptanceTrackingService();
-        $feedbackService = new EngineerFeedbackService();
+        $acceptanceService = new AcceptanceTrackingService;
+        $feedbackService = new EngineerFeedbackService;
 
         // Find all completed code review tasks for this MR
         $tasks = Task::where('project_id', $this->projectId)
@@ -65,7 +66,7 @@ class ProcessAcceptanceTracking implements ShouldQueue
                 $this->gitlabProjectId,
                 $this->mrIid,
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('ProcessAcceptanceTracking: failed to fetch discussions', [
                 'project_id' => $this->projectId,
                 'mr_iid' => $this->mrIid,
@@ -186,7 +187,7 @@ class ProcessAcceptanceTracking implements ShouldQueue
                 );
 
                 $emojiByDiscussion[$discussionId] = $feedbackService->classifyReactions($emoji);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 Log::warning('ProcessAcceptanceTracking: failed to fetch emoji for discussion', [
                     'project_id' => $this->projectId,
                     'mr_iid' => $this->mrIid,

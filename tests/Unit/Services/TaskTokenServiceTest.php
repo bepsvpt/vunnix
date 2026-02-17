@@ -3,43 +3,43 @@
 use App\Services\TaskTokenService;
 use Carbon\Carbon;
 
-beforeEach(function () {
+beforeEach(function (): void {
     Carbon::setTestNow(Carbon::create(2026, 2, 14, 12, 0, 0));
     $this->appKey = str_repeat('a', 32);
     $this->budgetMinutes = 60;
     $this->service = new TaskTokenService($this->appKey, $this->budgetMinutes);
 });
 
-afterEach(function () {
+afterEach(function (): void {
     Carbon::setTestNow();
 });
 
-it('generates a non-empty token string', function () {
+it('generates a non-empty token string', function (): void {
     $token = $this->service->generate(taskId: 42);
 
     expect($token)->toBeString()->not->toBeEmpty();
 });
 
-it('generates different tokens for different task IDs', function () {
+it('generates different tokens for different task IDs', function (): void {
     $token1 = $this->service->generate(taskId: 1);
     $token2 = $this->service->generate(taskId: 2);
 
     expect($token1)->not->toBe($token2);
 });
 
-it('validates a freshly generated token for the correct task ID', function () {
+it('validates a freshly generated token for the correct task ID', function (): void {
     $token = $this->service->generate(taskId: 42);
 
     expect($this->service->validate($token, taskId: 42))->toBeTrue();
 });
 
-it('rejects a token for the wrong task ID', function () {
+it('rejects a token for the wrong task ID', function (): void {
     $token = $this->service->generate(taskId: 42);
 
     expect($this->service->validate($token, taskId: 99))->toBeFalse();
 });
 
-it('rejects an expired token', function () {
+it('rejects an expired token', function (): void {
     $token = $this->service->generate(taskId: 42);
 
     // Travel past the 60-minute budget
@@ -48,7 +48,7 @@ it('rejects an expired token', function () {
     expect($this->service->validate($token, taskId: 42))->toBeFalse();
 });
 
-it('accepts a token within the budget window', function () {
+it('accepts a token within the budget window', function (): void {
     $token = $this->service->generate(taskId: 42);
 
     // 30 minutes later — still valid
@@ -57,7 +57,7 @@ it('accepts a token within the budget window', function () {
     expect($this->service->validate($token, taskId: 42))->toBeTrue();
 });
 
-it('rejects a token at exactly the budget boundary', function () {
+it('rejects a token at exactly the budget boundary', function (): void {
     $token = $this->service->generate(taskId: 42);
 
     // Exactly 60 minutes later — token should be expired (>=, not >)
@@ -66,19 +66,19 @@ it('rejects a token at exactly the budget boundary', function () {
     expect($this->service->validate($token, taskId: 42))->toBeFalse();
 });
 
-it('rejects a tampered token', function () {
+it('rejects a tampered token', function (): void {
     $token = $this->service->generate(taskId: 42);
-    $tampered = $token . 'x';
+    $tampered = $token.'x';
 
     expect($this->service->validate($tampered, taskId: 42))->toBeFalse();
 });
 
-it('rejects completely invalid token strings', function () {
+it('rejects completely invalid token strings', function (): void {
     expect($this->service->validate('not-a-valid-token', taskId: 42))->toBeFalse();
     expect($this->service->validate('', taskId: 42))->toBeFalse();
 });
 
-it('uses configurable task budget minutes', function () {
+it('uses configurable task budget minutes', function (): void {
     $service = new TaskTokenService($this->appKey, budgetMinutes: 10);
 
     $token = $service->generate(taskId: 42);
@@ -92,7 +92,7 @@ it('uses configurable task budget minutes', function () {
     expect($service->validate($token, taskId: 42))->toBeFalse();
 });
 
-it('rejects a token generated with a different app key', function () {
+it('rejects a token generated with a different app key', function (): void {
     $token = $this->service->generate(taskId: 42);
 
     $otherService = new TaskTokenService(str_repeat('b', 32), $this->budgetMinutes);
@@ -100,7 +100,7 @@ it('rejects a token generated with a different app key', function () {
     expect($otherService->validate($token, taskId: 42))->toBeFalse();
 });
 
-it('generates a token that is URL-safe base64 encoded', function () {
+it('generates a token that is URL-safe base64 encoded', function (): void {
     $token = $this->service->generate(taskId: 42);
 
     // Token should not contain characters problematic in URLs/headers

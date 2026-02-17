@@ -26,7 +26,7 @@ function eventContext(string $eventType, array $overrides = []): array
 //  Merge Request events
 // ------------------------------------------------------------------
 
-it('parses MR open payload into MergeRequestOpened', function () {
+it('parses MR open payload into MergeRequestOpened', function (): void {
     $router = new EventRouter;
 
     $event = $router->parseEvent(eventContext('merge_request', [
@@ -49,7 +49,7 @@ it('parses MR open payload into MergeRequestOpened', function () {
         ->and($event->gitlabProjectId)->toBe(100);
 });
 
-it('parses MR update payload into MergeRequestUpdated', function () {
+it('parses MR update payload into MergeRequestUpdated', function (): void {
     $router = new EventRouter;
 
     $event = $router->parseEvent(eventContext('merge_request', [
@@ -65,7 +65,7 @@ it('parses MR update payload into MergeRequestUpdated', function () {
         ->and($event->type())->toBe('merge_request_updated');
 });
 
-it('parses MR merge payload into MergeRequestMerged', function () {
+it('parses MR merge payload into MergeRequestMerged', function (): void {
     $router = new EventRouter;
 
     $event = $router->parseEvent(eventContext('merge_request', [
@@ -81,7 +81,7 @@ it('parses MR merge payload into MergeRequestMerged', function () {
         ->and($event->type())->toBe('merge_request_merged');
 });
 
-it('returns null for unknown MR actions', function () {
+it('returns null for unknown MR actions', function (): void {
     $router = new EventRouter;
 
     $event = $router->parseEvent(eventContext('merge_request', [
@@ -92,7 +92,7 @@ it('returns null for unknown MR actions', function () {
     expect($event)->toBeNull();
 });
 
-it('returns null for MR event without iid', function () {
+it('returns null for MR event without iid', function (): void {
     $router = new EventRouter;
 
     $event = $router->parseEvent(eventContext('merge_request', [
@@ -106,7 +106,7 @@ it('returns null for MR event without iid', function () {
 //  Note events
 // ------------------------------------------------------------------
 
-it('parses Note on MR payload into NoteOnMR', function () {
+it('parses Note on MR payload into NoteOnMR', function (): void {
     $router = new EventRouter;
 
     $event = $router->parseEvent(eventContext('note', [
@@ -123,7 +123,7 @@ it('parses Note on MR payload into NoteOnMR', function () {
         ->and($event->authorId)->toBe(5);
 });
 
-it('parses Note on Issue payload into NoteOnIssue', function () {
+it('parses Note on Issue payload into NoteOnIssue', function (): void {
     $router = new EventRouter;
 
     $event = $router->parseEvent(eventContext('note', [
@@ -140,7 +140,7 @@ it('parses Note on Issue payload into NoteOnIssue', function () {
         ->and($event->authorId)->toBe(3);
 });
 
-it('returns null for Note on unsupported noteable type', function () {
+it('returns null for Note on unsupported noteable type', function (): void {
     $router = new EventRouter;
 
     $event = $router->parseEvent(eventContext('note', [
@@ -156,7 +156,7 @@ it('returns null for Note on unsupported noteable type', function () {
 //  Issue events
 // ------------------------------------------------------------------
 
-it('parses Issue payload into IssueLabelChanged', function () {
+it('parses Issue payload into IssueLabelChanged', function (): void {
     $router = new EventRouter;
 
     $event = $router->parseEvent(eventContext('issue', [
@@ -176,7 +176,7 @@ it('parses Issue payload into IssueLabelChanged', function () {
         ->and($event->hasLabel('frontend'))->toBeFalse();
 });
 
-it('returns null for Issue event without iid', function () {
+it('returns null for Issue event without iid', function (): void {
     $router = new EventRouter;
 
     $event = $router->parseEvent(eventContext('issue', [
@@ -190,7 +190,7 @@ it('returns null for Issue event without iid', function () {
 //  Push events
 // ------------------------------------------------------------------
 
-it('parses Push payload into PushToMRBranch', function () {
+it('parses Push payload into PushToMRBranch', function (): void {
     $router = new EventRouter;
 
     $event = $router->parseEvent(eventContext('push', [
@@ -213,7 +213,7 @@ it('parses Push payload into PushToMRBranch', function () {
         ->and($event->totalCommitsCount)->toBe(1);
 });
 
-it('returns null for Push event without ref', function () {
+it('returns null for Push event without ref', function (): void {
     $router = new EventRouter;
 
     $event = $router->parseEvent(eventContext('push', []));
@@ -225,7 +225,7 @@ it('returns null for Push event without ref', function () {
 //  Unknown event types
 // ------------------------------------------------------------------
 
-it('returns null for unknown event types', function () {
+it('returns null for unknown event types', function (): void {
     $router = new EventRouter;
 
     $event = $router->parseEvent(eventContext('pipeline', []));

@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('returns task result data for authorized user', function () {
+it('returns task result data for authorized user', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -43,7 +43,7 @@ it('returns task result data for authorized user', function () {
     $response->assertJsonPath('data.result.branch', 'ai/test');
 });
 
-it('returns 403 for user without project access', function () {
+it('returns 403 for user without project access', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 
@@ -59,7 +59,7 @@ it('returns 403 for user without project access', function () {
     $response->assertForbidden();
 });
 
-it('returns 401 for unauthenticated request', function () {
+it('returns 401 for unauthenticated request', function (): void {
     $task = Task::factory()->create();
 
     $response = $this->getJson("/api/v1/tasks/{$task->id}/view");

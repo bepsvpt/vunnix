@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Register test route under /api/ prefix to avoid SPA catch-all route (/{any})
     Route::middleware('api.key')->get('/api/test-api-key', function () {
         return response()->json([
@@ -17,26 +17,26 @@ beforeEach(function () {
     });
 });
 
-it('authenticates with a valid API key', function () {
+it('authenticates with a valid API key', function (): void {
     $service = app(ApiKeyService::class);
     $user = User::factory()->create();
     $result = $service->generate($user, 'Test Key');
 
     $this->getJson('/api/test-api-key', [
-        'Authorization' => 'Bearer ' . $result['plaintext'],
+        'Authorization' => 'Bearer '.$result['plaintext'],
     ])
         ->assertOk()
         ->assertJsonPath('user_id', $user->id)
         ->assertJsonPath('auth_via', 'api_key');
 });
 
-it('rejects request with no bearer token', function () {
+it('rejects request with no bearer token', function (): void {
     $this->getJson('/api/test-api-key')
         ->assertStatus(401)
         ->assertJsonPath('error', 'Missing API key.');
 });
 
-it('rejects request with invalid bearer token', function () {
+it('rejects request with invalid bearer token', function (): void {
     $this->getJson('/api/test-api-key', [
         'Authorization' => 'Bearer invalid-token-here',
     ])
@@ -44,38 +44,38 @@ it('rejects request with invalid bearer token', function () {
         ->assertJsonPath('error', 'Invalid or expired API key.');
 });
 
-it('rejects revoked API key', function () {
+it('rejects revoked API key', function (): void {
     $service = app(ApiKeyService::class);
     $user = User::factory()->create();
     $result = $service->generate($user, 'Test Key');
     $service->revoke($result['api_key']);
 
     $this->getJson('/api/test-api-key', [
-        'Authorization' => 'Bearer ' . $result['plaintext'],
+        'Authorization' => 'Bearer '.$result['plaintext'],
     ])
         ->assertStatus(401)
         ->assertJsonPath('error', 'Invalid or expired API key.');
 });
 
-it('rejects expired API key', function () {
+it('rejects expired API key', function (): void {
     $service = app(ApiKeyService::class);
     $user = User::factory()->create();
     $result = $service->generate($user, 'Test Key', now()->subDay());
 
     $this->getJson('/api/test-api-key', [
-        'Authorization' => 'Bearer ' . $result['plaintext'],
+        'Authorization' => 'Bearer '.$result['plaintext'],
     ])
         ->assertStatus(401)
         ->assertJsonPath('error', 'Invalid or expired API key.');
 });
 
-it('sets auth_via attribute on request', function () {
+it('sets auth_via attribute on request', function (): void {
     $service = app(ApiKeyService::class);
     $user = User::factory()->create();
     $result = $service->generate($user, 'Test Key');
 
     $this->getJson('/api/test-api-key', [
-        'Authorization' => 'Bearer ' . $result['plaintext'],
+        'Authorization' => 'Bearer '.$result['plaintext'],
     ])
         ->assertOk()
         ->assertJsonPath('auth_via', 'api_key');

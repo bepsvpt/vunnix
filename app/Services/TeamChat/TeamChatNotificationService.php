@@ -5,6 +5,7 @@ namespace App\Services\TeamChat;
 use App\Models\GlobalSetting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class TeamChatNotificationService
 {
@@ -55,7 +56,7 @@ class TeamChatNotificationService
             }
 
             return true;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('Team chat notification error', [
                 'error' => $e->getMessage(),
                 'type' => $type,
@@ -80,7 +81,7 @@ class TeamChatNotificationService
             $response = Http::timeout(10)->post($webhookUrl, $payload);
 
             return $response->successful();
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return false;
         }
     }
@@ -106,6 +107,6 @@ class TeamChatNotificationService
     {
         $class = self::FORMATTERS[$platform] ?? GenericFormatter::class;
 
-        return new $class();
+        return new $class;
     }
 }

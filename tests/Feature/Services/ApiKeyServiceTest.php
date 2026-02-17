@@ -7,12 +7,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->service = app(ApiKeyService::class);
     $this->user = User::factory()->create();
 });
 
-it('generates a new API key and returns plaintext once', function () {
+it('generates a new API key and returns plaintext once', function (): void {
     $result = $this->service->generate($this->user, 'My CI Key');
 
     expect($result)->toHaveKeys(['api_key', 'plaintext']);
@@ -28,7 +28,7 @@ it('generates a new API key and returns plaintext once', function () {
     expect($result['api_key']->key)->toBe(hash('sha256', $result['plaintext']));
 });
 
-it('generates unique keys', function () {
+it('generates unique keys', function (): void {
     $result1 = $this->service->generate($this->user, 'Key 1');
     $result2 = $this->service->generate($this->user, 'Key 2');
 
@@ -36,31 +36,31 @@ it('generates unique keys', function () {
     expect($result1['api_key']->key)->not->toBe($result2['api_key']->key);
 });
 
-it('resolves user from plaintext key', function () {
+it('resolves user from plaintext key', function (): void {
     $result = $this->service->generate($this->user, 'Test Key');
 
     $resolved = $this->service->resolveUser($result['plaintext']);
     expect($resolved->id)->toBe($this->user->id);
 });
 
-it('returns null for invalid plaintext key', function () {
+it('returns null for invalid plaintext key', function (): void {
     expect($this->service->resolveUser('invalid-key'))->toBeNull();
 });
 
-it('returns null for revoked key', function () {
+it('returns null for revoked key', function (): void {
     $result = $this->service->generate($this->user, 'Test Key');
     $result['api_key']->update(['revoked' => true, 'revoked_at' => now()]);
 
     expect($this->service->resolveUser($result['plaintext']))->toBeNull();
 });
 
-it('returns null for expired key', function () {
+it('returns null for expired key', function (): void {
     $result = $this->service->generate($this->user, 'Test Key', now()->subDay());
 
     expect($this->service->resolveUser($result['plaintext']))->toBeNull();
 });
 
-it('revokes a key', function () {
+it('revokes a key', function (): void {
     $result = $this->service->generate($this->user, 'Test Key');
 
     $this->service->revoke($result['api_key']);
@@ -70,7 +70,7 @@ it('revokes a key', function () {
     expect($result['api_key']->revoked_at)->not->toBeNull();
 });
 
-it('records usage on resolve', function () {
+it('records usage on resolve', function (): void {
     $result = $this->service->generate($this->user, 'Test Key');
 
     $this->service->resolveUser($result['plaintext'], '10.0.0.1');

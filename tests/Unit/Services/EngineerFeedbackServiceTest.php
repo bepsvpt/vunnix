@@ -4,8 +4,8 @@ use App\Services\EngineerFeedbackService;
 
 // ─── classifyReactions ───────────────────────────────────────────
 
-it('maps thumbsup to positive', function () {
-    $service = new EngineerFeedbackService();
+it('maps thumbsup to positive', function (): void {
+    $service = new EngineerFeedbackService;
 
     $emoji = [
         ['name' => 'thumbsup', 'user' => ['id' => 5]],
@@ -20,8 +20,8 @@ it('maps thumbsup to positive', function () {
     ]);
 });
 
-it('maps thumbsdown to negative', function () {
-    $service = new EngineerFeedbackService();
+it('maps thumbsdown to negative', function (): void {
+    $service = new EngineerFeedbackService;
 
     $emoji = [
         ['name' => 'thumbsdown', 'user' => ['id' => 6]],
@@ -36,8 +36,8 @@ it('maps thumbsdown to negative', function () {
     ]);
 });
 
-it('maps empty reactions to neutral', function () {
-    $service = new EngineerFeedbackService();
+it('maps empty reactions to neutral', function (): void {
+    $service = new EngineerFeedbackService;
 
     $result = $service->classifyReactions([]);
 
@@ -48,8 +48,8 @@ it('maps empty reactions to neutral', function () {
     ]);
 });
 
-it('counts multiple reactions and determines sentiment by majority', function () {
-    $service = new EngineerFeedbackService();
+it('counts multiple reactions and determines sentiment by majority', function (): void {
+    $service = new EngineerFeedbackService;
 
     $emoji = [
         ['name' => 'thumbsup', 'user' => ['id' => 1]],
@@ -66,8 +66,8 @@ it('counts multiple reactions and determines sentiment by majority', function ()
     ]);
 });
 
-it('returns neutral sentiment when positive and negative counts are equal', function () {
-    $service = new EngineerFeedbackService();
+it('returns neutral sentiment when positive and negative counts are equal', function (): void {
+    $service = new EngineerFeedbackService;
 
     $emoji = [
         ['name' => 'thumbsup', 'user' => ['id' => 1]],
@@ -83,8 +83,8 @@ it('returns neutral sentiment when positive and negative counts are equal', func
     ]);
 });
 
-it('ignores non-thumbs emoji reactions', function () {
-    $service = new EngineerFeedbackService();
+it('ignores non-thumbs emoji reactions', function (): void {
+    $service = new EngineerFeedbackService;
 
     $emoji = [
         ['name' => 'thumbsup', 'user' => ['id' => 1]],
@@ -104,8 +104,8 @@ it('ignores non-thumbs emoji reactions', function () {
 
 // ─── inferSentimentFromThreadState ───────────────────────────────
 
-it('infers neutral sentiment from all thread states when no reactions', function () {
-    $service = new EngineerFeedbackService();
+it('infers neutral sentiment from all thread states when no reactions', function (): void {
+    $service = new EngineerFeedbackService;
 
     expect($service->inferSentimentFromThreadState('accepted'))->toBe('neutral');
     expect($service->inferSentimentFromThreadState('accepted_auto'))->toBe('neutral');

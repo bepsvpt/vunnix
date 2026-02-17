@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('returns quality stats scoped to user projects', function () {
+it('returns quality stats scoped to user projects', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -65,7 +65,7 @@ it('returns quality stats scoped to user projects', function () {
     $response->assertJsonPath('data.avg_findings_per_review', 4);
 });
 
-it('returns correct response structure', function () {
+it('returns correct response structure', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -84,7 +84,7 @@ it('returns correct response structure', function () {
     ]);
 });
 
-it('returns null acceptance rate (not yet tracked)', function () {
+it('returns null acceptance rate (not yet tracked)', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -95,7 +95,7 @@ it('returns null acceptance rate (not yet tracked)', function () {
     $response->assertJsonPath('data.acceptance_rate', null);
 });
 
-it('returns null avg findings when no reviews exist', function () {
+it('returns null avg findings when no reviews exist', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -107,12 +107,12 @@ it('returns null avg findings when no reviews exist', function () {
     $response->assertJsonPath('data.avg_findings_per_review', null);
 });
 
-it('returns 401 for unauthenticated users', function () {
+it('returns 401 for unauthenticated users', function (): void {
     $response = $this->getJson('/api/v1/dashboard/quality');
     $response->assertUnauthorized();
 });
 
-it('excludes tasks from disabled projects', function () {
+it('excludes tasks from disabled projects', function (): void {
     $user = User::factory()->create();
     $disabledProject = Project::factory()->create(['enabled' => false]);
     $disabledProject->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -136,7 +136,7 @@ it('excludes tasks from disabled projects', function () {
     $response->assertJsonPath('data.total_findings', 0);
 });
 
-it('excludes non-code-review tasks from quality metrics', function () {
+it('excludes non-code-review tasks from quality metrics', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
@@ -164,7 +164,7 @@ it('excludes non-code-review tasks from quality metrics', function () {
     $response->assertJsonPath('data.total_findings', 0);
 });
 
-it('handles reviews with zero findings', function () {
+it('handles reviews with zero findings', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
