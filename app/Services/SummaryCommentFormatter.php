@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use DateTimeInterface;
+use Illuminate\Support\Str;
 
 /**
  * Formats a validated CodeReviewSchema result as a markdown summary comment.
@@ -77,7 +78,7 @@ class SummaryCommentFormatter
         $lines[] = '|---|----------|----------|------|-------------|';
         foreach ($findings as $finding) {
             $severity = self::SEVERITY_BADGES[$finding['severity']] ?? $finding['severity'];
-            $category = ucfirst($finding['category']);
+            $category = Str::ucfirst($finding['category']);
             $file = '`'.$finding['file'].':'.$finding['line'].'`';
             $lines[] = "| {$finding['id']} | {$severity} | {$category} | {$file} | {$finding['title']} |";
         }

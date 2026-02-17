@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Throwable;
 
 class AppServiceProvider extends ServiceProvider
@@ -28,8 +29,8 @@ class AppServiceProvider extends ServiceProvider
             $appKey = $app['config']['app.key'];
 
             // Strip the base64: prefix if present
-            if (str_starts_with($appKey, 'base64:')) {
-                $appKey = base64_decode(substr($appKey, 7), true);
+            if (Str::startsWith($appKey, 'base64:')) {
+                $appKey = base64_decode(Str::after($appKey, 'base64:'), true);
             }
 
             return new TaskTokenService(

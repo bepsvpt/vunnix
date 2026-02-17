@@ -25,7 +25,7 @@ function makeAgentResponse(array $events, ?\Throwable $exception = null): Stream
         foreach ($events as $event) {
             yield json_encode($event, JSON_THROW_ON_ERROR);
         }
-        if ($exception !== null) {
+        if ($exception instanceof \Throwable) {
             throw $exception;
         }
     };

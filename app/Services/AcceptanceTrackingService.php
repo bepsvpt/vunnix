@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class AcceptanceTrackingService
 {
@@ -136,7 +137,7 @@ class AcceptanceTrackingService
         $body = $notes[0]['body'] ?? '';
 
         // AI threads always start with a severity tag: 🔴 **Critical**, 🟡 **Major**, or 🟢 **Minor**
-        return (bool) preg_match('/^(?:🔴|🟡|🟢)\s\*\*(?:Critical|Major|Minor)\*\*/', $body);
+        return Str::isMatch('/^(?:🔴|🟡|🟢)\s\*\*(?:Critical|Major|Minor)\*\*/', $body);
     }
 
     /**
@@ -161,7 +162,7 @@ class AcceptanceTrackingService
             $position = $firstNote['position'] ?? [];
 
             $sameFile = ($position['new_path'] ?? '') === $finding['file'];
-            $sameTitle = str_contains($body, $finding['title']);
+            $sameTitle = Str::contains($body, $finding['title']);
 
             if ($sameFile && $sameTitle) {
                 return $discussion['id'] ?? null;

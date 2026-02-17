@@ -2,6 +2,8 @@
 
 namespace App\Events\Webhook;
 
+use Illuminate\Support\Str;
+
 class PushToMRBranch extends WebhookEvent
 {
     /**
@@ -32,6 +34,6 @@ class PushToMRBranch extends WebhookEvent
      */
     public function branchName(): string
     {
-        return (string) preg_replace('#^refs/heads/#', '', $this->ref);
+        return Str::replaceStart('refs/heads/', '', $this->ref);
     }
 }

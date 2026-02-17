@@ -8,6 +8,7 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Reusable HTTP client for GitLab REST API v4.
@@ -23,7 +24,7 @@ class GitLabClient
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(config('services.gitlab.host') ?? 'https://gitlab.com', '/');
+        $this->baseUrl = Str::rtrim(config('services.gitlab.host') ?? 'https://gitlab.com', '/');
         $this->token = config('services.gitlab.bot_token') ?? '';
     }
 
@@ -697,7 +698,7 @@ class GitLabClient
      */
     protected function url(string $path): string
     {
-        return $this->baseUrl.'/api/v4/'.ltrim($path, '/');
+        return $this->baseUrl.'/api/v4/'.Str::ltrim($path, '/');
     }
 
     /**

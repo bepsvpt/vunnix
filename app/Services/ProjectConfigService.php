@@ -6,6 +6,7 @@ use App\Models\GlobalSetting;
 use App\Models\Project;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class ProjectConfigService
 {
@@ -57,7 +58,7 @@ class ProjectConfigService
         }
 
         // Fall back to global setting (top-level keys only)
-        $topKey = explode('.', $key)[0];
+        $topKey = Str::before($key, '.');
         if ($topKey === $key) {
             return GlobalSetting::get($key, $default);
         }
@@ -138,7 +139,7 @@ class ProjectConfigService
         }
 
         // 3. Global setting (top-level keys only)
-        $topKey = explode('.', $key)[0];
+        $topKey = Str::before($key, '.');
         if ($topKey === $key) {
             return GlobalSetting::get($key, $default);
         }

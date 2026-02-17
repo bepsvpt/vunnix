@@ -2,6 +2,8 @@
 
 namespace App\Services\TeamChat;
 
+use Illuminate\Support\Str;
+
 class MattermostFormatter implements ChatFormatterInterface
 {
     private const URGENCY_COLORS = [
@@ -25,7 +27,7 @@ class MattermostFormatter implements ChatFormatterInterface
             $fields[] = ['short' => true, 'title' => 'Project', 'value' => $context['project']];
         }
         if (isset($context['urgency']) && $context['urgency'] !== '') {
-            $fields[] = ['short' => true, 'title' => 'Urgency', 'value' => ucfirst($context['urgency'])];
+            $fields[] = ['short' => true, 'title' => 'Urgency', 'value' => Str::ucfirst($context['urgency'])];
         }
 
         $attachment = [

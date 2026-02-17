@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Str;
+
 /**
  * Formats a single code review finding as a markdown discussion thread body.
  *
@@ -28,7 +30,7 @@ class InlineThreadFormatter
     public function format(array $finding): string
     {
         $severity = self::SEVERITY_TAGS[$finding['severity']] ?? $finding['severity'];
-        $category = ucfirst($finding['category']);
+        $category = Str::ucfirst($finding['category']);
 
         $lines = [];
         $lines[] = "{$severity} | {$category}";

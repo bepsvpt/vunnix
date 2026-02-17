@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ReviewStrategy;
+use Illuminate\Support\Str;
 
 /**
  * Analyzes changed file paths to select the appropriate review strategy.
@@ -69,7 +70,7 @@ class StrategyResolver
         $hasBackend = false;
 
         foreach ($filePaths as $path) {
-            $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            $extension = Str::lower(pathinfo($path, PATHINFO_EXTENSION));
 
             if (in_array($extension, self::FRONTEND_EXTENSIONS, true)) {
                 $hasFrontend = true;
@@ -100,7 +101,7 @@ class StrategyResolver
     {
         foreach ($filePaths as $path) {
             foreach (self::SECURITY_PATTERNS as $pattern) {
-                if (preg_match($pattern, $path) === 1) {
+                if (Str::isMatch($pattern, $path)) {
                     return true;
                 }
             }
@@ -114,6 +115,6 @@ class StrategyResolver
      */
     private function isMigration(string $path): bool
     {
-        return (bool) preg_match(self::MIGRATION_PATTERN, $path);
+        return Str::isMatch(self::MIGRATION_PATTERN, $path);
     }
 }

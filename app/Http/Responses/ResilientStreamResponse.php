@@ -35,7 +35,7 @@ class ResilientStreamResponse
                             return;
                         }
 
-                        echo 'data: '.((string) $event)."\n\n";
+                        echo 'data: '.($event)."\n\n";
 
                         if (ob_get_level() > 0) {
                             ob_flush();

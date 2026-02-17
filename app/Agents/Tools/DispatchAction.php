@@ -12,6 +12,7 @@ use App\Services\ProjectAccessChecker;
 use App\Services\TaskDispatcher;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Throwable;
@@ -240,7 +241,7 @@ class DispatchAction implements Tool
             'ui_adjustment' => 'UI adjustment',
             'create_mr' => 'Merge request creation',
             'deep_analysis' => 'Deep analysis',
-            default => ucfirst(str_replace('_', ' ', $actionType)),
+            default => Str::ucfirst(Str::replace('_', ' ', $actionType)),
         };
 
         $message = "[System: Task dispatched] {$typeLabel} \"{$title}\" has been dispatched as Task #{$task->id}.";

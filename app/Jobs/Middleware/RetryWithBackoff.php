@@ -5,6 +5,7 @@ namespace App\Jobs\Middleware;
 use App\Exceptions\GitLabApiException;
 use Closure;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Job middleware that implements error-specific retry with exponential backoff.
@@ -107,7 +108,7 @@ class RetryWithBackoff
             $job->attemptHistory[] = [
                 'attempt' => $attempts,
                 'timestamp' => now()->toIso8601String(),
-                'error' => "HTTP {$e->statusCode}: ".mb_substr($e->responseBody, 0, 500),
+                'error' => "HTTP {$e->statusCode}: ".Str::substr($e->responseBody, 0, 500),
             ];
         }
 

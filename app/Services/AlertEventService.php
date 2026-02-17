@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Throwable;
 
 class AlertEventService
@@ -690,7 +691,7 @@ class AlertEventService
             default => '⚪',
         };
 
-        return "🤖 Review complete on **{$projectName}** MR !{$mrIid} — {$riskEmoji} ".ucfirst($riskLevel)." risk, {$findingsCount} findings";
+        return "🤖 Review complete on **{$projectName}** MR !{$mrIid} — {$riskEmoji} ".Str::ucfirst($riskLevel)." risk, {$findingsCount} findings";
     }
 
     /**
@@ -743,11 +744,11 @@ class AlertEventService
     private function buildFailedOrGenericMessage(\App\Models\Task $task, string $projectName): string
     {
         if ($task->status === \App\Enums\TaskStatus::Failed) {
-            $typeLabel = str_replace('_', ' ', $task->type->value);
+            $typeLabel = Str::replace('_', ' ', $task->type->value);
             $mrRef = $task->mr_iid !== null ? " MR !{$task->mr_iid}" : '';
             $reason = $task->error_reason ?? 'max retries exceeded';
 
-            return '❌ '.ucfirst($typeLabel)." failed for **{$projectName}**{$mrRef} — {$reason}";
+            return '❌ '.Str::ucfirst($typeLabel)." failed for **{$projectName}**{$mrRef} — {$reason}";
         }
 
         return "🤖 Task #{$task->id} completed for **{$projectName}**";
@@ -783,7 +784,7 @@ class AlertEventService
         $patterns = ['api error', 'api_error', '500', '502', '503', '529', 'timeout', 'connection refused', 'overloaded'];
 
         foreach ($patterns as $pattern) {
-            if (str_contains(strtolower($errorReason), $pattern)) {
+            if (Str::contains($errorReason, $pattern, ignoreCase: true)) {
                 return true;
             }
         }
