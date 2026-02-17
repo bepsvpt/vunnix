@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { useConversationsStore } from '@/stores/conversations';
 import ActionPreviewCard from './ActionPreviewCard.vue';
 import MarkdownContent from './MarkdownContent.vue';
@@ -45,6 +45,13 @@ function buildResultCardProps(result: CompletedResult) {
 }
 
 const store = useConversationsStore();
+
+// Filter out system messages from chat display — they're metadata used by
+// hydrateResultCards and resubscribeActiveTasks, not user-facing content.
+// ResultCard components render task results visually instead.
+const visibleMessages = computed(() =>
+    store.messages.filter(m => m.role !== 'system'),
+);
 const scrollContainer = ref<HTMLElement | null>(null);
 
 async function scrollToBottom() {
@@ -162,7 +169,7 @@ async function handleSend(content: string) {
             <!-- Messages -->
             <div v-else class="space-y-3 max-w-3xl mx-auto">
                 <MessageBubble
-                    v-for="message in store.messages"
+                    v-for="message in visibleMessages"
                     :key="message.id"
                     :message="message"
                 />

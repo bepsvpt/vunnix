@@ -63,6 +63,8 @@ interface SSEEvent {
     // Laravel AI SDK sends tool_name and arguments (not tool/input)
     tool_name?: string;
     arguments?: Record<string, unknown>;
+    // tool_result events include the tool's return value
+    result?: string;
 }
 
 interface TaskDispatchInfo {
@@ -373,9 +375,49 @@ export const useConversationsStore = defineStore('conversations', () => {
     }
 
     /**
+     * Re-subscribe to Reverb channels for tasks that were dispatched but
+     * haven't reached terminal status yet. Called after fetchMessages to
+     * restore real-time tracking after a page reload.
+     */
+    function resubscribeActiveTasks(): void {
+        const dispatchedTaskIds = new Set<number>();
+        const deliveredTaskIds = new Set<number>();
+
+        for (const msg of messages.value) {
+            // Check tool_results for dispatch markers (SDK stores tool outputs here)
+            const toolResults = msg.tool_results as unknown[];
+            if (Array.isArray(toolResults)) {
+                for (const tr of toolResults) {
+                    const text = String((tr as Record<string, unknown>).result ?? '');
+                    const dispatch = parseTaskDispatchMessage(text);
+                    if (dispatch) {
+                        dispatchedTaskIds.add(dispatch.taskId);
+                    }
+                }
+            }
+
+            // Check for delivery markers (terminal tasks already handled by hydrateResultCards)
+            if (msg.role === 'system' && msg.content.includes('[System: Task result delivered]')) {
+                const match = msg.content.match(/Task #(\d+)/);
+                if (match) {
+                    deliveredTaskIds.add(Number.parseInt(match[1], 10));
+                }
+            }
+        }
+
+        // Subscribe to tasks that were dispatched but not yet delivered
+        for (const taskId of dispatchedTaskIds) {
+            if (!deliveredTaskIds.has(taskId) && !taskSubscriptions.value.has(taskId)) {
+                subscribeToTask(taskId);
+            }
+        }
+    }
+
+    /**
      * Fetch messages for a conversation by loading its detail.
-     * After loading, hydrates result cards from persisted system messages (T70)
-     * and restores any unconfirmed action preview (T68).
+     * After loading, hydrates result cards from persisted system messages (T70),
+     * restores any unconfirmed action preview (T68), and re-subscribes to
+     * still-active task channels for real-time tracking after page reload.
      */
     async function fetchMessages(conversationId: string): Promise<void> {
         messagesLoading.value = true;
@@ -385,6 +427,7 @@ export const useConversationsStore = defineStore('conversations', () => {
             messages.value = response.data.data.messages || [];
             restoreActionPreview(messages.value);
             await hydrateResultCards();
+            resubscribeActiveTasks();
         } catch (err: unknown) {
             messagesError.value = getErrorMessage(err, 'Failed to load messages');
             messages.value = [];
@@ -545,6 +588,25 @@ export const useConversationsStore = defineStore('conversations', () => {
                         activeToolCalls.value = activeToolCalls.value.filter(
                             tc => tc.tool !== event.tool_name,
                         );
+
+                        // Detect task dispatch in tool result and subscribe to Reverb channel
+                        if (typeof event.result === 'string') {
+                            const dispatch = parseTaskDispatchMessage(event.result);
+                            if (dispatch) {
+                                trackTask({
+                                    task_id: dispatch.taskId,
+                                    status: 'received',
+                                    type: typeFromLabel(dispatch.typeLabel),
+                                    title: dispatch.title,
+                                    project_id: selected.value?.project_id || null,
+                                    pipeline_id: null,
+                                    pipeline_status: null,
+                                    started_at: null,
+                                    conversation_id: selectedId.value,
+                                });
+                                subscribeToTask(dispatch.taskId);
+                            }
+                        }
                     }
                 },
                 onDone() {

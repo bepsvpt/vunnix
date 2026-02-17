@@ -1159,6 +1159,35 @@ describe('useConversationsStore', () => {
             expect(mockEchoInstance.private).toHaveBeenCalledWith('task.42');
         });
 
+        it('auto-tracks task from tool_result event containing dispatch marker', async () => {
+            const events = [
+                { type: 'stream_start' },
+                { type: 'tool_call', tool_name: 'DispatchAction', arguments: { action_type: 'deep_analysis', project_id: 42 } },
+                { type: 'tool_result', tool_name: 'DispatchAction', result: '[System: Task dispatched] Deep analysis "Codebase scan" has been dispatched as Task #7. The analysis results will be fed back into this conversation when complete.' },
+                { type: 'text_start' },
+                { type: 'text_delta', delta: 'I\'ve started the deep analysis.' },
+                { type: 'text_end' },
+                { type: 'stream_end' },
+                '[DONE]',
+            ];
+            vi.stubGlobal('fetch', vi.fn(() => mockSSEFetch(events)));
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [];
+
+            await store.streamMessage('Analyze the codebase');
+
+            // Task should be tracked from tool_result, not from text_delta
+            expect(store.activeTasks.size).toBe(1);
+            expect(store.activeTasks.get(7)).toBeDefined();
+            expect(store.activeTasks.get(7)!.title).toBe('Codebase scan');
+            expect(store.activeTasks.get(7)!.type).toBe('deep_analysis');
+
+            // Should have subscribed to the task's Reverb channel
+            expect(mockEchoInstance.private).toHaveBeenCalledWith('task.7');
+        });
+
         it('does not auto-track when no [System: Task dispatched] in response', async () => {
             const events = [
                 { type: 'stream_start' },
@@ -1719,6 +1748,80 @@ describe('useConversationsStore', () => {
             await store.fetchMessages('conv-1');
 
             expect(store.completedResults.length).toBe(0);
+        });
+
+        it('re-subscribes to active tasks from tool_results on fetchMessages reload', async () => {
+            mockedAxios.get.mockResolvedValueOnce({
+                data: {
+                    data: {
+                        id: 'conv-1',
+                        messages: [
+                            { id: 'msg-1', role: 'user', content: 'Analyze this', created_at: '2026-02-15T12:00:00Z' },
+                            {
+                                id: 'msg-2',
+                                role: 'assistant',
+                                content: 'I\'ve started the analysis.',
+                                created_at: '2026-02-15T12:00:01Z',
+                                tool_results: [
+                                    { result: '[System: Task dispatched] Deep analysis "Codebase scan" has been dispatched as Task #7. The analysis results will be fed back into this conversation when complete.' },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            });
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            await store.fetchMessages('conv-1');
+
+            // Task #7 was dispatched but no delivery message exists — should re-subscribe
+            expect(mockEchoInstance.private).toHaveBeenCalledWith('task.7');
+        });
+
+        it('does not re-subscribe to already-delivered tasks on reload', async () => {
+            mockedAxios.get
+                .mockResolvedValueOnce({
+                    data: {
+                        data: {
+                            id: 'conv-1',
+                            messages: [
+                                {
+                                    id: 'msg-1',
+                                    role: 'assistant',
+                                    content: 'Done.',
+                                    created_at: '2026-02-15T12:00:01Z',
+                                    tool_results: [
+                                        { result: '[System: Task dispatched] Feature implementation "Add payment" has been dispatched as Task #42.' },
+                                    ],
+                                },
+                                { id: 'msg-2', role: 'system', content: '[System: Task result delivered] Task #42 "Add payment" completed.', created_at: '2026-02-15T12:05:00Z' },
+                            ],
+                        },
+                    },
+                })
+                .mockResolvedValueOnce({
+                    data: {
+                        data: {
+                            task_id: 42,
+                            status: 'completed',
+                            type: 'feature_dev',
+                            title: 'Add payment',
+                            mr_iid: 123,
+                            issue_iid: null,
+                            project_id: 1,
+                            error_reason: null,
+                            result: { notes: 'Done' },
+                        },
+                    },
+                });
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            await store.fetchMessages('conv-1');
+
+            // Task #42 already has a delivery message — should NOT re-subscribe
+            expect(mockEchoInstance.private).not.toHaveBeenCalledWith('task.42');
         });
 
         it('$reset clears completedResults', () => {
