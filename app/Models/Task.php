@@ -49,6 +49,18 @@ class Task extends Model
         'completed_at',
     ];
 
+    /**
+     * @return array{
+     *   type: 'App\Enums\TaskType',
+     *   origin: 'App\Enums\TaskOrigin',
+     *   priority: 'App\Enums\TaskPriority',
+     *   status: 'App\Enums\TaskStatus',
+     *   result: 'array',
+     *   prompt_version: 'array',
+     *   started_at: 'datetime',
+     *   completed_at: 'datetime',
+     * }
+     */
     protected function casts(): array
     {
         return [
@@ -65,21 +77,25 @@ class Task extends Model
 
     // ─── Relationships ──────────────────────────────────────────────
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsTo<Project, $this> */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
 
+    /** @return HasOne<TaskMetric, $this> */
     public function metric(): HasOne
     {
         return $this->hasOne(TaskMetric::class);
     }
 
+    /** @return HasMany<FindingAcceptance, $this> */
     public function findingAcceptances(): HasMany
     {
         return $this->hasMany(FindingAcceptance::class);

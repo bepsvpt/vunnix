@@ -29,6 +29,12 @@ class WebhookEventLog extends Model
         'commit_sha',
     ];
 
+    /**
+     * @return array{
+     *   mr_iid: 'integer',
+     *   created_at: 'datetime',
+     * }
+     */
     protected function casts(): array
     {
         return [
@@ -37,6 +43,7 @@ class WebhookEventLog extends Model
         ];
     }
 
+    /** @return BelongsTo<Project, $this> */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);

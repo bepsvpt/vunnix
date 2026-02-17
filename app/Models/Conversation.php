@@ -27,6 +27,11 @@ class Conversation extends Model
         'archived_at',
     ];
 
+    /**
+     * @return array{
+     *   archived_at: 'datetime',
+     * }
+     */
     protected function casts(): array
     {
         return [
@@ -43,26 +48,31 @@ class Conversation extends Model
         });
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsTo<Project, $this> */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
 
+    /** @return HasMany<Message, $this> */
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class, 'conversation_id');
     }
 
+    /** @return HasOne<Message, $this> */
     public function latestMessage(): HasOne
     {
         return $this->hasOne(Message::class, 'conversation_id')->latestOfMany();
     }
 
+    /** @return BelongsToMany<Project, $this> */
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'conversation_projects');

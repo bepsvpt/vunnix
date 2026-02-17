@@ -22,6 +22,19 @@ class TaskMetric extends Model
         'findings_count',
     ];
 
+    /**
+     * @return array{
+     *   input_tokens: 'integer',
+     *   output_tokens: 'integer',
+     *   cost: 'decimal:6',
+     *   duration: 'integer',
+     *   severity_critical: 'integer',
+     *   severity_high: 'integer',
+     *   severity_medium: 'integer',
+     *   severity_low: 'integer',
+     *   findings_count: 'integer',
+     * }
+     */
     protected function casts(): array
     {
         return [
@@ -37,11 +50,13 @@ class TaskMetric extends Model
         ];
     }
 
+    /** @return BelongsTo<Task, $this> */
     public function task(): BelongsTo
     {
         return $this->belongsTo(Task::class);
     }
 
+    /** @return BelongsTo<Project, $this> */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);

@@ -22,6 +22,15 @@ class AlertEvent extends Model
         'recovery_notified_at',
     ];
 
+    /**
+     * @return array{
+     *   context: 'array',
+     *   detected_at: 'datetime',
+     *   resolved_at: 'datetime',
+     *   notified_at: 'datetime',
+     *   recovery_notified_at: 'datetime',
+     * }
+     */
     protected function casts(): array
     {
         return [

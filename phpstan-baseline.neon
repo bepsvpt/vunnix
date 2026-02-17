@@ -1,2 +1,103 @@
 parameters:
-    ignoreErrors: []
+	ignoreErrors:
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$count\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/DashboardAdoptionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$week\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/DashboardAdoptionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$avg_cost\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/DashboardCostController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$month\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/DashboardCostController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$project_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/DashboardCostController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$task_count\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Api/DashboardCostController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$total_cost\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/DashboardCostController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$claude_md\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/PromptVersionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$schema\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/PromptVersionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$skill\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/PromptVersionController.php
+
+		-
+			message: '#^Access to an undefined property Laravel\\Socialite\\Contracts\\User\:\:\$expiresIn\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AuthController.php
+
+		-
+			message: '#^Access to an undefined property Laravel\\Socialite\\Contracts\\User\:\:\$refreshToken\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AuthController.php
+
+		-
+			message: '#^Access to an undefined property Laravel\\Socialite\\Contracts\\User\:\:\$token\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AuthController.php
+
+		-
+			message: '#^Call to an undefined method Laravel\\Socialite\\Contracts\\Provider\:\:scopes\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/AuthController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Cache\\Repository\:\:getRedis\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/HealthCheckController.php
+
+		-
+			message: '#^Call to an undefined method App\\Services\\GitLabClient\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/WebhookController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$gitlab_access_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/User.php

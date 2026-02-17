@@ -30,6 +30,18 @@ class DeadLetterEntry extends Model
         'dead_lettered_at',
     ];
 
+    /**
+     * @return array{
+     *   task_record: 'array',
+     *   attempts: 'array',
+     *   dismissed: 'boolean',
+     *   retried: 'boolean',
+     *   originally_queued_at: 'datetime',
+     *   dead_lettered_at: 'datetime',
+     *   dismissed_at: 'datetime',
+     *   retried_at: 'datetime',
+     * }
+     */
     protected function casts(): array
     {
         return [
@@ -46,21 +58,25 @@ class DeadLetterEntry extends Model
 
     // ─── Relationships ──────────────────────────────────────────────
 
+    /** @return BelongsTo<Task, $this> */
     public function task(): BelongsTo
     {
         return $this->belongsTo(Task::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function dismissedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'dismissed_by');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function retriedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'retried_by');
     }
 
+    /** @return BelongsTo<Task, $this> */
     public function retriedTask(): BelongsTo
     {
         return $this->belongsTo(Task::class, 'retried_task_id');

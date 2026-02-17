@@ -22,6 +22,14 @@ class ApiKey extends Model
         'revoked_at',
     ];
 
+    /**
+     * @return array{
+     *   last_used_at: 'datetime',
+     *   expires_at: 'datetime',
+     *   revoked: 'boolean',
+     *   revoked_at: 'datetime',
+     * }
+     */
     protected function casts(): array
     {
         return [
@@ -32,6 +40,7 @@ class ApiKey extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

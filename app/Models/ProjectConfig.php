@@ -18,6 +18,14 @@ class ProjectConfig extends Model
         'settings',
     ];
 
+    /**
+     * @return array{
+     *   webhook_secret: 'encrypted',
+     *   webhook_token_validation: 'boolean',
+     *   ci_trigger_token: 'encrypted',
+     *   settings: 'array',
+     * }
+     */
     protected function casts(): array
     {
         return [
@@ -28,6 +36,7 @@ class ProjectConfig extends Model
         ];
     }
 
+    /** @return BelongsTo<Project, $this> */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);

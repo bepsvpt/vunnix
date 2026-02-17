@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,7 +25,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'username' => $this->username,
             'avatar_url' => $this->avatar_url,
-            'projects' => $projects->map(function ($project) {
+            'projects' => $projects->map(function (Project $project) {
                 $roles = $this->rolesForProject($project);
                 $permissions = $this->permissionsForProject($project);
 

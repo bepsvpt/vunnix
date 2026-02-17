@@ -47,9 +47,12 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * @return array{
+     *   email_verified_at: 'datetime',
+     *   password: 'hashed',
+     *   gitlab_id: 'integer',
+     *   oauth_token_expires_at: 'datetime',
+     * }
      */
     protected function casts(): array
     {
@@ -70,6 +73,7 @@ class User extends Authenticatable
         return $this->password ?? '';
     }
 
+    /** @return BelongsToMany<Project, $this> */
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class)
@@ -77,6 +81,7 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    /** @return HasMany<ApiKey, $this> */
     public function apiKeys(): HasMany
     {
         return $this->hasMany(ApiKey::class);
@@ -101,6 +106,8 @@ class User extends Authenticatable
      */
     /**
      * Get all roles assigned to the user (across all projects).
+     *
+     * @return BelongsToMany<Role, $this>
      */
     public function roles(): BelongsToMany
     {

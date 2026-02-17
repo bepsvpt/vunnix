@@ -28,6 +28,16 @@ class FindingAcceptance extends Model
         'emoji_sentiment',
     ];
 
+    /**
+     * @return array{
+     *   line: 'integer',
+     *   emoji_positive_count: 'integer',
+     *   emoji_negative_count: 'integer',
+     *   code_change_correlated: 'boolean',
+     *   bulk_resolved: 'boolean',
+     *   resolved_at: 'datetime',
+     * }
+     */
     protected function casts(): array
     {
         return [
@@ -40,11 +50,13 @@ class FindingAcceptance extends Model
         ];
     }
 
+    /** @return BelongsTo<Task, $this> */
     public function task(): BelongsTo
     {
         return $this->belongsTo(Task::class);
     }
 
+    /** @return BelongsTo<Project, $this> */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);

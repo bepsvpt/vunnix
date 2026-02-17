@@ -23,6 +23,13 @@ class Project extends Model
         'webhook_id',
     ];
 
+    /**
+     * @return array{
+     *   gitlab_project_id: 'integer',
+     *   enabled: 'boolean',
+     *   webhook_configured: 'boolean',
+     * }
+     */
     protected function casts(): array
     {
         return [
@@ -32,6 +39,7 @@ class Project extends Model
         ];
     }
 
+    /** @return BelongsToMany<User, $this> */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
@@ -39,11 +47,13 @@ class Project extends Model
             ->withTimestamps();
     }
 
+    /** @return HasOne<ProjectConfig, $this> */
     public function projectConfig(): HasOne
     {
         return $this->hasOne(ProjectConfig::class);
     }
 
+    /** @return HasMany<Role, $this> */
     public function roles(): HasMany
     {
         return $this->hasMany(Role::class);

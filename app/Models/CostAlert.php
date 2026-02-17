@@ -15,6 +15,13 @@ class CostAlert extends Model
         'acknowledged_at',
     ];
 
+    /**
+     * @return array{
+     *   context: 'array',
+     *   acknowledged: 'boolean',
+     *   acknowledged_at: 'datetime',
+     * }
+     */
     protected function casts(): array
     {
         return [

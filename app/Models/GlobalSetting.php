@@ -21,6 +21,12 @@ class GlobalSetting extends Model
         'bot_pat_created_at',
     ];
 
+    /**
+     * @return array{
+     *   value: 'json',
+     *   bot_pat_created_at: 'datetime',
+     * }
+     */
     protected function casts(): array
     {
         return [
