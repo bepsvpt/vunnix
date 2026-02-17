@@ -56,8 +56,6 @@ it('returns rejection when access checker denies access', function (): void {
         'project_id' => 42,
         'title' => 'Add payment',
         'description' => 'Implement Stripe payments',
-        'user_id' => 1,
-        'conversation_id' => 'conv-abc',
     ]);
 
     $result = $this->tool->handle($request);
@@ -79,8 +77,6 @@ it('returns error for invalid action type', function (): void {
         'project_id' => 42,
         'title' => 'Test',
         'description' => 'Test desc',
-        'user_id' => 1,
-        'conversation_id' => 'conv-abc',
     ]);
 
     $result = $this->tool->handle($request);

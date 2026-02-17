@@ -12,6 +12,7 @@ use App\Services\ProjectAccessChecker;
 use App\Services\TaskDispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Context;
 use Laravel\Ai\Tools\Request;
 
 uses(RefreshDatabase::class);
@@ -66,6 +67,7 @@ it('creates a task with conversation origin when dispatching implement_feature',
     $project = Project::factory()->enabled()->create();
     $user = dispatchTestUser($project);
     Auth::login($user);
+    Context::add('vunnix_conversation_id', 'conv-test-123');
 
     $tool = new DispatchAction(
         app(ProjectAccessChecker::class),
@@ -79,8 +81,6 @@ it('creates a task with conversation origin when dispatching implement_feature',
         'description' => 'Implement payment flow with Stripe SDK',
         'branch_name' => 'ai/payment-feature',
         'target_branch' => 'main',
-        'user_id' => $user->id,
-        'conversation_id' => 'conv-test-123',
     ]);
 
     $result = $tool->handle($request);
@@ -104,6 +104,7 @@ it('creates a task for deep_analysis action type', function (): void {
     $project = Project::factory()->enabled()->create();
     $user = dispatchTestUser($project);
     Auth::login($user);
+    Context::add('vunnix_conversation_id', 'conv-test-456');
 
     $tool = new DispatchAction(
         app(ProjectAccessChecker::class),
@@ -115,8 +116,6 @@ it('creates a task for deep_analysis action type', function (): void {
         'project_id' => $project->gitlab_project_id,
         'title' => 'Analyze payment module dependencies',
         'description' => 'Which reports are affected if we modify the order status enum?',
-        'user_id' => $user->id,
-        'conversation_id' => 'conv-test-456',
     ]);
 
     $result = $tool->handle($request);
@@ -147,8 +146,6 @@ it('returns permission error when user lacks chat.dispatch_task', function (): v
         'project_id' => $project->gitlab_project_id,
         'title' => 'Test issue',
         'description' => 'Test description',
-        'user_id' => $user->id,
-        'conversation_id' => 'conv-test-789',
     ]);
 
     $result = $tool->handle($request);
@@ -175,8 +172,6 @@ it('returns error for invalid action type', function (): void {
         'project_id' => $project->gitlab_project_id,
         'title' => 'Test',
         'description' => 'Test',
-        'user_id' => $user->id,
-        'conversation_id' => 'conv-test-000',
     ]);
 
     $result = $tool->handle($request);
@@ -207,8 +202,6 @@ it('stores existing_mr_iid on task when dispatching ui_adjustment correction', f
         'branch_name' => 'ai/fix-card-padding',
         'target_branch' => 'main',
         'existing_mr_iid' => 456,
-        'user_id' => $user->id,
-        'conversation_id' => 'conv-designer-iter',
     ]);
 
     $result = $tool->handle($request);
@@ -239,8 +232,6 @@ it('does not set mr_iid when existing_mr_iid is absent', function (): void {
         'description' => 'Initial adjustment',
         'branch_name' => 'ai/new-change',
         'target_branch' => 'main',
-        'user_id' => $user->id,
-        'conversation_id' => 'conv-new',
     ]);
 
     $result = $tool->handle($request);
@@ -269,8 +260,6 @@ it('maps create_issue to PrdCreation task type', function (): void {
         'description' => 'Implement dark mode theme toggle',
         'assignee_id' => 7,
         'labels' => 'feature,ai::created',
-        'user_id' => $user->id,
-        'conversation_id' => 'conv-test-issue',
     ]);
 
     $result = $tool->handle($request);
