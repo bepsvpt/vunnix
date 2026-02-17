@@ -84,7 +84,7 @@ class PostFeatureDevResult implements ShouldQueue
         $mrTitle = $result['mr_title'] ?? null;
         $mrDescription = $result['mr_description'] ?? null;
 
-        if (empty($branch) || empty($mrTitle)) {
+        if ($branch === null || $branch === '' || $mrTitle === null || $mrTitle === '') {
             Log::warning('PostFeatureDevResult: missing branch or mr_title in result', [
                 'task_id' => $this->taskId,
             ]);
@@ -153,7 +153,7 @@ class PostFeatureDevResult implements ShouldQueue
             $gitLab->updateMergeRequest($gitlabProjectId, $mrIid, array_filter([
                 'title' => $mrTitle,
                 'description' => $mrDescription,
-            ]));
+            ], static fn (mixed $v): bool => $v !== null));
 
             Log::info('PostFeatureDevResult: existing MR updated (designer iteration)', [
                 'task_id' => $this->taskId,
@@ -217,7 +217,7 @@ class PostFeatureDevResult implements ShouldQueue
     {
         $branch = $result['branch'] ?? 'unknown';
         $mrTitle = $result['mr_title'] ?? 'Untitled';
-        $testsAdded = ($result['tests_added'] ?? false) ? '✅ Yes' : '❌ No';
+        $testsAdded = ($result['tests_added'] ?? false) === true ? '✅ Yes' : '❌ No';
         $notes = $result['notes'] ?? '';
         $filesChanged = $result['files_changed'] ?? [];
 
@@ -230,7 +230,7 @@ class PostFeatureDevResult implements ShouldQueue
             '',
         ];
 
-        if (! empty($filesChanged)) {
+        if ($filesChanged !== []) {
             $lines[] = '**Files Changed:**';
             foreach ($filesChanged as $file) {
                 $action = $file['action'] ?? 'modified';
@@ -242,7 +242,7 @@ class PostFeatureDevResult implements ShouldQueue
             $lines[] = '';
         }
 
-        if (! empty($notes)) {
+        if ($notes !== '') {
             $lines[] = '**Notes:**';
             $lines[] = $notes;
         }

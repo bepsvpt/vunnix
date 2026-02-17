@@ -32,7 +32,7 @@ class AuthenticateTaskToken
     {
         $bearerToken = $request->bearerToken();
 
-        if (empty($bearerToken)) {
+        if ($bearerToken === null || $bearerToken === '') {
             Log::warning('Task result request missing bearer token', [
                 'ip' => $request->ip(),
             ]);

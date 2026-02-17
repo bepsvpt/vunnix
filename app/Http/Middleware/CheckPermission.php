@@ -23,7 +23,7 @@ class CheckPermission
     {
         $user = $request->user();
 
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -50,7 +50,7 @@ class CheckPermission
         // Then, try a project_id parameter (route, query, or body)
         $projectId = $request->route('project') ?? $request->input('project_id');
 
-        if ($projectId) {
+        if ($projectId !== null) {
             return Project::where('id', $projectId)->first();
         }
 

@@ -22,7 +22,7 @@ class ConversationResource extends JsonResource
             'updated_at' => $this->updated_at?->toIso8601String(),
             'last_message' => $this->whenLoaded('latestMessage', function (): ?array {
                 $msg = $this->latestMessage;
-                if (! $msg) {
+                if ($msg === null) {
                     return null;
                 }
 

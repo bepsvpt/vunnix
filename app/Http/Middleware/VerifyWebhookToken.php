@@ -20,7 +20,7 @@ class VerifyWebhookToken
     {
         $token = $request->header('X-Gitlab-Token');
 
-        if (empty($token)) {
+        if ($token === null || $token === '') {
             Log::warning('Webhook request missing X-Gitlab-Token header', [
                 'ip' => $request->ip(),
             ]);

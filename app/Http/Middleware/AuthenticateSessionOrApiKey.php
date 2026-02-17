@@ -16,7 +16,7 @@ class AuthenticateSessionOrApiKey
     public function handle(Request $request, Closure $next): Response
     {
         // Try session auth first (Vue SPA)
-        if ($request->user()) {
+        if ($request->user() !== null) {
             $request->attributes->set('auth_via', 'session');
 
             return $next($request);
@@ -25,7 +25,7 @@ class AuthenticateSessionOrApiKey
         // Try API key auth
         $bearerToken = $request->bearerToken();
 
-        if (empty($bearerToken)) {
+        if ($bearerToken === null || $bearerToken === '') {
             return response()->json(['error' => 'Authentication required.'], 401);
         }
 

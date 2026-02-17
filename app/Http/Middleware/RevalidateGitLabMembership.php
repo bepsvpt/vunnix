@@ -13,7 +13,7 @@ class RevalidateGitLabMembership
     {
         if (auth()->check()) {
             $user = auth()->user();
-            if ($user) {
+            if ($user !== null) {
                 $cacheKey = "membership_revalidated:{$user->id}";
 
                 if (! Cache::has($cacheKey)) {

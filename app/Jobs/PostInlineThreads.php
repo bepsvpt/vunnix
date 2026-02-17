@@ -173,7 +173,7 @@ class PostInlineThreads implements ShouldQueue
         foreach ($discussions as $discussion) {
             $notes = $discussion['notes'] ?? [];
 
-            if (empty($notes)) {
+            if ($notes === []) {
                 continue;
             }
 

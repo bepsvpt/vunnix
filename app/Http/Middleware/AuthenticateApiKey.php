@@ -18,7 +18,7 @@ class AuthenticateApiKey
     {
         $bearerToken = $request->bearerToken();
 
-        if (empty($bearerToken)) {
+        if ($bearerToken === null || $bearerToken === '') {
             return response()->json(['error' => 'Missing API key.'], 401);
         }
 
