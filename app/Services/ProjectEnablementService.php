@@ -67,7 +67,7 @@ class ProjectEnablementService
 
         // 2. Create webhook
         $secret = Str::random(40);
-        $webhookUrl = rtrim(config('app.url'), '/').'/api/webhook';
+        $webhookUrl = rtrim(config('app.url'), '/').'/webhook';
 
         try {
             $webhook = $this->gitLab->createWebhook($project->gitlab_project_id, $webhookUrl, $secret, [

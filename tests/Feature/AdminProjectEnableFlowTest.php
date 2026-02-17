@@ -105,7 +105,7 @@ it('creates webhook with correct URL, secret, and events on enable', function ()
 
         $data = $request->data();
 
-        return str_contains($data['url'] ?? '', '/api/webhook')
+        return str_contains($data['url'] ?? '', '/webhook')
             && ! empty($data['token'])
             && ($data['merge_requests_events'] ?? false) === true
             && ($data['note_events'] ?? false) === true
