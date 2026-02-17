@@ -44,7 +44,7 @@ class EventRouter
             $this->botAccountId = $botAccountId;
         } else {
             $botId = config('services.gitlab.bot_account_id');
-            $this->botAccountId = $botId ? (int) $botId : null;
+            $this->botAccountId = $botId !== null && $botId !== '' && $botId !== 0 ? (int) $botId : null;
         }
     }
 
@@ -288,7 +288,7 @@ class EventRouter
         }
 
         // Check for @ai ask "..." pattern — extract quoted question
-        if (preg_match('/@ai\s+ask\s+"([^"]+)"/', $note, $matches)) {
+        if (preg_match('/@ai\s+ask\s+"([^"]+)"/', $note, $matches) === 1) {
             return new RoutingResult('ask_command', 'normal', $event, [
                 'question' => $matches[1],
             ]);
@@ -296,7 +296,7 @@ class EventRouter
 
         // Check recognized commands: @ai review, @ai improve
         foreach (self::COMMANDS as $command => $intent) {
-            if (preg_match('/@ai\s+'.preg_quote($command, '/').'\b/i', $note)) {
+            if (preg_match('/@ai\s+'.preg_quote($command, '/').'\b/i', $note) === 1) {
                 $priority = $intent === 'on_demand_review' ? 'high' : 'normal';
 
                 return new RoutingResult($intent, $priority, $event);
@@ -351,7 +351,7 @@ class EventRouter
      */
     private function extractUnrecognizedCommand(string $note): string
     {
-        if (preg_match('/@ai\s+(\S+)/', $note, $matches)) {
+        if (preg_match('/@ai\s+(\S+)/', $note, $matches) === 1) {
             return '@ai '.$matches[1];
         }
 

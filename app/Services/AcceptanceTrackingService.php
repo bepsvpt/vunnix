@@ -36,7 +36,7 @@ class AcceptanceTrackingService
     public function classifyThreadState(array $discussion): string
     {
         $notes = $discussion['notes'] ?? [];
-        if (empty($notes)) {
+        if ($notes === []) {
             return 'dismissed';
         }
 
@@ -44,7 +44,7 @@ class AcceptanceTrackingService
         $firstNote = $notes[0];
         $resolved = $firstNote['resolved'] ?? false;
 
-        return $resolved ? 'accepted' : 'dismissed';
+        return $resolved === true ? 'accepted' : 'dismissed';
     }
 
     /**
@@ -129,7 +129,7 @@ class AcceptanceTrackingService
     public function isAiCreatedDiscussion(array $discussion): bool
     {
         $notes = $discussion['notes'] ?? [];
-        if (empty($notes)) {
+        if ($notes === []) {
             return false;
         }
 
@@ -152,7 +152,7 @@ class AcceptanceTrackingService
     {
         foreach ($discussions as $discussion) {
             $notes = $discussion['notes'] ?? [];
-            if (empty($notes)) {
+            if ($notes === []) {
                 continue;
             }
 

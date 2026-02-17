@@ -30,7 +30,7 @@ class TeamChatNotificationService
         }
 
         $webhookUrl = GlobalSetting::get('team_chat_webhook_url', '');
-        if (empty($webhookUrl)) {
+        if ($webhookUrl === '' || $webhookUrl === null) {
             return false;
         }
 
@@ -98,11 +98,11 @@ class TeamChatNotificationService
         $categories = GlobalSetting::get('team_chat_categories', []);
 
         // If no categories configured, all are enabled by default (§18.2)
-        if (empty($categories)) {
+        if (! is_array($categories) || $categories === []) {
             return true;
         }
 
-        return ! empty($categories[$category]);
+        return isset($categories[$category]) && (bool) $categories[$category];
     }
 
     public function resolveFormatter(string $platform): ChatFormatterInterface

@@ -71,7 +71,7 @@ class ProjectConfigService
     public function set(Project $project, string $key, mixed $value): void
     {
         $config = $project->projectConfig;
-        if (! $config) {
+        if ($config === null) {
             $config = $project->projectConfig()->create(['settings' => []]);
         }
 
@@ -97,7 +97,7 @@ class ProjectConfigService
     public function bulkSet(Project $project, array $overrides): void
     {
         $config = $project->projectConfig;
-        if (! $config) {
+        if ($config === null) {
             $config = $project->projectConfig()->create(['settings' => []]);
         }
 

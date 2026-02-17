@@ -116,7 +116,7 @@ class TaskDispatcher
         // Look up the CI trigger token from project config
         $triggerToken = $task->project->projectConfig?->ci_trigger_token;
 
-        if (empty($triggerToken)) {
+        if ($triggerToken === null || $triggerToken === '') {
             Log::error('TaskDispatcher: missing CI trigger token', [
                 'task_id' => $task->id,
                 'project_id' => $task->project_id,
@@ -146,7 +146,7 @@ class TaskDispatcher
             ];
 
             // Pass the question text for ask_command tasks
-            if (! empty($task->result['question'])) {
+            if (isset($task->result['question']) && $task->result['question'] !== '') {
                 $variables['VUNNIX_QUESTION'] = $task->result['question'];
             }
 
@@ -158,7 +158,7 @@ class TaskDispatcher
             // T72: Pass existing MR IID for designer iteration (push to same branch)
             if ($task->mr_iid !== null && in_array($task->type, [TaskType::FeatureDev, TaskType::UiAdjustment], true)) {
                 $variables['VUNNIX_EXISTING_MR_IID'] = (string) $task->mr_iid;
-                if (! empty($task->result['branch_name'])) {
+                if (isset($task->result['branch_name']) && $task->result['branch_name'] !== '') {
                     $variables['VUNNIX_EXISTING_BRANCH'] = $task->result['branch_name'];
                 }
             }
@@ -249,7 +249,7 @@ class TaskDispatcher
                 $changes['changes'] ?? [],
             );
 
-            $filePaths = array_filter($filePaths);
+            $filePaths = array_filter($filePaths, static fn (string $path): bool => $path !== '');
 
             return $this->strategyResolver->resolve($filePaths);
         } catch (Throwable $e) {

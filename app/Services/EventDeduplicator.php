@@ -289,7 +289,7 @@ class EventDeduplicator
                 $event->branchName(),
             );
 
-            return $mr ? (int) $mr['iid'] : null;
+            return $mr !== null ? (int) $mr['iid'] : null;
         } catch (Throwable $e) {
             // Best-effort: log failure but don't block event processing
             Log::warning('EventDeduplicator: failed to resolve MR IID from branch', [

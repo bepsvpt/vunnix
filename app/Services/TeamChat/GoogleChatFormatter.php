@@ -25,7 +25,7 @@ class GoogleChatFormatter implements ChatFormatterInterface
         ];
 
         // Add action links as buttons
-        if (! empty($context['links'])) {
+        if (isset($context['links']) && $context['links'] !== []) {
             $buttons = [];
             foreach ($context['links'] as $link) {
                 $buttons[] = [

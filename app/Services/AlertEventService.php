@@ -80,7 +80,7 @@ class AlertEventService
 
         $activeAlert = AlertEvent::active()->ofType('api_outage')->first();
 
-        if ($consecutiveApiErrors >= 3 && ! $activeAlert) {
+        if ($consecutiveApiErrors >= 3 && $activeAlert === null) {
             // Trigger new alert
             $alert = AlertEvent::create([
                 'alert_type' => 'api_outage',
@@ -96,7 +96,7 @@ class AlertEventService
             return $alert;
         }
 
-        if ($consecutiveApiErrors === 0 && $activeAlert) {
+        if ($consecutiveApiErrors === 0 && $activeAlert !== null) {
             // Recovery — first success after outage
             $activeAlert->update([
                 'status' => 'resolved',
@@ -137,7 +137,7 @@ class AlertEventService
         $failureRate = $failed / $total;
         $activeAlert = AlertEvent::active()->ofType('high_failure_rate')->first();
 
-        if ($failureRate > 0.20 && ! $activeAlert) {
+        if ($failureRate > 0.20 && $activeAlert === null) {
             $percent = round($failureRate * 100, 1);
             $alert = AlertEvent::create([
                 'alert_type' => 'high_failure_rate',
@@ -157,7 +157,7 @@ class AlertEventService
             return $alert;
         }
 
-        if ($failureRate <= 0.20 && $activeAlert) {
+        if ($failureRate <= 0.20 && $activeAlert !== null) {
             $activeAlert->update([
                 'status' => 'resolved',
                 'resolved_at' => $now,
@@ -185,7 +185,7 @@ class AlertEventService
         $threshold = (int) config('vunnix.queue_depth_threshold', 50);
         $activeAlert = AlertEvent::active()->ofType('queue_depth')->first();
 
-        if ($queueDepth > $threshold && ! $activeAlert) {
+        if ($queueDepth > $threshold && $activeAlert === null) {
             $alert = AlertEvent::create([
                 'alert_type' => 'queue_depth',
                 'status' => 'active',
@@ -203,7 +203,7 @@ class AlertEventService
             return $alert;
         }
 
-        if ($queueDepth <= $threshold && $activeAlert) {
+        if ($queueDepth <= $threshold && $activeAlert !== null) {
             $activeAlert->update([
                 'status' => 'resolved',
                 'resolved_at' => $now,
@@ -240,7 +240,7 @@ class AlertEventService
 
         $activeAlert = AlertEvent::active()->ofType('auth_failure')->first();
 
-        if ($authFailures >= 2 && ! $activeAlert) {
+        if ($authFailures >= 2 && $activeAlert === null) {
             $alert = AlertEvent::create([
                 'alert_type' => 'auth_failure',
                 'status' => 'active',
@@ -255,7 +255,7 @@ class AlertEventService
             return $alert;
         }
 
-        if ($authFailures === 0 && $activeAlert) {
+        if ($authFailures === 0 && $activeAlert !== null) {
             $activeAlert->update([
                 'status' => 'resolved',
                 'resolved_at' => $now,
@@ -293,7 +293,7 @@ class AlertEventService
         $threshold = 80.0;
         $activeAlert = AlertEvent::active()->ofType('disk_usage')->first();
 
-        if ($usedPercent >= $threshold && ! $activeAlert) {
+        if ($usedPercent >= $threshold && $activeAlert === null) {
             $alert = AlertEvent::create([
                 'alert_type' => 'disk_usage',
                 'status' => 'active',
@@ -311,7 +311,7 @@ class AlertEventService
             return $alert;
         }
 
-        if ($usedPercent < $threshold && $activeAlert) {
+        if ($usedPercent < $threshold && $activeAlert !== null) {
             $activeAlert->update([
                 'status' => 'resolved',
                 'resolved_at' => $now,
@@ -342,7 +342,7 @@ class AlertEventService
 
         if (! $healthy) {
             $firstFailure = Cache::get('infra:health_first_failure');
-            if (! $firstFailure) {
+            if ($firstFailure === null) {
                 Cache::put('infra:health_first_failure', $now->toIso8601String(), 3600);
 
                 return null;
@@ -353,7 +353,7 @@ class AlertEventService
                 return null;
             }
 
-            if ($activeAlert) {
+            if ($activeAlert !== null) {
                 return null;
             }
 
@@ -374,7 +374,7 @@ class AlertEventService
         // Healthy — clear failure tracking and resolve active alert
         Cache::forget('infra:health_first_failure');
 
-        if ($activeAlert) {
+        if ($activeAlert !== null) {
             $activeAlert->update([
                 'status' => 'resolved',
                 'resolved_at' => $now,
@@ -408,7 +408,7 @@ class AlertEventService
 
         if ($cpuPercent !== null && $cpuPercent > $threshold) {
             $firstHigh = Cache::get('infra:cpu_first_high');
-            if (! $firstHigh) {
+            if ($firstHigh === null) {
                 Cache::put('infra:cpu_first_high', $now->toIso8601String(), 3600);
 
                 return null;
@@ -419,7 +419,7 @@ class AlertEventService
                 return null;
             }
 
-            if ($activeAlert) {
+            if ($activeAlert !== null) {
                 return null;
             }
 
@@ -441,7 +441,7 @@ class AlertEventService
         // Below threshold — clear tracking, resolve if active
         Cache::forget('infra:cpu_first_high');
 
-        if ($activeAlert) {
+        if ($activeAlert !== null) {
             $activeAlert->update([
                 'status' => 'resolved',
                 'resolved_at' => $now,
@@ -475,7 +475,7 @@ class AlertEventService
 
         if ($memoryPercent !== null && $memoryPercent > $threshold) {
             $firstHigh = Cache::get('infra:memory_first_high');
-            if (! $firstHigh) {
+            if ($firstHigh === null) {
                 Cache::put('infra:memory_first_high', $now->toIso8601String(), 3600);
 
                 return null;
@@ -486,7 +486,7 @@ class AlertEventService
                 return null;
             }
 
-            if ($activeAlert) {
+            if ($activeAlert !== null) {
                 return null;
             }
 
@@ -508,7 +508,7 @@ class AlertEventService
         // Below threshold — clear tracking, resolve if active
         Cache::forget('infra:memory_first_high');
 
-        if ($activeAlert) {
+        if ($activeAlert !== null) {
             $activeAlert->update([
                 'status' => 'resolved',
                 'resolved_at' => $now,
@@ -639,8 +639,8 @@ class AlertEventService
     {
         if (is_readable('/proc/meminfo')) {
             $meminfo = (string) file_get_contents('/proc/meminfo');
-            if (preg_match('/MemTotal:\s+(\d+)/', $meminfo, $totalMatch)
-                && preg_match('/MemAvailable:\s+(\d+)/', $meminfo, $availMatch)) {
+            if (preg_match('/MemTotal:\s+(\d+)/', $meminfo, $totalMatch) === 1
+                && preg_match('/MemAvailable:\s+(\d+)/', $meminfo, $availMatch) === 1) {
                 $total = (int) $totalMatch[1];
                 $available = (int) $availMatch[1];
                 if ($total > 0) {
@@ -744,8 +744,8 @@ class AlertEventService
     {
         if ($task->status === \App\Enums\TaskStatus::Failed) {
             $typeLabel = str_replace('_', ' ', $task->type->value);
-            $mrRef = $task->mr_iid ? " MR !{$task->mr_iid}" : '';
-            $reason = $task->error_reason ?: 'max retries exceeded';
+            $mrRef = $task->mr_iid !== null ? " MR !{$task->mr_iid}" : '';
+            $reason = $task->error_reason ?? 'max retries exceeded';
 
             return '❌ '.ucfirst($typeLabel)." failed for **{$projectName}**{$mrRef} — {$reason}";
         }
@@ -760,7 +760,7 @@ class AlertEventService
     {
         $activeAlert = AlertEvent::active()->ofType($alertType)->first();
 
-        if ($activeAlert) {
+        if ($activeAlert !== null) {
             $activeAlert->update([
                 'status' => 'resolved',
                 'resolved_at' => $now,

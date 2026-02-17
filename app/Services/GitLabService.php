@@ -46,7 +46,7 @@ class GitLabService
             $allProjects = array_merge($allProjects, $projects);
 
             $nextPage = $response->header('x-next-page');
-            $page = $nextPage ? (int) $nextPage : null;
+            $page = $nextPage !== '' ? (int) $nextPage : null;
         } while ($page);
 
         return $allProjects;

@@ -100,7 +100,7 @@ class StrategyResolver
     {
         foreach ($filePaths as $path) {
             foreach (self::SECURITY_PATTERNS as $pattern) {
-                if (preg_match($pattern, $path)) {
+                if (preg_match($pattern, $path) === 1) {
                     return true;
                 }
             }

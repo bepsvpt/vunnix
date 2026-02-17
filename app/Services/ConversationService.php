@@ -33,11 +33,11 @@ class ConversationService
             $query->notArchived();
         }
 
-        if ($projectId) {
+        if ($projectId !== null) {
             $query->forProject($projectId);
         }
 
-        if ($search) {
+        if ($search !== null && $search !== '') {
             // Full-text search on title (LIKE fallback for SQLite in tests)
             $query->whereRaw('LOWER(title) LIKE ?', ['%'.strtolower($search).'%']);
         }
@@ -108,9 +108,9 @@ class ConversationService
         $agent = VunnixAgent::make();
 
         // Inject project context for per-project config (T93: PRD template)
-        if ($conversation->project_id) {
+        if ($conversation->project_id !== null) {
             $project = Project::find($conversation->project_id);
-            if ($project) {
+            if ($project !== null) {
                 $agent->setProject($project);
             }
         }

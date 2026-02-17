@@ -21,10 +21,10 @@ class MattermostFormatter implements ChatFormatterInterface
         $color = self::URGENCY_COLORS[$urgency] ?? self::URGENCY_COLORS['info'];
 
         $fields = [];
-        if (! empty($context['project'])) {
+        if (isset($context['project']) && $context['project'] !== '') {
             $fields[] = ['short' => true, 'title' => 'Project', 'value' => $context['project']];
         }
-        if (! empty($context['urgency'])) {
+        if (isset($context['urgency']) && $context['urgency'] !== '') {
             $fields[] = ['short' => true, 'title' => 'Urgency', 'value' => ucfirst($context['urgency'])];
         }
 
@@ -35,7 +35,7 @@ class MattermostFormatter implements ChatFormatterInterface
         ];
 
         // Add action links as text footer
-        if (! empty($context['links'])) {
+        if (isset($context['links']) && $context['links'] !== []) {
             $linkTexts = array_map(fn (array $l): string => "[{$l['label']}]({$l['url']})", $context['links']);
             $attachment['text'] .= "\n\n".implode(' | ', $linkTexts);
         }

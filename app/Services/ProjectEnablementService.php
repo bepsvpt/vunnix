@@ -126,12 +126,12 @@ class ProjectEnablementService
 
         // Store webhook secret and trigger token in config
         $configData = ['webhook_secret' => $secret];
-        if ($triggerToken) {
+        if ($triggerToken !== null && $triggerToken !== '') {
             $configData['ci_trigger_token'] = $triggerToken;
         }
 
         $config = $project->projectConfig;
-        if ($config) {
+        if ($config !== null) {
             $config->update($configData);
         } else {
             $project->projectConfig()->create($configData);
@@ -153,7 +153,7 @@ class ProjectEnablementService
     public function disable(Project $project): array
     {
         // Remove webhook if one was configured
-        if ($project->webhook_id) {
+        if ($project->webhook_id !== null) {
             try {
                 $this->gitLab->deleteWebhook($project->gitlab_project_id, $project->webhook_id);
             } catch (Throwable $e) {
@@ -184,7 +184,7 @@ class ProjectEnablementService
     private function resolveBotUserId(): ?int
     {
         $configured = config('services.gitlab.bot_account_id');
-        if ($configured) {
+        if ($configured !== null && $configured !== '') {
             return (int) $configured;
         }
 

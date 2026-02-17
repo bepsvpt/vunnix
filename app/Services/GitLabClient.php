@@ -23,8 +23,8 @@ class GitLabClient
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(config('services.gitlab.host') ?: 'https://gitlab.com', '/');
-        $this->token = config('services.gitlab.bot_token') ?: '';
+        $this->baseUrl = rtrim(config('services.gitlab.host') ?? 'https://gitlab.com', '/');
+        $this->token = config('services.gitlab.bot_token') ?? '';
     }
 
     // ------------------------------------------------------------------
@@ -60,7 +60,7 @@ class GitLabClient
                 'ref' => $ref,
                 'recursive' => $recursive ? 'true' : null,
                 'per_page' => 100,
-            ]),
+            ], static fn (mixed $v): bool => $v !== null),
         );
 
         return $this->handleResponse($response, "listTree {$path}")->json();
@@ -588,7 +588,7 @@ class GitLabClient
                 'name' => $name,
                 'color' => $color,
                 'description' => $description,
-            ]),
+            ], static fn (string $v): bool => $v !== ''),
         );
 
         if ($response->status() === 409) {

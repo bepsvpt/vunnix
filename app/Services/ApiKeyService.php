@@ -48,7 +48,7 @@ class ApiKeyService
             ->where('key', $hash)
             ->first();
 
-        if (! $apiKey) {
+        if ($apiKey === null) {
             return null;
         }
 

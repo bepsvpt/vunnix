@@ -48,7 +48,7 @@ class BotPatRotationService
 
         // Check if an active alert already exists (not yet acknowledged)
         $activeAlert = AlertEvent::active()->ofType(self::ALERT_TYPE)->first();
-        if ($activeAlert) {
+        if ($activeAlert !== null) {
             return null; // Already alerting, wait for acknowledgement
         }
 

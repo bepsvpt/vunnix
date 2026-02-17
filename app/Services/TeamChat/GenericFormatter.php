@@ -12,7 +12,7 @@ class GenericFormatter implements ChatFormatterInterface
     {
         $text = $message;
 
-        if (! empty($context['links'])) {
+        if (isset($context['links']) && $context['links'] !== []) {
             $linkTexts = array_map(fn (array $l): string => "{$l['label']}: {$l['url']}", $context['links']);
             $text .= "\n\n".implode("\n", $linkTexts);
         }

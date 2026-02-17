@@ -31,7 +31,7 @@ class SlackFormatter implements ChatFormatterInterface
         ];
 
         // Add action links as buttons if present
-        if (! empty($context['links'])) {
+        if (isset($context['links']) && $context['links'] !== []) {
             $elements = [];
             foreach ($context['links'] as $link) {
                 $elements[] = [
