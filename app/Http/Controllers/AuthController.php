@@ -48,7 +48,7 @@ class AuthController extends Controller
                 'oauth_provider' => 'gitlab',
                 'oauth_token' => $gitlabUser->token,
                 'oauth_refresh_token' => $gitlabUser->refreshToken,
-                'oauth_token_expires_at' => $gitlabUser->expiresIn
+                'oauth_token_expires_at' => $gitlabUser->expiresIn !== null
                     ? now()->addSeconds($gitlabUser->expiresIn)
                     : null,
             ],
@@ -80,7 +80,7 @@ class AuthController extends Controller
     public function logout(Request $request): RedirectResponse
     {
         $userId = auth()->id();
-        if ($userId) {
+        if ($userId !== null) {
             try {
                 app(AuditLogService::class)->logAuthEvent(
                     userId: (int) $userId,

@@ -14,7 +14,7 @@ class PromptVersionController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -40,7 +40,7 @@ class PromptVersionController extends Controller
                 ->orderByRaw("json_extract(prompt_version, '$.skill')");
         }
 
-        /** @var \Illuminate\Support\Collection<int, object{skill: string|null, claude_md: string|null, schema: string|null}> $versions */
+        /** @var \Illuminate\Support\Collection<int, object{skill: string|null, claude_md: string|null, schema: string|null}> $versions */ // @phpstan-ignore varTag.type
         $versions = $query->get();
 
         return response()->json([

@@ -36,7 +36,7 @@ class InfrastructureAlertController extends Controller
     private function authorizeAdmin(Request $request): void
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 

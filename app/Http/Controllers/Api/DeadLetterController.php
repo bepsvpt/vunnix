@@ -54,7 +54,7 @@ class DeadLetterController extends Controller
 
         try {
             $user = $request->user();
-            if (! $user) {
+            if ($user === null) {
                 abort(401);
             }
             $newTask = $this->service->retry($deadLetterEntry, $user);
@@ -71,7 +71,7 @@ class DeadLetterController extends Controller
 
         try {
             $user = $request->user();
-            if (! $user) {
+            if ($user === null) {
                 abort(401);
             }
             $this->service->dismiss($deadLetterEntry, $user);
@@ -85,7 +85,7 @@ class DeadLetterController extends Controller
     private function authorizeAdmin(Request $request): void
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 

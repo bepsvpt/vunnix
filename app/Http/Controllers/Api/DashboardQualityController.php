@@ -25,7 +25,7 @@ class DashboardQualityController extends Controller
         $promptVersion = $request->input('prompt_version');
 
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -38,7 +38,7 @@ class DashboardQualityController extends Controller
         $byType = $this->metricsQuery->byType($projectIds);
         $reviewMetrics = $byType->where('task_type', 'code_review')->first();
 
-        if (! $promptVersion && $reviewMetrics && (int) $reviewMetrics->task_count > 0) {
+        if ($promptVersion === null && $reviewMetrics !== null && (int) $reviewMetrics->task_count > 0) {
             $severityTotals = [
                 'critical' => (int) $reviewMetrics->total_severity_critical,
                 'major' => (int) $reviewMetrics->total_severity_high,
@@ -53,7 +53,7 @@ class DashboardQualityController extends Controller
                 ->where('status', TaskStatus::Completed)
                 ->whereNotNull('result');
 
-            if ($promptVersion) {
+            if ($promptVersion !== null) {
                 $reviewQuery->whereJsonContains('prompt_version->skill', $promptVersion);
             }
 

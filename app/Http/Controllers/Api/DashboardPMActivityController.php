@@ -17,7 +17,7 @@ class DashboardPMActivityController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 

@@ -37,13 +37,13 @@ class ConversationController extends Controller
         ]);
 
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
         $conversations = $this->conversationService->listForUser(
             user: $user,
-            projectId: $request->integer('project_id') ?: null,
+            projectId: $request->integer('project_id') !== 0 ? $request->integer('project_id') : null,
             search: $request->input('search'),
             archived: $request->boolean('archived'),
             perPage: $request->integer('per_page', 25),
@@ -59,7 +59,7 @@ class ConversationController extends Controller
     public function store(CreateConversationRequest $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
         $project = Project::where('id', $request->validated('project_id'))->firstOrFail();
@@ -102,7 +102,7 @@ class ConversationController extends Controller
         $this->authorize('sendMessage', $conversation);
 
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -130,7 +130,7 @@ class ConversationController extends Controller
         $this->authorize('stream', $conversation);
 
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -151,7 +151,7 @@ class ConversationController extends Controller
         $this->authorize('addProject', $conversation);
 
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 

@@ -16,7 +16,7 @@ class ExternalMetricsController extends Controller
     public function summary(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 

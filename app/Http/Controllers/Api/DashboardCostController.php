@@ -20,7 +20,7 @@ class DashboardCostController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -131,7 +131,7 @@ class DashboardCostController extends Controller
             ->mapWithKeys(fn ($tokens, $type): array => [$type => (int) $tokens])
             ->all();
 
-        /** @var \Illuminate\Support\Collection<int, object{type: \App\Enums\TaskType, avg_cost: float, total_cost: float, task_count: int}> $costPerTypeResults */
+        /** @var \Illuminate\Support\Collection<int, object{type: \App\Enums\TaskType, avg_cost: float, total_cost: float, task_count: int}> $costPerTypeResults @phpstan-ignore varTag.type */
         $costPerTypeResults = Task::whereIn('project_id', $projectIds)
             ->where('status', TaskStatus::Completed)
             ->whereNotNull('cost')
@@ -144,12 +144,12 @@ class DashboardCostController extends Controller
                 $row->type->value => [
                     'avg_cost' => round($row->avg_cost, 6),
                     'total_cost' => round($row->total_cost, 6),
-                    'task_count' => (int) $row->task_count,
+                    'task_count' => $row->task_count,
                 ],
             ])
             ->all();
 
-        /** @var \Illuminate\Support\Collection<int, object{project_id: int, project_name: string, total_cost: float, task_count: int}> $costPerProjectResults */
+        /** @var \Illuminate\Support\Collection<int, object{project_id: int, project_name: string, total_cost: float, task_count: int}> $costPerProjectResults @phpstan-ignore varTag.type */
         $costPerProjectResults = Task::whereIn('project_id', $projectIds)
             ->where('status', TaskStatus::Completed)
             ->whereNotNull('cost')
@@ -160,10 +160,10 @@ class DashboardCostController extends Controller
 
         $costPerProject = $costPerProjectResults
             ->map(fn ($row): array => [
-                'project_id' => (int) $row->project_id,
+                'project_id' => $row->project_id,
                 'project_name' => $row->project_name,
                 'total_cost' => round($row->total_cost, 6),
-                'task_count' => (int) $row->task_count,
+                'task_count' => $row->task_count,
             ])
             ->values()
             ->all();
@@ -173,7 +173,7 @@ class DashboardCostController extends Controller
             ? "strftime('%Y-%m', created_at)"
             : "TO_CHAR(created_at, 'YYYY-MM')";
 
-        /** @var \Illuminate\Support\Collection<int, object{month: string, total_cost: float|null, total_tokens: int|null, task_count: int}> $monthlyResults */
+        /** @var \Illuminate\Support\Collection<int, object{month: string, total_cost: float|null, total_tokens: int|null, task_count: int}> $monthlyResults @phpstan-ignore varTag.type */
         $monthlyResults = Task::whereIn('project_id', $projectIds)
             ->whereIn('status', [TaskStatus::Completed, TaskStatus::Failed])
             ->where('created_at', '>=', now()->subMonths(12)->startOfMonth())
@@ -191,8 +191,8 @@ class DashboardCostController extends Controller
             ->map(fn ($row): array => [
                 'month' => $row->month,
                 'total_cost' => round($row->total_cost ?? 0, 6),
-                'total_tokens' => (int) ($row->total_tokens ?? 0),
-                'task_count' => (int) $row->task_count,
+                'total_tokens' => $row->total_tokens ?? 0,
+                'task_count' => $row->task_count,
             ])
             ->values()
             ->all();

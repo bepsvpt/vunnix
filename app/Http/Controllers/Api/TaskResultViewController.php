@@ -12,7 +12,7 @@ class TaskResultViewController extends Controller
     public function __invoke(Request $request, Task $task): JsonResponse
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 

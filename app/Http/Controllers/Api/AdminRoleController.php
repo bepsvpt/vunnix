@@ -223,7 +223,7 @@ class AdminRoleController extends Controller
     private function authorizeRoleAdmin(Request $request): void
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 

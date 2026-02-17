@@ -75,7 +75,7 @@ class WebhookController extends Controller
         $gitlabEvent = $request->header('X-Gitlab-Event');
         $eventUuid = $request->header('X-Gitlab-Event-UUID');
 
-        if (empty($gitlabEvent)) {
+        if ($gitlabEvent === null || $gitlabEvent === '') {
             Log::warning('Webhook request missing X-Gitlab-Event header', [
                 'project_id' => $project->id,
             ]);
@@ -116,7 +116,7 @@ class WebhookController extends Controller
                     'issue_iid' => $eventContext['issue_iid'] ?? null,
                     'action' => $eventContext['action'] ?? null,
                     'event_uuid' => $eventUuid,
-                ]),
+                ], static fn (mixed $v): bool => $v !== null),
             );
         } catch (Throwable) {
             // Audit logging should never break webhook processing

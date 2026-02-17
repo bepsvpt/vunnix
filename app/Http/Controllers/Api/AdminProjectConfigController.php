@@ -24,7 +24,7 @@ class AdminProjectConfigController extends Controller
         $this->authorizeAdmin($request);
 
         $config = $project->projectConfig;
-        if (! $config) {
+        if ($config === null) {
             $config = $project->projectConfig()->create(['settings' => []]);
         }
 
@@ -43,7 +43,7 @@ class AdminProjectConfigController extends Controller
         $this->configService->bulkSet($project, $overrides);
 
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -77,7 +77,7 @@ class AdminProjectConfigController extends Controller
     private function authorizeAdmin(Request $request): void
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 

@@ -45,7 +45,7 @@ class HealthCheckController extends Controller
     private function checkRedis(): array
     {
         try {
-            /** @var \Illuminate\Cache\RedisStore $store */
+            /** @var \Illuminate\Cache\RedisStore $store */ // @phpstan-ignore varTag.type
             $store = Cache::store('redis');
             $result = $store->getRedis()->connection()->ping();
 

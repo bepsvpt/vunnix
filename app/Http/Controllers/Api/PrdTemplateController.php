@@ -62,7 +62,7 @@ class PrdTemplateController extends Controller
         return response()->json([
             'data' => [
                 'template' => $globalOverride ?? GlobalSetting::defaultPrdTemplate(),
-                'source' => $globalOverride ? 'global' : 'default',
+                'source' => $globalOverride !== null ? 'global' : 'default',
             ],
         ]);
     }
@@ -89,7 +89,7 @@ class PrdTemplateController extends Controller
             'success' => true,
             'data' => [
                 'template' => $globalOverride ?? GlobalSetting::defaultPrdTemplate(),
-                'source' => $globalOverride ? 'global' : 'default',
+                'source' => $globalOverride !== null ? 'global' : 'default',
             ],
         ]);
     }
@@ -124,7 +124,7 @@ class PrdTemplateController extends Controller
     private function authorizeConfigManage(Request $request, Project $project): void
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -139,7 +139,7 @@ class PrdTemplateController extends Controller
     private function authorizeAdmin(Request $request): void
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 

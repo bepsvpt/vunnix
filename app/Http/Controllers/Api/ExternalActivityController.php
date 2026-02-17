@@ -20,7 +20,7 @@ class ExternalActivityController extends Controller
         ]);
 
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -31,7 +31,8 @@ class ExternalActivityController extends Controller
             ->orderByDesc('created_at')
             ->orderByDesc('id');
 
-        if ($projectId = $request->input('project_id')) {
+        $projectId = $request->input('project_id');
+        if ($projectId !== null && $projectId !== '') {
             if ($accessibleProjectIds->contains((int) $projectId)) {
                 $query->where('project_id', (int) $projectId);
             } else {
@@ -39,7 +40,8 @@ class ExternalActivityController extends Controller
             }
         }
 
-        if ($type = $request->input('type')) {
+        $type = $request->input('type');
+        if (is_string($type) && $type !== '') {
             $query->where('type', $type);
         }
 

@@ -30,7 +30,7 @@ class ExternalTaskController extends Controller
         ]);
 
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -41,7 +41,8 @@ class ExternalTaskController extends Controller
             ->orderByDesc('created_at')
             ->orderByDesc('id');
 
-        if ($projectId = $request->input('project_id')) {
+        $projectId = $request->input('project_id');
+        if ($projectId !== null && $projectId !== '') {
             if ($accessibleProjectIds->contains((int) $projectId)) {
                 $query->where('project_id', (int) $projectId);
             } else {
@@ -49,23 +50,28 @@ class ExternalTaskController extends Controller
             }
         }
 
-        if ($type = $request->input('type')) {
+        $type = $request->input('type');
+        if (is_string($type) && $type !== '') {
             $query->where('type', $type);
         }
 
-        if ($status = $request->input('status')) {
+        $status = $request->input('status');
+        if (is_string($status) && $status !== '') {
             $query->where('status', $status);
         }
 
-        if ($dateFrom = $request->input('date_from')) {
+        $dateFrom = $request->input('date_from');
+        if (is_string($dateFrom) && $dateFrom !== '') {
             $query->where('created_at', '>=', $dateFrom);
         }
 
-        if ($dateTo = $request->input('date_to')) {
+        $dateTo = $request->input('date_to');
+        if (is_string($dateTo) && $dateTo !== '') {
             $query->where('created_at', '<=', $dateTo.' 23:59:59');
         }
 
-        if ($promptVersion = $request->input('prompt_version')) {
+        $promptVersion = $request->input('prompt_version');
+        if (is_string($promptVersion) && $promptVersion !== '') {
             $query->whereJsonContains('prompt_version->skill', $promptVersion);
         }
 
@@ -79,7 +85,7 @@ class ExternalTaskController extends Controller
     public function show(Request $request, Task $task): ExternalTaskResource
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -100,7 +106,7 @@ class ExternalTaskController extends Controller
         ]);
 
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 

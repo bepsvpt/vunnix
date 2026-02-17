@@ -17,7 +17,7 @@ class DashboardAdoptionController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -54,7 +54,7 @@ class DashboardAdoptionController extends Controller
             ? "strftime('%Y-%m', created_at)"
             : "TO_CHAR(created_at, 'YYYY-MM')";
 
-        /** @var \Illuminate\Support\Collection<int, object{month: string, type: TaskType, count: int}> $taskResults */
+        /** @var \Illuminate\Support\Collection<int, object{month: string, type: TaskType, count: int}> $taskResults @phpstan-ignore varTag.type */
         $taskResults = Task::whereIn('project_id', $projectIds)
             ->whereIn('status', [TaskStatus::Completed, TaskStatus::Failed])
             ->where('created_at', '>=', now()->subMonths(12)->startOfMonth())
@@ -70,7 +70,7 @@ class DashboardAdoptionController extends Controller
         $tasksByTypeOverTime = $taskResults
             ->groupBy('month')
             ->map(fn ($rows) => $rows->mapWithKeys(fn ($row): array => [
-                $row->type->value => (int) $row->count,
+                $row->type->value => $row->count,
             ])->all())
             ->all();
 
@@ -79,7 +79,7 @@ class DashboardAdoptionController extends Controller
             ? "strftime('%Y-W%W', created_at)"
             : "TO_CHAR(created_at, 'IYYY-\"W\"IW')";
 
-        /** @var \Illuminate\Support\Collection<int, object{week: string, count: int}> $mentionResults */
+        /** @var \Illuminate\Support\Collection<int, object{week: string, count: int}> $mentionResults @phpstan-ignore varTag.type */
         $mentionResults = Task::whereIn('project_id', $projectIds)
             ->where('origin', TaskOrigin::Webhook)
             ->where('created_at', '>=', now()->subWeeks(12)->startOfWeek())
@@ -94,7 +94,7 @@ class DashboardAdoptionController extends Controller
         $aiMentionsPerWeek = $mentionResults
             ->map(fn ($row): array => [
                 'week' => $row->week,
-                'count' => (int) $row->count,
+                'count' => $row->count,
             ])
             ->values()
             ->all();

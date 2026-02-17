@@ -11,7 +11,7 @@ class ExternalProjectController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 

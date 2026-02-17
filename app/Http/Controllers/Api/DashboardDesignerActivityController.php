@@ -15,7 +15,7 @@ class DashboardDesignerActivityController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -35,7 +35,7 @@ class DashboardDesignerActivityController extends Controller
         $avgIterations = null;
         if ($uiAdjustmentsDispatched > 0) {
             $avgIterations = round(
-                $completedUiTasks->avg(fn ($task): int|float => $task->retry_count + 1) ?? 0,
+                $completedUiTasks->avg(fn ($task): int => $task->retry_count + 1) ?? 0,
                 1
             );
         }

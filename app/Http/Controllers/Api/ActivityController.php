@@ -19,7 +19,7 @@ class ActivityController extends Controller
         ]);
 
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -33,7 +33,8 @@ class ActivityController extends Controller
             ->orderByDesc('created_at')
             ->orderByDesc('id');
 
-        if ($type = $request->input('type')) {
+        $type = $request->input('type');
+        if ($type !== null && $type !== '') {
             $query->where('type', $type);
         }
 

@@ -19,7 +19,7 @@ class ApiKeyController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -43,12 +43,13 @@ class ApiKeyController extends Controller
     public function store(CreateApiKeyRequest $request): JsonResponse
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
-        $expiresAt = $request->validated('expires_at')
-            ? Carbon::parse($request->validated('expires_at'))
+        $validatedExpiresAt = $request->validated('expires_at');
+        $expiresAt = $validatedExpiresAt !== null && $validatedExpiresAt !== ''
+            ? Carbon::parse($validatedExpiresAt)
             : null;
 
         $result = $this->apiKeyService->generate(
@@ -70,7 +71,7 @@ class ApiKeyController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 

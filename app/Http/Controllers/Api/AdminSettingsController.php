@@ -22,7 +22,7 @@ class AdminSettingsController extends Controller
 
         return response()->json([
             'data' => GlobalSettingResource::collection($settings),
-            'api_key_configured' => ! empty(config('services.anthropic.api_key')),
+            'api_key_configured' => config('services.anthropic.api_key') !== null && config('services.anthropic.api_key') !== '',
             'defaults' => GlobalSetting::defaults(),
         ]);
     }
@@ -32,7 +32,7 @@ class AdminSettingsController extends Controller
         $this->authorizeSettingsAdmin($request);
 
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
@@ -96,7 +96,7 @@ class AdminSettingsController extends Controller
     private function authorizeSettingsAdmin(Request $request): void
     {
         $user = $request->user();
-        if (! $user) {
+        if ($user === null) {
             abort(401);
         }
 
