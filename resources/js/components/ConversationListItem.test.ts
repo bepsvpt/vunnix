@@ -128,7 +128,8 @@ describe('conversationListItem', () => {
         });
 
         const rootButton = wrapper.find('button');
-        expect(rootButton.classes()).toContain('bg-zinc-100');
+        expect(rootButton.classes()).toContain('border-l-blue-500');
+        expect(rootButton.classes()).toContain('bg-zinc-50');
     });
 
     it('does not apply selected styling when isSelected is false', () => {
@@ -140,7 +141,8 @@ describe('conversationListItem', () => {
         });
 
         const rootButton = wrapper.find('button');
-        expect(rootButton.classes()).not.toContain('bg-zinc-100');
+        expect(rootButton.classes()).not.toContain('border-l-blue-500');
+        expect(rootButton.classes()).toContain('border-l-transparent');
     });
 
     it('shows Archive title for non-archived conversations', () => {

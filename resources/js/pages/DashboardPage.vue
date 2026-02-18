@@ -9,6 +9,7 @@ import DashboardInfrastructure from '@/components/DashboardInfrastructure.vue';
 import DashboardOverview from '@/components/DashboardOverview.vue';
 import DashboardPMActivity from '@/components/DashboardPMActivity.vue';
 import DashboardQuality from '@/components/DashboardQuality.vue';
+import BaseTabGroup from '@/components/ui/BaseTabGroup.vue';
 import { useDashboardRealtime } from '@/composables/useDashboardRealtime';
 import { useAuthStore } from '@/stores/auth';
 import { useDashboardStore } from '@/stores/dashboard';
@@ -56,36 +57,31 @@ watch(() => dashboard.metricsUpdates.length, () => {
 </script>
 
 <template>
-    <div>
-        <h1 class="text-2xl font-semibold mb-6">
-            Dashboard
-        </h1>
-
-        <!-- View tabs -->
-        <div class="flex items-center gap-2 mb-6" data-testid="dashboard-view-tabs">
-            <button
-                v-for="view in views"
-                :key="view.key"
-                :data-testid="`view-tab-${view.key}`"
-                class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
-                :class="activeView === view.key
-                    ? 'border-zinc-500 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
-                    : 'border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'"
-                @click="activeView = view.key"
-            >
-                {{ view.label }}
-            </button>
+    <div class="max-w-[var(--width-content)] mx-auto">
+        <!-- Page header -->
+        <div class="px-6 lg:px-8 pt-6 pb-0">
+            <h1 class="text-xl font-semibold mb-4">
+                Dashboard
+            </h1>
+            <BaseTabGroup
+                :tabs="views"
+                :model-value="activeView"
+                data-testid="dashboard-view-tabs"
+                @update:model-value="activeView = $event"
+            />
         </div>
 
-        <!-- View content -->
-        <DashboardOverview v-if="activeView === 'overview'" />
-        <DashboardQuality v-else-if="activeView === 'quality'" />
-        <DashboardPMActivity v-else-if="activeView === 'pm-activity'" />
-        <DashboardDesignerActivity v-else-if="activeView === 'designer-activity'" />
-        <DashboardEfficiency v-else-if="activeView === 'efficiency'" />
-        <DashboardCost v-else-if="activeView === 'cost'" />
-        <DashboardInfrastructure v-else-if="activeView === 'infrastructure'" />
-        <DashboardAdoption v-else-if="activeView === 'adoption'" />
-        <ActivityFeed v-else-if="activeView === 'activity'" />
+        <!-- Tab content -->
+        <div class="px-6 lg:px-8 py-6">
+            <DashboardOverview v-if="activeView === 'overview'" />
+            <DashboardQuality v-else-if="activeView === 'quality'" />
+            <DashboardPMActivity v-else-if="activeView === 'pm-activity'" />
+            <DashboardDesignerActivity v-else-if="activeView === 'designer-activity'" />
+            <DashboardEfficiency v-else-if="activeView === 'efficiency'" />
+            <DashboardCost v-else-if="activeView === 'cost'" />
+            <DashboardInfrastructure v-else-if="activeView === 'infrastructure'" />
+            <DashboardAdoption v-else-if="activeView === 'adoption'" />
+            <ActivityFeed v-else-if="activeView === 'activity'" />
+        </div>
     </div>
 </template>

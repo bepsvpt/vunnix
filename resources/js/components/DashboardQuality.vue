@@ -2,6 +2,9 @@
 import { computed, onMounted, watch } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 import { useDashboardStore } from '@/stores/dashboard';
+import BaseCard from './ui/BaseCard.vue';
+import BaseEmptyState from './ui/BaseEmptyState.vue';
+import BaseSpinner from './ui/BaseSpinner.vue';
 
 const dashboard = useDashboardStore();
 const admin = useAdminStore();
@@ -71,10 +74,7 @@ function severityPercent(count: number) {
             data-testid="quality-loading"
             class="flex items-center justify-center py-12"
         >
-            <svg class="animate-spin h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+            <BaseSpinner size="md" />
         </div>
 
         <!-- Quality cards -->
@@ -86,7 +86,7 @@ function severityPercent(count: number) {
                 </label>
                 <select
                     data-testid="prompt-version-filter"
-                    class="text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-3 py-1.5 focus:ring-2 focus:ring-zinc-400 focus:border-zinc-400"
+                    class="text-sm rounded-[var(--radius-card)] border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-3 py-1.5 focus:ring-2 focus:ring-zinc-400 focus:border-zinc-400"
                     :value="dashboard.promptVersionFilter"
                     @change="dashboard.promptVersionFilter = $event.target.value || null"
                 >
@@ -113,7 +113,7 @@ function severityPercent(count: number) {
                         v-for="alert in overrelianceAlerts"
                         :key="alert.id"
                         :data-testid="`overreliance-alert-${alert.id}`"
-                        class="rounded-lg border p-3 flex items-start justify-between" :class="[overrelianceSeverityColors[alert.severity] || overrelianceSeverityColors.warning]"
+                        class="rounded-[var(--radius-card)] border p-3 flex items-start justify-between" :class="[overrelianceSeverityColors[alert.severity] || overrelianceSeverityColors.warning]"
                     >
                         <div>
                             <span class="text-xs font-semibold uppercase">{{ overrelianceRuleLabels[alert.rule] || alert.rule }}</span>
@@ -137,9 +137,8 @@ function severityPercent(count: number) {
 
             <!-- Top row: Acceptance rate + Avg findings per review + Total reviews -->
             <div class="grid grid-cols-3 gap-4">
-                <div
+                <BaseCard
                     data-testid="acceptance-rate-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         Acceptance Rate
@@ -150,11 +149,10 @@ function severityPercent(count: number) {
                     <p v-if="quality.acceptance_rate === null" class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
                         Not yet tracked
                     </p>
-                </div>
+                </BaseCard>
 
-                <div
+                <BaseCard
                     data-testid="avg-findings-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         Avg Findings / Review
@@ -165,11 +163,10 @@ function severityPercent(count: number) {
                     <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         {{ quality.total_findings }} total findings
                     </p>
-                </div>
+                </BaseCard>
 
-                <div
+                <BaseCard
                     data-testid="total-reviews-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         Total Reviews
@@ -177,7 +174,7 @@ function severityPercent(count: number) {
                     <p class="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-100" data-testid="total-reviews-value">
                         {{ quality.total_reviews }}
                     </p>
-                </div>
+                </BaseCard>
             </div>
 
             <!-- Severity distribution -->
@@ -186,9 +183,9 @@ function severityPercent(count: number) {
                     Severity Distribution
                 </h3>
                 <div class="grid grid-cols-3 gap-4" data-testid="severity-distribution">
-                    <div
+                    <BaseCard
                         data-testid="severity-critical"
-                        class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4 text-center"
+                        class="text-center"
                     >
                         <p class="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide">
                             Critical
@@ -199,11 +196,11 @@ function severityPercent(count: number) {
                         <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400" data-testid="severity-critical-pct">
                             {{ severityPercent(quality.severity_distribution.critical) }}%
                         </p>
-                    </div>
+                    </BaseCard>
 
-                    <div
+                    <BaseCard
                         data-testid="severity-major"
-                        class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4 text-center"
+                        class="text-center"
                     >
                         <p class="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide">
                             Major
@@ -214,11 +211,11 @@ function severityPercent(count: number) {
                         <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400" data-testid="severity-major-pct">
                             {{ severityPercent(quality.severity_distribution.major) }}%
                         </p>
-                    </div>
+                    </BaseCard>
 
-                    <div
+                    <BaseCard
                         data-testid="severity-minor"
-                        class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4 text-center"
+                        class="text-center"
                     >
                         <p class="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
                             Minor
@@ -229,22 +226,16 @@ function severityPercent(count: number) {
                         <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400" data-testid="severity-minor-pct">
                             {{ severityPercent(quality.severity_distribution.minor) }}%
                         </p>
-                    </div>
+                    </BaseCard>
                 </div>
             </div>
         </div>
 
         <!-- Empty state -->
-        <div
-            v-else
-            data-testid="quality-empty"
-            class="flex items-center justify-center py-12"
-        >
-            <div class="text-center text-zinc-400 dark:text-zinc-500">
-                <p class="text-sm">
-                    No quality data available.
-                </p>
-            </div>
-        </div>
+        <BaseEmptyState v-else data-testid="quality-empty">
+            <template #description>
+                No quality data available.
+            </template>
+        </BaseEmptyState>
     </div>
 </template>

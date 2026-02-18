@@ -39,7 +39,7 @@ watch(
 </script>
 
 <template>
-    <div class="flex h-[calc(100vh-4rem)] -m-4 lg:-m-8">
+    <div class="flex h-[calc(100vh-4rem)]">
         <!-- Sidebar: conversation list -->
         <aside class="w-80 flex-shrink-0 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
             <ConversationList />

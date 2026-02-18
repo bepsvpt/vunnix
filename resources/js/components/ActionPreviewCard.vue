@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import MarkdownContent from './MarkdownContent.vue';
+import BaseButton from './ui/BaseButton.vue';
 
 interface ActionPreview {
     action_type: string;
@@ -164,20 +165,22 @@ const isMr = computed(() => props.action.action_type === 'create_mr');
                 <span class="text-xs text-zinc-500 dark:text-zinc-400 animate-pulse">Dispatching…</span>
             </template>
             <template v-else>
-                <button
+                <BaseButton
                     data-testid="cancel-btn"
-                    class="px-3 py-1.5 text-xs font-medium rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                    variant="ghost"
+                    size="sm"
                     @click="emit('cancel')"
                 >
                     Cancel
-                </button>
-                <button
+                </BaseButton>
+                <BaseButton
                     data-testid="confirm-btn"
-                    class="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                    variant="primary"
+                    size="sm"
                     @click="emit('confirm')"
                 >
                     Confirm
-                </button>
+                </BaseButton>
             </template>
         </div>
     </div>

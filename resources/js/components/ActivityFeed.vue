@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import ActivityFeedItem from '@/components/ActivityFeedItem.vue';
+import BaseEmptyState from '@/components/ui/BaseEmptyState.vue';
+import BaseFilterChips from '@/components/ui/BaseFilterChips.vue';
+import BaseSpinner from '@/components/ui/BaseSpinner.vue';
 import { useDashboardStore } from '@/stores/dashboard';
 
 const dashboard = useDashboardStore();
 
-const tabs: Array<{ label: string; value: string | null }> = [
+const chips: Array<{ label: string; value: string | null }> = [
     { label: 'All', value: null },
     { label: 'Reviews', value: 'code_review' },
     { label: 'Feature Dev', value: 'feature_dev' },
@@ -12,27 +15,20 @@ const tabs: Array<{ label: string; value: string | null }> = [
     { label: 'PRDs', value: 'prd_creation' },
 ];
 
-function selectTab(value: string | null) {
+function onFilterChange(value: string | null) {
     dashboard.fetchActivity(value);
 }
 </script>
 
 <template>
     <div data-testid="activity-feed">
-        <!-- Filter tabs -->
-        <div class="flex items-center gap-2 mb-4">
-            <button
-                v-for="tab in tabs"
-                :key="tab.label"
-                :data-testid="`filter-tab-${tab.value ?? 'all'}`"
-                class="px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors"
-                :class="dashboard.activeFilter === tab.value
-                    ? 'border-zinc-500 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
-                    : 'border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'"
-                @click="selectTab(tab.value)"
-            >
-                {{ tab.label }}
-            </button>
+        <!-- Filter chips -->
+        <div class="mb-4">
+            <BaseFilterChips
+                :chips="chips"
+                :model-value="dashboard.activeFilter"
+                @update:model-value="onFilterChange"
+            />
         </div>
 
         <!-- Loading indicator -->
@@ -41,27 +37,26 @@ function selectTab(value: string | null) {
             data-testid="loading-indicator"
             class="flex items-center justify-center py-12"
         >
-            <svg class="animate-spin h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+            <BaseSpinner size="md" />
         </div>
 
         <!-- Empty state -->
-        <div
+        <BaseEmptyState
             v-else-if="!dashboard.isLoading && dashboard.activityFeed.length === 0"
             data-testid="empty-state"
-            class="flex items-center justify-center py-12"
         >
-            <div class="text-center text-zinc-400 dark:text-zinc-500">
-                <svg class="w-10 h-10 mx-auto mb-2 opacity-50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <template #icon>
+                <svg class="w-10 h-10 text-zinc-400 dark:text-zinc-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
-                <p class="text-sm">
-                    No activity yet.
-                </p>
-            </div>
-        </div>
+            </template>
+            <template #title>
+                No activity yet
+            </template>
+            <template #description>
+                Activity from your projects will appear here as tasks are processed.
+            </template>
+        </BaseEmptyState>
 
         <!-- Feed list -->
         <div v-else class="space-y-1">
@@ -75,15 +70,12 @@ function selectTab(value: string | null) {
             <div v-if="dashboard.hasMore" class="pt-4 text-center">
                 <button
                     data-testid="load-more-btn"
-                    class="px-4 py-2 text-sm font-medium rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="px-4 py-2 text-sm font-medium rounded-[var(--radius-button)] border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     :disabled="dashboard.isLoading"
                     @click="dashboard.loadMore()"
                 >
                     <span v-if="dashboard.isLoading" class="inline-flex items-center gap-2">
-                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
+                        <BaseSpinner size="sm" />
                         Loading...
                     </span>
                     <span v-else>Load more</span>

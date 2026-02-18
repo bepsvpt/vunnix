@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { useDashboardStore } from '@/stores/dashboard';
+import BaseCard from './ui/BaseCard.vue';
+import BaseEmptyState from './ui/BaseEmptyState.vue';
+import BaseSpinner from './ui/BaseSpinner.vue';
 
 const dashboard = useDashboardStore();
 
@@ -72,19 +75,15 @@ const aiMentions = computed(() => {
             data-testid="adoption-loading"
             class="flex items-center justify-center py-12"
         >
-            <svg class="animate-spin h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+            <BaseSpinner size="md" />
         </div>
 
         <!-- Adoption data -->
         <div v-else-if="adoption" class="space-y-6">
             <!-- Summary row: AI-Reviewed MR % + Chat Active Users -->
             <div class="grid grid-cols-2 gap-4">
-                <div
+                <BaseCard
                     data-testid="ai-reviewed-mr-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         AI-Reviewed MR %
@@ -100,11 +99,10 @@ const aiMentions = computed(() => {
                             No merge requests yet
                         </template>
                     </p>
-                </div>
+                </BaseCard>
 
-                <div
+                <BaseCard
                     data-testid="chat-active-users-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         Chat Active Users
@@ -115,7 +113,7 @@ const aiMentions = computed(() => {
                     <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         Distinct users with conversations
                     </p>
-                </div>
+                </BaseCard>
             </div>
 
             <!-- Tasks by type over time -->
@@ -127,7 +125,7 @@ const aiMentions = computed(() => {
                     v-if="tasksByTypeMonths.length > 0"
                     data-testid="tasks-by-type-over-time"
                 >
-                    <div class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+                    <div class="overflow-hidden rounded-[var(--radius-card)] border border-zinc-200 dark:border-zinc-700">
                         <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
                             <thead class="bg-zinc-50 dark:bg-zinc-800">
                                 <tr>
@@ -164,15 +162,11 @@ const aiMentions = computed(() => {
                         </table>
                     </div>
                 </div>
-                <div
-                    v-else
-                    data-testid="tasks-by-type-empty"
-                    class="text-center text-zinc-400 dark:text-zinc-500 py-4"
-                >
-                    <p class="text-sm">
+                <BaseEmptyState v-else data-testid="tasks-by-type-empty">
+                    <template #description>
                         No task data over time yet.
-                    </p>
-                </div>
+                    </template>
+                </BaseEmptyState>
             </div>
 
             <!-- @ai mentions per week -->
@@ -184,7 +178,7 @@ const aiMentions = computed(() => {
                     v-if="aiMentions.length > 0"
                     data-testid="ai-mentions-per-week"
                 >
-                    <div class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+                    <div class="overflow-hidden rounded-[var(--radius-card)] border border-zinc-200 dark:border-zinc-700">
                         <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
                             <thead class="bg-zinc-50 dark:bg-zinc-800">
                                 <tr>
@@ -213,29 +207,19 @@ const aiMentions = computed(() => {
                         </table>
                     </div>
                 </div>
-                <div
-                    v-else
-                    data-testid="ai-mentions-empty"
-                    class="text-center text-zinc-400 dark:text-zinc-500 py-4"
-                >
-                    <p class="text-sm">
+                <BaseEmptyState v-else data-testid="ai-mentions-empty">
+                    <template #description>
                         No @ai mention data yet.
-                    </p>
-                </div>
+                    </template>
+                </BaseEmptyState>
             </div>
         </div>
 
         <!-- Empty state -->
-        <div
-            v-else
-            data-testid="adoption-empty"
-            class="flex items-center justify-center py-12"
-        >
-            <div class="text-center text-zinc-400 dark:text-zinc-500">
-                <p class="text-sm">
-                    No adoption data available.
-                </p>
-            </div>
-        </div>
+        <BaseEmptyState v-else data-testid="adoption-empty">
+            <template #description>
+                No adoption data available.
+            </template>
+        </BaseEmptyState>
     </div>
 </template>

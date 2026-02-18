@@ -2,6 +2,9 @@
 import type { AdminRole } from '@/types';
 import { computed, onMounted, ref } from 'vue';
 import { useAdminStore } from '@/stores/admin';
+import BaseBadge from './ui/BaseBadge.vue';
+import BaseButton from './ui/BaseButton.vue';
+import BaseEmptyState from './ui/BaseEmptyState.vue';
 
 interface Permission {
     name: string;
@@ -125,14 +128,15 @@ function togglePermission(list: string[], permName: string) {
             <h2 class="text-lg font-medium">
                 Roles
             </h2>
-            <button
+            <BaseButton
                 v-if="!showCreateForm"
-                class="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+                variant="primary"
+                size="sm"
                 data-testid="create-role-btn"
                 @click="startCreate"
             >
                 Create Role
-            </button>
+            </BaseButton>
         </div>
 
         <!-- Create form -->
@@ -176,12 +180,12 @@ function togglePermission(list: string[], permName: string) {
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button class="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700" data-testid="create-role-submit" @click="submitCreate">
+                    <BaseButton variant="primary" size="sm" data-testid="create-role-submit" @click="submitCreate">
                         Create
-                    </button>
-                    <button class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300" @click="showCreateForm = false">
+                    </BaseButton>
+                    <BaseButton variant="secondary" size="sm" @click="showCreateForm = false">
                         Cancel
-                    </button>
+                    </BaseButton>
                 </div>
             </div>
         </div>
@@ -192,9 +196,14 @@ function togglePermission(list: string[], permName: string) {
         </div>
 
         <!-- Empty state -->
-        <div v-else-if="admin.roles.length === 0" class="py-8 text-center text-zinc-500">
-            No roles defined. Create a role to get started.
-        </div>
+        <BaseEmptyState v-else-if="admin.roles.length === 0">
+            <template #title>
+                No roles defined
+            </template>
+            <template #description>
+                Create a role to get started.
+            </template>
+        </BaseEmptyState>
 
         <!-- Role list -->
         <div v-else class="space-y-3">
@@ -221,9 +230,9 @@ function togglePermission(list: string[], permName: string) {
                                 {{ role.description }}
                             </p>
                             <div class="mt-2 flex flex-wrap gap-1.5">
-                                <span v-for="perm in role.permissions" :key="perm" class="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                                <BaseBadge v-for="perm in role.permissions" :key="perm" variant="neutral">
                                     {{ perm }}
-                                </span>
+                                </BaseBadge>
                                 <span v-if="role.permissions.length === 0" class="text-xs text-zinc-400 italic">No permissions</span>
                             </div>
                             <p class="mt-1 text-xs text-zinc-400">
@@ -231,12 +240,12 @@ function togglePermission(list: string[], permName: string) {
                             </p>
                         </div>
                         <div class="ml-4 flex-shrink-0 flex gap-2">
-                            <button class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800" :data-testid="`edit-role-btn-${role.id}`" @click="startEdit(role)">
+                            <BaseButton variant="secondary" size="sm" :data-testid="`edit-role-btn-${role.id}`" @click="startEdit(role)">
                                 Edit
-                            </button>
-                            <button class="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20" :data-testid="`delete-role-btn-${role.id}`" @click="handleDelete(role)">
+                            </BaseButton>
+                            <BaseButton variant="danger" size="sm" :data-testid="`delete-role-btn-${role.id}`" @click="handleDelete(role)">
                                 Delete
-                            </button>
+                            </BaseButton>
                         </div>
                     </div>
                 </template>
@@ -270,12 +279,12 @@ function togglePermission(list: string[], permName: string) {
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <button class="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700" :data-testid="`save-role-btn-${role.id}`" @click="submitEdit(role.id)">
+                            <BaseButton variant="primary" size="sm" :data-testid="`save-role-btn-${role.id}`" @click="submitEdit(role.id)">
                                 Save
-                            </button>
-                            <button class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300" @click="cancelEdit">
+                            </BaseButton>
+                            <BaseButton variant="secondary" size="sm" @click="cancelEdit">
                                 Cancel
-                            </button>
+                            </BaseButton>
                         </div>
                     </div>
                 </template>

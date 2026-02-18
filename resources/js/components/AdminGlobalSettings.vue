@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useAdminStore } from '@/stores/admin';
+import BaseButton from './ui/BaseButton.vue';
+import BaseCard from './ui/BaseCard.vue';
 
 interface FormState {
     ai_model: string;
@@ -170,7 +172,7 @@ async function handleTestWebhook() {
             </div>
 
             <!-- API Key Status (display-only per D153) -->
-            <div class="mb-6 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+            <BaseCard class="mb-6">
                 <h3 class="text-sm font-medium mb-2">
                     Claude API Key
                 </h3>
@@ -187,10 +189,10 @@ async function handleTestWebhook() {
                         Managed via environment variable (ANTHROPIC_API_KEY)
                     </span>
                 </div>
-            </div>
+            </BaseCard>
 
             <!-- AI Settings -->
-            <div class="mb-6 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+            <BaseCard class="mb-6">
                 <h3 class="text-sm font-medium mb-3">
                     AI Configuration
                 </h3>
@@ -222,10 +224,10 @@ async function handleTestWebhook() {
                         <input v-model.number="form.max_tokens" type="number" min="1024" max="200000" class="w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800">
                     </div>
                 </div>
-            </div>
+            </BaseCard>
 
             <!-- Pricing -->
-            <div class="mb-6 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+            <BaseCard class="mb-6">
                 <h3 class="text-sm font-medium mb-3">
                     Cost Tracking Prices ($ per million tokens)
                 </h3>
@@ -239,10 +241,10 @@ async function handleTestWebhook() {
                         <input v-model.number="form.ai_prices_output" type="number" step="0.01" min="0" class="w-full rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800">
                     </div>
                 </div>
-            </div>
+            </BaseCard>
 
             <!-- Team Chat Notifications -->
-            <div class="mb-6 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700" data-testid="section-team-chat">
+            <BaseCard class="mb-6" data-testid="section-team-chat">
                 <h3 class="text-sm font-medium mb-3">
                     Team Chat Notifications
                 </h3>
@@ -281,23 +283,24 @@ async function handleTestWebhook() {
                     </div>
                     <!-- Test webhook button -->
                     <div class="flex items-center gap-2">
-                        <button
-                            class="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                        <BaseButton
+                            variant="secondary"
+                            size="sm"
                             data-testid="test-webhook-btn"
                             :disabled="testingWebhook || !form.team_chat_webhook_url"
                             @click="handleTestWebhook"
                         >
                             {{ testingWebhook ? 'Testing...' : 'Test Webhook' }}
-                        </button>
+                        </BaseButton>
                         <span v-if="testWebhookResult !== null" class="text-xs" :class="testWebhookResult.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'" data-testid="test-webhook-result">
                             {{ testWebhookResult.message }}
                         </span>
                     </div>
                 </div>
-            </div>
+            </BaseCard>
 
             <!-- Bot PAT Rotation (D144) -->
-            <div class="mb-6 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+            <BaseCard class="mb-6">
                 <h3 class="text-sm font-medium mb-3">
                     Bot Personal Access Token
                 </h3>
@@ -308,18 +311,18 @@ async function handleTestWebhook() {
                         Used for rotation reminder at 5.5 months (T116)
                     </p>
                 </div>
-            </div>
+            </BaseCard>
 
             <!-- Save button -->
             <div class="flex items-center gap-3">
-                <button
-                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                <BaseButton
+                    variant="primary"
                     data-testid="save-settings-btn"
                     :disabled="saving"
                     @click="handleSave"
                 >
                     {{ saving ? 'Saving...' : 'Save Settings' }}
-                </button>
+                </BaseButton>
             </div>
         </template>
     </div>

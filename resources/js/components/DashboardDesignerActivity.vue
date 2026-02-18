@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { useDashboardStore } from '@/stores/dashboard';
+import BaseCard from './ui/BaseCard.vue';
+import BaseEmptyState from './ui/BaseEmptyState.vue';
+import BaseSpinner from './ui/BaseSpinner.vue';
 
 const dashboard = useDashboardStore();
 
@@ -31,19 +34,15 @@ const successRateDisplay = computed(() => {
             data-testid="designer-activity-loading"
             class="flex items-center justify-center py-12"
         >
-            <svg class="animate-spin h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+            <BaseSpinner size="md" />
         </div>
 
         <!-- Designer Activity cards -->
         <div v-else-if="designerActivity" class="space-y-6">
             <!-- Top row: UI Adjustments Dispatched + Avg Iterations -->
             <div class="grid grid-cols-2 gap-4">
-                <div
+                <BaseCard
                     data-testid="ui-adjustments-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         UI Adjustments
@@ -54,11 +53,10 @@ const successRateDisplay = computed(() => {
                     <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         Completed UI adjustment tasks
                     </p>
-                </div>
+                </BaseCard>
 
-                <div
+                <BaseCard
                     data-testid="avg-iterations-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         Avg Iterations
@@ -72,14 +70,13 @@ const successRateDisplay = computed(() => {
                     <p v-else class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         Attempts per UI adjustment
                     </p>
-                </div>
+                </BaseCard>
             </div>
 
             <!-- Bottom row: MRs from Chat + First-Attempt Success Rate -->
             <div class="grid grid-cols-2 gap-4">
-                <div
+                <BaseCard
                     data-testid="mrs-from-chat-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         MRs from Chat
@@ -90,11 +87,10 @@ const successRateDisplay = computed(() => {
                     <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         Merge requests created via conversation
                     </p>
-                </div>
+                </BaseCard>
 
-                <div
+                <BaseCard
                     data-testid="success-rate-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         First-Attempt Success
@@ -108,21 +104,15 @@ const successRateDisplay = computed(() => {
                     <p v-else class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         Completed on first attempt
                     </p>
-                </div>
+                </BaseCard>
             </div>
         </div>
 
         <!-- Empty state -->
-        <div
-            v-else
-            data-testid="designer-activity-empty"
-            class="flex items-center justify-center py-12"
-        >
-            <div class="text-center text-zinc-400 dark:text-zinc-500">
-                <p class="text-sm">
-                    No designer activity data available.
-                </p>
-            </div>
-        </div>
+        <BaseEmptyState v-else data-testid="designer-activity-empty">
+            <template #description>
+                No designer activity data available.
+            </template>
+        </BaseEmptyState>
     </div>
 </template>

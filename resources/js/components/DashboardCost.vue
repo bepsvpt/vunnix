@@ -2,6 +2,9 @@
 import { computed, onMounted } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 import { useDashboardStore } from '@/stores/dashboard';
+import BaseCard from './ui/BaseCard.vue';
+import BaseEmptyState from './ui/BaseEmptyState.vue';
+import BaseSpinner from './ui/BaseSpinner.vue';
 
 const dashboard = useDashboardStore();
 const admin = useAdminStore();
@@ -96,10 +99,7 @@ const monthlyTrend = computed(() => {
             data-testid="cost-loading"
             class="flex items-center justify-center py-12"
         >
-            <svg class="animate-spin h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+            <BaseSpinner size="md" />
         </div>
 
         <!-- Cost data -->
@@ -114,7 +114,7 @@ const monthlyTrend = computed(() => {
                         v-for="alert in costAlerts"
                         :key="alert.id"
                         :data-testid="`cost-alert-${alert.id}`"
-                        class="rounded-lg border p-3 flex items-start justify-between" :class="[severityColors[alert.severity] || severityColors.warning]"
+                        class="rounded-[var(--radius-card)] border p-3 flex items-start justify-between" :class="[severityColors[alert.severity] || severityColors.warning]"
                     >
                         <div>
                             <span class="text-xs font-semibold uppercase">{{ ruleLabels[alert.rule] || alert.rule }}</span>
@@ -138,9 +138,8 @@ const monthlyTrend = computed(() => {
 
             <!-- Summary row: Total Cost + Total Tokens -->
             <div class="grid grid-cols-2 gap-4">
-                <div
+                <BaseCard
                     data-testid="total-cost-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         Total Cost
@@ -151,11 +150,10 @@ const monthlyTrend = computed(() => {
                     <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         All completed tasks
                     </p>
-                </div>
+                </BaseCard>
 
-                <div
+                <BaseCard
                     data-testid="total-tokens-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         Total Tokens
@@ -166,7 +164,7 @@ const monthlyTrend = computed(() => {
                     <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         All completed and failed tasks
                     </p>
-                </div>
+                </BaseCard>
             </div>
 
             <!-- Token usage by type -->
@@ -179,11 +177,11 @@ const monthlyTrend = computed(() => {
                     class="grid grid-cols-3 gap-4"
                     data-testid="token-usage-by-type"
                 >
-                    <div
+                    <BaseCard
                         v-for="entry in tokenUsageEntries"
                         :key="entry.key"
                         :data-testid="`token-usage-${entry.key}`"
-                        class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4 text-center"
+                        class="text-center"
                     >
                         <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                             {{ entry.label }}
@@ -191,17 +189,13 @@ const monthlyTrend = computed(() => {
                         <p class="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-100" :data-testid="`token-usage-${entry.key}-value`">
                             {{ entry.tokens.toLocaleString() }}
                         </p>
-                    </div>
+                    </BaseCard>
                 </div>
-                <div
-                    v-else
-                    data-testid="token-usage-empty"
-                    class="text-center text-zinc-400 dark:text-zinc-500 py-4"
-                >
-                    <p class="text-sm">
+                <BaseEmptyState v-else data-testid="token-usage-empty">
+                    <template #description>
                         No token usage data yet.
-                    </p>
-                </div>
+                    </template>
+                </BaseEmptyState>
             </div>
 
             <!-- Cost per type -->
@@ -213,7 +207,7 @@ const monthlyTrend = computed(() => {
                     v-if="costPerTypeEntries.length > 0"
                     data-testid="cost-per-type"
                 >
-                    <div class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+                    <div class="overflow-hidden rounded-[var(--radius-card)] border border-zinc-200 dark:border-zinc-700">
                         <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
                             <thead class="bg-zinc-50 dark:bg-zinc-800">
                                 <tr>
@@ -254,15 +248,11 @@ const monthlyTrend = computed(() => {
                         </table>
                     </div>
                 </div>
-                <div
-                    v-else
-                    data-testid="cost-per-type-empty"
-                    class="text-center text-zinc-400 dark:text-zinc-500 py-4"
-                >
-                    <p class="text-sm">
+                <BaseEmptyState v-else data-testid="cost-per-type-empty">
+                    <template #description>
                         No cost data by type yet.
-                    </p>
-                </div>
+                    </template>
+                </BaseEmptyState>
             </div>
 
             <!-- Cost per project -->
@@ -274,7 +264,7 @@ const monthlyTrend = computed(() => {
                     v-if="costPerProject.length > 0"
                     data-testid="cost-per-project"
                 >
-                    <div class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+                    <div class="overflow-hidden rounded-[var(--radius-card)] border border-zinc-200 dark:border-zinc-700">
                         <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
                             <thead class="bg-zinc-50 dark:bg-zinc-800">
                                 <tr>
@@ -309,15 +299,11 @@ const monthlyTrend = computed(() => {
                         </table>
                     </div>
                 </div>
-                <div
-                    v-else
-                    data-testid="cost-per-project-empty"
-                    class="text-center text-zinc-400 dark:text-zinc-500 py-4"
-                >
-                    <p class="text-sm">
+                <BaseEmptyState v-else data-testid="cost-per-project-empty">
+                    <template #description>
                         No cost data by project yet.
-                    </p>
-                </div>
+                    </template>
+                </BaseEmptyState>
             </div>
 
             <!-- Monthly trend -->
@@ -329,7 +315,7 @@ const monthlyTrend = computed(() => {
                     v-if="monthlyTrend.length > 0"
                     data-testid="monthly-trend"
                 >
-                    <div class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+                    <div class="overflow-hidden rounded-[var(--radius-card)] border border-zinc-200 dark:border-zinc-700">
                         <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
                             <thead class="bg-zinc-50 dark:bg-zinc-800">
                                 <tr>
@@ -370,29 +356,19 @@ const monthlyTrend = computed(() => {
                         </table>
                     </div>
                 </div>
-                <div
-                    v-else
-                    data-testid="monthly-trend-empty"
-                    class="text-center text-zinc-400 dark:text-zinc-500 py-4"
-                >
-                    <p class="text-sm">
+                <BaseEmptyState v-else data-testid="monthly-trend-empty">
+                    <template #description>
                         No monthly trend data yet.
-                    </p>
-                </div>
+                    </template>
+                </BaseEmptyState>
             </div>
         </div>
 
         <!-- Empty state -->
-        <div
-            v-else
-            data-testid="cost-empty"
-            class="flex items-center justify-center py-12"
-        >
-            <div class="text-center text-zinc-400 dark:text-zinc-500">
-                <p class="text-sm">
-                    No cost data available.
-                </p>
-            </div>
-        </div>
+        <BaseEmptyState v-else data-testid="cost-empty">
+            <template #description>
+                No cost data available.
+            </template>
+        </BaseEmptyState>
     </div>
 </template>

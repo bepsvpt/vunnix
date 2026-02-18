@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { useDashboardStore } from '@/stores/dashboard';
+import BaseCard from './ui/BaseCard.vue';
+import BaseEmptyState from './ui/BaseEmptyState.vue';
+import BaseSpinner from './ui/BaseSpinner.vue';
 
 const dashboard = useDashboardStore();
 
@@ -25,19 +28,15 @@ const avgTurnsDisplay = computed(() => {
             data-testid="pm-activity-loading"
             class="flex items-center justify-center py-12"
         >
-            <svg class="animate-spin h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+            <BaseSpinner size="md" />
         </div>
 
         <!-- PM Activity cards -->
         <div v-else-if="pmActivity" class="space-y-6">
             <!-- Top row: PRDs Created + Conversations Held -->
             <div class="grid grid-cols-2 gap-4">
-                <div
+                <BaseCard
                     data-testid="prds-created-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         PRDs Created
@@ -48,11 +47,10 @@ const avgTurnsDisplay = computed(() => {
                     <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         Issues created from PRD conversations
                     </p>
-                </div>
+                </BaseCard>
 
-                <div
+                <BaseCard
                     data-testid="conversations-held-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         Conversations Held
@@ -63,14 +61,13 @@ const avgTurnsDisplay = computed(() => {
                     <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         Total chat conversations
                     </p>
-                </div>
+                </BaseCard>
             </div>
 
             <!-- Bottom row: Issues from Chat + Avg Turns per PRD -->
             <div class="grid grid-cols-2 gap-4">
-                <div
+                <BaseCard
                     data-testid="issues-from-chat-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         Issues from Chat
@@ -81,11 +78,10 @@ const avgTurnsDisplay = computed(() => {
                     <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         Issues created via conversation dispatch
                     </p>
-                </div>
+                </BaseCard>
 
-                <div
+                <BaseCard
                     data-testid="avg-turns-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         Avg Turns / PRD
@@ -99,21 +95,15 @@ const avgTurnsDisplay = computed(() => {
                     <p v-else class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         Conversation messages before PRD creation
                     </p>
-                </div>
+                </BaseCard>
             </div>
         </div>
 
         <!-- Empty state -->
-        <div
-            v-else
-            data-testid="pm-activity-empty"
-            class="flex items-center justify-center py-12"
-        >
-            <div class="text-center text-zinc-400 dark:text-zinc-500">
-                <p class="text-sm">
-                    No PM activity data available.
-                </p>
-            </div>
-        </div>
+        <BaseEmptyState v-else data-testid="pm-activity-empty">
+            <template #description>
+                No PM activity data available.
+            </template>
+        </BaseEmptyState>
     </div>
 </template>

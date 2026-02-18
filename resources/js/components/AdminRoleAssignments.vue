@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useAdminStore } from '@/stores/admin';
+import BaseBadge from './ui/BaseBadge.vue';
+import BaseButton from './ui/BaseButton.vue';
+import BaseEmptyState from './ui/BaseEmptyState.vue';
 
 interface AssignForm {
     user_id: number | null;
@@ -101,14 +104,15 @@ function applyFilter() {
             <h2 class="text-lg font-medium">
                 Role Assignments
             </h2>
-            <button
+            <BaseButton
                 v-if="!showAssignForm"
-                class="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+                variant="primary"
+                size="sm"
                 data-testid="assign-role-btn"
                 @click="startAssign"
             >
                 Assign Role
-            </button>
+            </BaseButton>
         </div>
 
         <!-- Filter -->
@@ -158,20 +162,25 @@ function applyFilter() {
                     </p>
                 </div>
                 <div class="flex gap-2">
-                    <button class="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700" data-testid="assign-submit" @click="submitAssign">
+                    <BaseButton variant="primary" size="sm" data-testid="assign-submit" @click="submitAssign">
                         Assign
-                    </button>
-                    <button class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300" @click="showAssignForm = false">
+                    </BaseButton>
+                    <BaseButton variant="secondary" size="sm" @click="showAssignForm = false">
                         Cancel
-                    </button>
+                    </BaseButton>
                 </div>
             </div>
         </div>
 
         <!-- Empty state -->
-        <div v-if="admin.roleAssignments.length === 0" class="py-8 text-center text-zinc-500">
-            No role assignments found. Assign a role to a user to get started.
-        </div>
+        <BaseEmptyState v-if="admin.roleAssignments.length === 0">
+            <template #title>
+                No role assignments found
+            </template>
+            <template #description>
+                Assign a role to a user to get started.
+            </template>
+        </BaseEmptyState>
 
         <!-- Assignment list -->
         <div v-else class="space-y-2">
@@ -187,18 +196,22 @@ function applyFilter() {
                         <span class="text-xs text-zinc-400">@{{ assignment.username }}</span>
                     </div>
                     <div class="mt-0.5 flex items-center gap-2 text-xs text-zinc-500">
-                        <span class="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">{{ assignment.role_name }}</span>
+                        <BaseBadge variant="neutral">
+                            {{ assignment.role_name }}
+                        </BaseBadge>
                         <span>on</span>
                         <span class="font-medium">{{ assignment.project_name }}</span>
                     </div>
                 </div>
-                <button
-                    class="ml-4 rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                <BaseButton
+                    class="ml-4"
+                    variant="danger"
+                    size="sm"
                     :data-testid="`revoke-btn-${i}`"
                     @click="handleRevoke(assignment)"
                 >
                     Revoke
-                </button>
+                </BaseButton>
             </div>
         </div>
     </div>

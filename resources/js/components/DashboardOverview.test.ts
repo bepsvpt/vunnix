@@ -1,15 +1,18 @@
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useDashboardStore } from '@/stores/dashboard';
 import DashboardOverview from './DashboardOverview.vue';
 
 let pinia: ReturnType<typeof createPinia>;
 
+const RouterLinkStub = { template: '<a :href="to" :data-testid="$attrs[\'data-testid\']"><slot /></a>', props: ['to'] };
+
 function mountOverview() {
     return mount(DashboardOverview, {
         global: {
             plugins: [pinia],
+            stubs: { RouterLink: RouterLinkStub },
         },
     });
 }
@@ -26,6 +29,20 @@ const sampleOverview = {
     total_completed: 21,
     total_failed: 3,
     recent_activity: new Date().toISOString(),
+};
+
+const allZerosOverview = {
+    tasks_by_type: {
+        code_review: 0,
+        feature_dev: 0,
+        ui_adjustment: 0,
+        prd_creation: 0,
+    },
+    active_tasks: 0,
+    success_rate: null,
+    total_completed: 0,
+    total_failed: 0,
+    recent_activity: null,
 };
 
 describe('dashboardOverview', () => {
@@ -61,14 +78,58 @@ describe('dashboardOverview', () => {
         expect(wrapper.find('[data-testid="overview-loading"]').exists()).toBe(false);
     });
 
-    // -- Empty state --
+    // -- Error / empty state (null overview) --
 
-    it('shows empty state when not loading and no data', () => {
+    it('shows error empty state when not loading and no data', () => {
         const store = useDashboardStore();
         store.overviewLoading = false;
         store.overview = null;
         const wrapper = mountOverview();
         expect(wrapper.find('[data-testid="overview-empty"]').exists()).toBe(true);
+        expect(wrapper.text()).toContain('Unable to load overview');
+    });
+
+    it('shows retry button in error state', () => {
+        const store = useDashboardStore();
+        store.overviewLoading = false;
+        store.overview = null;
+        const wrapper = mountOverview();
+        expect(wrapper.find('[data-testid="retry-btn"]').exists()).toBe(true);
+    });
+
+    it('calls fetchOverview when retry button is clicked', async () => {
+        const store = useDashboardStore();
+        store.overviewLoading = false;
+        store.overview = null;
+        const fetchSpy = vi.spyOn(store, 'fetchOverview').mockResolvedValue();
+        const wrapper = mountOverview();
+        await wrapper.find('[data-testid="retry-btn"]').trigger('click');
+        expect(fetchSpy).toHaveBeenCalled();
+    });
+
+    // -- Onboarding state (all zeros) --
+
+    it('shows onboarding state when all values are zero', () => {
+        const store = useDashboardStore();
+        store.overview = allZerosOverview;
+        const wrapper = mountOverview();
+        expect(wrapper.find('[data-testid="overview-onboarding"]').exists()).toBe(true);
+        expect(wrapper.text()).toContain('Welcome to Vunnix');
+    });
+
+    it('shows admin and chat links in onboarding state', () => {
+        const store = useDashboardStore();
+        store.overview = allZerosOverview;
+        const wrapper = mountOverview();
+        expect(wrapper.find('[data-testid="onboarding-admin-link"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="onboarding-chat-link"]').exists()).toBe(true);
+    });
+
+    it('does not show onboarding when there is real data', () => {
+        const store = useDashboardStore();
+        store.overview = sampleOverview;
+        const wrapper = mountOverview();
+        expect(wrapper.find('[data-testid="overview-onboarding"]').exists()).toBe(false);
     });
 
     // -- Active tasks card --
@@ -172,9 +233,9 @@ describe('dashboardOverview', () => {
         expect(wrapper.find('[data-testid="type-card-prd_creation"]').text()).toContain('PRDs');
     });
 
-    // -- Zero counts --
+    // -- Zero counts (with some completed tasks — not onboarding) --
 
-    it('displays zero counts correctly', () => {
+    it('displays zero type counts when overview has completed tasks but zero type breakdown', () => {
         const store = useDashboardStore();
         store.overview = {
             ...sampleOverview,
@@ -185,15 +246,13 @@ describe('dashboardOverview', () => {
                 prd_creation: 0,
             },
             active_tasks: 0,
-            total_completed: 0,
-            total_failed: 0,
         };
         const wrapper = mountOverview();
         expect(wrapper.find('[data-testid="active-tasks-count"]').text()).toBe('0');
         expect(wrapper.find('[data-testid="type-count-code_review"]').text()).toBe('0');
     });
 
-    // -- Relative time formatting (lines 33-39) --
+    // -- Relative time formatting --
 
     it('displays minutes ago for recent_activity within the last hour', () => {
         const store = useDashboardStore();

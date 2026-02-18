@@ -37,8 +37,8 @@ const navLinks = [
 </script>
 
 <template>
-    <nav class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
-        <div class="max-w-7xl mx-auto px-4 lg:px-8">
+    <nav class="sticky top-0 z-30 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shadow-[var(--shadow-nav)]">
+        <div class="max-w-[var(--width-content)] mx-auto px-4 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <!-- Logo / Brand -->
                 <div class="flex items-center gap-2">
@@ -51,11 +51,12 @@ const navLinks = [
                         v-for="link in navLinks"
                         :key="link.to"
                         :to="link.to"
-                        class="px-3 py-2 rounded-md text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                        active-class="!text-zinc-900 dark:!text-zinc-100 bg-zinc-100 dark:bg-zinc-800"
+                        class="flex items-center gap-1.5 px-3 py-2 -mb-px border-b-2 border-transparent text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors"
+                        active-class="!border-zinc-900 dark:!border-zinc-100 !text-zinc-900 dark:!text-zinc-100"
                         @click="closeMenu"
                     >
-                        {{ link.label }}
+                        <span class="text-base leading-none">{{ link.icon }}</span>
+                        <span>{{ link.label }}</span>
                     </RouterLink>
                 </div>
 
@@ -86,7 +87,7 @@ const navLinks = [
                         <!-- Dropdown -->
                         <div
                             v-if="userMenuOpen"
-                            class="absolute right-0 mt-1 w-48 rounded-md bg-white dark:bg-zinc-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 py-1 z-50"
+                            class="absolute right-0 mt-1 w-48 rounded-[var(--radius-card)] bg-white dark:bg-zinc-800 shadow-[var(--shadow-dropdown)] ring-1 ring-black/5 dark:ring-white/10 py-1 z-50"
                         >
                             <div class="px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400 border-b border-zinc-100 dark:border-zinc-700">
                                 {{ auth.user.username }}

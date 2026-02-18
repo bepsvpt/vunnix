@@ -37,38 +37,38 @@ describe('activityFeed', () => {
         expect(wrapper.find('[data-testid="activity-feed"]').exists()).toBe(true);
     });
 
-    // -- Filter tabs --
+    // -- Filter chips --
 
-    it('renders all five filter tabs', () => {
+    it('renders all five filter chips', () => {
         const wrapper = mountFeed();
-        expect(wrapper.find('[data-testid="filter-tab-all"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="filter-tab-code_review"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="filter-tab-feature_dev"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="filter-tab-ui_adjustment"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="filter-tab-prd_creation"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="chip-all"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="chip-code_review"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="chip-feature_dev"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="chip-ui_adjustment"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="chip-prd_creation"]').exists()).toBe(true);
     });
 
-    it('highlights the active filter tab', () => {
+    it('highlights the active filter chip', () => {
         const store = useDashboardStore();
         store.activeFilter = 'code_review';
         const wrapper = mountFeed();
-        const tab = wrapper.find('[data-testid="filter-tab-code_review"]');
-        expect(tab.classes().join(' ')).toContain('bg-zinc-100');
+        const chip = wrapper.find('[data-testid="chip-code_review"]');
+        expect(chip.classes().join(' ')).toContain('bg-zinc-900');
     });
 
-    it('clicking a filter tab calls fetchActivity with correct type', async () => {
+    it('clicking a filter chip calls fetchActivity with correct type', async () => {
         const store = useDashboardStore();
         store.fetchActivity = vi.fn();
         const wrapper = mountFeed();
-        await wrapper.find('[data-testid="filter-tab-code_review"]').trigger('click');
+        await wrapper.find('[data-testid="chip-code_review"]').trigger('click');
         expect(store.fetchActivity).toHaveBeenCalledWith('code_review');
     });
 
-    it('clicking All tab calls fetchActivity with null', async () => {
+    it('clicking All chip calls fetchActivity with null', async () => {
         const store = useDashboardStore();
         store.fetchActivity = vi.fn();
         const wrapper = mountFeed();
-        await wrapper.find('[data-testid="filter-tab-all"]').trigger('click');
+        await wrapper.find('[data-testid="chip-all"]').trigger('click');
         expect(store.fetchActivity).toHaveBeenCalledWith(null);
     });
 

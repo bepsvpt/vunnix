@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
+import BaseBadge from './ui/BaseBadge.vue';
 
 interface PinnedTask {
     task_id: number;
@@ -77,13 +78,14 @@ function isPipelinePending(task: PinnedTask): boolean {
             class="flex items-center gap-3 px-4 py-2 text-sm"
         >
             <!-- Action type badge -->
-            <span
+            <BaseBadge
                 data-testid="task-type-badge"
-                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shrink-0"
+                variant="info"
+                class="shrink-0"
             >
                 <span>{{ typeDisplay(task.type).emoji }}</span>
                 <span class="hidden sm:inline">{{ typeDisplay(task.type).label }}</span>
-            </span>
+            </BaseBadge>
 
             <!-- Status & title -->
             <div class="flex-1 min-w-0">

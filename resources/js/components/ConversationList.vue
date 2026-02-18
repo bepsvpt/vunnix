@@ -5,6 +5,8 @@ import { useAuthStore } from '@/stores/auth';
 import { useConversationsStore } from '@/stores/conversations';
 import ConversationListItem from './ConversationListItem.vue';
 import NewConversationDialog from './NewConversationDialog.vue';
+import BaseButton from './ui/BaseButton.vue';
+import BaseSpinner from './ui/BaseSpinner.vue';
 
 const store = useConversationsStore();
 const auth = useAuthStore();
@@ -70,13 +72,14 @@ onMounted(() => {
     <div class="flex flex-col h-full">
         <!-- New conversation button -->
         <div class="p-3 border-b border-zinc-200 dark:border-zinc-800">
-            <button
-                type="button"
-                class="w-full px-3 py-2 text-sm font-medium rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
+            <BaseButton
+                variant="primary"
+                size="md"
+                class="w-full"
                 @click="showNewDialog = true"
             >
                 + New Conversation
-            </button>
+            </BaseButton>
         </div>
 
         <!-- Search + filters -->
@@ -84,12 +87,12 @@ onMounted(() => {
             <input
                 type="text"
                 placeholder="Search conversations..."
-                class="w-full px-3 py-1.5 text-sm rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600"
+                class="w-full px-3 py-1.5 text-sm rounded-[var(--radius-input)] border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 @input="onSearchInput"
             >
             <div class="flex items-center gap-2">
                 <select
-                    class="flex-1 px-2 py-1 text-xs rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300"
+                    class="flex-1 px-2 py-1 text-xs rounded-[var(--radius-input)] border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300"
                     @change="onProjectFilter"
                 >
                     <option value="">
@@ -105,7 +108,7 @@ onMounted(() => {
                 </select>
                 <button
                     type="button"
-                    class="px-2 py-1 text-xs rounded border transition-colors"
+                    class="px-2 py-1 text-xs rounded-[var(--radius-button)] border transition-colors"
                     :class="store.showArchived
                         ? 'border-zinc-500 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
                         : 'border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'"
@@ -120,10 +123,7 @@ onMounted(() => {
         <div class="flex-1 overflow-y-auto">
             <!-- Loading state -->
             <div v-if="store.loading && store.conversations.length === 0" class="p-4 text-center">
-                <svg class="animate-spin h-5 w-5 mx-auto text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+                <BaseSpinner size="md" />
             </div>
 
             <!-- Empty state -->

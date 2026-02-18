@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Conversation } from '@/types';
 import { computed } from 'vue';
+import BaseBadge from './ui/BaseBadge.vue';
 
 interface Props {
     conversation: Conversation;
@@ -46,30 +47,29 @@ const lastMessagePreview = computed(() => {
 <template>
     <button
         type="button"
-        class="w-full text-left px-3 py-3 rounded-lg transition-colors group"
+        class="w-full text-left px-3 py-3 rounded-lg transition-colors group border-l-2"
         :class="isSelected
-            ? 'bg-zinc-100 dark:bg-zinc-800'
-            : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'"
+            ? 'bg-zinc-50 dark:bg-zinc-800/80 border-l-blue-500'
+            : 'border-l-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/50'"
         @click="emit('select', conversation.id)"
     >
         <div class="flex items-start justify-between gap-2">
             <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2">
-                    <h3
-                        class="text-sm truncate"
-                        :class="isSelected
-                            ? 'font-semibold text-zinc-900 dark:text-zinc-100'
-                            : 'font-medium text-zinc-700 dark:text-zinc-300'"
-                    >
-                        {{ conversation.title }}
-                    </h3>
-                    <span
-                        v-if="projectName"
-                        class="shrink-0 text-xs px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400"
-                    >
-                        {{ projectName }}
-                    </span>
-                </div>
+                <h3
+                    class="text-sm truncate"
+                    :class="isSelected
+                        ? 'font-semibold text-zinc-900 dark:text-zinc-100'
+                        : 'font-medium text-zinc-700 dark:text-zinc-300'"
+                >
+                    {{ conversation.title }}
+                </h3>
+                <BaseBadge
+                    v-if="projectName"
+                    variant="neutral"
+                    class="mt-1"
+                >
+                    {{ projectName }}
+                </BaseBadge>
                 <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 truncate">
                     {{ lastMessagePreview }}
                 </p>

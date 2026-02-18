@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useAdminStore } from '@/stores/admin';
+import BaseBadge from './ui/BaseBadge.vue';
+import BaseButton from './ui/BaseButton.vue';
+import BaseCard from './ui/BaseCard.vue';
+import BaseEmptyState from './ui/BaseEmptyState.vue';
+import BaseSpinner from './ui/BaseSpinner.vue';
 
 const emit = defineEmits<{
     configure: [payload: { id: number; name: string }];
@@ -61,21 +66,32 @@ async function handleDisable(projectId: number) {
         </div>
 
         <!-- Loading state -->
-        <div v-if="admin.loading" class="py-8 text-center text-zinc-500">
-            Loading projects...
+        <div v-if="admin.loading" class="py-8 text-center">
+            <BaseSpinner size="md" class="mx-auto" />
+            <p class="mt-2 text-sm text-zinc-500">
+                Loading projects...
+            </p>
         </div>
 
         <!-- Empty state -->
-        <div v-else-if="admin.projects.length === 0" class="py-8 text-center text-zinc-500">
-            No projects found. Projects appear here after users log in via GitLab OAuth.
-        </div>
+        <BaseEmptyState v-else-if="admin.projects.length === 0">
+            <template #icon>
+                🏗️
+            </template>
+            <template #title>
+                No projects found
+            </template>
+            <template #description>
+                Projects appear here after users log in via GitLab OAuth.
+            </template>
+        </BaseEmptyState>
 
         <!-- Project list -->
         <div v-else class="space-y-3">
-            <div
+            <BaseCard
                 v-for="project in admin.projects"
                 :key="project.id"
-                class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700"
+                padded
                 :data-testid="`project-row-${project.id}`"
             >
                 <div class="flex items-center justify-between">
@@ -84,21 +100,18 @@ async function handleDisable(projectId: number) {
                             <h3 class="text-sm font-medium truncate">
                                 {{ project.name }}
                             </h3>
-                            <span
+                            <BaseBadge
                                 :data-testid="`project-status-${project.id}`"
-                                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                                :class="project.enabled
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                    : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'"
+                                :variant="project.enabled ? 'success' : 'neutral'"
                             >
                                 {{ project.enabled ? 'Enabled' : 'Disabled' }}
-                            </span>
-                            <span
+                            </BaseBadge>
+                            <BaseBadge
                                 v-if="project.enabled && project.webhook_configured"
-                                class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                                variant="info"
                             >
                                 Webhook active
-                            </span>
+                            </BaseBadge>
                         </div>
                         <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                             GitLab #{{ project.gitlab_project_id }}
@@ -111,35 +124,38 @@ async function handleDisable(projectId: number) {
                     </div>
 
                     <div class="ml-4 flex-shrink-0 flex gap-2">
-                        <button
+                        <BaseButton
                             v-if="!project.enabled"
-                            :disabled="actionInProgress === project.id"
-                            class="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                            variant="primary"
+                            size="sm"
+                            :loading="actionInProgress === project.id"
                             :data-testid="`enable-btn-${project.id}`"
                             @click="handleEnable(project.id)"
                         >
                             {{ actionInProgress === project.id ? 'Enabling...' : 'Enable' }}
-                        </button>
+                        </BaseButton>
                         <template v-else>
-                            <button
-                                class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                            <BaseButton
+                                variant="secondary"
+                                size="sm"
                                 :data-testid="`configure-btn-${project.id}`"
                                 @click="emit('configure', { id: project.id, name: project.name })"
                             >
                                 Configure
-                            </button>
-                            <button
-                                :disabled="actionInProgress === project.id"
-                                class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800 disabled:opacity-50"
+                            </BaseButton>
+                            <BaseButton
+                                variant="secondary"
+                                size="sm"
+                                :loading="actionInProgress === project.id"
                                 :data-testid="`disable-btn-${project.id}`"
                                 @click="handleDisable(project.id)"
                             >
                                 {{ actionInProgress === project.id ? 'Disabling...' : 'Disable' }}
-                            </button>
+                            </BaseButton>
                         </template>
                     </div>
                 </div>
-            </div>
+            </BaseCard>
         </div>
     </div>
 </template>

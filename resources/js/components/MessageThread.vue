@@ -9,6 +9,7 @@ import PinnedTaskBar from './PinnedTaskBar.vue';
 import ResultCard from './ResultCard.vue';
 import ToolUseIndicators from './ToolUseIndicators.vue';
 import TypingIndicator from './TypingIndicator.vue';
+import BaseSpinner from './ui/BaseSpinner.vue';
 
 interface CompletedResult {
     task_id: number;
@@ -84,71 +85,7 @@ async function handleSend(content: string) {
                 data-testid="messages-loading"
                 class="flex items-center justify-center h-full"
             >
-                <svg class="animate-spin h-6 w-6 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-            </div>
-
-            <!-- Error: retryable (amber) vs terminal (red) — D187/D188 -->
-            <div
-                v-else-if="store.messagesError"
-                class="flex items-center justify-center h-full"
-            >
-                <div
-                    v-if="store.streamRetryable"
-                    data-testid="retryable-error"
-                    class="flex items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700 dark:bg-amber-950"
-                    role="alert"
-                >
-                    <svg class="h-5 w-5 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <div>
-                        <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
-                            {{ store.messagesError }}
-                        </p>
-                        <p class="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
-                            You can resend your message to try again.
-                        </p>
-                    </div>
-                    <button
-                        class="ml-auto text-amber-400 hover:text-amber-600 dark:hover:text-amber-300"
-                        aria-label="Dismiss"
-                        @click="store.messagesError = null; store.streamRetryable = false"
-                    >
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                <div
-                    v-else
-                    data-testid="terminal-error"
-                    class="flex items-center gap-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 dark:border-red-700 dark:bg-red-950"
-                    role="alert"
-                >
-                    <svg class="h-5 w-5 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <div>
-                        <p class="text-sm font-medium text-red-800 dark:text-red-200">
-                            {{ store.messagesError }}
-                        </p>
-                        <p class="text-xs text-red-600 dark:text-red-400 mt-0.5">
-                            This error cannot be resolved by retrying.
-                        </p>
-                    </div>
-                    <button
-                        class="ml-auto text-red-400 hover:text-red-600 dark:hover:text-red-300"
-                        aria-label="Dismiss"
-                        @click="store.messagesError = null"
-                    >
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
+                <BaseSpinner size="lg" />
             </div>
 
             <!-- Empty state (suppressed when streaming) -->
@@ -168,7 +105,7 @@ async function handleSend(content: string) {
             </div>
 
             <!-- Messages -->
-            <div v-else class="space-y-3 max-w-3xl mx-auto">
+            <div v-else class="space-y-4 max-w-4xl mx-auto py-6">
                 <MessageBubble
                     v-for="message in visibleMessages"
                     :key="message.id"
@@ -204,14 +141,77 @@ async function handleSend(content: string) {
                 <div v-if="store.streaming && store.streamingContent" class="flex w-full justify-start">
                     <div
                         data-testid="streaming-bubble"
-                        class="max-w-[80%] rounded-2xl px-4 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-bl-md"
+                        class="max-w-2xl rounded-[var(--radius-bubble)] rounded-bl-sm px-5 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
                     >
-                        <MarkdownContent :content="store.streamingContent" />
+                        <div class="chat-bubble">
+                            <MarkdownContent :content="store.streamingContent" />
+                        </div>
                     </div>
                 </div>
 
                 <!-- Typing indicator: pulsing dots while streaming -->
                 <TypingIndicator v-if="store.streaming" />
+            </div>
+        </div>
+
+        <!-- Error banners: positioned outside scroll area so they don't scroll with messages -->
+        <div
+            v-if="store.messagesError"
+            class="px-4 py-2 border-t border-zinc-200 dark:border-zinc-800"
+        >
+            <div
+                v-if="store.streamRetryable"
+                data-testid="retryable-error"
+                class="flex items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700 dark:bg-amber-950"
+                role="alert"
+            >
+                <svg class="h-5 w-5 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <div>
+                    <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
+                        {{ store.messagesError }}
+                    </p>
+                    <p class="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                        You can resend your message to try again.
+                    </p>
+                </div>
+                <button
+                    class="ml-auto text-amber-400 hover:text-amber-600 dark:hover:text-amber-300"
+                    aria-label="Dismiss"
+                    @click="store.messagesError = null; store.streamRetryable = false"
+                >
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div
+                v-else
+                data-testid="terminal-error"
+                class="flex items-center gap-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 dark:border-red-700 dark:bg-red-950"
+                role="alert"
+            >
+                <svg class="h-5 w-5 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                    <p class="text-sm font-medium text-red-800 dark:text-red-200">
+                        {{ store.messagesError }}
+                    </p>
+                    <p class="text-xs text-red-600 dark:text-red-400 mt-0.5">
+                        This error cannot be resolved by retrying.
+                    </p>
+                </div>
+                <button
+                    class="ml-auto text-red-400 hover:text-red-600 dark:hover:text-red-300"
+                    aria-label="Dismiss"
+                    @click="store.messagesError = null"
+                >
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
         </div>
 

@@ -102,29 +102,29 @@ describe('dashboardPage', () => {
         setUpRegularUser();
         const wrapper = mountDashboard();
 
-        expect(wrapper.find('[data-testid="view-tab-overview"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="view-tab-quality"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="view-tab-pm-activity"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="view-tab-designer-activity"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="view-tab-efficiency"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="view-tab-adoption"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="view-tab-activity"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-overview"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-quality"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-pm-activity"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-designer-activity"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-efficiency"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-adoption"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-activity"]').exists()).toBe(true);
     });
 
     it('shows cost and infrastructure tabs for admin users', () => {
         setUpAdminUser();
         const wrapper = mountDashboard();
 
-        expect(wrapper.find('[data-testid="view-tab-cost"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="view-tab-infrastructure"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-cost"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-infrastructure"]').exists()).toBe(true);
     });
 
     it('hides cost and infrastructure tabs for non-admin users', () => {
         setUpRegularUser();
         const wrapper = mountDashboard();
 
-        expect(wrapper.find('[data-testid="view-tab-cost"]').exists()).toBe(false);
-        expect(wrapper.find('[data-testid="view-tab-infrastructure"]').exists()).toBe(false);
+        expect(wrapper.find('[data-testid="tab-cost"]').exists()).toBe(false);
+        expect(wrapper.find('[data-testid="tab-infrastructure"]').exists()).toBe(false);
     });
 
     it('activity tab always appears last (after admin tabs)', () => {
@@ -140,8 +140,8 @@ describe('dashboardPage', () => {
         setUpAdminUser();
         const wrapper = mountDashboard();
 
-        const overviewTab = wrapper.find('[data-testid="view-tab-overview"]');
-        expect(overviewTab.classes()).toContain('border-zinc-500');
+        const overviewTab = wrapper.find('[data-testid="tab-overview"]');
+        expect(overviewTab.classes()).toContain('border-zinc-900');
     });
 
     it('switches to quality tab on click', async () => {
@@ -151,16 +151,16 @@ describe('dashboardPage', () => {
         vi.spyOn(dashboard, 'fetchPromptVersions').mockResolvedValue();
 
         const wrapper = mountDashboard();
-        await wrapper.find('[data-testid="view-tab-quality"]').trigger('click');
+        await wrapper.find('[data-testid="tab-quality"]').trigger('click');
         await wrapper.vm.$nextTick();
 
         // Quality tab should now be active
-        const qualityTab = wrapper.find('[data-testid="view-tab-quality"]');
-        expect(qualityTab.classes()).toContain('border-zinc-500');
+        const qualityTab = wrapper.find('[data-testid="tab-quality"]');
+        expect(qualityTab.classes()).toContain('border-zinc-900');
 
         // Overview tab should no longer be active
-        const overviewTab = wrapper.find('[data-testid="view-tab-overview"]');
-        expect(overviewTab.classes()).not.toContain('border-zinc-500');
+        const overviewTab = wrapper.find('[data-testid="tab-overview"]');
+        expect(overviewTab.classes()).not.toContain('border-zinc-900');
     });
 
     it('switches to pm-activity tab on click', async () => {
@@ -169,11 +169,11 @@ describe('dashboardPage', () => {
         vi.spyOn(dashboard, 'fetchPMActivity').mockResolvedValue();
 
         const wrapper = mountDashboard();
-        await wrapper.find('[data-testid="view-tab-pm-activity"]').trigger('click');
+        await wrapper.find('[data-testid="tab-pm-activity"]').trigger('click');
         await wrapper.vm.$nextTick();
 
-        const pmTab = wrapper.find('[data-testid="view-tab-pm-activity"]');
-        expect(pmTab.classes()).toContain('border-zinc-500');
+        const pmTab = wrapper.find('[data-testid="tab-pm-activity"]');
+        expect(pmTab.classes()).toContain('border-zinc-900');
     });
 
     it('switches to designer-activity tab on click', async () => {
@@ -182,11 +182,11 @@ describe('dashboardPage', () => {
         vi.spyOn(dashboard, 'fetchDesignerActivity').mockResolvedValue();
 
         const wrapper = mountDashboard();
-        await wrapper.find('[data-testid="view-tab-designer-activity"]').trigger('click');
+        await wrapper.find('[data-testid="tab-designer-activity"]').trigger('click');
         await wrapper.vm.$nextTick();
 
-        const designerTab = wrapper.find('[data-testid="view-tab-designer-activity"]');
-        expect(designerTab.classes()).toContain('border-zinc-500');
+        const designerTab = wrapper.find('[data-testid="tab-designer-activity"]');
+        expect(designerTab.classes()).toContain('border-zinc-900');
     });
 
     it('switches to efficiency tab on click', async () => {
@@ -195,11 +195,11 @@ describe('dashboardPage', () => {
         vi.spyOn(dashboard, 'fetchEfficiency').mockResolvedValue();
 
         const wrapper = mountDashboard();
-        await wrapper.find('[data-testid="view-tab-efficiency"]').trigger('click');
+        await wrapper.find('[data-testid="tab-efficiency"]').trigger('click');
         await wrapper.vm.$nextTick();
 
-        const efficiencyTab = wrapper.find('[data-testid="view-tab-efficiency"]');
-        expect(efficiencyTab.classes()).toContain('border-zinc-500');
+        const efficiencyTab = wrapper.find('[data-testid="tab-efficiency"]');
+        expect(efficiencyTab.classes()).toContain('border-zinc-900');
     });
 
     it('switches to cost tab on click (admin only)', async () => {
@@ -209,11 +209,11 @@ describe('dashboardPage', () => {
         vi.spyOn(dashboard, 'fetchCostAlerts').mockResolvedValue();
 
         const wrapper = mountDashboard();
-        await wrapper.find('[data-testid="view-tab-cost"]').trigger('click');
+        await wrapper.find('[data-testid="tab-cost"]').trigger('click');
         await wrapper.vm.$nextTick();
 
-        const costTab = wrapper.find('[data-testid="view-tab-cost"]');
-        expect(costTab.classes()).toContain('border-zinc-500');
+        const costTab = wrapper.find('[data-testid="tab-cost"]');
+        expect(costTab.classes()).toContain('border-zinc-900');
     });
 
     it('switches to infrastructure tab on click (admin only)', async () => {
@@ -222,11 +222,11 @@ describe('dashboardPage', () => {
         vi.spyOn(dashboard, 'fetchInfrastructureAlerts').mockResolvedValue();
 
         const wrapper = mountDashboard();
-        await wrapper.find('[data-testid="view-tab-infrastructure"]').trigger('click');
+        await wrapper.find('[data-testid="tab-infrastructure"]').trigger('click');
         await wrapper.vm.$nextTick();
 
-        const infraTab = wrapper.find('[data-testid="view-tab-infrastructure"]');
-        expect(infraTab.classes()).toContain('border-zinc-500');
+        const infraTab = wrapper.find('[data-testid="tab-infrastructure"]');
+        expect(infraTab.classes()).toContain('border-zinc-900');
     });
 
     it('switches to adoption tab on click', async () => {
@@ -235,22 +235,22 @@ describe('dashboardPage', () => {
         vi.spyOn(dashboard, 'fetchAdoption').mockResolvedValue();
 
         const wrapper = mountDashboard();
-        await wrapper.find('[data-testid="view-tab-adoption"]').trigger('click');
+        await wrapper.find('[data-testid="tab-adoption"]').trigger('click');
         await wrapper.vm.$nextTick();
 
-        const adoptionTab = wrapper.find('[data-testid="view-tab-adoption"]');
-        expect(adoptionTab.classes()).toContain('border-zinc-500');
+        const adoptionTab = wrapper.find('[data-testid="tab-adoption"]');
+        expect(adoptionTab.classes()).toContain('border-zinc-900');
     });
 
     it('switches to activity tab on click', async () => {
         setUpAdminUser();
 
         const wrapper = mountDashboard();
-        await wrapper.find('[data-testid="view-tab-activity"]').trigger('click');
+        await wrapper.find('[data-testid="tab-activity"]').trigger('click');
         await wrapper.vm.$nextTick();
 
-        const activityTab = wrapper.find('[data-testid="view-tab-activity"]');
-        expect(activityTab.classes()).toContain('border-zinc-500');
+        const activityTab = wrapper.find('[data-testid="tab-activity"]');
+        expect(activityTab.classes()).toContain('border-zinc-900');
     });
 
     it('calls fetchOverview and fetchActivity on mount', () => {

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { useDashboardStore } from '@/stores/dashboard';
+import BaseCard from './ui/BaseCard.vue';
+import BaseEmptyState from './ui/BaseEmptyState.vue';
+import BaseSpinner from './ui/BaseSpinner.vue';
 
 const dashboard = useDashboardStore();
 
@@ -51,19 +54,15 @@ const completionRateEntries = computed(() => {
             data-testid="efficiency-loading"
             class="flex items-center justify-center py-12"
         >
-            <svg class="animate-spin h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+            <BaseSpinner size="md" />
         </div>
 
         <!-- Efficiency cards -->
         <div v-else-if="efficiency" class="space-y-6">
             <!-- Top row: Time to First Review + Review Turnaround -->
             <div class="grid grid-cols-2 gap-4">
-                <div
+                <BaseCard
                     data-testid="time-to-first-review-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         Time to First Review
@@ -77,11 +76,10 @@ const completionRateEntries = computed(() => {
                     <p v-else class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         Avg wait before processing starts
                     </p>
-                </div>
+                </BaseCard>
 
-                <div
+                <BaseCard
                     data-testid="review-turnaround-card"
-                    class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4"
                 >
                     <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                         Review Turnaround
@@ -95,7 +93,7 @@ const completionRateEntries = computed(() => {
                     <p v-else class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         Avg total time from creation to completion
                     </p>
-                </div>
+                </BaseCard>
             </div>
 
             <!-- Completion rate by type -->
@@ -108,11 +106,11 @@ const completionRateEntries = computed(() => {
                     class="grid grid-cols-3 gap-4"
                     data-testid="completion-rate-by-type"
                 >
-                    <div
+                    <BaseCard
                         v-for="entry in completionRateEntries"
                         :key="entry.key"
                         :data-testid="`completion-rate-${entry.key}`"
-                        class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4 text-center"
+                        class="text-center"
                     >
                         <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                             {{ entry.label }}
@@ -120,31 +118,21 @@ const completionRateEntries = computed(() => {
                         <p class="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-100" :data-testid="`completion-rate-${entry.key}-value`">
                             {{ entry.rate }}%
                         </p>
-                    </div>
+                    </BaseCard>
                 </div>
-                <div
-                    v-else
-                    data-testid="completion-rate-empty"
-                    class="text-center text-zinc-400 dark:text-zinc-500 py-4"
-                >
-                    <p class="text-sm">
+                <BaseEmptyState v-else data-testid="completion-rate-empty">
+                    <template #description>
                         No completed or failed tasks yet.
-                    </p>
-                </div>
+                    </template>
+                </BaseEmptyState>
             </div>
         </div>
 
         <!-- Empty state -->
-        <div
-            v-else
-            data-testid="efficiency-empty"
-            class="flex items-center justify-center py-12"
-        >
-            <div class="text-center text-zinc-400 dark:text-zinc-500">
-                <p class="text-sm">
-                    No efficiency data available.
-                </p>
-            </div>
-        </div>
+        <BaseEmptyState v-else data-testid="efficiency-empty">
+            <template #description>
+                No efficiency data available.
+            </template>
+        </BaseEmptyState>
     </div>
 </template>

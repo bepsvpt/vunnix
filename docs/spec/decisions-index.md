@@ -193,3 +193,8 @@
 | D186 | `vue-tsc` type checking in CI — separate lightweight job (Node.js only, no DB services), consistent with D176/D182 | ext-008 | Active |
 | D187 | Structured SSE error event for AI provider failures during streaming — emits `{"type":"error","error":{...}}` when rate limited or overloaded mid-stream | ext-009 | Active |
 | D188 | Client-side recovery for streaming errors — frontend shows retryable/terminal error banners, refetches persisted messages via REST API | ext-009 | Active |
+| D189 | Design token system via Tailwind `@theme` CSS custom properties — tokens for radii, shadows, and content widths enforce consistency without a build step | ext-010 | Active |
+| D190 | 3-tier navigation visual hierarchy — navbar underline (heaviest), page underline tabs BaseTabGroup (medium), inline pill-style BaseFilterChips (lightest) | ext-010 | Active |
+| D191 | Chat message bubble width constraints — assistant `max-w-2xl` (672px), user `max-w-md` (448px), `leading-[1.75]` + `my-3` paragraph spacing via `.chat-bubble` | ext-010 | Active |
+| D192 | Three-state empty model for Dashboard — error → retry CTA, all-zeros → onboarding CTAs, data present → normal render | ext-010 | Active |
+| D193 | Base UI component library at `components/ui/` — 7 primitives (BaseCard, BaseBadge, BaseButton, BaseTabGroup, BaseFilterChips, BaseEmptyState, BaseSpinner) with typed props and design-token-backed styling | ext-010 | Active |

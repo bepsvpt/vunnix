@@ -2,6 +2,8 @@
 import { computed, onMounted } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 import { useDashboardStore } from '@/stores/dashboard';
+import BaseEmptyState from './ui/BaseEmptyState.vue';
+import BaseSpinner from './ui/BaseSpinner.vue';
 
 const dashboard = useDashboardStore();
 const admin = useAdminStore();
@@ -54,7 +56,7 @@ async function handleAcknowledge(alertId: number) {
         <div
             v-if="status"
             data-testid="infra-status-banner"
-            class="rounded-lg border p-4 mb-6"
+            class="rounded-[var(--radius-card)] border p-4 mb-6"
             :class="status.overall_status === 'healthy'
                 ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
                 : 'border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20'"
@@ -84,7 +86,7 @@ async function handleAcknowledge(alertId: number) {
                     v-for="check in checkStatuses"
                     :key="check.type"
                     :data-testid="`infra-check-${check.type}`"
-                    class="rounded-lg border p-3 text-center"
+                    class="rounded-[var(--radius-card)] border p-3 text-center"
                     :class="check.status === 'ok'
                         ? 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800'
                         : 'border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20'"
@@ -117,7 +119,7 @@ async function handleAcknowledge(alertId: number) {
                     v-for="alert in alerts"
                     :key="alert.id"
                     :data-testid="`infra-alert-${alert.id}`"
-                    class="rounded-lg border p-3 flex items-start justify-between" :class="[severityColors[alert.severity] || severityColors.warning]"
+                    class="rounded-[var(--radius-card)] border p-3 flex items-start justify-between" :class="[severityColors[alert.severity] || severityColors.warning]"
                 >
                     <div>
                         <span class="text-xs font-semibold uppercase">{{ typeLabels[alert.alert_type] || alert.alert_type }}</span>
@@ -140,15 +142,11 @@ async function handleAcknowledge(alertId: number) {
         </div>
 
         <!-- No alerts state -->
-        <div
-            v-else-if="status"
-            data-testid="infra-no-alerts"
-            class="text-center text-zinc-400 dark:text-zinc-500 py-8"
-        >
-            <p class="text-sm">
+        <BaseEmptyState v-else-if="status" data-testid="infra-no-alerts">
+            <template #description>
                 No active infrastructure alerts.
-            </p>
-        </div>
+            </template>
+        </BaseEmptyState>
 
         <!-- Loading state (no status fetched yet) -->
         <div
@@ -156,10 +154,7 @@ async function handleAcknowledge(alertId: number) {
             data-testid="infra-loading"
             class="flex items-center justify-center py-12"
         >
-            <svg class="animate-spin h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+            <BaseSpinner size="md" />
         </div>
     </div>
 </template>

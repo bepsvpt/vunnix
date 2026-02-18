@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useAdminStore } from '@/stores/admin';
+import BaseButton from './ui/BaseButton.vue';
+import BaseCard from './ui/BaseCard.vue';
 
 interface Props {
     projectId: number;
@@ -149,23 +151,26 @@ async function handleSave() {
     <div>
         <!-- Header with back button -->
         <div class="flex items-center gap-3 mb-6">
-            <button
+            <BaseButton
                 data-testid="back-btn"
-                class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                variant="secondary"
+                size="sm"
                 @click="emit('back')"
             >
                 &larr; Back
-            </button>
+            </BaseButton>
             <h2 class="text-lg font-medium">
                 {{ projectName }} &mdash; Configuration
             </h2>
-            <button
+            <BaseButton
                 data-testid="edit-template-btn"
-                class="ml-auto rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                variant="secondary"
+                size="sm"
+                class="ml-auto"
                 @click="emit('editTemplate')"
             >
                 PRD Template
-            </button>
+            </BaseButton>
         </div>
 
         <!-- Loading state -->
@@ -192,7 +197,7 @@ async function handleSave() {
             </div>
 
             <!-- Settings groups -->
-            <div v-for="group in allSettingGroups" :key="group.title" class="mb-6 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+            <BaseCard v-for="group in allSettingGroups" :key="group.title" class="mb-6">
                 <h3 class="text-sm font-medium mb-3">
                     {{ group.title }}
                 </h3>
@@ -259,18 +264,18 @@ async function handleSave() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </BaseCard>
 
             <!-- Save button -->
             <div class="flex items-center gap-3">
-                <button
+                <BaseButton
                     data-testid="save-config-btn"
-                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    variant="primary"
                     :disabled="saving"
                     @click="handleSave"
                 >
                     {{ saving ? 'Saving...' : 'Save Configuration' }}
-                </button>
+                </BaseButton>
             </div>
         </template>
     </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import BaseButton from './ui/BaseButton.vue';
 
 const emit = defineEmits<{
     create: [projectId: number];
@@ -63,21 +64,19 @@ function onSubmit() {
             </div>
 
             <div class="flex justify-end gap-2 mt-6">
-                <button
-                    type="button"
-                    class="px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                <BaseButton
+                    variant="secondary"
                     @click="emit('close')"
                 >
                     Cancel
-                </button>
-                <button
-                    type="button"
-                    class="px-4 py-2 text-sm rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors disabled:opacity-50"
+                </BaseButton>
+                <BaseButton
+                    variant="primary"
                     :disabled="!selectedProjectId || creating"
                     @click="onSubmit"
                 >
                     {{ creating ? 'Creating...' : 'Start Conversation' }}
-                </button>
+                </BaseButton>
             </div>
         </div>
     </div>

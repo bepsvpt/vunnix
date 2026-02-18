@@ -60,9 +60,9 @@ describe('appNavigation', () => {
 
         const links = wrapper.findAll('a');
         const labels = links.map(l => l.text());
-        expect(labels).toContain('Chat');
-        expect(labels).toContain('Dashboard');
-        expect(labels).toContain('Admin');
+        expect(labels.some(l => l.includes('Chat'))).toBe(true);
+        expect(labels.some(l => l.includes('Dashboard'))).toBe(true);
+        expect(labels.some(l => l.includes('Admin'))).toBe(true);
     });
 
     it('mobile menu is hidden by default', async () => {
@@ -344,7 +344,7 @@ describe('appNavigation', () => {
 
             // Click the Dashboard link in mobile menu (desktop links are in hidden md:flex div)
             // Mobile links are inside the md:hidden border-t div
-            const mobileLinks = wrapper.findAll('a').filter(a => a.text() === 'Dashboard');
+            const mobileLinks = wrapper.findAll('a').filter(a => a.text().includes('Dashboard'));
             await mobileLinks[mobileLinks.length - 1].trigger('click');
             await flushPromises();
 
@@ -428,12 +428,12 @@ describe('appNavigation', () => {
 
             const wrapper = mountNav(router);
 
-            // Find the Dashboard link — it should have the custom active-class applied by Vue Router
+            // Find the Dashboard link — it should have the underline active-class applied by Vue Router
             const links = wrapper.findAll('a');
-            const dashboardLink = links.find(l => l.text() === 'Dashboard');
+            const dashboardLink = links.find(l => l.text().includes('Dashboard'));
             expect(dashboardLink).toBeTruthy();
-            // The component uses active-class="!text-zinc-900 dark:!text-zinc-100 bg-zinc-100 dark:bg-zinc-800"
-            expect(dashboardLink!.classes()).toContain('bg-zinc-100');
+            // The component uses active-class with border-based underline
+            expect(dashboardLink!.classes().some(c => c.includes('border-zinc-900'))).toBe(true);
         });
 
         it('does not apply active class to non-current route links', async () => {
@@ -443,11 +443,11 @@ describe('appNavigation', () => {
 
             const wrapper = mountNav(router);
 
-            // Dashboard link should NOT have the active styling class
+            // Dashboard link should NOT have the active underline class
             const links = wrapper.findAll('a');
-            const dashboardLink = links.find(l => l.text() === 'Dashboard');
+            const dashboardLink = links.find(l => l.text().includes('Dashboard'));
             expect(dashboardLink).toBeTruthy();
-            expect(dashboardLink!.classes()).not.toContain('bg-zinc-100');
+            expect(dashboardLink!.classes().some(c => c.includes('border-zinc-900'))).toBe(false);
         });
     });
 });

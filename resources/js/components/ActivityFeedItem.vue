@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Activity } from '@/types';
 import { computed } from 'vue';
+import BaseBadge from './ui/BaseBadge.vue';
 
 interface Props {
     item: Activity;
@@ -22,11 +23,11 @@ const typeLabels: Record<string, string> = {
     prd_creation: 'PRD',
 };
 
-const statusConfig: Record<string, { icon: string; classes: string }> = {
-    queued: { icon: '\u23F3', classes: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
-    running: { icon: '\u23F3', classes: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
-    completed: { icon: '\u2705', classes: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
-    failed: { icon: '\u274C', classes: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+const statusConfig: Record<string, { icon: string; variant: 'warning' | 'success' | 'danger' }> = {
+    queued: { icon: '\u23F3', variant: 'warning' },
+    running: { icon: '\u23F3', variant: 'warning' },
+    completed: { icon: '\u2705', variant: 'success' },
+    failed: { icon: '\u274C', variant: 'danger' },
 };
 
 const typeIcon = computed(() => typeIcons[props.item.type] || '\u2699\uFE0F');
@@ -75,19 +76,18 @@ const linkText = computed(() => {
         <!-- Content -->
         <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
-                <span
+                <BaseBadge
                     data-testid="activity-project"
-                    class="text-xs font-medium px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+                    variant="neutral"
                 >
                     {{ item.project_name }}
-                </span>
-                <span
+                </BaseBadge>
+                <BaseBadge
                     data-testid="activity-status-badge"
-                    class="text-xs px-1.5 py-0.5 rounded font-medium"
-                    :class="status.classes"
+                    :variant="status.variant"
                 >
                     {{ status.icon }} {{ item.status }}
-                </span>
+                </BaseBadge>
             </div>
 
             <p

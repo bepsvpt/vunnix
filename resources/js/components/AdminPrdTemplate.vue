@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useAdminStore } from '@/stores/admin';
+import BaseButton from './ui/BaseButton.vue';
 
 interface Props {
     projectId: number;
@@ -73,13 +74,14 @@ async function handleSave() {
     <div>
         <!-- Header with back button -->
         <div class="flex items-center gap-3 mb-6">
-            <button
+            <BaseButton
                 data-testid="back-btn"
-                class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                variant="secondary"
+                size="sm"
                 @click="emit('back')"
             >
                 &larr; Back
-            </button>
+            </BaseButton>
             <h2 class="text-lg font-medium">
                 {{ projectName }} &mdash; PRD Template
             </h2>
@@ -146,14 +148,14 @@ async function handleSave() {
 
             <!-- Save button -->
             <div class="flex items-center gap-3">
-                <button
+                <BaseButton
                     data-testid="save-template-btn"
-                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    variant="primary"
                     :disabled="saving"
                     @click="handleSave"
                 >
                     {{ saving ? 'Saving...' : 'Save Template' }}
-                </button>
+                </BaseButton>
             </div>
         </template>
     </div>

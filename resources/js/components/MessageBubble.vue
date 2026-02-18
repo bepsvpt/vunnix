@@ -23,23 +23,25 @@ const formattedTime = computed(() => {
         :class="isUser ? 'justify-end' : 'justify-start'"
     >
         <div
-            class="max-w-[80%] rounded-2xl px-4 py-3"
+            class="rounded-[var(--radius-bubble)]"
             :class="isUser
-                ? 'bg-blue-600 text-white rounded-br-md'
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-bl-md'"
+                ? 'max-w-md px-4 py-3 text-sm leading-relaxed bg-blue-600 text-white rounded-br-sm'
+                : 'max-w-2xl px-5 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-bl-sm'"
             :data-role="message.role"
         >
             <!-- User messages: plain text -->
-            <p v-if="isUser" class="text-sm whitespace-pre-wrap break-words">
+            <p v-if="isUser" class="whitespace-pre-wrap break-words">
                 {{ message.content }}
             </p>
 
             <!-- Assistant messages: rendered markdown -->
-            <MarkdownContent v-else :content="message.content" />
+            <div v-else class="chat-bubble">
+                <MarkdownContent :content="message.content" />
+            </div>
 
             <div
                 data-testid="timestamp"
-                class="mt-1 text-xs opacity-60"
+                class="mt-1.5 text-[11px] opacity-50"
                 :class="isUser ? 'text-right' : 'text-left'"
             >
                 {{ formattedTime }}

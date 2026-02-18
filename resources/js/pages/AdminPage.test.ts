@@ -31,7 +31,7 @@ describe('adminPage', () => {
 
     it('shows Projects tab', () => {
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
-        expect(wrapper.find('[data-testid="admin-tab-projects"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-projects"]').exists()).toBe(true);
     });
 
     it('fetches projects on mount', () => {
@@ -86,12 +86,12 @@ describe('adminPage', () => {
 
     it('shows Roles tab', () => {
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
-        expect(wrapper.find('[data-testid="admin-tab-roles"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-roles"]').exists()).toBe(true);
     });
 
     it('shows Assignments tab', () => {
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
-        expect(wrapper.find('[data-testid="admin-tab-assignments"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-assignments"]').exists()).toBe(true);
     });
 
     it('switches to Roles tab content on click', async () => {
@@ -100,7 +100,7 @@ describe('adminPage', () => {
         vi.spyOn(admin, 'fetchPermissions').mockResolvedValue();
 
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
-        await wrapper.find('[data-testid="admin-tab-roles"]').trigger('click');
+        await wrapper.find('[data-testid="tab-roles"]').trigger('click');
         await wrapper.vm.$nextTick();
 
         expect(wrapper.text()).toContain('Roles');
@@ -114,7 +114,7 @@ describe('adminPage', () => {
         vi.spyOn(admin, 'fetchRoles').mockResolvedValue();
 
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
-        await wrapper.find('[data-testid="admin-tab-assignments"]').trigger('click');
+        await wrapper.find('[data-testid="tab-assignments"]').trigger('click');
         await wrapper.vm.$nextTick();
 
         expect(wrapper.text()).toContain('Role Assignments');
@@ -123,7 +123,7 @@ describe('adminPage', () => {
 
     it('shows Settings tab', () => {
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
-        expect(wrapper.find('[data-testid="admin-tab-settings"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-settings"]').exists()).toBe(true);
     });
 
     it('switches to Settings tab content on click', async () => {
@@ -131,7 +131,7 @@ describe('adminPage', () => {
         vi.spyOn(admin, 'fetchSettings').mockResolvedValue();
 
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
-        await wrapper.find('[data-testid="admin-tab-settings"]').trigger('click');
+        await wrapper.find('[data-testid="tab-settings"]').trigger('click');
         await wrapper.vm.$nextTick();
 
         expect(wrapper.text()).toContain('Global Settings');
@@ -139,7 +139,7 @@ describe('adminPage', () => {
 
     it('shows Dead Letter tab', () => {
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
-        expect(wrapper.find('[data-testid="admin-tab-dlq"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-dlq"]').exists()).toBe(true);
     });
 
     it('switches to Dead Letter tab content on click', async () => {
@@ -147,7 +147,7 @@ describe('adminPage', () => {
         vi.spyOn(admin, 'fetchDeadLetterEntries').mockResolvedValue();
 
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
-        await wrapper.find('[data-testid="admin-tab-dlq"]').trigger('click');
+        await wrapper.find('[data-testid="tab-dlq"]').trigger('click');
         await wrapper.vm.$nextTick();
 
         expect(wrapper.text()).toContain('Dead Letter');
@@ -155,23 +155,23 @@ describe('adminPage', () => {
 
     it('shows all five tabs', () => {
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
-        expect(wrapper.find('[data-testid="admin-tab-projects"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="admin-tab-roles"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="admin-tab-assignments"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="admin-tab-settings"]').exists()).toBe(true);
-        expect(wrapper.find('[data-testid="admin-tab-dlq"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-projects"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-roles"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-assignments"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-settings"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-dlq"]').exists()).toBe(true);
     });
 
     it('highlights the active tab with distinct styling', async () => {
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
 
         // Projects tab is active by default
-        const projectsTab = wrapper.find('[data-testid="admin-tab-projects"]');
-        expect(projectsTab.classes()).toContain('border-zinc-500');
+        const projectsTab = wrapper.find('[data-testid="tab-projects"]');
+        expect(projectsTab.classes()).toContain('border-zinc-900');
 
         // Roles tab is not active
-        const rolesTab = wrapper.find('[data-testid="admin-tab-roles"]');
-        expect(rolesTab.classes()).not.toContain('border-zinc-500');
+        const rolesTab = wrapper.find('[data-testid="tab-roles"]');
+        expect(rolesTab.classes()).not.toContain('border-zinc-900');
     });
 
     it('shows AdminProjectConfig when configure event is emitted from project list', async () => {
@@ -277,6 +277,6 @@ describe('adminPage', () => {
     it('defaults to projects tab showing AdminProjectList', () => {
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
         // Default activeTab is 'projects', so project list component should render
-        expect(wrapper.find('[data-testid="admin-tab-projects"]').classes()).toContain('border-zinc-500');
+        expect(wrapper.find('[data-testid="tab-projects"]').classes()).toContain('border-zinc-900');
     });
 });

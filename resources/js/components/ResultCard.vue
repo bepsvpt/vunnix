@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { computed, ref } from 'vue';
 import MarkdownContent from './MarkdownContent.vue';
+import BaseBadge from './ui/BaseBadge.vue';
 
 interface KeyFinding {
     title: string;
@@ -121,12 +122,12 @@ async function toggleFullAnalysis(): Promise<void> {
     }
 }
 
-function severityClass(severity: string): string {
+function severityVariant(severity: string): 'danger' | 'warning' | 'info' {
     if (severity === 'critical')
-        return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
+        return 'danger';
     if (severity === 'major')
-        return 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300';
-    return 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300';
+        return 'warning';
+    return 'info';
 }
 </script>
 
@@ -146,16 +147,13 @@ function severityClass(severity: string): string {
                 : 'border-red-100 dark:border-red-900'"
         >
             <span class="text-lg">{{ isSuccess ? '✅' : '❌' }}</span>
-            <span
+            <BaseBadge
                 data-testid="result-type-badge"
-                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
-                :class="isSuccess
-                    ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'"
+                :variant="isSuccess ? 'success' : 'danger'"
             >
                 <span>{{ typeDisplay.emoji }}</span>
                 <span>{{ isSuccess ? `${typeDisplay.label} completed` : `${typeDisplay.label} failed` }}</span>
-            </span>
+            </BaseBadge>
         </div>
 
         <!-- Body -->
@@ -244,10 +242,12 @@ function severityClass(severity: string): string {
                         class="text-xs space-y-0.5"
                     >
                         <div class="flex items-center gap-1.5">
-                            <span
-                                class="px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide"
-                                :class="severityClass(finding.severity)"
-                            >{{ finding.severity }}</span>
+                            <BaseBadge
+                                :variant="severityVariant(finding.severity)"
+                                class="uppercase tracking-wide !text-[10px] !px-1.5"
+                            >
+                                {{ finding.severity }}
+                            </BaseBadge>
                             <span class="font-medium text-zinc-800 dark:text-zinc-200">{{ finding.title }}</span>
                         </div>
                         <div class="text-zinc-500 dark:text-zinc-400 pl-0.5 result-card-markdown">

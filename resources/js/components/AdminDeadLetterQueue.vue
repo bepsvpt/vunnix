@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useAdminStore } from '@/stores/admin';
+import BaseButton from './ui/BaseButton.vue';
+import BaseCard from './ui/BaseCard.vue';
+import BaseEmptyState from './ui/BaseEmptyState.vue';
 
 interface DeadLetterEntry {
     id: number;
@@ -140,7 +143,7 @@ onMounted(() => {
             </div>
 
             <div v-else-if="admin.deadLetterDetail" class="space-y-4">
-                <div class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <BaseCard>
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-sm font-medium">
                             Entry #{{ admin.deadLetterDetail.id }}
@@ -171,18 +174,18 @@ onMounted(() => {
                         </dt>
                         <dd>{{ admin.deadLetterDetail.attempt_count ?? '—' }}</dd>
                     </dl>
-                </div>
+                </BaseCard>
 
                 <!-- Error details -->
-                <div class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <BaseCard>
                     <h4 class="text-sm font-medium mb-2">
                         Error Details
                     </h4>
                     <pre class="text-xs text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap break-words bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded">{{ admin.deadLetterDetail.error_details || 'No error details recorded.' }}</pre>
-                </div>
+                </BaseCard>
 
                 <!-- Attempt history -->
-                <div v-if="admin.deadLetterDetail.attempt_history?.length" class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <BaseCard v-if="admin.deadLetterDetail.attempt_history?.length">
                     <h4 class="text-sm font-medium mb-2">
                         Attempt History
                     </h4>
@@ -200,26 +203,26 @@ onMounted(() => {
                             </p>
                         </div>
                     </div>
-                </div>
+                </BaseCard>
 
                 <!-- Action buttons -->
                 <div class="flex gap-3">
-                    <button
+                    <BaseButton
+                        variant="primary"
                         :disabled="actionInProgress === admin.deadLetterDetail.id"
-                        class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                         :data-testid="`dlq-retry-btn-${admin.deadLetterDetail.id}`"
                         @click="handleRetry(admin.deadLetterDetail.id)"
                     >
                         {{ actionInProgress === admin.deadLetterDetail.id ? 'Retrying...' : 'Retry' }}
-                    </button>
-                    <button
+                    </BaseButton>
+                    <BaseButton
+                        variant="secondary"
                         :disabled="actionInProgress === admin.deadLetterDetail.id"
-                        class="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800 disabled:opacity-50"
                         :data-testid="`dlq-dismiss-btn-${admin.deadLetterDetail.id}`"
                         @click="handleDismiss(admin.deadLetterDetail.id)"
                     >
                         {{ actionInProgress === admin.deadLetterDetail.id ? 'Dismissing...' : 'Dismiss' }}
-                    </button>
+                    </BaseButton>
                 </div>
             </div>
         </div>
@@ -269,9 +272,11 @@ onMounted(() => {
             </div>
 
             <!-- Empty state -->
-            <div v-else-if="admin.deadLetterEntries.length === 0" class="py-8 text-center text-zinc-500" data-testid="dlq-empty">
-                No failed tasks in the dead letter queue.
-            </div>
+            <BaseEmptyState v-else-if="admin.deadLetterEntries.length === 0" data-testid="dlq-empty">
+                <template #title>
+                    No failed tasks in the dead letter queue
+                </template>
+            </BaseEmptyState>
 
             <!-- Entry list -->
             <div v-else class="space-y-3">

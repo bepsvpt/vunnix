@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BaseButton from './ui/BaseButton.vue';
+
 interface Props {
     existingProjectName: string;
     newProjectName: string;
@@ -35,13 +37,12 @@ const emit = defineEmits<{
             </p>
 
             <div class="flex justify-end gap-2">
-                <button
-                    type="button"
-                    class="px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                <BaseButton
+                    variant="secondary"
                     @click="emit('cancel')"
                 >
                     Cancel
-                </button>
+                </BaseButton>
                 <button
                     type="button"
                     class="px-4 py-2 text-sm rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors"

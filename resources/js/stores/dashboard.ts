@@ -28,6 +28,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const nextCursor = ref<string | null>(null);
     const hasMore = computed(() => nextCursor.value !== null);
 
+    const isAllZeros = computed(() => {
+        if (!overview.value)
+            return false;
+        const o = overview.value;
+        return (o.active_tasks as number) === 0
+            && ((o.total_completed as number) + (o.total_failed as number)) === 0;
+    });
+
     // Filter state for activity feed tabs (§5.3)
     const activeFilter = ref<string | null>(null); // null = 'All', or: 'code_review', 'feature_dev', 'ui_adjustment', 'prd_creation'
     const projectFilter = ref<number | null>(null); // null = all projects, or project_id
@@ -287,6 +295,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         isLoading,
         nextCursor,
         hasMore,
+        isAllZeros,
         filteredFeed,
         addActivityItem,
         addMetricsUpdate,
