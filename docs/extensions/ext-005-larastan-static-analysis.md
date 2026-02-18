@@ -1,5 +1,7 @@
 ## Extension 005: Larastan (PHPStan) Static Analysis
 
+**Status: ✅ Implemented** — `f82d9b9` through `cf19ab7`
+
 ### Trigger
 Long-term maintainability improvement. CLAUDE.md lists PHPStan as the static analysis tool and the executor Docker image already has PHPStan installed globally (D71), but no configuration, dev dependency, or CI enforcement exists for the main application.
 

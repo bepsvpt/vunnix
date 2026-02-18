@@ -1,5 +1,7 @@
 ## Extension 006: Laravel Pint Integration
 
+**Status: ✅ Implemented** — `40dcc46`
+
 ### Trigger
 Pint is installed (`laravel/pint: ^1.24`) but only runs when manually invoked via `./vendor/bin/pint`. No automated enforcement exists — no Claude Code hooks, no CI check, and no project-level `pint.json` configuration. Code style drifts silently between contributors (human and AI).
 

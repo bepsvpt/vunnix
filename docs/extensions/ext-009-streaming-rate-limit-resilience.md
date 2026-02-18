@@ -1,5 +1,7 @@
 ## Extension 009: Streaming Rate Limit Resilience
 
+**Status: ✅ Implemented** — `5580280`
+
 ### Trigger
 
 Production `RateLimitedException` crashed the SSE chat stream mid-conversation after 3 successful tool calls. The Anthropic API returned 429 during the 4th AI SDK call. No graceful degradation — the stream died with an unhandled exception propagating through `StreamableAgentResponse` → FrankenPHP → broken HTTP response.

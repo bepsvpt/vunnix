@@ -1,5 +1,7 @@
 ## Extension 004: CI Test Workflows
 
+**Status: ✅ Implemented** — `0d53f87`
+
 ### Trigger
 
 Build workflows (build-executor, build-app) push Docker images to GHCR without running any tests. The repo has 900+ PHP tests (Pest) and Vue/Vitest tests, but no CI automation. A broken commit on `main` gets built and published as-is.

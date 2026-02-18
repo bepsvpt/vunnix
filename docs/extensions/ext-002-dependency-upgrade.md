@@ -1,5 +1,7 @@
 ## Extension 002: Full Dependency Upgrade
 
+**Status: ✅ Implemented** — `9f8179b`
+
 ### Trigger
 
 Dependencies have drifted from latest — major versions behind in testing stack (Pest 3→4), frontend state/routing (Pinia 2→3, Vue Router 4→5), Docker images (PHP 8.4→8.5, PG 16→18, Redis 7→8, Node 22→24), and GitHub Actions (checkout v4→v6). Project is pre-deployment, making this the ideal time.

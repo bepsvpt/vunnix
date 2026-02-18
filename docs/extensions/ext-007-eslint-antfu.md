@@ -1,5 +1,7 @@
 ## Extension 007: ESLint with @antfu/eslint-config
 
+**Status: ✅ Implemented** — `d076044`
+
 ### Trigger
 Frontend has zero linting or formatting tooling. CLAUDE.md states "Formatting: ESLint + Prettier" as the Vue standard, but neither is installed. PHP side has full coverage (Pint ext-006 + PHPStan ext-005 + Rector); JS/Vue side has no enforcement. D71 established ESLint as a code quality tool but it was never operationalized.
 

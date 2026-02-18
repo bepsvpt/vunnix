@@ -1,5 +1,7 @@
 ## Extension 003: GitHub Releases Deployment
 
+**Status: ✅ Implemented** — `c3e62d7`
+
 ### Trigger
 
 Migration from GitLab to GitHub hosting. Need a production distribution story so self-hosted users can deploy Vunnix on any VPS/EC2 without cloning the source repo — just `docker compose up -d`.

@@ -1,5 +1,7 @@
 ## Extension 008: Frontend TypeScript Migration
 
+**Status: ✅ Implemented** — `01852ac`
+
 ### Trigger
 
 Long-term maintainability concern for the Vue 3 frontend. The codebase has zero TypeScript infrastructure — no `.ts` files, no `tsconfig.json`, no typed props or stores. Adding type safety improves refactoring confidence, IDE support, and catches bugs at compile time.

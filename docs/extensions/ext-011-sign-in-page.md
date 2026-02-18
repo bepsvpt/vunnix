@@ -1,5 +1,7 @@
 ## Extension 011: Sign-In Page for Unauthenticated Users
 
+**Status: ✅ Implemented** — `b39da2c`
+
 ### Trigger
 UX improvement — unauthenticated users are immediately redirected to GitLab OAuth (`/auth/redirect`) with no context or branding. A dedicated sign-in page provides orientation before leaving the SPA.
 

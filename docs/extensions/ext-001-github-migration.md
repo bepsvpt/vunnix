@@ -1,5 +1,7 @@
 ## Extension 001: Migrate Repo Hosting to GitHub
 
+**Status: ✅ Implemented** — `c4e6a3b`
+
 ### Trigger
 CI ecosystem preference and virtually unlimited free CI credits for public repos on GitHub Actions. Repository: https://github.com/bepsvpt/vunnix
 
