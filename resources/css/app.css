@@ -37,6 +37,12 @@
     --width-sidebar: 20rem;
 }
 
+/* Restore pointer cursor on interactive elements (Tailwind v4 removed this reset) */
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+    cursor: pointer;
+}
+
 /* Markdown content typography for AI chat responses */
 .markdown-content {
     @apply text-sm leading-relaxed;
