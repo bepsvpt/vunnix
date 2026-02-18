@@ -347,6 +347,9 @@ run_claude() {
 
     log "Claude CLI output saved to $CLAUDE_OUTPUT_FILE ($(wc -c < "$CLAUDE_OUTPUT_FILE" 2>/dev/null || echo 0) bytes)"
 
+    # Normalize output format before any field checks
+    normalize_claude_output "$CLAUDE_OUTPUT_FILE"
+
     # Log structured_output presence for debugging
     if jq -e '.structured_output' "$CLAUDE_OUTPUT_FILE" >/dev/null 2>&1; then
         log "✓ Claude CLI populated .structured_output field (schema-validated)"
@@ -671,9 +674,6 @@ main() {
     # run_claude echoes the duration (seconds) to stdout on success
     local duration=0
     if duration=$(run_claude "$skills"); then
-        # Step 4a: Normalize output format (array → result object)
-        normalize_claude_output "$CLAUDE_OUTPUT_FILE"
-
         # Step 4b: Repair unstructured output if needed
         # --json-schema validates but doesn't enforce (see comment at build_prompt).
         # When Claude uses sub-agents, the final response can be narrative text.
