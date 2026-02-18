@@ -126,7 +126,7 @@ test('includes error_reason in broadcast payload for failed task', function (): 
     expect($payload)->toHaveKey('error_reason', 'Schema validation failed');
 });
 
-test('includes analysis content in broadcast payload for completed deep_analysis task', function (): void {
+test('includes key findings and references in broadcast payload for completed deep_analysis task (excludes large analysis field)', function (): void {
     $task = Task::factory()->create([
         'type' => 'deep_analysis',
         'status' => 'completed',
@@ -145,8 +145,9 @@ test('includes analysis content in broadcast payload for completed deep_analysis
     $event = new TaskStatusChanged($task);
     $payload = $event->broadcastWith();
 
-    expect($payload['result_data'])->toHaveKey('analysis');
-    expect($payload['result_data']['analysis'])->toContain('JWT tokens');
+    // analysis is intentionally excluded from broadcast — it can be 10–50KB+
+    // and would exceed the Reverb max_message_size limit.
+    expect($payload['result_data'])->not->toHaveKey('analysis');
     expect($payload['result_data']['key_findings'])->toHaveCount(1);
     expect($payload['result_data']['references'])->toHaveCount(1);
 });

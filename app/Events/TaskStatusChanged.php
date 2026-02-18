@@ -88,8 +88,10 @@ class TaskStatusChanged implements ShouldBroadcast
     private function buildResultSummary(array $result): ?string
     {
         // Preferred summary/notes fields (feature_dev, code_review, etc.)
+        // Guard with is_string(): code_review 'summary' is a structured object,
+        // not a string — skip it so we fall through to other fields.
         $text = $result['summary'] ?? $result['notes'] ?? null;
-        if ($text !== null && $text !== '') {
+        if (is_string($text) && $text !== '') {
             return $text;
         }
 

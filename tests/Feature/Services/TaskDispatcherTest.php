@@ -8,6 +8,7 @@ use App\Models\ProjectConfig;
 use App\Models\Task;
 use App\Services\TaskDispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 
@@ -24,6 +25,11 @@ it('routes server-side task (PrdCreation) without GitLab API call', function ():
         'mr_iid' => null,
         'issue_iid' => 10,
     ]);
+
+    // Pre-seed cache so gitlabWebUrl() returns without an HTTP call.
+    // Without this, TaskStatusChanged::broadcastWith() would call the
+    // GitLab projects API on cache miss, breaking assertNothingSent().
+    Cache::put("project.{$task->project_id}.gitlab_web_url", 'https://gitlab.example.com/project');
 
     $dispatcher = app(TaskDispatcher::class);
     $dispatcher->dispatch($task);
@@ -542,6 +548,9 @@ it('does not dispatch PostPlaceholderComment for non-review task types', functio
         'mr_iid' => null,
         'issue_iid' => 10,
     ]);
+
+    // Pre-seed cache so gitlabWebUrl() returns without an HTTP call.
+    Cache::put("project.{$task->project_id}.gitlab_web_url", 'https://gitlab.example.com/project');
 
     $dispatcher = app(TaskDispatcher::class);
     $dispatcher->dispatch($task);
