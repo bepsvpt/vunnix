@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/vunnix.svg" alt="Vunnix" width="128">
+</p>
+
 # Vunnix
 
 AI-powered development platform for **self-hosted GitLab Free** — conversational AI chat + event-driven code review orchestrator.

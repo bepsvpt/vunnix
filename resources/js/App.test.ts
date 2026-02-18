@@ -67,7 +67,7 @@ describe('app', () => {
         });
 
         expect(wrapper.find('nav').exists()).toBe(true);
-        expect(wrapper.text()).toContain('Vunnix');
+        expect(wrapper.find('img[alt="Vunnix"]').exists()).toBe(true);
     });
 
     it('renders ChatPage at /chat', async () => {

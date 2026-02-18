@@ -41,14 +41,16 @@ beforeEach(() => {
 });
 
 describe('appNavigation', () => {
-    it('renders brand name', async () => {
+    it('renders brand logo', async () => {
         const router = createTestRouter();
         router.push('/chat');
         await router.isReady();
 
         const wrapper = mountNav(router);
 
-        expect(wrapper.text()).toContain('Vunnix');
+        const logo = wrapper.find('img[alt="Vunnix"]');
+        expect(logo.exists()).toBe(true);
+        expect(logo.classes()).toContain('h-8');
     });
 
     it('renders all three nav links', async () => {
@@ -391,11 +393,12 @@ describe('appNavigation', () => {
             const hamburger = wrapper.find('button[aria-label="Toggle navigation menu"]');
             await hamburger.trigger('click');
 
-            // Find mobile user section images (look for the 8x8 sized avatar in mobile section)
+            // Find mobile user section avatar (h-8 sized, distinct from desktop h-7 and logo)
             const imgs = wrapper.findAll('img');
-            const mobileAvatar = imgs.find(img => img.classes().includes('h-8'));
+            const mobileAvatar = imgs.find(img =>
+                img.classes().includes('h-8') && img.attributes('src') === 'https://example.com/mobile-avatar.png',
+            );
             expect(mobileAvatar).toBeTruthy();
-            expect(mobileAvatar!.attributes('src')).toBe('https://example.com/mobile-avatar.png');
         });
 
         it('hides mobile user section when not authenticated', async () => {

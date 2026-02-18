@@ -48,7 +48,7 @@ function isLinkActive(to: string): boolean {
             <div class="flex items-center justify-between h-16">
                 <!-- Logo / Brand -->
                 <div class="flex items-center gap-2">
-                    <span class="text-lg font-semibold">Vunnix</span>
+                    <img src="/vunnix-rt.svg" alt="Vunnix" class="h-8">
                 </div>
 
                 <!-- Desktop nav links -->
