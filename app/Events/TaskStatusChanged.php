@@ -47,6 +47,7 @@ class TaskStatusChanged implements ShouldBroadcast
             'title' => $result['title'] ?? $result['mr_title'] ?? null,
             'started_at' => $this->task->started_at?->toIso8601String(),
             'conversation_id' => $this->task->conversation_id,
+            'gitlab_url' => $this->task->project->gitlabWebUrl(),
             'result_summary' => $this->task->isTerminal() ? ($result['summary'] ?? $result['notes'] ?? null) : null,
             'error_reason' => $this->task->isTerminal() ? $this->task->error_reason : null,
             'timestamp' => now()->toIso8601String(),

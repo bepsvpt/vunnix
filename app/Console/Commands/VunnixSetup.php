@@ -148,6 +148,12 @@ class VunnixSetup extends Command
             $this->info("  [✓] Project record exists (Vunnix ID: {$project->id})");
         }
 
+        // Cache the GitLab web URL for use in broadcast payloads and API responses
+        $webUrl = $gitlabProject['web_url'] ?? null;
+        if (is_string($webUrl) && $webUrl !== '') {
+            \Illuminate\Support\Facades\Cache::forever("project.{$project->id}.gitlab_web_url", $webUrl);
+        }
+
         return $project;
     }
 

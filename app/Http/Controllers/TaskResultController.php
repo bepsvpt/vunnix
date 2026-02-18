@@ -91,8 +91,11 @@ class TaskResultController extends Controller
         }
 
         // Failed results transition immediately — no RP validation needed
+        // Prefer error_message (descriptive) over error (short code) for user-facing display
+        $errorReason = $validated['error_message'] ?? $validated['error'] ?? null;
+
         try {
-            $task->transitionTo(TaskStatus::Failed, $validated['error'] ?? null);
+            $task->transitionTo(TaskStatus::Failed, $errorReason);
         } catch (InvalidTaskTransitionException $e) {
             Log::error('Task result transition failed', [
                 'task_id' => $task->id,

@@ -35,6 +35,7 @@ class StoreTaskResultRequest extends FormRequest
             'result' => ['required_if:status,completed', 'nullable', 'array'],
 
             'error' => ['nullable', 'string', 'max:10000'],
+            'error_message' => ['nullable', 'string', 'max:10000'],
 
             'tokens' => ['required', 'array'],
             'tokens.input' => ['required', 'integer', 'min:0'],

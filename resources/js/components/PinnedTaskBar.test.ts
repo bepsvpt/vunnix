@@ -64,14 +64,15 @@ describe('pinnedTaskBar', () => {
         expect(wrapper.find('[data-testid="elapsed-time"]').text()).toBe('5m 1s');
     });
 
-    it('shows pipeline link when pipeline_id is available', () => {
+    it('shows pipeline link when pipeline_id and gitlab_url are available', () => {
         const tasks = [
-            { task_id: 1, status: 'running', type: 'feature_dev', title: 'Test', pipeline_id: 456, pipeline_status: 'running', started_at: '2026-02-15T12:00:00Z', project_id: 1, conversation_id: 'c1' },
+            { task_id: 1, status: 'running', type: 'feature_dev', title: 'Test', pipeline_id: 456, pipeline_status: 'running', started_at: '2026-02-15T12:00:00Z', project_id: 1, conversation_id: 'c1', gitlab_url: 'https://gitlab.com/group/project' },
         ];
         const wrapper = mountBar(tasks);
         const link = wrapper.find('[data-testid="pipeline-link"]');
         expect(link.exists()).toBe(true);
         expect(link.text()).toContain('View pipeline');
+        expect(link.attributes('href')).toBe('https://gitlab.com/group/project/-/pipelines/456');
     });
 
     it('hides pipeline link when pipeline_id is null', () => {

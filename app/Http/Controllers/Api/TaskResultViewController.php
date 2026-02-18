@@ -36,6 +36,7 @@ class TaskResultViewController extends Controller
                 'pipeline_status' => $task->pipeline_status,
                 'started_at' => $task->started_at?->toIso8601String(),
                 'conversation_id' => $task->conversation_id,
+                'gitlab_url' => $task->project->gitlabWebUrl(),
                 'error_reason' => $task->error_reason,
                 'result' => $task->result,
             ],

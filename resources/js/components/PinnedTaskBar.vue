@@ -9,6 +9,7 @@ interface PinnedTask {
     pipeline_id: number | null;
     pipeline_status: string | null;
     started_at: string | null;
+    gitlab_url: string | null;
 }
 
 interface Props {
@@ -117,9 +118,9 @@ function isPipelinePending(task: PinnedTask): boolean {
 
             <!-- Pipeline link -->
             <a
-                v-if="task.pipeline_id"
+                v-if="task.pipeline_id && task.gitlab_url"
                 data-testid="pipeline-link"
-                :href="`/-/pipelines/${task.pipeline_id}`"
+                :href="`${task.gitlab_url}/-/pipelines/${task.pipeline_id}`"
                 target="_blank"
                 rel="noopener"
                 class="text-xs text-blue-600 dark:text-blue-400 hover:underline shrink-0"

@@ -38,6 +38,7 @@ interface TrackedTask {
     pipeline_status: string | null;
     started_at: string | null;
     conversation_id: string | null;
+    gitlab_url: string | null;
     result_summary?: string | null;
 }
 
@@ -179,7 +180,7 @@ export const useConversationsStore = defineStore('conversations', () => {
             result_data: (eventData.result_data as Record<string, unknown>) || {},
             conversation_id: (eventData.conversation_id as string | null) ?? null,
             project_id: eventData.project_id as number,
-            gitlab_url: '',
+            gitlab_url: (eventData.gitlab_url as string) || '',
         });
 
         // Append system context marker message
@@ -259,6 +260,7 @@ export const useConversationsStore = defineStore('conversations', () => {
                     pipeline_id: event.pipeline_id as number | null,
                     pipeline_status: event.pipeline_status as string | null,
                     started_at: event.started_at as string | null,
+                    gitlab_url: (event.gitlab_url as string | null) ?? null,
                     result_summary: event.result_summary as string | null,
                 });
 
@@ -296,6 +298,7 @@ export const useConversationsStore = defineStore('conversations', () => {
                     pipeline_id: data.pipeline_id ?? null,
                     pipeline_status: data.pipeline_status ?? null,
                     started_at: data.started_at ?? null,
+                    gitlab_url: data.gitlab_url ?? null,
                     result_summary: data.result?.summary ?? data.result?.notes ?? null,
                 });
 
@@ -475,6 +478,7 @@ export const useConversationsStore = defineStore('conversations', () => {
                     pipeline_status: null,
                     started_at: null,
                     conversation_id: selectedId.value,
+                    gitlab_url: null,
                 });
                 subscribeToTask(taskId);
             }
@@ -561,7 +565,7 @@ export const useConversationsStore = defineStore('conversations', () => {
                     result_data: resultData,
                     conversation_id: selectedId.value,
                     project_id: data.project_id,
-                    gitlab_url: '',
+                    gitlab_url: data.gitlab_url || '',
                 });
             } catch {
                 // Task may have been deleted or user lost access — skip silently
@@ -689,6 +693,7 @@ export const useConversationsStore = defineStore('conversations', () => {
                                     pipeline_status: null,
                                     started_at: null,
                                     conversation_id: selectedId.value,
+                                    gitlab_url: null,
                                 });
                                 subscribeToTask(dispatch.taskId);
                             }
@@ -720,6 +725,7 @@ export const useConversationsStore = defineStore('conversations', () => {
                             pipeline_status: null,
                             started_at: null,
                             conversation_id: selectedId.value,
+                            gitlab_url: null,
                         });
                         subscribeToTask(dispatch.taskId);
                     }

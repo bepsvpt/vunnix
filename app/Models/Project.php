@@ -85,6 +85,17 @@ class Project extends Model
     }
 
     /**
+     * Resolve the project's GitLab web URL (e.g. https://gitlab.com/group/project).
+     *
+     * Reads from cache only — populated by VunnixSetup and project sync.
+     * Returns null if the cache is empty (project hasn't been set up yet).
+     */
+    public function gitlabWebUrl(): ?string
+    {
+        return \Illuminate\Support\Facades\Cache::get("project.{$this->id}.gitlab_web_url");
+    }
+
+    /**
      * @return array{
      *   gitlab_project_id: 'integer',
      *   enabled: 'boolean',
