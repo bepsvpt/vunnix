@@ -196,6 +196,62 @@ it('disables an enabled project', function (): void {
     expect($project->webhook_id)->toBeNull();
 });
 
+it('returns error with warnings when enable fails via mock', function (): void {
+    $project = Project::factory()->create([
+        'gitlab_project_id' => 42,
+        'enabled' => false,
+    ]);
+    ProjectConfig::factory()->create(['project_id' => $project->id]);
+    $admin = createAdmin($project);
+
+    $this->mock(\App\Services\ProjectEnablementService::class)
+        ->shouldReceive('enable')
+        ->once()
+        ->with(\Mockery::on(fn ($p) => $p->id === $project->id))
+        ->andReturn([
+            'success' => false,
+            'error' => 'Some error',
+            'warnings' => ['Label creation skipped'],
+        ]);
+
+    $this->actingAs($admin)
+        ->postJson("/api/v1/admin/projects/{$project->id}/enable")
+        ->assertStatus(422)
+        ->assertJsonPath('success', false)
+        ->assertJsonPath('error', 'Some error')
+        ->assertJsonPath('warnings', ['Label creation skipped']);
+});
+
+it('returns error when disable fails via mock', function (): void {
+    $project = Project::factory()->create([
+        'gitlab_project_id' => 42,
+        'enabled' => true,
+        'webhook_configured' => true,
+        'webhook_id' => 555,
+    ]);
+    $admin = createAdmin($project);
+
+    $this->mock(\App\Services\ProjectEnablementService::class)
+        ->shouldReceive('disable')
+        ->once()
+        ->with(\Mockery::on(fn ($p) => $p->id === $project->id))
+        ->andReturn([
+            'success' => false,
+            'error' => 'Webhook removal failed',
+        ]);
+
+    $response = $this->actingAs($admin)
+        ->postJson("/api/v1/admin/projects/{$project->id}/disable");
+
+    $response->assertStatus(422)
+        ->assertJsonPath('success', false)
+        ->assertJsonPath('error', 'Webhook removal failed');
+
+    // The disable error response does NOT include 'warnings'
+    $json = $response->json();
+    expect($json)->not->toHaveKey('warnings');
+});
+
 it('rejects enable from non-admin', function (): void {
     $project = Project::factory()->create(['enabled' => false]);
     ProjectConfig::factory()->create(['project_id' => $project->id]);

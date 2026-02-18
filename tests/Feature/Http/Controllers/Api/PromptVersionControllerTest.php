@@ -96,6 +96,45 @@ it('excludes tasks with null prompt_version', function (): void {
         ->assertJsonCount(1, 'data');
 });
 
+it('returns correct structure for single task with specific prompt_version', function (): void {
+    [$user, $project] = createPromptVersionTestUser();
+
+    Task::factory()->create([
+        'project_id' => $project->id,
+        'status' => TaskStatus::Completed,
+        'prompt_version' => ['skill' => 'deep-analysis:2.1', 'claude_md' => 'executor:3.0', 'schema' => 'analysis:2.0'],
+    ]);
+
+    $response = $this->actingAs($user)->getJson('/api/v1/prompt-versions');
+
+    $response->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.skill', 'deep-analysis:2.1')
+        ->assertJsonPath('data.0.claude_md', 'executor:3.0')
+        ->assertJsonPath('data.0.schema', 'analysis:2.0');
+});
+
+it('returns empty data array when no completed tasks exist', function (): void {
+    [$user, $project] = createPromptVersionTestUser();
+
+    // Create tasks that are NOT completed — they should be excluded
+    Task::factory()->create([
+        'project_id' => $project->id,
+        'status' => TaskStatus::Running,
+        'prompt_version' => ['skill' => 'running-task:1.0', 'claude_md' => 'executor:1.0', 'schema' => 'review:1.0'],
+    ]);
+    Task::factory()->create([
+        'project_id' => $project->id,
+        'status' => TaskStatus::Received,
+        'prompt_version' => ['skill' => 'pending-task:1.0', 'claude_md' => 'executor:1.0', 'schema' => 'review:1.0'],
+    ]);
+
+    $response = $this->actingAs($user)->getJson('/api/v1/prompt-versions');
+
+    $response->assertOk()
+        ->assertJsonPath('data', []);
+});
+
 it('requires authentication', function (): void {
     $this->getJson('/api/v1/prompt-versions')
         ->assertStatus(401);

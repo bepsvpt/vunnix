@@ -177,6 +177,83 @@ it('filters DLQ entries by failure_reason', function (): void {
         ->assertJsonPath('data.0.failure_reason', 'expired');
 });
 
+it('filters DLQ entries by project_id from task_record', function (): void {
+    $project = Project::factory()->enabled()->create();
+    $user = createDlqAdmin($project);
+
+    $project2 = Project::factory()->enabled()->create();
+
+    // Entry with project_id matching filter
+    $matchingEntry = createDlqEntryWithTask($project);
+
+    // Entry with different project_id — should be excluded
+    createDlqEntryWithTask($project2);
+
+    $this->actingAs($user)
+        ->getJson("/api/v1/admin/dead-letter?project_id={$project->id}")
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $matchingEntry->id);
+});
+
+it('returns no entries when project_id filter matches nothing', function (): void {
+    $project = Project::factory()->enabled()->create();
+    $user = createDlqAdmin($project);
+
+    createDlqEntryWithTask($project);
+
+    $this->actingAs($user)
+        ->getJson('/api/v1/admin/dead-letter?project_id=999999')
+        ->assertOk()
+        ->assertJsonCount(0, 'data');
+});
+
+it('filters DLQ entries by date_from parameter', function (): void {
+    $project = Project::factory()->enabled()->create();
+    $user = createDlqAdmin($project);
+
+    // Old entry — before the date_from filter
+    createDlqEntryWithTask($project, [
+        'dead_lettered_at' => now()->subDays(10),
+    ]);
+
+    // Recent entry — after the date_from filter
+    $recentEntry = createDlqEntryWithTask($project, [
+        'dead_lettered_at' => now()->subDay(),
+    ]);
+
+    $dateFrom = now()->subDays(3)->toDateTimeString();
+
+    $this->actingAs($user)
+        ->getJson("/api/v1/admin/dead-letter?date_from={$dateFrom}")
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $recentEntry->id);
+});
+
+it('filters DLQ entries by date_to parameter', function (): void {
+    $project = Project::factory()->enabled()->create();
+    $user = createDlqAdmin($project);
+
+    // Old entry — before the date_to cutoff
+    $oldEntry = createDlqEntryWithTask($project, [
+        'dead_lettered_at' => now()->subDays(10),
+    ]);
+
+    // Recent entry — after the date_to cutoff
+    createDlqEntryWithTask($project, [
+        'dead_lettered_at' => now()->subDay(),
+    ]);
+
+    $dateTo = now()->subDays(5)->toDateTimeString();
+
+    $this->actingAs($user)
+        ->getJson("/api/v1/admin/dead-letter?date_to={$dateTo}")
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $oldEntry->id);
+});
+
 // ─── GET /api/v1/admin/dead-letter/{id} ────────────────────────
 
 it('returns single DLQ entry with relationships for admin', function (): void {

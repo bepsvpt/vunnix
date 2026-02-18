@@ -5,6 +5,7 @@ use App\Enums\TaskType;
 use App\Models\Task;
 use App\Services\ResultProcessor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
 
@@ -321,4 +322,71 @@ it('stores the sanitized result back on the task after validation', function ():
     $task->refresh();
     expect($task->result)->not->toHaveKey('injected_field')
         ->and($task->result)->toHaveKeys(['version', 'summary', 'findings', 'labels', 'commit_status']);
+});
+
+// ─── Transition edge cases ──────────────────────────────────────
+
+it('handles task already completed when processing valid result', function (): void {
+    // Create a task already in Completed state — IssueDiscussion has no schema,
+    // so process() will call succeed() directly, where transitionTo(Completed)
+    // throws because Completed → Completed is not a valid transition.
+    $task = Task::factory()->completed()->create([
+        'type' => TaskType::IssueDiscussion,
+    ]);
+    $task->result = ['response' => 'some result'];
+    $task->save();
+
+    $processor = app(ResultProcessor::class);
+    $result = $processor->process($task);
+
+    expect($result['success'])->toBeFalse()
+        ->and($result['data'])->toBeNull()
+        ->and($result['errors'])->toHaveKey('transition')
+        ->and($result['errors']['transition'][0])->toContain('completed');
+});
+
+it('handles task already completed when trying to fail with null result', function (): void {
+    // Task is already Completed with null result. process() sees null and calls
+    // fail(), which tries transitionTo(Failed). Completed → Failed is invalid,
+    // so the catch block logs and silently continues. The return still has
+    // success: false with the validation error.
+    $task = Task::factory()->completed()->create([
+        'type' => TaskType::CodeReview,
+    ]);
+    // result is null → triggers fail() path, but task is already Completed
+    $task->result = null;
+    $task->save();
+
+    Log::shouldReceive('warning')->once()->withArgs(fn (string $msg) => str_contains($msg, 'validation failed'));
+    Log::shouldReceive('info')->once()->withArgs(fn (string $msg) => str_contains($msg, 'already transitioned, cannot fail'));
+
+    $processor = app(ResultProcessor::class);
+    $result = $processor->process($task);
+
+    expect($result['success'])->toBeFalse()
+        ->and($result['errors'])->toHaveKey('validation')
+        ->and($result['errors']['validation'][0])->toContain('Result payload is null');
+});
+
+// ─── formatValidationErrors truncation ──────────────────────────
+
+it('truncates validation errors to 5 when many fields are invalid', function (): void {
+    $task = makeRunningTask(TaskType::CodeReview);
+    // Empty object — all required fields missing: version, summary, findings,
+    // labels, commit_status, plus nested summary.* fields generate many errors.
+    $task->result = [];
+    $task->save();
+
+    $processor = app(ResultProcessor::class);
+    $result = $processor->process($task);
+
+    expect($result['success'])->toBeFalse();
+
+    // The error reason stored on the task should contain at most 5 entries
+    // (semicolon-separated) after the "Schema validation failed: " prefix.
+    $task->refresh();
+    $errorMessage = str_replace('Schema validation failed: ', '', $task->error_reason ?? '');
+    $parts = explode('; ', $errorMessage);
+    expect(count($parts))->toBeLessThanOrEqual(5)
+        ->and(count($parts))->toBeGreaterThanOrEqual(1);
 });

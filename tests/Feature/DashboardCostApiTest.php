@@ -8,6 +8,7 @@ use App\Models\Role;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
@@ -375,4 +376,212 @@ it('ignores tasks with null tokens_used in token aggregation', function (): void
 
     $response->assertOk();
     $response->assertJsonPath('data.token_usage_by_type.code_review', 50000);
+});
+
+// ─── Materialized View / task_metrics Path ────────────────────
+
+it('uses pre-aggregated metrics when task_metrics data exists', function (): void {
+    $project = Project::factory()->enabled()->create();
+    $user = createAdminUser($project);
+
+    // Create tasks for task_metrics foreign key constraint
+    $task1 = Task::factory()->create(['project_id' => $project->id]);
+    $task2 = Task::factory()->create(['project_id' => $project->id]);
+
+    // Seed task_metrics — this makes MetricsQueryService::byType() return data,
+    // which triggers the fromMaterializedViews() code path in the controller
+    DB::table('task_metrics')->insert([
+        [
+            'task_id' => $task1->id,
+            'project_id' => $project->id,
+            'task_type' => 'code_review',
+            'input_tokens' => 10000,
+            'output_tokens' => 5000,
+            'cost' => 1.50,
+            'duration' => 45,
+            'severity_critical' => 1,
+            'severity_high' => 2,
+            'severity_medium' => 3,
+            'severity_low' => 0,
+            'findings_count' => 6,
+            'created_at' => now()->subDays(5),
+            'updated_at' => now()->subDays(5),
+        ],
+        [
+            'task_id' => $task2->id,
+            'project_id' => $project->id,
+            'task_type' => 'feature_dev',
+            'input_tokens' => 20000,
+            'output_tokens' => 10000,
+            'cost' => 3.00,
+            'duration' => 120,
+            'severity_critical' => 0,
+            'severity_high' => 0,
+            'severity_medium' => 0,
+            'severity_low' => 0,
+            'findings_count' => 0,
+            'created_at' => now()->subDays(3),
+            'updated_at' => now()->subDays(3),
+        ],
+    ]);
+
+    $response = $this->actingAs($user)->getJson('/api/v1/dashboard/cost');
+
+    $response->assertOk();
+    $response->assertJsonStructure([
+        'data' => [
+            'total_cost',
+            'total_tokens',
+            'token_usage_by_type',
+            'cost_per_type',
+            'cost_per_project',
+            'monthly_trend',
+        ],
+    ]);
+
+    // Verify token_usage_by_type from task_metrics aggregation
+    // code_review: input_tokens(10000) + output_tokens(5000) = 15000
+    // feature_dev: input_tokens(20000) + output_tokens(10000) = 30000
+    $response->assertJsonPath('data.token_usage_by_type.code_review', 15000);
+    $response->assertJsonPath('data.token_usage_by_type.feature_dev', 30000);
+
+    // Verify cost_per_type
+    $data = $response->json('data');
+    expect($data['cost_per_type'])->toHaveKey('code_review');
+    expect($data['cost_per_type']['code_review']['task_count'])->toBe(1);
+    expect((float) $data['cost_per_type']['code_review']['total_cost'])->toBe(1.5);
+    expect((float) $data['cost_per_type']['code_review']['avg_cost'])->toBe(1.5);
+
+    expect($data['cost_per_type'])->toHaveKey('feature_dev');
+    expect($data['cost_per_type']['feature_dev']['task_count'])->toBe(1);
+    expect((float) $data['cost_per_type']['feature_dev']['total_cost'])->toEqual(3.0);
+
+    // Verify cost_per_project (both task_metrics rows belong to same project)
+    expect($data['cost_per_project'])->toHaveCount(1);
+    expect($data['cost_per_project'][0]['project_name'])->toBe($project->name);
+    expect($data['cost_per_project'][0]['total_cost'])->toBe(4.5);
+    expect($data['cost_per_project'][0]['task_count'])->toBe(2);
+
+    // Verify totals come from byProject aggregation
+    $response->assertJsonPath('data.total_cost', 4.5);
+    $response->assertJsonPath('data.total_tokens', 45000);
+
+    // Verify monthly_trend from byPeriod aggregation
+    expect($data['monthly_trend'])->toBeArray();
+    expect($data['monthly_trend'])->not->toBeEmpty();
+});
+
+it('returns correct monthly trend from task_metrics data', function (): void {
+    $project = Project::factory()->enabled()->create();
+    $user = createAdminUser($project);
+
+    $task1 = Task::factory()->create(['project_id' => $project->id]);
+    $task2 = Task::factory()->create(['project_id' => $project->id]);
+
+    // Two metrics in different months
+    DB::table('task_metrics')->insert([
+        [
+            'task_id' => $task1->id,
+            'project_id' => $project->id,
+            'task_type' => 'code_review',
+            'input_tokens' => 5000,
+            'output_tokens' => 2000,
+            'cost' => 1.00,
+            'duration' => 30,
+            'severity_critical' => 0,
+            'severity_high' => 0,
+            'severity_medium' => 0,
+            'severity_low' => 0,
+            'findings_count' => 0,
+            'created_at' => now()->subMonth()->startOfMonth()->addDay(),
+            'updated_at' => now()->subMonth()->startOfMonth()->addDay(),
+        ],
+        [
+            'task_id' => $task2->id,
+            'project_id' => $project->id,
+            'task_type' => 'code_review',
+            'input_tokens' => 8000,
+            'output_tokens' => 3000,
+            'cost' => 2.00,
+            'duration' => 60,
+            'severity_critical' => 0,
+            'severity_high' => 0,
+            'severity_medium' => 0,
+            'severity_low' => 0,
+            'findings_count' => 0,
+            'created_at' => now()->startOfMonth()->addDay(),
+            'updated_at' => now()->startOfMonth()->addDay(),
+        ],
+    ]);
+
+    $response = $this->actingAs($user)->getJson('/api/v1/dashboard/cost');
+
+    $response->assertOk();
+    $data = $response->json('data');
+
+    // Should have 2 monthly entries sorted by month
+    expect($data['monthly_trend'])->toHaveCount(2);
+    expect($data['monthly_trend'][0]['month'])->toBeLessThan($data['monthly_trend'][1]['month']);
+
+    // First month: cost 1.00, tokens 7000, count 1
+    expect((float) $data['monthly_trend'][0]['total_cost'])->toEqual(1.0);
+    expect($data['monthly_trend'][0]['total_tokens'])->toBe(7000);
+    expect($data['monthly_trend'][0]['task_count'])->toBe(1);
+
+    // Second month: cost 2.00, tokens 11000, count 1
+    expect((float) $data['monthly_trend'][1]['total_cost'])->toEqual(2.0);
+    expect($data['monthly_trend'][1]['total_tokens'])->toBe(11000);
+    expect($data['monthly_trend'][1]['task_count'])->toBe(1);
+});
+
+it('scopes task_metrics data to user projects only', function (): void {
+    $project = Project::factory()->enabled()->create();
+    $otherProject = Project::factory()->enabled()->create();
+    $user = createAdminUser($project);
+
+    $task1 = Task::factory()->create(['project_id' => $project->id]);
+    $task2 = Task::factory()->create(['project_id' => $otherProject->id]);
+
+    DB::table('task_metrics')->insert([
+        [
+            'task_id' => $task1->id,
+            'project_id' => $project->id,
+            'task_type' => 'code_review',
+            'input_tokens' => 5000,
+            'output_tokens' => 2000,
+            'cost' => 1.00,
+            'duration' => 30,
+            'severity_critical' => 0,
+            'severity_high' => 0,
+            'severity_medium' => 0,
+            'severity_low' => 0,
+            'findings_count' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'task_id' => $task2->id,
+            'project_id' => $otherProject->id,
+            'task_type' => 'code_review',
+            'input_tokens' => 50000,
+            'output_tokens' => 20000,
+            'cost' => 9.00,
+            'duration' => 300,
+            'severity_critical' => 0,
+            'severity_high' => 0,
+            'severity_medium' => 0,
+            'severity_low' => 0,
+            'findings_count' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+    ]);
+
+    $response = $this->actingAs($user)->getJson('/api/v1/dashboard/cost');
+
+    $response->assertOk();
+    // Only the user's project cost should appear
+    $data = $response->json('data');
+    expect((float) $data['total_cost'])->toEqual(1.0);
+    expect($data['total_tokens'])->toBe(7000);
 });

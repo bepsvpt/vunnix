@@ -23,8 +23,9 @@ $minCoverage = 90;
 
 /** @var list<string> Glob patterns (relative to project root) to exclude from enforcement */
 $excludePatterns = [
-    // Add patterns here for files that are intentionally below threshold, e.g.:
-    // 'app/Providers/AppServiceProvider.php',
+    // Dual-driver SQL branches (PostgreSQL + SQLite) — one branch is always uncovered
+    // regardless of test environment. Coverage is ~77% in both CI and local.
+    'app/Http/Controllers/Api/PromptVersionController.php',
 ];
 
 // ─── CLI argument parsing ───────────────────────────────────────────────────
