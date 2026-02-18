@@ -88,5 +88,9 @@ RUN chmod +x /vunnix-executor/entrypoint.sh \
 # GitLab CI job timeout is the hard limit (20 min, D34).
 # The entrypoint validates the task-scoped token TTL (D127) before starting.
 ENV VUNNIX_EXECUTOR_VERSION="2.1.0"
+# Claude CLI rejects --dangerously-skip-permissions as root (security check).
+# IS_SANDBOX=1 signals that root is acceptable (container is isolated).
+# See: https://github.com/anthropics/claude-code/issues/3490
+ENV IS_SANDBOX=1
 
 ENTRYPOINT ["/vunnix-executor/entrypoint.sh"]
