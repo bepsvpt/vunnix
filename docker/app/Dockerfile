@@ -1,7 +1,7 @@
 # ==========================================================================
 #  Stage 1: Build frontend assets (D171)
 #  Node.js build stage compiles Vue SPA + Tailwind CSS via Vite.
-#  Only public/build/ is carried forward — no Node.js in final image.
+#  Only public/assets/ is carried forward — no Node.js in final image.
 # ==========================================================================
 FROM node:24-bookworm-slim AS frontend
 
@@ -64,8 +64,8 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 COPY . .
 
 # Copy compiled frontend assets from build stage (D171)
-# Positioned after COPY . . to overwrite any stale public/build/ from source context
-COPY --from=frontend /app/public/build public/build
+# Positioned after COPY . . to overwrite any stale public/assets/ from source context
+COPY --from=frontend /app/public/assets public/assets
 
 # Run post-install scripts
 RUN composer dump-autoload --optimize \

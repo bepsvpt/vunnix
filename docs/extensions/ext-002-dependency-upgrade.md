@@ -167,7 +167,7 @@ What it does NOT do:
 #### T127: Run npm update and verify frontend
 **File(s):** `package.json`, `package-lock.json`
 **Action:** Run `npm update` to pull latest within all semver ranges (Tailwind 4.1.x, Vite 7.3.x, Axios 1.13.x, etc.). Then run `npm run build` to verify production build succeeds.
-**Verification:** `npm run build` produces output in `public/build/` without errors
+**Verification:** `npm run build` produces output in `public/assets/` without errors
 
 #### T128: Run Vue test suite and fix any failures
 **File(s):** `resources/js/**/*.test.js`

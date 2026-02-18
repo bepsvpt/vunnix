@@ -45,6 +45,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->app->make(\Illuminate\Foundation\Vite::class)->useBuildDirectory('assets');
+
         Task::observe(TaskObserver::class);
 
         Gate::policy(Conversation::class, ConversationPolicy::class);

@@ -28,7 +28,7 @@ What it does NOT do:
 ### New Decisions
 
 - **D170:** App image in public GHCR at `ghcr.io/bepsvpt/vunnix/app` — same registry and auth model as executor (D163). Public repo = public images, no credentials needed to pull.
-- **D171:** Multi-stage Docker build for frontend assets — Node 24 build stage runs `npm ci` + `npm run build`, only compiled `public/build/` directory copied into final FrankenPHP image. Keeps final image lean (no Node.js, npm, or node_modules).
+- **D171:** Multi-stage Docker build for frontend assets — Node 24 build stage runs `npm ci` + `npm run build`, only compiled `public/assets/` directory copied into final FrankenPHP image. Keeps final image lean (no Node.js, npm, or node_modules).
 
 ### Affected Existing Decisions
 
@@ -48,9 +48,9 @@ What it does NOT do:
 **File(s):** `docker/app/Dockerfile`
 **Action:**
 - Add a `frontend` build stage using `node:24-bookworm-slim` that copies `package.json`, `package-lock.json`, `vite.config.js`, `resources/`, and runs `npm ci && npm run build`
-- In the main FrankenPHP stage, add `COPY --from=frontend /app/public/build public/build` after the application code is copied
-- Position the COPY after `COPY . .` so it overwrites any stale `public/build/` from the source context
-**Verification:** `docker build -f docker/app/Dockerfile .` succeeds; the built image contains `public/build/manifest.json`
+- In the main FrankenPHP stage, add `COPY --from=frontend /app/public/assets public/assets` after the application code is copied
+- Position the COPY after `COPY . .` so it overwrites any stale `public/assets/` from the source context
+**Verification:** `docker build -f docker/app/Dockerfile .` succeeds; the built image contains `public/assets/manifest.json`
 
 #### T136: Create GitHub Actions release workflow
 **File(s):** `.github/workflows/build-app.yml`
@@ -104,7 +104,7 @@ Create a self-contained deployment guide covering:
 
 ### Verification
 
-- [ ] `docker build -f docker/app/Dockerfile .` succeeds and final image contains `public/build/manifest.json`
+- [ ] `docker build -f docker/app/Dockerfile .` succeeds and final image contains `public/assets/manifest.json`
 - [ ] `.github/workflows/build-app.yml` is valid YAML with correct triggers and GHCR push
 - [ ] `docker compose -f docker-compose.production.yml config` validates without errors
 - [ ] `.env.production.example` includes `VUNNIX_VERSION` and excludes `VITE_*` variables

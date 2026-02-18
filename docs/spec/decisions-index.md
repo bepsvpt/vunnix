@@ -175,7 +175,7 @@
 | D168 | Node 24 LTS for executor image — Active LTS (EOL Apr 2028) | ext-002 | Active |
 | D169 | Pest 4 + PHPUnit 12 for test suite — enables test sharding, requires PHP 8.3+ | ext-002 | Active |
 | D170 | App image in public GHCR at `ghcr.io/bepsvpt/vunnix/app` — same registry and auth model as executor (D163) | ext-003 | Active |
-| D171 | Multi-stage Docker build for frontend assets — Node 24 build stage, only compiled `public/build/` in final image | ext-003 | Active |
+| D171 | Multi-stage Docker build for frontend assets — Node 24 build stage, only compiled `public/assets/` in final image | ext-003 | Active |
 | D172 | CI tests run against PostgreSQL 18 service container — workflow env vars override phpunit.xml via `<env force="false">` | ext-004 | Active |
 | D173 | Use `shivammathur/setup-php@v2` for PHP 8.5 in CI — confirmed supported since v2.36.0 | ext-004 | Active |
 | D174 | Use Larastan 3.x (not standalone PHPStan) for dev static analysis — Laravel-aware stubs | ext-005 | Active |
