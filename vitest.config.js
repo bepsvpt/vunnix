@@ -11,7 +11,13 @@ export default defineConfig({
             provider: 'v8',
             reportsDirectory: 'coverage/js',
             include: ['resources/js/**/*.{ts,vue}'],
-            exclude: ['resources/js/**/*.test.ts'],
+            exclude: [
+                'resources/js/**/*.test.ts',
+                'resources/js/env.d.ts',
+                'resources/js/types/**',
+                'resources/js/app.ts',
+                'resources/js/bootstrap.ts',
+            ],
         },
     },
     resolve: {

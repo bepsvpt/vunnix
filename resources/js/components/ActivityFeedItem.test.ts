@@ -151,4 +151,101 @@ describe('activityFeedItem', () => {
         const text = wrapper.text();
         expect(text).not.toMatch(/^\s*\u00B7/); // no leading middot
     });
+
+    // -- Relative timestamp formatting (lines 45-51) --
+
+    it('displays "just now" for very recent activity', () => {
+        const wrapper = mountItem(makeItem({ created_at: new Date().toISOString() }));
+        expect(wrapper.find('[data-testid="activity-timestamp"]').text()).toBe('just now');
+    });
+
+    it('displays minutes ago for activity within the last hour', () => {
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        const wrapper = mountItem(makeItem({ created_at: fiveMinutesAgo }));
+        expect(wrapper.find('[data-testid="activity-timestamp"]').text()).toBe('5m ago');
+    });
+
+    it('displays hours ago for activity within the last day', () => {
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+        const wrapper = mountItem(makeItem({ created_at: twoHoursAgo }));
+        expect(wrapper.find('[data-testid="activity-timestamp"]').text()).toBe('2h ago');
+    });
+
+    it('displays days ago for activity within the last 30 days', () => {
+        const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
+        const wrapper = mountItem(makeItem({ created_at: tenDaysAgo }));
+        expect(wrapper.find('[data-testid="activity-timestamp"]').text()).toBe('10d ago');
+    });
+
+    it('displays formatted date for activity older than 30 days', () => {
+        const oldDate = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+        const wrapper = mountItem(makeItem({ created_at: oldDate.toISOString() }));
+        const displayed = wrapper.find('[data-testid="activity-timestamp"]').text();
+        expect(displayed).toBe(oldDate.toLocaleDateString());
+        expect(displayed).not.toContain('ago');
+    });
+
+    // -- Null/missing summary handling --
+
+    it('hides summary when summary is empty string', () => {
+        const wrapper = mountItem(makeItem({ summary: '' }));
+        expect(wrapper.find('[data-testid="activity-summary"]').exists()).toBe(false);
+    });
+
+    it('hides summary when summary is undefined', () => {
+        const item = makeItem();
+        delete item.summary;
+        const wrapper = mountItem(item);
+        expect(wrapper.find('[data-testid="activity-summary"]').exists()).toBe(false);
+    });
+
+    // -- Error reason display --
+
+    it('renders with failed status and error_reason', () => {
+        const wrapper = mountItem(makeItem({
+            status: 'failed',
+            error_reason: 'API timeout after 30s',
+        }));
+        const badge = wrapper.find('[data-testid="activity-status-badge"]');
+        expect(badge.text()).toContain('failed');
+        expect(badge.classes().join(' ')).toContain('bg-red-100');
+    });
+
+    // -- Edge cases: missing optional fields --
+
+    it('renders correctly with minimal fields (no user, no link refs)', () => {
+        const wrapper = mountItem(makeItem({
+            user_name: null,
+            mr_iid: null,
+            issue_iid: null,
+            conversation_id: null,
+            summary: null,
+        }));
+        expect(wrapper.find('[data-testid="activity-item"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="activity-summary"]').exists()).toBe(false);
+        expect(wrapper.text()).not.toContain('MR');
+        expect(wrapper.text()).not.toContain('Issue');
+    });
+
+    it('falls back to queued status config for unknown status', () => {
+        const wrapper = mountItem(makeItem({ status: 'unknown_status' }));
+        const badge = wrapper.find('[data-testid="activity-status-badge"]');
+        // Unknown status falls back to statusConfig.queued (hourglass, amber)
+        expect(badge.text()).toContain('\u23F3');
+        expect(badge.classes().join(' ')).toContain('bg-amber-100');
+    });
+
+    it('falls back to gear icon for unknown type', () => {
+        const wrapper = mountItem(makeItem({ type: 'unknown_type' }));
+        const icon = wrapper.find('[data-testid="activity-type-icon"]');
+        expect(icon.text()).toContain('\u2699');
+    });
+
+    it('handles null created_at gracefully', () => {
+        const wrapper = mountItem(makeItem({ created_at: null }));
+        // When created_at is null, `new Date('')` produces Invalid Date
+        // The component should still render without crashing
+        expect(wrapper.find('[data-testid="activity-item"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="activity-timestamp"]').exists()).toBe(true);
+    });
 });

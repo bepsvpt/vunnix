@@ -192,4 +192,81 @@ describe('dashboardOverview', () => {
         expect(wrapper.find('[data-testid="active-tasks-count"]').text()).toBe('0');
         expect(wrapper.find('[data-testid="type-count-code_review"]').text()).toBe('0');
     });
+
+    // -- Relative time formatting (lines 33-39) --
+
+    it('displays minutes ago for recent_activity within the last hour', () => {
+        const store = useDashboardStore();
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+        store.overview = { ...sampleOverview, recent_activity: tenMinutesAgo };
+        const wrapper = mountOverview();
+        expect(wrapper.find('[data-testid="recent-activity-value"]').text()).toBe('10m ago');
+    });
+
+    it('displays hours ago for recent_activity within the last day', () => {
+        const store = useDashboardStore();
+        const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+        store.overview = { ...sampleOverview, recent_activity: threeHoursAgo };
+        const wrapper = mountOverview();
+        expect(wrapper.find('[data-testid="recent-activity-value"]').text()).toBe('3h ago');
+    });
+
+    it('displays days ago for recent_activity within the last 30 days', () => {
+        const store = useDashboardStore();
+        const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+        store.overview = { ...sampleOverview, recent_activity: fiveDaysAgo };
+        const wrapper = mountOverview();
+        expect(wrapper.find('[data-testid="recent-activity-value"]').text()).toBe('5d ago');
+    });
+
+    it('displays formatted date for recent_activity older than 30 days', () => {
+        const store = useDashboardStore();
+        const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+        store.overview = { ...sampleOverview, recent_activity: sixtyDaysAgo.toISOString() };
+        const wrapper = mountOverview();
+        const displayed = wrapper.find('[data-testid="recent-activity-value"]').text();
+        // toLocaleDateString() produces locale-dependent output; just verify it's not a relative format
+        expect(displayed).not.toContain('ago');
+        expect(displayed).not.toBe('Just now');
+        expect(displayed).not.toBe('No activity');
+        expect(displayed).toBe(sixtyDaysAgo.toLocaleDateString());
+    });
+
+    // -- Success rate edge values --
+
+    it('displays 0% success rate', () => {
+        const store = useDashboardStore();
+        store.overview = { ...sampleOverview, success_rate: 0 };
+        const wrapper = mountOverview();
+        expect(wrapper.find('[data-testid="success-rate-value"]').text()).toBe('0%');
+    });
+
+    it('displays 50% success rate', () => {
+        const store = useDashboardStore();
+        store.overview = { ...sampleOverview, success_rate: 50 };
+        const wrapper = mountOverview();
+        expect(wrapper.find('[data-testid="success-rate-value"]').text()).toBe('50%');
+    });
+
+    it('displays 100% success rate', () => {
+        const store = useDashboardStore();
+        store.overview = { ...sampleOverview, success_rate: 100 };
+        const wrapper = mountOverview();
+        expect(wrapper.find('[data-testid="success-rate-value"]').text()).toBe('100%');
+    });
+
+    // -- Edge cases for missing type counts --
+
+    it('displays 0 when tasks_by_type is missing a key', () => {
+        const store = useDashboardStore();
+        store.overview = {
+            ...sampleOverview,
+            tasks_by_type: { code_review: 7 }, // missing feature_dev, ui_adjustment, prd_creation
+        };
+        const wrapper = mountOverview();
+        expect(wrapper.find('[data-testid="type-count-code_review"]').text()).toBe('7');
+        expect(wrapper.find('[data-testid="type-count-feature_dev"]').text()).toBe('0');
+        expect(wrapper.find('[data-testid="type-count-ui_adjustment"]').text()).toBe('0');
+        expect(wrapper.find('[data-testid="type-count-prd_creation"]').text()).toBe('0');
+    });
 });

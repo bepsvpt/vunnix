@@ -282,4 +282,240 @@ describe('streamSSE', () => {
             retryable: true,
         });
     });
+
+    // ─── Empty stream / immediate close ─────────────────────────
+
+    it('handles empty stream with immediate close', async () => {
+        const events: unknown[] = [];
+        const onDone = vi.fn();
+        const stream = new ReadableStream({
+            start(controller) {
+                controller.close();
+            },
+        });
+        const response = new Response(stream, {
+            status: 200,
+            headers: { 'Content-Type': 'text/event-stream' },
+        });
+
+        await streamSSE(response, { onEvent: event => events.push(event), onDone });
+
+        expect(events).toHaveLength(0);
+        expect(onDone).not.toHaveBeenCalled();
+    });
+
+    // ─── Buffer flushing edge cases ─────────────────────────────
+
+    it('processes remaining buffer content after stream ends (no trailing double-newline)', async () => {
+        const events: unknown[] = [];
+        const onDone = vi.fn();
+        // Data without trailing \n\n — stays in buffer until stream ends
+        const response = mockChunkedSSEResponse([
+            'data: {"type":"text_delta","delta":"partial"}\n\ndata: {"type":"final"}',
+        ]);
+
+        await streamSSE(response, { onEvent: event => events.push(event), onDone });
+
+        // First event goes through main loop, second through buffer flush
+        expect(events).toHaveLength(2);
+        expect(events[0]).toEqual({ type: 'text_delta', delta: 'partial' });
+        expect(events[1]).toEqual({ type: 'final' });
+    });
+
+    it('handles [DONE] in remaining buffer', async () => {
+        const onDone = vi.fn();
+        // [DONE] without trailing \n\n so it stays in the buffer
+        const response = mockChunkedSSEResponse([
+            'data: {"type":"stream_start"}\n\ndata: [DONE]',
+        ]);
+
+        await streamSSE(response, { onEvent: () => {}, onDone });
+
+        expect(onDone).toHaveBeenCalledOnce();
+    });
+
+    it('ignores malformed JSON in remaining buffer', async () => {
+        const events: unknown[] = [];
+        const onError = vi.fn();
+        // Malformed JSON without trailing \n\n stays in buffer
+        const response = mockChunkedSSEResponse([
+            'data: {"type":"ok"}\n\ndata: {broken',
+        ]);
+
+        await streamSSE(response, {
+            onEvent: event => events.push(event),
+            onError,
+        });
+
+        // First event parsed normally, malformed one in buffer is skipped
+        expect(events).toHaveLength(1);
+        expect(events[0]).toEqual({ type: 'ok' });
+        // onError should NOT be called for malformed JSON (silently skipped)
+        expect(onError).not.toHaveBeenCalled();
+    });
+
+    it('ignores non-data lines in remaining buffer', async () => {
+        const events: unknown[] = [];
+        // Comment and event lines in remaining buffer should be skipped
+        const response = mockChunkedSSEResponse([
+            'data: {"type":"first"}\n\n: comment\nevent: ping\nid: 42',
+        ]);
+
+        await streamSSE(response, { onEvent: event => events.push(event) });
+
+        expect(events).toHaveLength(1);
+        expect(events[0]).toEqual({ type: 'first' });
+    });
+
+    it('skips empty/whitespace-only remaining buffer', async () => {
+        const events: unknown[] = [];
+        const onDone = vi.fn();
+        // Trailing whitespace after final \n\n should not trigger buffer processing
+        const response = mockChunkedSSEResponse([
+            'data: {"type":"ok"}\n\ndata: [DONE]\n\n   \n  ',
+        ]);
+
+        await streamSSE(response, { onEvent: event => events.push(event), onDone });
+
+        expect(events).toHaveLength(1);
+        expect(onDone).toHaveBeenCalledOnce();
+    });
+
+    // ─── Missing callback edge cases ────────────────────────────
+
+    it('does not throw when onDone is not provided', async () => {
+        const events: unknown[] = [];
+        const response = mockSSEResponse([
+            'data: {"type":"stream_start"}',
+            '',
+            'data: [DONE]',
+            '',
+        ]);
+
+        // No onDone callback — should complete without error
+        await expect(
+            streamSSE(response, { onEvent: event => events.push(event) }),
+        ).resolves.toBeUndefined();
+
+        expect(events).toHaveLength(1);
+    });
+
+    it('does not throw when onError is not provided and response is not ok', async () => {
+        const response = new Response('Server Error', { status: 500 });
+
+        // No onError callback — should complete without throwing
+        await expect(
+            streamSSE(response, { onEvent: () => {} }),
+        ).resolves.toBeUndefined();
+    });
+
+    it('does not throw when onError is not provided and stream read fails', async () => {
+        const stream = new ReadableStream({
+            start(controller) {
+                controller.error(new Error('Connection lost'));
+            },
+        });
+        const response = new Response(stream, {
+            status: 200,
+            headers: { 'Content-Type': 'text/event-stream' },
+        });
+
+        // No onError callback — should complete without throwing
+        await expect(
+            streamSSE(response, { onEvent: () => {} }),
+        ).resolves.toBeUndefined();
+    });
+
+    // ─── Stream error in buffer without onStreamError ───────────
+
+    it('silently drops error events in remaining buffer when onStreamError is absent', async () => {
+        const events: unknown[] = [];
+        // Error event without trailing \n\n stays in buffer; no onStreamError provided
+        const response = mockChunkedSSEResponse([
+            'data: {"type":"error","error":{"message":"overloaded","code":"rate_limited","retryable":true}}',
+        ]);
+
+        await streamSSE(response, {
+            onEvent: event => events.push(event),
+        });
+
+        // In the remaining buffer path, isStreamError is true. Without onStreamError,
+        // onStreamError?.() is a no-op and the else branch (onEvent) is not reached.
+        // This differs from the main loop where !onStreamError falls through to onEvent.
+        expect(events).toHaveLength(0);
+    });
+
+    // ─── isStreamError type guard edge cases ────────────────────
+
+    it('does not treat non-object data as stream errors', async () => {
+        const events: unknown[] = [];
+        const onStreamError = vi.fn();
+        const response = mockSSEResponse([
+            'data: "just a string"',
+            '',
+            'data: 42',
+            '',
+            'data: null',
+            '',
+            'data: true',
+            '',
+            'data: [DONE]',
+            '',
+        ]);
+
+        await streamSSE(response, {
+            onEvent: event => events.push(event),
+            onStreamError,
+        });
+
+        expect(events).toEqual(['just a string', 42, null, true]);
+        expect(onStreamError).not.toHaveBeenCalled();
+    });
+
+    it('does not treat objects without type="error" as stream errors', async () => {
+        const events: unknown[] = [];
+        const onStreamError = vi.fn();
+        const response = mockSSEResponse([
+            'data: {"type":"warning","error":{"message":"not a real error","code":"test","retryable":false}}',
+            '',
+            'data: {"error":{"message":"missing type field","code":"test","retryable":false}}',
+            '',
+            'data: {"type":"error"}',
+            '',
+            'data: [DONE]',
+            '',
+        ]);
+
+        await streamSSE(response, {
+            onEvent: event => events.push(event),
+            onStreamError,
+        });
+
+        // type="warning" is not type="error", so goes to onEvent
+        // missing type field goes to onEvent
+        // type="error" without error object: isStreamError checks error is an object
+        expect(events).toHaveLength(3);
+        expect(onStreamError).not.toHaveBeenCalled();
+    });
+
+    // ─── Multiple events in a single chunk ──────────────────────
+
+    it('processes multiple data lines within a single SSE event block', async () => {
+        const events: unknown[] = [];
+        // Two data: lines in the same event block (between double-newlines)
+        // SSE spec says each data: line is separate, so both should be processed
+        const response = mockSSEResponse([
+            'data: {"type":"first"}',
+            'data: {"type":"second"}',
+            '',
+            'data: [DONE]',
+            '',
+        ]);
+
+        await streamSSE(response, { onEvent: event => events.push(event) });
+
+        expect(events).toHaveLength(2);
+        expect(events[0]).toEqual({ type: 'first' });
+        expect(events[1]).toEqual({ type: 'second' });
+    });
 });
