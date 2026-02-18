@@ -259,7 +259,7 @@ Persistent lessons discovered during development. Write each as an actionable ru
 | `verify/verify_m{N}.py` | Per-milestone verification scripts |
 | `verify/helpers.py` | Shared verification utilities |
 | `docker-compose.yml` | Development services |
-| `docker-compose.prod.yml` | Production overrides (resource limits, log rotation) |
+| `docker-compose.production.yml` | Standalone production compose (GHCR images, resource limits, log rotation) |
 | `.env.production.example` | Production environment template |
 | `executor/` | Docker image for GitLab Runner |
 | `.env` | Environment configuration (secrets, API keys) |

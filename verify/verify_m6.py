@@ -31,65 +31,65 @@ print("=" * 60)
 # ============================================================
 section("T105: Production Docker Compose")
 
-# --- docker-compose.prod.yml ---
+# --- docker-compose.production.yml ---
 checker.check(
-    "docker-compose.prod.yml exists",
-    file_exists("docker-compose.prod.yml"),
+    "docker-compose.production.yml exists",
+    file_exists("docker-compose.production.yml"),
 )
 checker.check(
     "Prod compose has resource limits",
-    file_contains("docker-compose.prod.yml", "resources"),
+    file_contains("docker-compose.production.yml", "resources"),
 )
 checker.check(
     "Prod compose has memory limits",
-    file_contains("docker-compose.prod.yml", "memory"),
+    file_contains("docker-compose.production.yml", "memory"),
 )
 checker.check(
     "Prod compose has CPU limits",
-    file_contains("docker-compose.prod.yml", "cpus"),
+    file_contains("docker-compose.production.yml", "cpus"),
 )
 checker.check(
     "Prod compose has log rotation max-size",
-    file_contains("docker-compose.prod.yml", "max-size"),
+    file_contains("docker-compose.production.yml", "max-size"),
 )
 checker.check(
     "Prod compose has log rotation max-file",
-    file_contains("docker-compose.prod.yml", "max-file"),
+    file_contains("docker-compose.production.yml", "max-file"),
 )
 checker.check(
     "Prod compose log max-size is 32m",
-    file_contains("docker-compose.prod.yml", '"32m"'),
+    file_contains("docker-compose.production.yml", '"32m"'),
 )
 checker.check(
     "Prod compose log max-file is 10",
-    file_contains("docker-compose.prod.yml", '"10"'),
+    file_contains("docker-compose.production.yml", '"10"'),
 )
 checker.check(
     "Prod compose uses json-file logging driver",
-    file_contains("docker-compose.prod.yml", "json-file"),
+    file_contains("docker-compose.production.yml", "json-file"),
 )
 checker.check(
     "Prod compose has backup-data volume",
-    file_contains("docker-compose.prod.yml", "backup-data"),
+    file_contains("docker-compose.production.yml", "backup-data"),
 )
 checker.check(
     "Prod compose sets APP_ENV=production",
-    file_contains("docker-compose.prod.yml", "APP_ENV: production"),
+    file_contains("docker-compose.production.yml", "APP_ENV: production"),
 )
 checker.check(
     "Prod compose sets APP_DEBUG=false",
-    file_contains("docker-compose.prod.yml", 'APP_DEBUG: "false"'),
+    file_contains("docker-compose.production.yml", 'APP_DEBUG: "false"'),
 )
 checker.check(
     "Prod compose covers all 7 services (app, postgres, redis, reverb, queue-server, queue-runner, scheduler)",
     all(
-        file_contains("docker-compose.prod.yml", svc)
+        file_contains("docker-compose.production.yml", svc)
         for svc in ["app:", "postgres:", "redis:", "reverb:", "queue-server:", "queue-runner:", "scheduler:"]
     ),
 )
 checker.check(
     "Scheduler mounts backup-data volume",
-    file_contains("docker-compose.prod.yml", "backup-data:/app/storage/backups"),
+    file_contains("docker-compose.production.yml", "backup-data:/app/storage/backups"),
 )
 
 # --- BackupDatabase Artisan command ---
