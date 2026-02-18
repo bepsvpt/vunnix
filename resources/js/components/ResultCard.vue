@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { computed, ref } from 'vue';
+import MarkdownContent from './MarkdownContent.vue';
 
 interface KeyFinding {
     title: string;
