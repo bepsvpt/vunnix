@@ -89,3 +89,29 @@
 .markdown-content hr {
     @apply my-4 border-zinc-200 dark:border-zinc-700;
 }
+
+/* Compact markdown override for result card context (text-xs base) */
+.result-card-markdown .markdown-content {
+    @apply text-xs;
+}
+
+.result-card-markdown .markdown-content h1 {
+    @apply text-sm;
+}
+
+.result-card-markdown .markdown-content h2 {
+    @apply text-xs font-bold mt-2 mb-1;
+}
+
+.result-card-markdown .markdown-content h3 {
+    @apply text-xs font-semibold mt-1.5 mb-0.5;
+}
+
+.result-card-markdown .markdown-content p {
+    @apply my-1;
+}
+
+.result-card-markdown .markdown-content ul,
+.result-card-markdown .markdown-content ol {
+    @apply my-1 pl-4;
+}

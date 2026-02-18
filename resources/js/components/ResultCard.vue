@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import axios from 'axios';
 import { computed, ref } from 'vue';
 
 interface KeyFinding {
@@ -86,6 +87,39 @@ const hasFindings = computed(() =>
 
 const findingsExpanded = ref(false);
 
+// Full analysis lazy-fetch — deep_analysis reports can be 10–50KB+, so they
+// are excluded from the broadcast payload. We fetch on demand from the API.
+const fullAnalysis = ref<string | null>(null);
+const analysisLoading = ref(false);
+const analysisExpanded = ref(false);
+
+const hasAnalysisExpand = computed(() =>
+    props.result.type === 'deep_analysis' && props.result.result_summary !== null,
+);
+
+async function toggleFullAnalysis(): Promise<void> {
+    if (analysisExpanded.value) {
+        analysisExpanded.value = false;
+        return;
+    }
+    // Already fetched — just expand.
+    if (fullAnalysis.value !== null) {
+        analysisExpanded.value = true;
+        return;
+    }
+    analysisLoading.value = true;
+    try {
+        const response = await axios.get(`/api/v1/tasks/${props.result.task_id}/view`);
+        fullAnalysis.value = (response.data?.data?.result?.analysis as string) ?? null;
+        if (fullAnalysis.value !== null)
+            analysisExpanded.value = true;
+    } catch {
+        // silent — button stays collapsed; user can retry
+    } finally {
+        analysisLoading.value = false;
+    }
+}
+
 function severityClass(severity: string): string {
     if (severity === 'critical')
         return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
@@ -162,13 +196,35 @@ function severityClass(severity: string): string {
             </div>
 
             <!-- Summary -->
-            <p
+            <div
                 v-if="result.result_summary"
                 data-testid="result-summary"
-                class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed"
+                class="text-xs text-zinc-600 dark:text-zinc-400 result-card-markdown"
             >
-                {{ result.result_summary }}
-            </p>
+                <MarkdownContent :content="result.result_summary" />
+            </div>
+
+            <!-- Full analysis expand (deep_analysis only) -->
+            <div v-if="hasAnalysisExpand" class="space-y-1.5">
+                <button
+                    type="button"
+                    class="flex items-center gap-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors disabled:opacity-50"
+                    :disabled="analysisLoading"
+                    @click="toggleFullAnalysis"
+                >
+                    <span v-if="analysisLoading" class="animate-pulse">Loading…</span>
+                    <template v-else>
+                        <span>{{ analysisExpanded ? '▾' : '▸' }}</span>
+                        <span>{{ analysisExpanded ? 'Hide full analysis' : 'View full analysis' }}</span>
+                    </template>
+                </button>
+                <div
+                    v-if="analysisExpanded && fullAnalysis"
+                    class="text-xs text-zinc-600 dark:text-zinc-400 border-t border-zinc-200 dark:border-zinc-700 pt-2 result-card-markdown"
+                >
+                    <MarkdownContent :content="fullAnalysis" />
+                </div>
+            </div>
 
             <!-- Key findings (deep_analysis / security_audit) -->
             <div v-if="hasFindings" class="space-y-1.5">
@@ -193,9 +249,9 @@ function severityClass(severity: string): string {
                             >{{ finding.severity }}</span>
                             <span class="font-medium text-zinc-800 dark:text-zinc-200">{{ finding.title }}</span>
                         </div>
-                        <p class="text-zinc-500 dark:text-zinc-400 leading-relaxed pl-0.5">
-                            {{ finding.description }}
-                        </p>
+                        <div class="text-zinc-500 dark:text-zinc-400 pl-0.5 result-card-markdown">
+                            <MarkdownContent :content="finding.description" />
+                        </div>
                     </li>
                 </ul>
             </div>

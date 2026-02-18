@@ -1,7 +1,20 @@
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
+import axios from 'axios';
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ResultCard from './ResultCard.vue';
+
+vi.mock('axios');
+
+// Mock MarkdownContent since it's tested separately.
+// Without this, Shiki WASM fails in JSDOM and v-html renders empty.
+vi.mock('@/lib/markdown', () => ({
+    getMarkdownRenderer: () => ({
+        render: (content: string) => `<p>${content}</p>`,
+    }),
+    isHighlightReady: () => false,
+    onHighlightLoaded: vi.fn(),
+}));
 
 function makeResult(overrides: Record<string, unknown> = {}) {
     return {
@@ -30,12 +43,23 @@ function makeResult(overrides: Record<string, unknown> = {}) {
 function mountCard(result: Record<string, unknown>) {
     return mount(ResultCard, {
         props: { result },
+        global: {
+            // Stub MarkdownContent: v-html content is invisible to wrapper.text()
+            // in JSDOM. The stub renders content as plain text so assertions work.
+            stubs: {
+                MarkdownContent: {
+                    template: '<div data-stub="markdown">{{ content }}</div>',
+                    props: ['content'],
+                },
+            },
+        },
     });
 }
 
 describe('resultCard', () => {
     beforeEach(() => {
         setActivePinia(createPinia());
+        vi.clearAllMocks();
     });
 
     // -- Success state --
@@ -199,5 +223,97 @@ describe('resultCard', () => {
         await wrapper.find('button').trigger('click');
         const badge = wrapper.find('span.text-red-700, span.dark\\:text-red-300');
         expect(badge.exists() || wrapper.text()).toBeTruthy();
+    });
+
+    // -- Full analysis expand (deep_analysis) --
+
+    it('shows "View full analysis" button for deep_analysis with summary', () => {
+        const wrapper = mountCard(makeResult({
+            type: 'deep_analysis',
+            result_summary: 'First 500 characters of analysis...',
+            key_findings: null,
+        }));
+        expect(wrapper.text()).toContain('View full analysis');
+    });
+
+    it('hides "View full analysis" button for non-deep_analysis types', () => {
+        const wrapper = mountCard(makeResult({
+            type: 'feature_dev',
+            result_summary: 'Some summary',
+        }));
+        expect(wrapper.text()).not.toContain('View full analysis');
+    });
+
+    it('hides "View full analysis" button when result_summary is null', () => {
+        const wrapper = mountCard(makeResult({
+            type: 'deep_analysis',
+            result_summary: null,
+            key_findings: null,
+        }));
+        expect(wrapper.text()).not.toContain('View full analysis');
+    });
+
+    it('fetches and shows full analysis on button click', async () => {
+        vi.mocked(axios.get).mockResolvedValueOnce({
+            data: { data: { result: { analysis: '# Security Report\nComplete analysis text here.' } } },
+        });
+
+        const wrapper = mountCard(makeResult({
+            task_id: 99,
+            type: 'deep_analysis',
+            result_summary: 'First 500 chars…',
+            key_findings: null,
+        }));
+
+        await wrapper.find('button').trigger('click');
+        await flushPromises();
+
+        expect(axios.get).toHaveBeenCalledWith('/api/v1/tasks/99/view');
+        expect(wrapper.text()).toContain('Complete analysis text here.');
+        expect(wrapper.text()).toContain('Hide full analysis');
+    });
+
+    it('collapses full analysis on second click', async () => {
+        vi.mocked(axios.get).mockResolvedValueOnce({
+            data: { data: { result: { analysis: 'Complete analysis text.' } } },
+        });
+
+        const wrapper = mountCard(makeResult({
+            type: 'deep_analysis',
+            result_summary: 'Preview…',
+            key_findings: null,
+        }));
+
+        await wrapper.find('button').trigger('click');
+        await flushPromises();
+        expect(wrapper.text()).toContain('Complete analysis text.');
+
+        await wrapper.find('button').trigger('click');
+        expect(wrapper.text()).not.toContain('Complete analysis text.');
+        expect(wrapper.text()).toContain('View full analysis');
+    });
+
+    it('does not re-fetch on subsequent expand after collapse', async () => {
+        vi.mocked(axios.get).mockResolvedValueOnce({
+            data: { data: { result: { analysis: 'Cached analysis.' } } },
+        });
+
+        const wrapper = mountCard(makeResult({
+            type: 'deep_analysis',
+            result_summary: 'Preview…',
+            key_findings: null,
+        }));
+
+        // First expand — fetches
+        await wrapper.find('button').trigger('click');
+        await flushPromises();
+        // Collapse
+        await wrapper.find('button').trigger('click');
+        // Second expand — should NOT re-fetch
+        await wrapper.find('button').trigger('click');
+        await flushPromises();
+
+        expect(axios.get).toHaveBeenCalledTimes(1);
+        expect(wrapper.text()).toContain('Cached analysis.');
     });
 });
