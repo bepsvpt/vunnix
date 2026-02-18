@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/vunnix.svg" alt="Vunnix" width="128">
+  <img src="public/vunnix-ut.svg" alt="Vunnix" width="256">
 </p>
 
 # Vunnix
