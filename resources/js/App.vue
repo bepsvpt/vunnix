@@ -25,6 +25,9 @@ watch(() => auth.isAuthenticated, (authenticated) => {
                 <router-view />
             </main>
         </template>
+        <template v-else-if="auth.isGuest">
+            <router-view />
+        </template>
         <div v-else class="flex-1 flex items-center justify-center">
             <div class="text-center text-zinc-500 dark:text-zinc-400">
                 <BaseSpinner size="lg" class="mx-auto mb-3" />

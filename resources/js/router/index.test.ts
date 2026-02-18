@@ -9,8 +9,9 @@ describe('router', () => {
         expect(router.options.history.base).toBe('');
     });
 
-    it('has four named routes: chat, chat-conversation, dashboard, admin', () => {
+    it('has five named routes: sign-in, chat, chat-conversation, dashboard, admin', () => {
         const routeNames = router.getRoutes().map(r => r.name).filter(Boolean);
+        expect(routeNames).toContain('sign-in');
         expect(routeNames).toContain('chat');
         expect(routeNames).toContain('chat-conversation');
         expect(routeNames).toContain('dashboard');
@@ -26,6 +27,12 @@ describe('router', () => {
         const route = router.options.routes.find(r => r.path === '/chat/:id');
         expect(route).toBeDefined();
         expect(route!.name).toBe('chat-conversation');
+    });
+
+    it('defines /sign-in route', () => {
+        const route = router.options.routes.find(r => r.path === '/sign-in');
+        expect(route).toBeDefined();
+        expect(route!.name).toBe('sign-in');
     });
 });
 
@@ -46,12 +53,10 @@ describe('router beforeEach guard', () => {
             projects: [],
         });
         const fetchSpy = vi.spyOn(auth, 'fetchUser');
-        const loginSpy = vi.spyOn(auth, 'login').mockImplementation(() => {});
 
         await router.push('/dashboard');
 
         expect(fetchSpy).not.toHaveBeenCalled();
-        expect(loginSpy).not.toHaveBeenCalled();
         expect(router.currentRoute.value.path).toBe('/dashboard');
     });
 
@@ -69,25 +74,22 @@ describe('router beforeEach guard', () => {
                 projects: [],
             });
         });
-        const loginSpy = vi.spyOn(auth, 'login').mockImplementation(() => {});
 
         await router.push('/chat');
 
         expect(fetchSpy).toHaveBeenCalledOnce();
-        expect(loginSpy).not.toHaveBeenCalled();
         expect(router.currentRoute.value.path).toBe('/chat');
     });
 
-    it('calls login and aborts navigation when fetchUser fails (user remains guest)', async () => {
+    it('redirects to /sign-in when fetchUser fails (user becomes guest)', async () => {
         const auth = useAuthStore();
         // user starts as null — guard will call fetchUser
-        const fetchSpy = vi.spyOn(auth, 'fetchUser').mockImplementation(async () => {
+        vi.spyOn(auth, 'fetchUser').mockImplementation(async () => {
             // Simulate failed fetch — user becomes false (guest)
             auth.clearUser();
         });
-        const loginSpy = vi.spyOn(auth, 'login').mockImplementation(() => {});
 
-        // Start from a known route first so we can verify navigation was aborted
+        // Start from a known route first so we can verify redirect
         auth.setUser({
             id: 1,
             name: 'Temp',
@@ -103,10 +105,8 @@ describe('router beforeEach guard', () => {
 
         await router.push('/admin');
 
-        expect(fetchSpy).toHaveBeenCalledOnce();
-        expect(loginSpy).toHaveBeenCalledOnce();
-        // Navigation should be aborted (return false in guard), so route stays at /dashboard
-        expect(router.currentRoute.value.path).toBe('/dashboard');
+        // Guard should redirect guest to /sign-in
+        expect(router.currentRoute.value.path).toBe('/sign-in');
     });
 
     it('does not re-fetch on subsequent navigations when user is authenticated', async () => {
@@ -122,7 +122,6 @@ describe('router beforeEach guard', () => {
                 projects: [],
             });
         });
-        const loginSpy = vi.spyOn(auth, 'login').mockImplementation(() => {});
 
         // First navigation triggers fetchUser (user is null)
         await router.push('/chat');
@@ -131,7 +130,6 @@ describe('router beforeEach guard', () => {
         // Second navigation — user is now authenticated, no re-fetch needed
         await router.push('/dashboard');
         expect(fetchSpy).toHaveBeenCalledOnce(); // still just once
-        expect(loginSpy).not.toHaveBeenCalled();
         expect(router.currentRoute.value.path).toBe('/dashboard');
     });
 
@@ -151,7 +149,6 @@ describe('router beforeEach guard', () => {
                 projects: [],
             });
         });
-        const loginSpy = vi.spyOn(auth, 'login').mockImplementation(() => {});
 
         // user is null and isLoading is true — guard checks: user === null && !isLoading
         // Since isLoading is true, the condition is false, so fetchUser is NOT called.
@@ -159,22 +156,46 @@ describe('router beforeEach guard', () => {
         await router.push('/chat');
 
         expect(fetchSpy).not.toHaveBeenCalled();
-        expect(loginSpy).not.toHaveBeenCalled();
     });
 
-    it('redirects to OAuth login when user is explicitly a guest (user is false)', async () => {
+    it('redirects guest to /sign-in when visiting a protected route', async () => {
         const auth = useAuthStore();
         // Set user to false (guest) — this means auth was already checked
         auth.clearUser(); // sets user to false
 
         const fetchSpy = vi.spyOn(auth, 'fetchUser');
-        const loginSpy = vi.spyOn(auth, 'login').mockImplementation(() => {});
 
-        // user is false: not null, so fetchUser is NOT called.
-        // isGuest is true → login() is called and navigation is aborted.
         await router.push('/dashboard');
 
         expect(fetchSpy).not.toHaveBeenCalled();
-        expect(loginSpy).toHaveBeenCalledOnce();
+        // Guest should be redirected to /sign-in
+        expect(router.currentRoute.value.path).toBe('/sign-in');
+    });
+
+    it('allows guest to stay on /sign-in', async () => {
+        const auth = useAuthStore();
+        auth.clearUser(); // sets user to false (guest)
+
+        await router.push('/sign-in');
+
+        expect(router.currentRoute.value.path).toBe('/sign-in');
+    });
+
+    it('redirects authenticated user away from /sign-in to /chat', async () => {
+        const auth = useAuthStore();
+        auth.setUser({
+            id: 1,
+            name: 'Test User',
+            email: 'test@example.com',
+            username: 'testuser',
+            avatar_url: null,
+            projects: [],
+        });
+
+        // Navigate to a known route first so /sign-in push isn't a no-op
+        await router.push('/dashboard');
+        await router.push('/sign-in');
+
+        expect(router.currentRoute.value.path).toBe('/chat');
     });
 });

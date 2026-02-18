@@ -47,7 +47,7 @@ export const useAuthStore = defineStore('auth', () => {
             // Proceed with client-side cleanup even if the server request fails
         }
         user.value = false;
-        window.location.href = '/auth/redirect';
+        window.location.href = '/sign-in';
     }
 
     /**

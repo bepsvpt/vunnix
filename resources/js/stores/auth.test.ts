@@ -102,7 +102,7 @@ describe('useAuthStore', () => {
 
             expect(mockedAxios.post).toHaveBeenCalledWith('/auth/logout');
             expect(auth.user).toBe(false);
-            expect(window.location.href).toBe('/auth/redirect');
+            expect(window.location.href).toBe('/sign-in');
         });
 
         it('clears user even if server logout fails', async () => {
@@ -114,7 +114,7 @@ describe('useAuthStore', () => {
             await auth.logout();
 
             expect(auth.user).toBe(false);
-            expect(window.location.href).toBe('/auth/redirect');
+            expect(window.location.href).toBe('/sign-in');
         });
     });
 

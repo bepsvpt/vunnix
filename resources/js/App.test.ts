@@ -8,6 +8,7 @@ import App from './App.vue';
 import AdminPage from './pages/AdminPage.vue';
 import ChatPage from './pages/ChatPage.vue';
 import DashboardPage from './pages/DashboardPage.vue';
+import SignInPage from './pages/SignInPage.vue';
 
 vi.mock('axios');
 vi.mock('@/composables/useEcho', () => ({
@@ -21,11 +22,12 @@ let pinia: ReturnType<typeof createPinia>;
 
 function createTestRouter() {
     // Create a router without the auth guard — App.test focuses on rendering,
-    // not auth flow. The production router guard is tested in auth.test.js.
+    // not auth flow. The production router guard is tested in router/index.test.ts.
     return createRouter({
         history: createMemoryHistory(),
         routes: [
             { path: '/', redirect: '/chat' },
+            { path: '/sign-in', name: 'sign-in', component: SignInPage },
             { path: '/chat', name: 'chat', component: ChatPage },
             { path: '/chat/:id', name: 'chat-conversation', component: ChatPage },
             { path: '/dashboard', name: 'dashboard', component: DashboardPage },
@@ -135,5 +137,25 @@ describe('app', () => {
 
         expect(wrapper.text()).toContain('Loading');
         expect(wrapper.find('nav').exists()).toBe(false);
+    });
+
+    it('renders sign-in page without navigation when user is guest', async () => {
+        const auth = useAuthStore();
+        auth.clearUser(); // sets user to false (guest)
+
+        const router = createTestRouter();
+        router.push('/sign-in');
+        await router.isReady();
+
+        const wrapper = mount(App, {
+            global: {
+                plugins: [pinia, router],
+            },
+        });
+
+        // Should NOT have the navigation bar
+        expect(wrapper.find('nav').exists()).toBe(false);
+        // Should render the sign-in page content
+        expect(wrapper.text()).toContain('Sign in with GitLab');
     });
 });
