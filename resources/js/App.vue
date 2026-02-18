@@ -18,10 +18,10 @@ watch(() => auth.isAuthenticated, (authenticated) => {
 </script>
 
 <template>
-    <div class="min-h-screen flex flex-col">
+    <div class="h-dvh flex flex-col">
         <template v-if="auth.isAuthenticated">
             <AppNavigation />
-            <main class="flex-1">
+            <main class="flex-1 min-h-0 overflow-auto">
                 <router-view />
             </main>
         </template>
