@@ -425,6 +425,9 @@ it('uses pre-aggregated metrics when task_metrics data exists', function (): voi
         ],
     ]);
 
+    // Refresh materialized views so PostgreSQL CI sees the seeded data
+    $this->artisan('metrics:aggregate');
+
     $response = $this->actingAs($user)->getJson('/api/v1/dashboard/cost');
 
     $response->assertOk();
@@ -514,6 +517,9 @@ it('returns correct monthly trend from task_metrics data', function (): void {
         ],
     ]);
 
+    // Refresh materialized views so PostgreSQL CI sees the seeded data
+    $this->artisan('metrics:aggregate');
+
     $response = $this->actingAs($user)->getJson('/api/v1/dashboard/cost');
 
     $response->assertOk();
@@ -576,6 +582,9 @@ it('scopes task_metrics data to user projects only', function (): void {
             'updated_at' => now(),
         ],
     ]);
+
+    // Refresh materialized views so PostgreSQL CI sees the seeded data
+    $this->artisan('metrics:aggregate');
 
     $response = $this->actingAs($user)->getJson('/api/v1/dashboard/cost');
 

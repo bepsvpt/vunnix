@@ -220,6 +220,9 @@ it('uses pre-aggregated metrics from task_metrics when available', function (): 
         'updated_at' => now(),
     ]);
 
+    // Refresh materialized views so PostgreSQL CI sees the seeded data
+    $this->artisan('metrics:aggregate');
+
     $response = $this->actingAs($user)->getJson('/api/v1/dashboard/quality');
 
     $response->assertOk();
@@ -273,6 +276,9 @@ it('uses pre-aggregated metrics across multiple code review task_metrics rows', 
             'updated_at' => now(),
         ],
     ]);
+
+    // Refresh materialized views so PostgreSQL CI sees the seeded data
+    $this->artisan('metrics:aggregate');
 
     $response = $this->actingAs($user)->getJson('/api/v1/dashboard/quality');
 
