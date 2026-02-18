@@ -193,6 +193,7 @@ async function handleSend(content: string) {
                 <div v-if="store.pendingAction" class="flex w-full justify-start">
                     <ActionPreviewCard
                         :action="store.pendingAction"
+                        :disabled="store.streaming"
                         @confirm="store.confirmAction()"
                         @cancel="store.cancelAction()"
                     />

@@ -451,6 +451,82 @@ post_failure() {
     fi
 }
 
+# ── Repair unstructured output ────────────────────────────────────────
+# When Claude CLI returns narrative text instead of schema-validated JSON,
+# attempt a lightweight repair pass: feed the text back to Claude with the
+# schema and ask it to reformat. This produces better structured output
+# (with key_findings, references, etc.) than the format-output.sh text
+# fallback which can only wrap raw text in a minimal JSON envelope.
+repair_output() {
+    log "Starting repair pass — re-prompting Claude to produce structured JSON"
+
+    local raw_text
+    raw_text=$(jq -r '.result' "$CLAUDE_OUTPUT_FILE" 2>/dev/null)
+    if [[ -z "$raw_text" ]]; then
+        log_error "Repair pass: no .result text to repair"
+        return 1
+    fi
+
+    local schema_file
+    schema_file=$(resolve_schema "$VUNNIX_TASK_TYPE") || return 1
+    local schema_json
+    schema_json=$(cat "$schema_file") || return 1
+
+    local repair_output_file="/tmp/vunnix-repair-output.json"
+    local project_dir="${CI_PROJECT_DIR:-.}"
+
+    # Simple single-turn prompt — no tools, no sub-agents
+    local repair_prompt
+    repair_prompt=$(cat <<REPAIR_EOF
+Reformat the following analysis text as a JSON object matching the provided schema.
+Extract structured data (key findings with titles/descriptions/severity, file references with line numbers) from the text.
+Do NOT add information that isn't in the original text.
+
+Analysis text:
+---
+${raw_text}
+REPAIR_EOF
+    )
+
+    cd "$project_dir"
+    if claude --print \
+        --output-format json \
+        --json-schema "$schema_json" \
+        --max-turns 1 \
+        "$repair_prompt" \
+        > "$repair_output_file" 2>>"$LOG_FILE"; then
+
+        # Check if repair produced .structured_output
+        if jq -e '.structured_output' "$repair_output_file" >/dev/null 2>&1; then
+            log "✓ Repair pass produced .structured_output — merging into original output"
+
+            # Merge: keep original usage/cost data, replace .structured_output
+            local repaired_structured
+            repaired_structured=$(jq '.structured_output' "$repair_output_file")
+            jq --argjson repaired "$repaired_structured" '. + {structured_output: $repaired}' \
+                "$CLAUDE_OUTPUT_FILE" > "${CLAUDE_OUTPUT_FILE}.tmp" \
+                && mv "${CLAUDE_OUTPUT_FILE}.tmp" "$CLAUDE_OUTPUT_FILE"
+
+            # Add repair pass token usage to totals
+            local repair_input repair_output_tokens
+            repair_input=$(jq -r '.usage.input_tokens // 0' "$repair_output_file" 2>/dev/null || echo "0")
+            repair_output_tokens=$(jq -r '.usage.output_tokens // 0' "$repair_output_file" 2>/dev/null || echo "0")
+            log "Repair pass usage: ${repair_input}in/${repair_output_tokens}out"
+
+            rm -f "$repair_output_file"
+            return 0
+        else
+            log "Repair pass did not produce .structured_output"
+            rm -f "$repair_output_file"
+            return 1
+        fi
+    else
+        log_error "Repair pass Claude CLI call failed"
+        rm -f "$repair_output_file"
+        return 1
+    fi
+}
+
 # ── Upload debug artifact ────────────────────────────────────────────
 save_debug_artifact() {
     # GitLab CI artifacts are collected from specific paths after the job
@@ -488,6 +564,18 @@ main() {
     # run_claude echoes the duration (seconds) to stdout on success
     local duration=0
     if duration=$(run_claude "$skills"); then
+        # Step 4b: Repair unstructured output if needed
+        # --json-schema validates but doesn't enforce (see comment at build_prompt).
+        # When Claude uses sub-agents, the final response can be narrative text.
+        if ! jq -e '.structured_output' "$CLAUDE_OUTPUT_FILE" >/dev/null 2>&1; then
+            local result_type
+            result_type=$(jq -r '.result | type' "$CLAUDE_OUTPUT_FILE" 2>/dev/null)
+            if [[ "$result_type" == "string" ]]; then
+                log "No .structured_output and .result is text — attempting repair pass"
+                repair_output || log "Repair pass failed — format-output.sh will apply text fallback"
+            fi
+        fi
+
         # Step 5: Format output and post result via T28 scripts
         post_result "$duration" || true
     else

@@ -17,6 +17,7 @@ interface ActionPreview {
 
 interface Props {
     action: ActionPreview;
+    disabled?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -159,20 +160,25 @@ const isMr = computed(() => props.action.action_type === 'create_mr');
 
         <!-- Footer: Confirm / Cancel -->
         <div class="px-4 py-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-2 justify-end">
-            <button
-                data-testid="cancel-btn"
-                class="px-3 py-1.5 text-xs font-medium rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                @click="emit('cancel')"
-            >
-                Cancel
-            </button>
-            <button
-                data-testid="confirm-btn"
-                class="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                @click="emit('confirm')"
-            >
-                Confirm
-            </button>
+            <template v-if="props.disabled">
+                <span class="text-xs text-zinc-500 dark:text-zinc-400 animate-pulse">Dispatching…</span>
+            </template>
+            <template v-else>
+                <button
+                    data-testid="cancel-btn"
+                    class="px-3 py-1.5 text-xs font-medium rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                    @click="emit('cancel')"
+                >
+                    Cancel
+                </button>
+                <button
+                    data-testid="confirm-btn"
+                    class="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                    @click="emit('confirm')"
+                >
+                    Confirm
+                </button>
+            </template>
         </div>
     </div>
 </template>

@@ -215,4 +215,24 @@ describe('actionPreviewCard', () => {
         }));
         expect(wrapper.text()).not.toContain('Assignee');
     });
+
+    // -- Disabled state --
+
+    it('shows Dispatching text and hides buttons when disabled', () => {
+        const wrapper = mount(ActionPreviewCard, {
+            props: { action: makeAction(), disabled: true },
+        });
+        expect(wrapper.text()).toContain('Dispatching');
+        expect(wrapper.find('[data-testid="confirm-btn"]').exists()).toBe(false);
+        expect(wrapper.find('[data-testid="cancel-btn"]').exists()).toBe(false);
+    });
+
+    it('shows buttons and no Dispatching text when not disabled', () => {
+        const wrapper = mount(ActionPreviewCard, {
+            props: { action: makeAction(), disabled: false },
+        });
+        expect(wrapper.text()).not.toContain('Dispatching');
+        expect(wrapper.find('[data-testid="confirm-btn"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="cancel-btn"]').exists()).toBe(true);
+    });
 });

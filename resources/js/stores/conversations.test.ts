@@ -1850,7 +1850,7 @@ describe('useConversationsStore', () => {
             expect(store.pendingAction).toBeNull();
         });
 
-        it('clears pendingAction on confirmAction', () => {
+        it('keeps pendingAction during streaming and clears after confirmAction completes', async () => {
             const store = useConversationsStore();
             store.selectedId = 'conv-1';
             store.pendingAction = { id: 'p-1', action_type: 'create_issue', title: 'Test', description: 'Test' };
@@ -1858,7 +1858,11 @@ describe('useConversationsStore', () => {
             // Mock streamMessage to prevent actual streaming
             vi.spyOn(store, 'streamMessage').mockResolvedValue();
 
-            store.confirmAction();
+            const promise = store.confirmAction();
+            // pendingAction is NOT cleared synchronously — card stays visible during streaming
+            expect(store.pendingAction).not.toBeNull();
+
+            await promise;
             expect(store.pendingAction).toBeNull();
         });
 

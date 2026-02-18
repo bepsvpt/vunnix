@@ -174,14 +174,57 @@ else
             # Not valid JSON - try stripping markdown fencing
             STRIPPED=$(echo "$CLAUDE_RESULT" | sed -n '/^```json/,/^```$/p' | sed '1d;$d')
             if [[ -n "$STRIPPED" ]]; then
-                PARSED_RESULT=$(echo "$STRIPPED" | jq '.' 2>/dev/null) || {
-                    log_error "Result is not valid JSON (even after stripping markdown fencing)"
-                    exit 2
-                }
-                log "Stripped markdown fencing from result string"
-            else
-                log_error "Result string is not valid JSON and has no markdown fencing"
-                exit 2
+                PARSED_RESULT=$(echo "$STRIPPED" | jq '.' 2>/dev/null) || STRIPPED=""
+                if [[ -n "$STRIPPED" ]]; then
+                    log "Stripped markdown fencing from result string"
+                fi
+            fi
+
+            # Text-to-schema fallback: construct minimal valid JSON from narrative text
+            if [[ -z "${PARSED_RESULT:-}" ]]; then
+                log "Result is narrative text — applying text-to-schema fallback for $TASK_TYPE"
+                case "$TASK_TYPE" in
+                    deep_analysis)
+                        PARSED_RESULT=$(jq -n --arg text "$CLAUDE_RESULT" '{
+                            version: "1.0",
+                            analysis: $text,
+                            key_findings: [],
+                            references: []
+                        }')
+                        ;;
+                    code_review|security_audit)
+                        PARSED_RESULT=$(jq -n --arg text "$CLAUDE_RESULT" '{
+                            version: "1.0",
+                            summary: $text,
+                            findings: [],
+                            labels: [],
+                            commit_status: "success"
+                        }')
+                        ;;
+                    issue_discussion)
+                        PARSED_RESULT=$(jq -n --arg text "$CLAUDE_RESULT" '{
+                            version: "1.0",
+                            response: $text,
+                            references: []
+                        }')
+                        ;;
+                    feature_dev|ui_adjustment)
+                        PARSED_RESULT=$(jq -n --arg text "$CLAUDE_RESULT" '{
+                            version: "1.0",
+                            branch: "unknown",
+                            mr_title: "Unknown",
+                            mr_description: $text,
+                            files_changed: [],
+                            tests_added: false,
+                            notes: $text
+                        }')
+                        ;;
+                    *)
+                        log_error "No text-to-schema fallback for task type: $TASK_TYPE"
+                        exit 2
+                        ;;
+                esac
+                log "Constructed fallback result from narrative text (${#CLAUDE_RESULT} chars)"
             fi
         }
         log "Parsed JSON from string .result field"

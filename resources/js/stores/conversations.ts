@@ -290,9 +290,18 @@ export const useConversationsStore = defineStore('conversations', () => {
 
             const currentStatus = data.status as string;
             const tracked = activeTasks.value.get(taskId);
+            if (!tracked)
+                return;
 
-            // Only update if the polled status is newer than what we have
-            if (tracked && currentStatus !== tracked.status) {
+            // Merge polled fields when status changed OR when new data arrived
+            // (pipeline_id, started_at, gitlab_url are set after the Running transition)
+            const statusChanged = currentStatus !== tracked.status;
+            const hasNewData = statusChanged
+                || (data.pipeline_id && !tracked.pipeline_id)
+                || (data.started_at && !tracked.started_at)
+                || (data.gitlab_url && !tracked.gitlab_url);
+
+            if (hasNewData) {
                 updateTaskStatus(taskId, {
                     status: currentStatus,
                     pipeline_id: data.pipeline_id ?? null,
@@ -301,15 +310,15 @@ export const useConversationsStore = defineStore('conversations', () => {
                     gitlab_url: data.gitlab_url ?? null,
                     result_summary: data.result?.summary ?? data.result?.notes ?? null,
                 });
+            }
 
-                // Handle terminal status caught by polling
-                if (isTerminalStatus(currentStatus)) {
-                    deliverTaskResult(taskId, data);
-                    setTimeout(() => {
-                        removeTask(taskId);
-                        unsubscribeFromTask(taskId);
-                    }, 3000);
-                }
+            // Handle terminal status caught by polling
+            if (statusChanged && isTerminalStatus(currentStatus)) {
+                deliverTaskResult(taskId, data);
+                setTimeout(() => {
+                    removeTask(taskId);
+                    unsubscribeFromTask(taskId);
+                }, 3000);
             }
         } catch {
             // Non-critical — Reverb subscription is the primary mechanism
@@ -789,11 +798,11 @@ export const useConversationsStore = defineStore('conversations', () => {
      * Sends a confirmation message to the AI, which will then call DispatchAction.
      */
     async function confirmAction(): Promise<void> {
-        if (!pendingAction.value || !selectedId.value)
+        if (!pendingAction.value || !selectedId.value || streaming.value)
             return;
         const action = pendingAction.value;
-        pendingAction.value = null;
         await streamMessage(`Confirmed. Go ahead with: ${action.title}`);
+        pendingAction.value = null;
     }
 
     /**
