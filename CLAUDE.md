@@ -214,12 +214,17 @@ Persistent lessons discovered during development. Write each as an actionable ru
 
 - **AI SDK Tool schema tests: use `new JsonSchemaTypeFactory` not `app(JsonSchema::class)` in unit tests:** `app()` requires the Laravel container. For pure unit tests (no `uses(TestCase::class)`), instantiate `Illuminate\JsonSchema\JsonSchemaTypeFactory` directly. Keep tool tests as pure unit tests with Mockery — they don't need the framework.
 - **AI SDK `Request::string()` returns `Stringable`, not `string`:** The `InteractsWithData` trait's `string()` method returns `Illuminate\Support\Stringable`. Comparing with `!== ''` always evaluates to `true` (object vs string). Cast to `(string)` before comparison or when building arrays that will be matched by Mockery.
+- **Never accept AI-provided internal identifiers in tool schemas:** The AI fabricates plausible-looking UUIDs for fields it can't know (e.g., `conversation_id: "conv_123456"`). Resolve internal IDs server-side — use `Context::get()`, `Auth::id()`, or closure injection. Remove unknowable fields from tool input schemas entirely.
 
 ### Vue & Frontend
 
 - **Vue component tests that use Pinia stores need `setActivePinia(createPinia())` in `beforeEach`:** When a component calls `useAuthStore()` in `<script setup>`, Pinia must be active before mounting. Create a `pinia` variable in module scope, initialize in `beforeEach`, and pass it as a plugin to `mount()`. Pre-set store state (e.g., `auth.setUser(...)`) before mounting to test authenticated vs. unauthenticated rendering.
 - **Page components with `onMounted` API calls cascade into App.test.js:** When a page component (e.g., `DashboardPage`) calls `axios.get()` on mount, `App.test.js` — which renders all routes — will trigger those calls. Add `vi.mock('axios')` and a default `axios.get.mockResolvedValue(...)` in `App.test.js` `beforeEach` to prevent unhandled rejections from cascading page mounts.
 - **Vue component tests with `watch` + `onMounted` store calls need all store methods mocked:** When a component has `onMounted` that calls multiple store methods (e.g., `fetchQuality`, `fetchPromptVersions`) and the global axios mock returns `{ data: { data: null } }`, unmocked store methods set reactive state to `null`. If the template uses `.length` on those refs (e.g., `v-if="store.items.length > 0"`), it crashes. Mock all `onMounted` store methods in tests that do interactive mutations (`setValue`, `trigger`), not just the one under test.
+
+### Real-time / Reverb
+
+- **Broadcast events must specify `broadcastQueue('vunnix-server')`:** Events implementing `ShouldBroadcast` without an explicit queue go to `default`, which no Docker worker processes (D134 defines `vunnix-server` + `vunnix-runner-*` only). Events sit unprocessed indefinitely with no error.
 
 ### Docker & DevOps
 
@@ -230,6 +235,11 @@ Persistent lessons discovered during development. Write each as an actionable ru
 - **`GITLAB_BOT_ACCOUNT_ID` must be a numeric user ID, not a username:** `ProjectEnablementService::resolveBotUserId()` casts the config value to `(int)`. PHP's `(int) "username"` silently evaluates to `0`, causing `getProjectMember(projectId, 0)` → 404 → "bot is not a member". No error or warning is raised.
 - **GitLab Pipeline Triggers API only accepts branch/tag names, not commit SHAs:** `POST /api/v4/projects/:id/trigger/pipeline` returns 400 "Reference not found" when `ref` is a commit SHA. Use the MR's `source_branch` name instead. This is different from the regular pipeline API (`POST /projects/:id/pipeline`) which does accept SHAs.
 - **GitLab Pipeline Triggers API must not include PRIVATE-TOKEN header:** `triggerPipeline()` authenticates via the `token` body parameter (trigger token), not the `PRIVATE-TOKEN` header. Sending both causes GitLab to authenticate as the bot user (with stricter variable injection rules) instead of the trigger token, resulting in "empty pipeline" or "insufficient permissions to set pipeline variables".
+
+### Task Pipeline
+
+- **Task `result` JSONB is nullable and polymorphic by type:** The column is `null` before completion, and completed tasks have different keys per type — `title` vs `mr_title`, `findings` vs `analysis` vs `response`, `gitlab_issue_url` vs `mr_iid`. Always null-coalesce (`$result = $task->result ?? []`) before accessing nested fields in events, listeners, and API resources.
+- **Re-broadcast `TaskStatusChanged` after downstream jobs update the Task:** When jobs like `PostFeatureDevResult` or `CreateGitLabIssue` save new fields (`mr_iid`, `issue_iid`) after the initial result, the frontend won't see them unless the event re-fires. `DeliverTaskResultToConversation` has an idempotency guard — new downstream jobs should follow the same re-broadcast pattern.
 
 ### Static Analysis & Tooling
 
