@@ -51,6 +51,20 @@ LOG_FILE="/tmp/vunnix-executor.log"
 CLAUDE_OUTPUT_FILE="/tmp/vunnix-claude-output.json"
 FORMATTED_RESULT_FILE="/tmp/vunnix-formatted-result.json"
 
+# ── Normalize Claude CLI output ──────────────────────────────────────
+# Newer Claude CLI versions (--output-format json) produce an array of
+# conversation turns instead of a single result object. The last element
+# (type: "result") contains .result, .structured_output, .usage, etc.
+# This function extracts that element so all downstream code (format-output.sh,
+# repair_output) can use the same top-level field paths.
+normalize_claude_output() {
+    local file="$1"
+    if jq -e 'type == "array"' "$file" >/dev/null 2>&1; then
+        log "Normalizing array-format output — extracting result element"
+        jq 'last' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
+    fi
+}
+
 # ── CI/CD environment for Claude CLI ─────────────────────────────────
 # Exports environment variables that disable non-essential features in
 # headless CI containers. Called once before the first claude invocation.
@@ -586,6 +600,9 @@ REPAIR_EOF
         "$repair_prompt" \
         > "$repair_output_file" 2>>"$LOG_FILE"; then
 
+        # Normalize array format before checking fields
+        normalize_claude_output "$repair_output_file"
+
         # Check if repair produced .structured_output
         if jq -e '.structured_output' "$repair_output_file" >/dev/null 2>&1; then
             log "✓ Repair pass produced .structured_output — merging into original output"
@@ -654,6 +671,9 @@ main() {
     # run_claude echoes the duration (seconds) to stdout on success
     local duration=0
     if duration=$(run_claude "$skills"); then
+        # Step 4a: Normalize output format (array → result object)
+        normalize_claude_output "$CLAUDE_OUTPUT_FILE"
+
         # Step 4b: Repair unstructured output if needed
         # --json-schema validates but doesn't enforce (see comment at build_prompt).
         # When Claude uses sub-agents, the final response can be narrative text.

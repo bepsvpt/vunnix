@@ -5,8 +5,9 @@
 # Transforms raw Claude CLI JSON output into the structured result payload
 # expected by the Vunnix Runner Result API (POST /api/v1/tasks/:id/result).
 #
-# The Claude CLI (--output-format json) produces a JSON object with cost,
-# duration, and result fields. This script extracts the AI's structured output,
+# The Claude CLI (--output-format json) produces a JSON array of conversation
+# turns (or a single result object in older versions). This script normalizes
+# the format, extracts the AI's structured output,
 # validates it has the required shape for the task type, and wraps it in the
 # API envelope defined in §20.4.
 #
@@ -145,6 +146,15 @@ if ! jq empty "$CLAUDE_OUTPUT_FILE" 2>/dev/null; then
     exit 2
 fi
 
+# ── Normalize array-format output ─────────────────────────────────────
+# Newer Claude CLI versions produce an array of conversation turns.
+# The last element (type: "result") contains the actual result data.
+if jq -e 'type == "array"' "$CLAUDE_OUTPUT_FILE" >/dev/null 2>&1; then
+    log "Normalizing array-format output — extracting result element"
+    jq 'last' "$CLAUDE_OUTPUT_FILE" > "${CLAUDE_OUTPUT_FILE}.tmp" \
+        && mv "${CLAUDE_OUTPUT_FILE}.tmp" "$CLAUDE_OUTPUT_FILE"
+fi
+
 # ── Extract the AI's structured result ───────────────────────────────
 # Claude CLI with --json-schema puts structured output in .structured_output field:
 # {
@@ -240,7 +250,7 @@ fi
 TOKENS_INPUT=$(jq -r '.usage.input_tokens // .input_tokens // 0' "$CLAUDE_OUTPUT_FILE" 2>/dev/null || echo "0")
 TOKENS_OUTPUT=$(jq -r '.usage.output_tokens // .output_tokens // 0' "$CLAUDE_OUTPUT_FILE" 2>/dev/null || echo "0")
 TOKENS_THINKING=$(jq -r '.usage.thinking_tokens // .thinking_tokens // 0' "$CLAUDE_OUTPUT_FILE" 2>/dev/null || echo "0")
-COST_USD=$(jq -r '.cost_usd // 0' "$CLAUDE_OUTPUT_FILE" 2>/dev/null || echo "0")
+COST_USD=$(jq -r '.total_cost_usd // .cost_usd // 0' "$CLAUDE_OUTPUT_FILE" 2>/dev/null || echo "0")
 CLI_DURATION_MS=$(jq -r '.duration_ms // 0' "$CLAUDE_OUTPUT_FILE" 2>/dev/null || echo "0")
 
 # Validate and coerce to integers (prevent --argjson invalid JSON errors)
