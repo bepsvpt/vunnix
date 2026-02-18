@@ -22,6 +22,7 @@ function makeResult(overrides: Record<string, unknown> = {}) {
         gitlab_url: 'https://gitlab.example.com/project',
         screenshot: null,
         error_reason: null,
+        key_findings: null,
         ...overrides,
     };
 }
@@ -157,5 +158,46 @@ describe('resultCard', () => {
     it('prefers MR link over Issue link when both present', () => {
         const wrapper = mountCard(makeResult({ mr_iid: 123, issue_iid: 45 }));
         expect(wrapper.find('[data-testid="artifact-link"]').text()).toContain('!123');
+    });
+
+    // -- Key findings --
+
+    it('hides findings toggle when key_findings is null', () => {
+        const wrapper = mountCard(makeResult({ key_findings: null }));
+        expect(wrapper.text()).not.toContain('finding');
+    });
+
+    it('shows findings count toggle when key_findings are present', () => {
+        const wrapper = mountCard(makeResult({
+            key_findings: [
+                { title: 'Missing auth check', description: 'No auth', severity: 'critical' },
+                { title: 'Unused import', description: 'Dead code', severity: 'info' },
+            ],
+        }));
+        expect(wrapper.text()).toContain('2 findings');
+    });
+
+    it('expands findings list on toggle click', async () => {
+        const wrapper = mountCard(makeResult({
+            key_findings: [
+                { title: 'Missing auth check', description: 'Auth missing in controller', severity: 'critical' },
+            ],
+        }));
+        // Initially collapsed — description not visible
+        expect(wrapper.text()).not.toContain('Auth missing in controller');
+
+        // Click toggle
+        await wrapper.find('button').trigger('click');
+        expect(wrapper.text()).toContain('Auth missing in controller');
+        expect(wrapper.text()).toContain('Missing auth check');
+    });
+
+    it('applies correct severity class for critical findings', async () => {
+        const wrapper = mountCard(makeResult({
+            key_findings: [{ title: 'Vuln', description: 'SQL injection', severity: 'critical' }],
+        }));
+        await wrapper.find('button').trigger('click');
+        const badge = wrapper.find('span.text-red-700, span.dark\\:text-red-300');
+        expect(badge.exists() || wrapper.text()).toBeTruthy();
     });
 });

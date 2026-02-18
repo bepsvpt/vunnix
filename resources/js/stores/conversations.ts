@@ -308,7 +308,7 @@ export const useConversationsStore = defineStore('conversations', () => {
                     pipeline_status: data.pipeline_status ?? null,
                     started_at: data.started_at ?? null,
                     gitlab_url: data.gitlab_url ?? null,
-                    result_summary: data.result?.summary ?? data.result?.notes ?? null,
+                    result_summary: data.result?.summary ?? data.result?.notes ?? (data.result?.analysis ? String(data.result.analysis).substring(0, 500) : null),
                 });
             }
 
@@ -569,7 +569,7 @@ export const useConversationsStore = defineStore('conversations', () => {
                     title: data.title,
                     mr_iid: data.mr_iid,
                     issue_iid: data.issue_iid,
-                    result_summary: r.notes || r.summary || null,
+                    result_summary: r.notes || r.summary || (r.analysis ? String(r.analysis).substring(0, 500) : null),
                     error_reason: data.error_reason,
                     result_data: resultData,
                     conversation_id: selectedId.value,

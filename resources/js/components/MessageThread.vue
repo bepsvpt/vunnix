@@ -39,6 +39,7 @@ function buildResultCardProps(result: CompletedResult) {
         result_summary: result.result_summary,
         error_reason: result.error_reason,
         screenshot: (result.result_data?.screenshot as string) || null,
+        key_findings: (result.result_data?.key_findings as Array<{ title: string; description: string; severity: string }>) || null,
         project_id: result.project_id,
         gitlab_url: result.gitlab_url || '',
     };

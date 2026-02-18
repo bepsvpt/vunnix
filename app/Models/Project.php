@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Throwable;
 
 /**
  * @property int $id
@@ -87,12 +88,30 @@ class Project extends Model
     /**
      * Resolve the project's GitLab web URL (e.g. https://gitlab.com/group/project).
      *
-     * Reads from cache only — populated by VunnixSetup and project sync.
-     * Returns null if the cache is empty (project hasn't been set up yet).
+     * Tries the cache first. On a cache miss (e.g. after Docker restart), fetches
+     * from the GitLab API and caches the result forever so only one API call is
+     * ever made per cache lifetime. Returns null only if the API call fails.
      */
     public function gitlabWebUrl(): ?string
     {
-        return \Illuminate\Support\Facades\Cache::get("project.{$this->id}.gitlab_web_url");
+        $cacheKey = "project.{$this->id}.gitlab_web_url";
+
+        $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        try {
+            $data = app(\App\Services\GitLabClient::class)->getProject($this->gitlab_project_id);
+            $url = $data['web_url'] ?? null;
+            if ($url !== null) {
+                \Illuminate\Support\Facades\Cache::forever($cacheKey, $url);
+            }
+
+            return $url;
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     /**

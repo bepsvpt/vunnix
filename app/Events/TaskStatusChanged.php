@@ -48,7 +48,7 @@ class TaskStatusChanged implements ShouldBroadcast
             'started_at' => $this->task->started_at?->toIso8601String(),
             'conversation_id' => $this->task->conversation_id,
             'gitlab_url' => $this->task->project->gitlabWebUrl(),
-            'result_summary' => $this->task->isTerminal() ? ($result['summary'] ?? $result['notes'] ?? null) : null,
+            'result_summary' => $this->task->isTerminal() ? $this->buildResultSummary($result) : null,
             'error_reason' => $this->task->isTerminal() ? $this->task->error_reason : null,
             'timestamp' => now()->toIso8601String(),
         ];
@@ -75,6 +75,35 @@ class TaskStatusChanged implements ShouldBroadcast
     public function broadcastQueue(): string
     {
         return 'vunnix-server';
+    }
+
+    /**
+     * Build a short human-readable summary of the task result.
+     *
+     * Falls back through type-specific fields so each task type surfaces
+     * something useful in the result card without truncating large fields.
+     *
+     * @param  array<string, mixed>  $result
+     */
+    private function buildResultSummary(array $result): ?string
+    {
+        // Preferred summary/notes fields (feature_dev, code_review, etc.)
+        $text = $result['summary'] ?? $result['notes'] ?? null;
+        if ($text !== null && $text !== '') {
+            return $text;
+        }
+
+        // Issue discussion: use the response text (truncated)
+        if (isset($result['response']) && $result['response'] !== '') {
+            return mb_substr($result['response'], 0, 500);
+        }
+
+        // Deep analysis: use the first 500 chars of the analysis text
+        if (isset($result['analysis']) && $result['analysis'] !== '') {
+            return mb_substr($result['analysis'], 0, 500);
+        }
+
+        return null;
     }
 
     /**
@@ -105,11 +134,11 @@ class TaskStatusChanged implements ShouldBroadcast
             $data['screenshot'] = $result['screenshot'] ?? null;
         }
 
-        // Deep analysis: include analysis content and key findings
+        // Deep analysis: include key findings and references.
+        // The full analysis text is intentionally excluded — it can be 10–50KB+
+        // and would exceed the Reverb max_message_size limit. The frontend
+        // fetches the full result from the API when hydrating result cards.
         if ($this->task->type === \App\Enums\TaskType::DeepAnalysis) {
-            if (isset($result['analysis'])) {
-                $data['analysis'] = $result['analysis'];
-            }
             if (isset($result['key_findings'])) {
                 $data['key_findings'] = $result['key_findings'];
             }

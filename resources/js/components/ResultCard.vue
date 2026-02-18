@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+
+interface KeyFinding {
+    title: string;
+    description: string;
+    severity: string;
+}
 
 interface TaskResult {
     task_id: number;
@@ -14,6 +20,7 @@ interface TaskResult {
     result_summary: string | null;
     error_reason: string | null;
     screenshot: string | null;
+    key_findings: KeyFinding[] | null;
     project_id: number;
     gitlab_url: string;
 }
@@ -72,6 +79,20 @@ const hasBranch = computed(() =>
 const hasScreenshot = computed(() =>
     props.result.type === 'ui_adjustment' && props.result.screenshot,
 );
+
+const hasFindings = computed(() =>
+    props.result.key_findings !== null && props.result.key_findings.length > 0,
+);
+
+const findingsExpanded = ref(false);
+
+function severityClass(severity: string): string {
+    if (severity === 'critical')
+        return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
+    if (severity === 'major')
+        return 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300';
+    return 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300';
+}
 </script>
 
 <template>
@@ -148,6 +169,36 @@ const hasScreenshot = computed(() =>
             >
                 {{ result.result_summary }}
             </p>
+
+            <!-- Key findings (deep_analysis / security_audit) -->
+            <div v-if="hasFindings" class="space-y-1.5">
+                <button
+                    type="button"
+                    class="flex items-center gap-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                    @click="findingsExpanded = !findingsExpanded"
+                >
+                    <span>{{ findingsExpanded ? '▾' : '▸' }}</span>
+                    <span>{{ result.key_findings!.length }} finding{{ result.key_findings!.length !== 1 ? 's' : '' }}</span>
+                </button>
+                <ul v-if="findingsExpanded" class="space-y-2">
+                    <li
+                        v-for="(finding, i) in result.key_findings"
+                        :key="i"
+                        class="text-xs space-y-0.5"
+                    >
+                        <div class="flex items-center gap-1.5">
+                            <span
+                                class="px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide"
+                                :class="severityClass(finding.severity)"
+                            >{{ finding.severity }}</span>
+                            <span class="font-medium text-zinc-800 dark:text-zinc-200">{{ finding.title }}</span>
+                        </div>
+                        <p class="text-zinc-500 dark:text-zinc-400 leading-relaxed pl-0.5">
+                            {{ finding.description }}
+                        </p>
+                    </li>
+                </ul>
+            </div>
 
             <!-- Error reason (failed tasks) -->
             <p
