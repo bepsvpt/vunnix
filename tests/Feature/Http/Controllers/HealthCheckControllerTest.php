@@ -10,6 +10,9 @@ it('returns healthy when all checks pass', function (): void {
     // Set a fresh queue worker heartbeat
     Cache::put('health:queue_worker:heartbeat', now()->toIso8601String(), 3600);
 
+    // Use a high disk threshold so the test doesn't depend on the dev machine's actual disk usage
+    config(['health.disk_usage_threshold' => 99]);
+
     // Mock the Redis health check (Redis may not be available in CI)
     $connectionMock = Mockery::mock();
     $connectionMock->shouldReceive('ping')->andReturn(true);
