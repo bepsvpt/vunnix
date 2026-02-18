@@ -147,6 +147,9 @@ jobs:
           DB_PASSWORD: postgres
         run: php artisan test --parallel --coverage --coverage-clover=coverage/php/clover.xml
 
+      - name: Check per-file coverage threshold
+        run: php scripts/check-coverage.php coverage/php/clover.xml --min=90
+
       - name: Upload PHP coverage
         if: always()
         uses: actions/upload-artifact@v4

@@ -58,7 +58,8 @@
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
         "test": "php artisan config:clear --ansi && php artisan test --parallel",
-        "test:coverage": "php artisan config:clear --ansi && php artisan test --parallel --coverage --coverage-html=coverage/php",
+        "test:coverage": "php artisan config:clear --ansi && php artisan test --parallel --coverage --coverage-html=coverage/php --coverage-clover=coverage/php/clover.xml",
+        "coverage:check": "php scripts/check-coverage.php",
         "analyse": "vendor/bin/phpstan analyse --memory-limit=-1",
         "audit:all": "composer audit && npm audit",
         "format": "./vendor/bin/pint",
