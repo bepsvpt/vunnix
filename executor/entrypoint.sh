@@ -16,6 +16,30 @@
 #
 # @see §3.4 Task Dispatcher & Task Executor
 # @see §6.7 Executor Image
+#
+# ── CI/CD Reliability Configuration ───────────────────────────────────
+# The Claude CLI runs headless in an ephemeral Docker container. These
+# settings ensure predictable, reliable execution:
+#
+# CLI Flags:
+#   --model opus              Pin to Opus family per D91 (auto-resolves to latest)
+#   --dangerously-skip-permissions  Prevent hangs on permission prompts (container is isolated)
+#   --verbose                 Full turn-by-turn debug output to LOG_FILE
+#   --no-session-persistence  No disk I/O for sessions (ephemeral container)
+#   --disable-slash-commands  Skills/slash commands irrelevant in print mode
+#   --max-budget-usd 10.00   Cost circuit breaker (2x max estimated task cost)
+#   --tools                   Task-type-aware: read-only for reviews, full for feature dev
+#   --disallowedTools         Block subagents, web access (not needed for code tasks)
+#
+# Environment Variables (set by configure_ci_env):
+#   CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 Autoupdater + bug cmd + error reporting + telemetry
+#   DISABLE_NON_ESSENTIAL_MODEL_CALLS=1        Skip flavor text, tips
+#   DISABLE_COST_WARNINGS=1                    No interactive cost prompts
+#   CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1     No background tasks in print mode
+#   CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY=1      No session quality surveys
+#   CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR=1 Stable working dir between bash calls
+#   BASH_DEFAULT_TIMEOUT_MS=300000             5-min default bash timeout
+#   BASH_MAX_TIMEOUT_MS=600000                 10-min max bash timeout (vs 20-min CI limit D34)
 
 set -euo pipefail
 
@@ -26,6 +50,21 @@ RESULT_FILE="/tmp/vunnix-result.json"
 LOG_FILE="/tmp/vunnix-executor.log"
 CLAUDE_OUTPUT_FILE="/tmp/vunnix-claude-output.json"
 FORMATTED_RESULT_FILE="/tmp/vunnix-formatted-result.json"
+
+# ── CI/CD environment for Claude CLI ─────────────────────────────────
+# Exports environment variables that disable non-essential features in
+# headless CI containers. Called once before the first claude invocation.
+configure_ci_env() {
+    # Single toggle: DISABLE_AUTOUPDATER + DISABLE_BUG_COMMAND + DISABLE_ERROR_REPORTING + DISABLE_TELEMETRY
+    export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+    export DISABLE_NON_ESSENTIAL_MODEL_CALLS=1
+    export DISABLE_COST_WARNINGS=1
+    export CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1
+    export CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY=1
+    export CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR=1
+    export BASH_DEFAULT_TIMEOUT_MS=300000   # 5 min default
+    export BASH_MAX_TIMEOUT_MS=600000       # 10 min max (vs 20-min CI timeout D34)
+}
 
 # ── Logging ──────────────────────────────────────────────────────────
 log() {
@@ -172,6 +211,34 @@ resolve_schema() {
     echo "$schema_file"
 }
 
+# ── Resolve Claude CLI tool restrictions ──────────────────────────────
+# Task-type-aware tool access: read-only tasks get Read/Grep/Glob/Bash,
+# write tasks additionally get Edit/Write. All tasks block subagents and
+# external network tools.
+resolve_tool_flags() {
+    local task_type="$1"
+    local tools
+
+    case "$task_type" in
+        code_review|security_audit|deep_analysis|issue_discussion)
+            # Read-only analysis — Bash needed for git diff, eslint, phpstan, etc.
+            tools="Read,Grep,Glob,Bash"
+            ;;
+        feature_dev|ui_adjustment)
+            # Write tasks — full file access for code changes + git operations
+            tools="Read,Grep,Glob,Edit,Write,Bash"
+            ;;
+        *)
+            # Unknown type: conservative read-only default
+            tools="Read,Grep,Glob,Bash"
+            ;;
+    esac
+
+    # Output flags — caller must NOT quote $tool_flags to allow word splitting
+    # --disallowedTools uses official tool names only (see settings.md §"Tools available to Claude")
+    echo "--tools ${tools} --disallowedTools Task WebFetch WebSearch NotebookEdit Skill"
+}
+
 # ── Run Claude CLI ───────────────────────────────────────────────────
 run_claude() {
     local skills="$1"
@@ -223,7 +290,14 @@ run_claude() {
     }
 
     log "Loaded JSON schema from: $schema_file ($(wc -c < "$schema_file") bytes)"
-    log "Running Claude CLI with --json-schema, max 30 turns, extended thinking enabled"
+
+    # Configure CI/CD environment variables (idempotent — safe to call multiple times)
+    configure_ci_env
+
+    # Resolve task-type-aware tool restrictions
+    local tool_flags
+    tool_flags=$(resolve_tool_flags "$VUNNIX_TASK_TYPE")
+    log "Running Claude CLI: model=opus, max-turns=30, budget=\$10, verbose, permissions=bypass, ${tool_flags}"
 
     # Build the Claude CLI prompt based on task type and strategy
     local prompt
@@ -233,10 +307,18 @@ run_claude() {
     # Claude puts schema-validated JSON in .structured_output field
     cd "$project_dir"
 
+    # shellcheck disable=SC2086
     claude --print \
         --output-format json \
         --json-schema "$schema_json" \
         --max-turns 30 \
+        --model opus \
+        --max-budget-usd 10.00 \
+        --verbose \
+        --dangerously-skip-permissions \
+        --no-session-persistence \
+        --disable-slash-commands \
+        $tool_flags \
         "$prompt" \
         > "$CLAUDE_OUTPUT_FILE" 2>>"$LOG_FILE" || {
         local exit_code=$?
@@ -480,7 +562,7 @@ repair_output() {
     repair_prompt=$(cat <<REPAIR_EOF
 Reformat the following analysis text as a JSON object matching the provided schema.
 Extract structured data (key findings with titles/descriptions/severity, file references with line numbers) from the text.
-Do NOT add information that isn't in the original text.
+Do NOT add information that is not in the original text.
 
 Analysis text:
 ---
@@ -493,6 +575,14 @@ REPAIR_EOF
         --output-format json \
         --json-schema "$schema_json" \
         --max-turns 1 \
+        --model opus \
+        --max-budget-usd 2.00 \
+        --verbose \
+        --dangerously-skip-permissions \
+        --no-session-persistence \
+        --disable-slash-commands \
+        --tools "Read,Grep,Glob" \
+        --disallowedTools Task WebFetch WebSearch NotebookEdit Skill \
         "$repair_prompt" \
         > "$repair_output_file" 2>>"$LOG_FILE"; then
 
