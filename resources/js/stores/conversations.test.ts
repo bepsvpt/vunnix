@@ -23,6 +23,8 @@ const { mockListenFn, mockStopListeningFn, mockChannel, mockEchoInstance } = vi.
 });
 vi.mock('@/composables/useEcho', () => ({
     getEcho: vi.fn().mockReturnValue(mockEchoInstance),
+    whenConnected: vi.fn().mockResolvedValue(undefined),
+    onReconnect: vi.fn().mockReturnValue(() => {}),
 }));
 
 beforeEach(() => {
@@ -1438,25 +1440,28 @@ describe('useConversationsStore', () => {
     });
 
     describe('reverb channel subscription (T69)', () => {
-        it('subscribeToTask subscribes to task.{id} channel', () => {
+        it('subscribeToTask subscribes to task.{id} channel', async () => {
             const store = useConversationsStore();
             store.subscribeToTask(42);
+            await flushPromises();
             expect(mockEchoInstance.private).toHaveBeenCalledWith('task.42');
         });
 
-        it('subscribeToTask listens for task.status.changed events', () => {
+        it('subscribeToTask listens for task.status.changed events', async () => {
             const store = useConversationsStore();
             store.subscribeToTask(42);
+            await flushPromises();
             expect(mockListenFn).toHaveBeenCalledWith(
                 '.task.status.changed',
                 expect.any(Function),
             );
         });
 
-        it('does not double-subscribe to the same task', () => {
+        it('does not double-subscribe to the same task', async () => {
             const store = useConversationsStore();
             store.subscribeToTask(42);
             store.subscribeToTask(42);
+            await flushPromises();
             expect(mockEchoInstance.private).toHaveBeenCalledTimes(1);
         });
 
@@ -1466,7 +1471,7 @@ describe('useConversationsStore', () => {
             expect(mockEchoInstance.leave).toHaveBeenCalledWith('task.42');
         });
 
-        it('receiving task.status.changed event updates tracked task', () => {
+        it('receiving task.status.changed event updates tracked task', async () => {
             const store = useConversationsStore();
             store.trackTask({
                 task_id: 42,
@@ -1481,6 +1486,7 @@ describe('useConversationsStore', () => {
             });
 
             store.subscribeToTask(42);
+            await flushPromises();
 
             // Simulate event by calling the listen callback
             const callback = mockListenFn.mock.calls[0][1];
@@ -1497,7 +1503,7 @@ describe('useConversationsStore', () => {
             expect(task.pipeline_id).toBe(999);
         });
 
-        it('schedules removal on terminal status event', () => {
+        it('schedules removal on terminal status event', async () => {
             vi.useFakeTimers();
             const store = useConversationsStore();
             store.trackTask({
@@ -1513,6 +1519,7 @@ describe('useConversationsStore', () => {
             });
 
             store.subscribeToTask(42);
+            await flushPromises();
 
             const callback = mockListenFn.mock.calls[0][1];
             callback({
@@ -1534,12 +1541,14 @@ describe('useConversationsStore', () => {
             vi.useRealTimers();
         });
 
-        it('$reset clears task subscriptions', () => {
+        it('$reset clears task subscriptions', async () => {
             const store = useConversationsStore();
             store.subscribeToTask(42);
+            await flushPromises();
             store.$reset();
             // After reset, subscribing again should work (not be deduped)
             store.subscribeToTask(42);
+            await flushPromises();
             expect(mockEchoInstance.private).toHaveBeenCalledTimes(2);
         });
     });
@@ -1616,7 +1625,7 @@ describe('useConversationsStore', () => {
             expect(store.completedResultsForConversation[0].task_id).toBe(1);
         });
 
-        it('delivers result card on terminal Reverb event via subscribeToTask', () => {
+        it('delivers result card on terminal Reverb event via subscribeToTask', async () => {
             vi.useFakeTimers();
             const store = useConversationsStore();
             store.selectedId = 'conv-1';
@@ -1635,6 +1644,7 @@ describe('useConversationsStore', () => {
             });
 
             store.subscribeToTask(42);
+            await flushPromises();
 
             // Simulate terminal event
             const callback = mockListenFn.mock.calls[0][1];

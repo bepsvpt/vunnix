@@ -10,6 +10,11 @@ import ChatPage from './pages/ChatPage.vue';
 import DashboardPage from './pages/DashboardPage.vue';
 
 vi.mock('axios');
+vi.mock('@/composables/useEcho', () => ({
+    whenConnected: vi.fn().mockResolvedValue(undefined),
+    onReconnect: vi.fn().mockReturnValue(() => {}),
+    getEcho: vi.fn(),
+}));
 const mockedAxios = vi.mocked(axios, true);
 
 let pinia: ReturnType<typeof createPinia>;

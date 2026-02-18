@@ -52,10 +52,4 @@ declare module 'markdown-it' {
 interface Window {
     axios: import('axios').AxiosStatic;
     Pusher: typeof import('pusher-js').default;
-    __REVERB_CONFIG__?: {
-        key?: string;
-        host?: string;
-        port?: number;
-        scheme?: string;
-    };
 }

@@ -3,7 +3,7 @@ import type { Conversation } from '@/types';
 import axios from 'axios';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import { getEcho } from '@/composables/useEcho';
+import { getEcho, onReconnect, whenConnected } from '@/composables/useEcho';
 import { streamSSE } from '@/lib/sse';
 
 // --- Local interfaces ---
@@ -225,35 +225,53 @@ export const useConversationsStore = defineStore('conversations', () => {
         return map[label] || 'feature_dev';
     }
 
+    // Re-poll all active task channels after a WebSocket reconnection
+    // to catch any status changes that occurred while disconnected.
+    onReconnect(() => {
+        for (const taskId of taskSubscriptions.value) {
+            pollCurrentTaskStatus(taskId);
+        }
+    });
+
     /**
      * Subscribe to a task's Reverb channel for real-time status updates.
+     * Waits for the WebSocket connection to be established before subscribing,
+     * preventing silent subscription failures from race conditions.
      * Listens on private channel `task.{id}` for `.task.status.changed` events.
      */
     function subscribeToTask(taskId: number): void {
         if (taskSubscriptions.value.has(taskId))
             return;
 
-        const echo = getEcho();
-        echo.private(`task.${taskId}`).listen('.task.status.changed', (event: Record<string, unknown>) => {
-            updateTaskStatus(event.task_id as number, {
-                status: event.status as string,
-                pipeline_id: event.pipeline_id as number | null,
-                pipeline_status: event.pipeline_status as string | null,
-                started_at: event.started_at as string | null,
-                result_summary: event.result_summary as string | null,
-            });
-
-            // If terminal, deliver result card and schedule cleanup
-            if (['completed', 'failed', 'superseded'].includes(event.status as string)) {
-                deliverTaskResult(event.task_id as number, event);
-                setTimeout(() => {
-                    removeTask(event.task_id as number);
-                    unsubscribeFromTask(event.task_id as number);
-                }, 3000);
-            }
-        });
-
+        // Mark as subscribed immediately to prevent duplicate calls
         taskSubscriptions.value = new Set([...taskSubscriptions.value, taskId]);
+
+        // Wait for WebSocket connection before subscribing to private channel
+        whenConnected().then(() => {
+            // Guard: task may have been unsubscribed while waiting for connection
+            if (!taskSubscriptions.value.has(taskId))
+                return;
+
+            const echo = getEcho();
+            echo.private(`task.${taskId}`).listen('.task.status.changed', (event: Record<string, unknown>) => {
+                updateTaskStatus(event.task_id as number, {
+                    status: event.status as string,
+                    pipeline_id: event.pipeline_id as number | null,
+                    pipeline_status: event.pipeline_status as string | null,
+                    started_at: event.started_at as string | null,
+                    result_summary: event.result_summary as string | null,
+                });
+
+                // If terminal, deliver result card and schedule cleanup
+                if (['completed', 'failed', 'superseded'].includes(event.status as string)) {
+                    deliverTaskResult(event.task_id as number, event);
+                    setTimeout(() => {
+                        removeTask(event.task_id as number);
+                        unsubscribeFromTask(event.task_id as number);
+                    }, 3000);
+                }
+            });
+        });
 
         // Catch up on status changes that happened before the subscription
         // was established (race condition: Queued/Running broadcasts may fire

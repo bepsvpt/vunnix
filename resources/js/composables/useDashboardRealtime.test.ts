@@ -22,6 +22,7 @@ vi.mock('@/composables/useEcho', () => ({
         private: mockPrivate,
         leave: mockLeave,
     }),
+    whenConnected: () => Promise.resolve(),
 }));
 
 describe('useDashboardRealtime', () => {
@@ -30,12 +31,16 @@ describe('useDashboardRealtime', () => {
         vi.clearAllMocks();
     });
 
-    it('subscribes to project activity and metrics channels', () => {
+    it('subscribes to project activity and metrics channels', async () => {
         const projects = [{ id: 10 }, { id: 20 }];
         const { subscribe } = useDashboardRealtime();
         subscribe(projects);
 
-        expect(mockPrivate).toHaveBeenCalledWith('project.10.activity');
+        // Wait for whenConnected() promise to resolve
+        await vi.waitFor(() => {
+            expect(mockPrivate).toHaveBeenCalledWith('project.10.activity');
+        });
+
         expect(mockPrivate).toHaveBeenCalledWith('project.20.activity');
         expect(mockPrivate).toHaveBeenCalledWith('metrics.10');
         expect(mockPrivate).toHaveBeenCalledWith('metrics.20');
@@ -43,16 +48,22 @@ describe('useDashboardRealtime', () => {
         expect(mockPrivate).toHaveBeenCalledTimes(4);
     });
 
-    it('listens for task.status.changed on activity channels', () => {
+    it('listens for task.status.changed on activity channels', async () => {
         const { subscribe } = useDashboardRealtime();
         subscribe([{ id: 10 }]);
 
-        expect(mockListen).toHaveBeenCalledWith('.task.status.changed', expect.any(Function));
+        await vi.waitFor(() => {
+            expect(mockListen).toHaveBeenCalledWith('.task.status.changed', expect.any(Function));
+        });
     });
 
-    it('listens for metrics.updated on metrics channels', () => {
+    it('listens for metrics.updated on metrics channels', async () => {
         const { subscribe } = useDashboardRealtime();
         subscribe([{ id: 10 }]);
+
+        await vi.waitFor(() => {
+            expect(mockListen).toHaveBeenCalled();
+        });
 
         const listenCalls = mockListen.mock.calls;
         const eventNames = listenCalls.map((c: unknown[]) => c[0]);
@@ -60,10 +71,14 @@ describe('useDashboardRealtime', () => {
         expect(eventNames).toContain('.metrics.updated');
     });
 
-    it('adds activity items to dashboard store when event fires', () => {
+    it('adds activity items to dashboard store when event fires', async () => {
         const store = useDashboardStore();
         const { subscribe } = useDashboardRealtime();
         subscribe([{ id: 10 }]);
+
+        await vi.waitFor(() => {
+            expect(mockListen).toHaveBeenCalled();
+        });
 
         // Find the .task.status.changed handler
         const activityCall = mockListen.mock.calls.find((c: unknown[]) => c[0] === '.task.status.changed');
@@ -82,10 +97,14 @@ describe('useDashboardRealtime', () => {
         expect(store.activityFeed[0].task_id).toBe(42);
     });
 
-    it('adds metrics updates to dashboard store when event fires', () => {
+    it('adds metrics updates to dashboard store when event fires', async () => {
         const store = useDashboardStore();
         const { subscribe } = useDashboardRealtime();
         subscribe([{ id: 10 }]);
+
+        await vi.waitFor(() => {
+            expect(mockListen).toHaveBeenCalled();
+        });
 
         // Find the .metrics.updated handler
         const metricsCall = mockListen.mock.calls.find((c: unknown[]) => c[0] === '.metrics.updated');
@@ -101,9 +120,14 @@ describe('useDashboardRealtime', () => {
         expect(store.metricsUpdates[0].data.tasks_today).toBe(7);
     });
 
-    it('unsubscribe leaves all channels', () => {
+    it('unsubscribe leaves all channels', async () => {
         const { subscribe, unsubscribe } = useDashboardRealtime();
         subscribe([{ id: 10 }, { id: 20 }]);
+
+        await vi.waitFor(() => {
+            expect(mockPrivate).toHaveBeenCalled();
+        });
+
         unsubscribe();
 
         expect(mockLeave).toHaveBeenCalledWith('project.10.activity');
@@ -112,16 +136,24 @@ describe('useDashboardRealtime', () => {
         expect(mockLeave).toHaveBeenCalledWith('metrics.20');
     });
 
-    it('resubscribe replaces previous subscriptions', () => {
+    it('resubscribe replaces previous subscriptions', async () => {
         const { subscribe } = useDashboardRealtime();
         subscribe([{ id: 10 }]);
+
+        await vi.waitFor(() => {
+            expect(mockPrivate).toHaveBeenCalledWith('project.10.activity');
+        });
+
         subscribe([{ id: 20 }]);
 
         // Should have left old channels before subscribing new
         expect(mockLeave).toHaveBeenCalledWith('project.10.activity');
         expect(mockLeave).toHaveBeenCalledWith('metrics.10');
-        // New channels subscribed
-        expect(mockPrivate).toHaveBeenCalledWith('project.20.activity');
+
+        await vi.waitFor(() => {
+            expect(mockPrivate).toHaveBeenCalledWith('project.20.activity');
+        });
+
         expect(mockPrivate).toHaveBeenCalledWith('metrics.20');
     });
 
@@ -133,7 +165,16 @@ describe('useDashboardRealtime', () => {
 
     it('does nothing if projects is null', () => {
         const { subscribe } = useDashboardRealtime();
-        subscribe(null);
+        subscribe(null as unknown as { id: number }[]);
+        expect(mockPrivate).not.toHaveBeenCalled();
+    });
+
+    it('cancels pending subscription if unsubscribed before connection', () => {
+        const { subscribe, unsubscribe } = useDashboardRealtime();
+        subscribe([{ id: 10 }]);
+        // Unsubscribe before whenConnected resolves
+        unsubscribe();
+        // The then() callback should see subscribedChannels is empty and bail
         expect(mockPrivate).not.toHaveBeenCalled();
     });
 });

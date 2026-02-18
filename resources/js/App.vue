@@ -1,8 +1,19 @@
 <script setup lang="ts">
+import { watch } from 'vue';
 import AppNavigation from '@/components/AppNavigation.vue';
+import { whenConnected } from '@/composables/useEcho';
 import { useAuthStore } from '@/stores/auth';
 
 const auth = useAuthStore();
+
+// Eagerly establish WebSocket connection once authenticated.
+// This ensures Echo is ready before any page needs real-time subscriptions
+// (chat task updates, dashboard activity feeds, etc.).
+watch(() => auth.isAuthenticated, (authenticated) => {
+    if (authenticated) {
+        whenConnected();
+    }
+}, { immediate: true });
 </script>
 
 <template>
