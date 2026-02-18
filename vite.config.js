@@ -7,6 +7,7 @@ export default defineConfig({
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.ts'],
+            buildDirectory: 'assets',
             refresh: true,
         }),
         vue({
@@ -22,9 +23,9 @@ export default defineConfig({
     build: {
         rollupOptions: {
             output: {
-                chunkFileNames: 'assets/[hash].js',
-                entryFileNames: 'assets/[hash].js',
-                assetFileNames: 'assets/[hash].[ext]',
+                chunkFileNames: '[hash].js',
+                entryFileNames: '[hash].js',
+                assetFileNames: '[hash].[ext]',
                 manualChunks(id) {
                     if (id.includes('@shikijs/langs/') || id.includes('shiki/dist/langs/')) {
                         return 'hl-l';
