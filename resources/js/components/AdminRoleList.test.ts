@@ -785,8 +785,6 @@ describe('adminRoleList \u2014 role description display', () => {
         await wrapper.vm.$nextTick();
 
         const roleRow = wrapper.find('[data-testid="role-row-1"]');
-        // Should not render an empty description paragraph
-        const descP = roleRow.findAll('p').filter(p => p.classes().length === 0 || p.text() === '');
         // Just verify the key metadata is present but not any empty description
         expect(roleRow.text()).toContain('developer');
     });

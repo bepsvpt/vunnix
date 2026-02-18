@@ -1,4 +1,4 @@
-import type MarkdownIt from 'markdown-it';
+import MarkdownIt from 'markdown-it';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -179,8 +179,7 @@ describe('markdown', () => {
 
     describe('applyHiddenFences', () => {
         it('can be applied to a standalone markdown-it instance', () => {
-            const MarkdownItCtor = require('markdown-it') as typeof MarkdownIt;
-            const instance = new MarkdownItCtor();
+            const instance = new MarkdownIt();
             applyHiddenFences(instance);
 
             const hidden = instance.render('```action_preview\n{"x":1}\n```');
@@ -191,8 +190,7 @@ describe('markdown', () => {
         });
 
         it('preserves a previous fence rule when wrapping', () => {
-            const MarkdownItCtor = require('markdown-it') as typeof MarkdownIt;
-            const instance = new MarkdownItCtor();
+            const instance = new MarkdownIt();
 
             // Install a custom fence rule first
             const customFence = vi.fn().mockReturnValue('<custom-fence></custom-fence>');
@@ -206,8 +204,7 @@ describe('markdown', () => {
         });
 
         it('works when no previous fence rule exists', () => {
-            const MarkdownItCtor = require('markdown-it') as typeof MarkdownIt;
-            const instance = new MarkdownItCtor();
+            const instance = new MarkdownIt();
             // Ensure no custom fence rule
             delete instance.renderer.rules.fence;
 
