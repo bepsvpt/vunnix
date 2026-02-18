@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+
+const route = useRoute();
 
 const auth = useAuthStore();
 const mobileMenuOpen = ref(false);
@@ -34,6 +36,10 @@ const navLinks = [
     { to: '/dashboard', label: 'Dashboard', icon: '📊' },
     { to: '/admin', label: 'Admin', icon: '⚙️' },
 ];
+
+function isLinkActive(to: string): boolean {
+    return route.path === to || route.path.startsWith(`${to}/`);
+}
 </script>
 
 <template>
@@ -51,8 +57,10 @@ const navLinks = [
                         v-for="link in navLinks"
                         :key="link.to"
                         :to="link.to"
-                        class="flex items-center gap-1.5 px-3 py-2 -mb-px border-b-2 border-transparent text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors"
-                        active-class="!border-zinc-900 dark:!border-zinc-100 !text-zinc-900 dark:!text-zinc-100"
+                        class="flex items-center gap-1.5 px-3 py-2 -mb-px border-b-2 text-sm font-medium transition-colors"
+                        :class="isLinkActive(link.to)
+                            ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100'
+                            : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-600'"
                         @click="closeMenu"
                     >
                         <span class="text-base leading-none">{{ link.icon }}</span>
@@ -133,8 +141,10 @@ const navLinks = [
                     v-for="link in navLinks"
                     :key="link.to"
                     :to="link.to"
-                    class="block px-3 py-2 rounded-md text-base font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                    active-class="!text-zinc-900 dark:!text-zinc-100 bg-zinc-100 dark:bg-zinc-800"
+                    class="block px-3 py-2 rounded-md text-base font-medium transition-colors"
+                    :class="isLinkActive(link.to)
+                        ? 'text-zinc-900 dark:text-zinc-100 bg-zinc-100 dark:bg-zinc-800'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800'"
                     @click="closeMenu"
                 >
                     {{ link.label }}

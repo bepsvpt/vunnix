@@ -37,6 +37,11 @@
     --width-sidebar: 20rem;
 }
 
+/* Global 125% scale — increases all rem-based sizing proportionally */
+html {
+    font-size: 125%;
+}
+
 /* Restore pointer cursor on interactive elements (Tailwind v4 removed this reset) */
 button:not(:disabled),
 [role="button"]:not(:disabled) {

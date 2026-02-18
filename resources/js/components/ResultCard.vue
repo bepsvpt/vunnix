@@ -134,7 +134,7 @@ function severityVariant(severity: string): 'danger' | 'warning' | 'info' {
 <template>
     <div
         data-testid="result-card"
-        class="w-full max-w-lg rounded-xl border overflow-hidden"
+        class="w-full max-w-2xl rounded-xl border overflow-hidden"
         :class="isSuccess
             ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30'
             : 'border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/30'"

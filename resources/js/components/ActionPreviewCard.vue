@@ -65,7 +65,7 @@ const isMr = computed(() => props.action.action_type === 'create_mr');
 <template>
     <div
         data-testid="action-preview-card"
-        class="w-full max-w-lg rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden"
+        class="w-full max-w-2xl rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden"
     >
         <!-- Header -->
         <div class="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-2">
