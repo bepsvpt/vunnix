@@ -46,7 +46,7 @@ jobs:
           restore-keys: composer-
 
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Check code formatting
         run: ./vendor/bin/pint --test
@@ -92,10 +92,10 @@ jobs:
           restore-keys: composer-
 
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Run PHPStan
-        run: composer analyse
+        run: vendor/bin/phpstan analyse --no-progress --error-format=github --memory-limit=-1
 
   php-tests:
     name: PHP Tests
@@ -134,7 +134,7 @@ jobs:
           restore-keys: composer-
 
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Run PHP tests with coverage
         env:
@@ -174,7 +174,7 @@ jobs:
         run: npm ci
 
       - name: Run JS tests with coverage
-        run: npx vitest run --coverage
+        run: npx vitest run --coverage --reporter=default --reporter=github-actions
 
       - name: Upload JS coverage
         if: always()
