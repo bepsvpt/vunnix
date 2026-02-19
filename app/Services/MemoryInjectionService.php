@@ -22,9 +22,31 @@ class MemoryInjectionService
             ->whereIn('type', ['review_pattern', 'cross_mr_pattern'])
             ->values();
 
-        return $this->buildSection(
+        $reviewGuidance = $this->buildSection(
             $entries,
             static fn (MemoryEntry $entry): string => '- '.($entry->content['pattern'] ?? ''),
+        );
+
+        $healthGuidance = $this->buildHealthGuidance($project);
+
+        return implode("\n", array_values(array_filter([$reviewGuidance, $healthGuidance], static fn (string $text): bool => $text !== '')));
+    }
+
+    public function buildHealthGuidance(Project $project): string
+    {
+        if (! (bool) config('health.enabled', true)) {
+            return '';
+        }
+
+        $entries = $this->projectMemoryService->getActiveMemories($project, 'health_signal');
+
+        return $this->buildSection(
+            $entries,
+            static function (MemoryEntry $entry): string {
+                $signal = $entry->content['signal'] ?? $entry->content['details_summary'] ?? null;
+
+                return is_string($signal) ? '- '.$signal : '';
+            },
         );
     }
 

@@ -197,7 +197,7 @@ export const AuditLogSchema = z.object({
 
 export const MemoryEntrySchema = z.object({
     id: z.number(),
-    type: z.enum(['review_pattern', 'conversation_fact', 'cross_mr_pattern']),
+    type: z.enum(['review_pattern', 'conversation_fact', 'cross_mr_pattern', 'health_signal']),
     category: z.string().nullable(),
     content: z.record(z.unknown()),
     confidence: z.number(),
@@ -212,6 +212,42 @@ export const MemoryStatsSchema = z.object({
     by_category: z.record(z.number()),
     average_confidence: z.number(),
     last_created_at: z.string().nullable(),
+});
+
+export const HealthDimensionSchema = z.enum(['coverage', 'dependency', 'complexity']);
+
+export const HealthSnapshotSchema = z.object({
+    id: z.number(),
+    dimension: HealthDimensionSchema,
+    score: z.number(),
+    details: z.record(z.unknown()),
+    source_ref: z.string().nullable(),
+    created_at: z.string().nullable(),
+});
+
+export const HealthSummaryMetricSchema = z.object({
+    score: z.number().nullable(),
+    trend_direction: z.enum(['up', 'down', 'stable']),
+    last_checked_at: z.string().nullable(),
+});
+
+export const HealthSummarySchema = z.object({
+    coverage: HealthSummaryMetricSchema,
+    dependency: HealthSummaryMetricSchema,
+    complexity: HealthSummaryMetricSchema,
+});
+
+export const HealthAlertSchema = z.object({
+    id: z.number(),
+    alert_type: z.string(),
+    status: z.string(),
+    severity: z.string(),
+    message: z.string(),
+    context: z.record(z.unknown()).nullable(),
+    detected_at: z.string().nullable(),
+    resolved_at: z.string().nullable(),
+    created_at: z.string().nullable(),
+    updated_at: z.string().nullable(),
 });
 
 // --- Inferred types ---
@@ -231,5 +267,9 @@ export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
 export type AuditLog = z.infer<typeof AuditLogSchema>;
 export type MemoryEntry = z.infer<typeof MemoryEntrySchema>;
 export type MemoryStats = z.infer<typeof MemoryStatsSchema>;
+export type HealthDimension = z.infer<typeof HealthDimensionSchema>;
+export type HealthSnapshot = z.infer<typeof HealthSnapshotSchema>;
+export type HealthSummary = z.infer<typeof HealthSummarySchema>;
+export type HealthAlert = z.infer<typeof HealthAlertSchema>;
 export type ProjectRef = z.infer<typeof ProjectRefSchema>;
 export type ApiError = z.infer<typeof ApiErrorSchema>;

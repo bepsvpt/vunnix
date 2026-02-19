@@ -215,3 +215,10 @@
 | D208 | API key rate limiter keys by valid token hash + client IP, and falls back to IP-only buckets for missing/invalid tokens | ext-017 | Active |
 | D209 | Health endpoint reports generic `Check failed` errors without exposing raw infrastructure exception details | ext-017 | Active |
 | D210 | Admin webhook test endpoint blocks private/internal targets (RFC1918, loopback, link-local/metadata, localhost) to prevent SSRF | ext-017 | Active |
+| D211 | Proactive health data uses GitLab APIs + lock files + heuristics (no external platforms required) | ext-018 | Active |
+| D212 | Health launch scope is three dimensions only: coverage, dependencies, complexity | ext-018 | Active |
+| D213 | Health analysis runs server-side on `vunnix-server`, not GitLab Runner | ext-018 | Active |
+| D214 | Health snapshots are stored as 180-day time-series records in PostgreSQL/SQLite-compatible schema | ext-018 | Active |
+| D215 | Health threshold violations reuse AlertEvent with health alert types and optional auto-created GitLab issues | ext-018 | Active |
+| D216 | Significant health findings are bridged into Project Memory as `health_signal` entries for review guidance injection | ext-018 | Active |
+| D217 | Health is feature-flagged at global and per-dimension levels (`health.*`) with per-project overrides | ext-018 | Active |

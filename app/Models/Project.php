@@ -24,6 +24,8 @@ use Throwable;
  * @property-read \App\Models\ProjectConfig|null $projectConfig
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\MemoryEntry> $memoryEntries
  * @property-read int|null $memory_entries_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\HealthSnapshot> $healthSnapshots
+ * @property-read int|null $health_snapshots_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Role> $roles
  * @property-read int|null $roles_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
@@ -77,6 +79,12 @@ class Project extends Model
     public function memoryEntries(): HasMany
     {
         return $this->hasMany(MemoryEntry::class);
+    }
+
+    /** @return HasMany<HealthSnapshot, $this> */
+    public function healthSnapshots(): HasMany
+    {
+        return $this->hasMany(HealthSnapshot::class);
     }
 
     public function defaultRole(): ?Role

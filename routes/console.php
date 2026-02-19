@@ -49,3 +49,15 @@ Schedule::command('memory:analyze-patterns')
 Schedule::command('memory:archive-expired')
     ->dailyAt('04:00')
     ->withoutOverlapping();
+
+Schedule::command('health:analyze')
+    ->dailyAt('05:00')
+    ->withoutOverlapping()
+    ->when(fn (): bool => (bool) config('health.enabled', true));
+
+Schedule::command('health:clean-snapshots')
+    ->weekly()
+    ->sundays()
+    ->at('04:00')
+    ->withoutOverlapping()
+    ->when(fn (): bool => (bool) config('health.enabled', true));

@@ -114,6 +114,7 @@ describe('dashboardPage', () => {
 
         expect(wrapper.find('[data-testid="tab-overview"]').exists()).toBe(true);
         expect(wrapper.find('[data-testid="tab-quality"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-health"]').exists()).toBe(true);
         expect(wrapper.find('[data-testid="tab-pm-activity"]').exists()).toBe(true);
         expect(wrapper.find('[data-testid="tab-designer-activity"]').exists()).toBe(true);
         expect(wrapper.find('[data-testid="tab-efficiency"]').exists()).toBe(true);
@@ -316,8 +317,8 @@ describe('dashboardPage', () => {
         const wrapper = mountDashboard();
 
         const tabs = wrapper.findAll('[data-testid="dashboard-view-tabs"] button');
-        // Regular user: overview, quality, pm-activity, designer-activity, efficiency, adoption, activity = 7
-        expect(tabs.length).toBe(7);
+        // Regular user: overview, quality, health, pm-activity, designer-activity, efficiency, adoption, activity = 8
+        expect(tabs.length).toBe(8);
     });
 
     it('shows correct tab count for admin users', () => {
@@ -325,7 +326,7 @@ describe('dashboardPage', () => {
         const wrapper = mountDashboard();
 
         const tabs = wrapper.findAll('[data-testid="dashboard-view-tabs"] button');
-        // Admin: overview, quality, pm-activity, designer-activity, efficiency, adoption, cost, infrastructure, activity = 9
-        expect(tabs.length).toBe(9);
+        // Admin: overview, quality, health, pm-activity, designer-activity, efficiency, adoption, cost, infrastructure, activity = 10
+        expect(tabs.length).toBe(10);
     });
 });

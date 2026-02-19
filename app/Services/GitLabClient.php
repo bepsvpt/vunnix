@@ -638,6 +638,22 @@ class GitLabClient
     // ------------------------------------------------------------------
 
     /**
+     * List pipelines for a project.
+     *
+     * @param  array<string, mixed>  $params
+     * @return array<int, array<string, mixed>>
+     */
+    public function listPipelines(int $projectId, array $params = []): array
+    {
+        $response = $this->request()->get(
+            $this->url("projects/{$projectId}/pipelines"),
+            array_merge(['per_page' => 20], $params),
+        );
+
+        return $this->handleResponse($response, "listPipelines #{$projectId}")->json();
+    }
+
+    /**
      * Create a pipeline trigger token for a project.
      *
      * @return array{id: int, token: string, description: string}

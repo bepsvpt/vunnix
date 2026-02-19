@@ -136,3 +136,20 @@ it('returns empty context when capability flags are disabled', function (): void
     expect($service->buildConversationContext($project))->toBe('');
     expect($service->buildCrossMRContext($project))->toBe('');
 });
+
+it('builds health guidance from health_signal memory entries', function (): void {
+    config(['health.enabled' => true]);
+
+    $project = Project::factory()->create();
+    MemoryEntry::factory()->create([
+        'project_id' => $project->id,
+        'type' => 'health_signal',
+        'category' => 'coverage',
+        'content' => ['signal' => 'Test coverage is at 68% (warning 70%).'],
+    ]);
+
+    $service = app(MemoryInjectionService::class);
+    $guidance = $service->buildHealthGuidance($project);
+
+    expect($guidance)->toContain('Test coverage is at 68%');
+});

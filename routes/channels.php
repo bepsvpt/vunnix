@@ -46,3 +46,12 @@ Broadcast::channel('metrics.{projectId}', function (User $user, int $projectId) 
         ->where('projects.id', $projectId)
         ->exists();
 });
+
+/**
+ * project.{projectId}.health — User must be a member of the project.
+ */
+Broadcast::channel('project.{projectId}.health', function (User $user, int $projectId) {
+    return $user->projects()
+        ->where('projects.id', $projectId)
+        ->exists();
+});

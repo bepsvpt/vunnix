@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\HealthAnalyzerContract;
 use App\Models\ApiKey;
 use App\Models\Conversation;
 use App\Models\Permission;
@@ -10,6 +11,13 @@ use App\Models\Task;
 use App\Models\User;
 use App\Observers\TaskObserver;
 use App\Policies\ConversationPolicy;
+use App\Services\Health\ComplexityAnalyzer;
+use App\Services\Health\CoverageAnalyzer;
+use App\Services\Health\DependencyAnalyzer;
+use App\Services\Health\HealthAlertService;
+use App\Services\Health\HealthAnalysisService;
+use App\Services\ProjectConfigService;
+use App\Services\ProjectMemoryService;
 use App\Services\TaskTokenService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Gate;
@@ -37,6 +45,28 @@ class AppServiceProvider extends ServiceProvider
             return new TaskTokenService(
                 appKey: $appKey,
                 budgetMinutes: (int) $app['config']['vunnix.task_budget_minutes'],
+            );
+        });
+
+        $this->app->bind(CoverageAnalyzer::class);
+        $this->app->bind(DependencyAnalyzer::class);
+        $this->app->bind(ComplexityAnalyzer::class);
+
+        $this->app->tag([
+            CoverageAnalyzer::class,
+            DependencyAnalyzer::class,
+            ComplexityAnalyzer::class,
+        ], 'health.analyzers');
+
+        $this->app->singleton(HealthAnalysisService::class, function (\Illuminate\Foundation\Application $app): HealthAnalysisService {
+            /** @var iterable<HealthAnalyzerContract> $analyzers */
+            $analyzers = $app->tagged('health.analyzers');
+
+            return new HealthAnalysisService(
+                analyzers: $analyzers,
+                alertService: $app->make(HealthAlertService::class),
+                projectConfigService: $app->make(ProjectConfigService::class),
+                projectMemoryService: $app->make(ProjectMemoryService::class),
             );
         });
     }

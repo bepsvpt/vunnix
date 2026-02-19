@@ -5,6 +5,7 @@ import DashboardAdoption from '@/components/DashboardAdoption.vue';
 import DashboardCost from '@/components/DashboardCost.vue';
 import DashboardDesignerActivity from '@/components/DashboardDesignerActivity.vue';
 import DashboardEfficiency from '@/components/DashboardEfficiency.vue';
+import DashboardHealthPanel from '@/components/DashboardHealthPanel.vue';
 import DashboardInfrastructure from '@/components/DashboardInfrastructure.vue';
 import DashboardOverview from '@/components/DashboardOverview.vue';
 import DashboardPMActivity from '@/components/DashboardPMActivity.vue';
@@ -24,6 +25,7 @@ const activeView = ref('overview');
 const baseViews: Array<{ key: string; label: string }> = [
     { key: 'overview', label: 'Overview' },
     { key: 'quality', label: 'Quality' },
+    { key: 'health', label: 'Health' },
     { key: 'pm-activity', label: 'PM Activity' },
     { key: 'designer-activity', label: 'Designer Activity' },
     { key: 'efficiency', label: 'Efficiency' },
@@ -84,6 +86,10 @@ watch(() => dashboard.metricsUpdates.length, () => {
                 <MemoryStatsWidget v-if="activeProjectId !== null" :project-id="activeProjectId" />
             </div>
             <DashboardQuality v-else-if="activeView === 'quality'" />
+            <DashboardHealthPanel
+                v-else-if="activeView === 'health' && activeProjectId !== null"
+                :project-id="activeProjectId"
+            />
             <DashboardPMActivity v-else-if="activeView === 'pm-activity'" />
             <DashboardDesignerActivity v-else-if="activeView === 'designer-activity'" />
             <DashboardEfficiency v-else-if="activeView === 'efficiency'" />

@@ -151,6 +151,7 @@ class ProjectMemoryService
         Cache::forget($this->cacheKey($projectId, 'review_pattern'));
         Cache::forget($this->cacheKey($projectId, 'conversation_fact'));
         Cache::forget($this->cacheKey($projectId, 'cross_mr_pattern'));
+        Cache::forget($this->cacheKey($projectId, 'health_signal'));
     }
 
     private function memoryAvailable(): bool

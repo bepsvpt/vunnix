@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\DashboardAdoptionController;
 use App\Http\Controllers\Api\DashboardCostController;
 use App\Http\Controllers\Api\DashboardDesignerActivityController;
 use App\Http\Controllers\Api\DashboardEfficiencyController;
+use App\Http\Controllers\Api\DashboardHealthController;
 use App\Http\Controllers\Api\DashboardOverviewController;
 use App\Http\Controllers\Api\DashboardPMActivityController;
 use App\Http\Controllers\Api\DashboardQualityController;
@@ -222,6 +223,16 @@ Route::prefix('v1')->group(function (): void {
             ->name('api.projects.memory.stats');
         Route::delete('/projects/{project}/memory/{memoryEntry}', [ProjectMemoryController::class, 'destroy'])
             ->name('api.projects.memory.destroy');
+
+        // Project health dashboard (ext-018)
+        Route::prefix('/projects/{project}/health')->group(function (): void {
+            Route::get('/trends', [DashboardHealthController::class, 'trends'])
+                ->name('api.projects.health.trends');
+            Route::get('/summary', [DashboardHealthController::class, 'summary'])
+                ->name('api.projects.health.summary');
+            Route::get('/alerts', [DashboardHealthController::class, 'alerts'])
+                ->name('api.projects.health.alerts');
+        });
     });
 
     // External API (T100) — accepts session auth OR API key
