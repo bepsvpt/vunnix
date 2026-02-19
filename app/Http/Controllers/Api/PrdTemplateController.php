@@ -143,11 +143,7 @@ class PrdTemplateController extends Controller
             abort(401);
         }
 
-        $hasAdmin = $user->projects()
-            ->get()
-            ->contains(fn ($project) => $user->hasPermission('admin.global_config', $project));
-
-        if (! $hasAdmin) {
+        if (! $user->isGlobalAdmin()) {
             abort(403, 'Admin access required.');
         }
     }

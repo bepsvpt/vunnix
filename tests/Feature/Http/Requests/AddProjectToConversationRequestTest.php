@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Conversation;
+use App\Models\Permission;
 use App\Models\Project;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
@@ -68,6 +70,17 @@ function addProjectTestUser(Project $project): User
     return $user;
 }
 
+function grantChatAccess(User $user, Project $project): void
+{
+    $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'developer']);
+    $permission = Permission::firstOrCreate(
+        ['name' => 'chat.access'],
+        ['description' => 'Can access chat', 'group' => 'chat']
+    );
+    $role->permissions()->attach($permission);
+    $user->assignRole($role, $project);
+}
+
 it('rejects request when project_id is missing', function (): void {
     $project = Project::factory()->create();
     $user = addProjectTestUser($project);
@@ -123,4 +136,30 @@ it('passes validation with a valid existing project_id', function (): void {
     // It may fail at authorization (403) or succeed (200) depending on
     // policy setup, but the validation layer itself should not reject it.
     expect($response->status())->not->toBe(422);
+});
+
+it('adds a project when user is authorized and belongs to the target project', function (): void {
+    $primaryProject = Project::factory()->create();
+    $targetProject = Project::factory()->create();
+    $user = addProjectTestUser($primaryProject);
+    $user->projects()->attach($targetProject->id, [
+        'gitlab_access_level' => 30,
+        'synced_at' => now(),
+    ]);
+    grantChatAccess($user, $primaryProject);
+
+    $conversation = Conversation::factory()
+        ->forProject($primaryProject)
+        ->forUser($user)
+        ->create();
+
+    $this->actingAs($user)
+        ->postJson("/api/v1/conversations/{$conversation->id}/projects", [
+            'project_id' => $targetProject->id,
+        ])
+        ->assertOk()
+        ->assertJsonPath('data.id', $conversation->id);
+
+    expect($conversation->fresh()->projects()->where('projects.id', $targetProject->id)->exists())
+        ->toBeTrue();
 });

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class GitLabService
 {
@@ -26,12 +27,21 @@ class GitLabService
         $page = 1;
 
         do {
-            $response = Http::withToken($token)
-                ->get("{$this->baseUrl}/api/v4/projects", [
-                    'membership' => 'true',
-                    'per_page' => 100,
+            try {
+                $response = Http::withToken($token)
+                    ->get("{$this->baseUrl}/api/v4/projects", [
+                        'membership' => 'true',
+                        'per_page' => 100,
+                        'page' => $page,
+                    ]);
+            } catch (Throwable $exception) {
+                Log::warning('GitLab API: request error while fetching user projects', [
                     'page' => $page,
+                    'error' => $exception->getMessage(),
                 ]);
+
+                return [];
+            }
 
             if (! $response->successful()) {
                 Log::warning('GitLab API: failed to fetch user projects', [

@@ -24,13 +24,8 @@ class DashboardCostController extends Controller
             abort(401);
         }
 
-        // Admin-only: user must have admin.global_config on at least one project (D29)
-        $hasAdmin = $user->projects()
-            ->where('enabled', true)
-            ->get()
-            ->contains(fn ($project) => $user->hasPermission('admin.global_config', $project));
-
-        if (! $hasAdmin) {
+        // Global admin only: user must have admin.global_config on all enabled projects
+        if (! $user->isGlobalAdmin()) {
             abort(403, 'Cost data is restricted to administrators.');
         }
 

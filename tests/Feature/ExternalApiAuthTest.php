@@ -1,12 +1,29 @@
 <?php
 
+use App\Models\Permission;
 use App\Models\Project;
+use App\Models\Role;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\ApiKeyService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+function grantExternalTaskPermissions(User $user, Project $project): void
+{
+    $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'external-operator']);
+    $reviewView = Permission::firstOrCreate(
+        ['name' => 'review.view'],
+        ['description' => 'Can view review results', 'group' => 'review']
+    );
+    $reviewTrigger = Permission::firstOrCreate(
+        ['name' => 'review.trigger'],
+        ['description' => 'Can trigger code reviews', 'group' => 'review']
+    );
+    $role->permissions()->attach([$reviewView->id, $reviewTrigger->id]);
+    $user->assignRole($role, $project);
+}
 
 beforeEach(function (): void {
     $this->user = User::factory()->create();
@@ -15,6 +32,7 @@ beforeEach(function (): void {
         'gitlab_access_level' => 30,
         'synced_at' => now(),
     ]);
+    grantExternalTaskPermissions($this->user, $this->project);
 
     $this->service = app(ApiKeyService::class);
     $this->apiKeyResult = $this->service->generate($this->user, 'CI Key');

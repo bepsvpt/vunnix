@@ -2,17 +2,31 @@
 
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
+use App\Models\Permission;
 use App\Models\Project;
+use App\Models\Role;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+function grantReviewViewPermission(User $user, Project $project): void
+{
+    $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'review-viewer']);
+    $permission = Permission::firstOrCreate(
+        ['name' => 'review.view'],
+        ['description' => 'Can view review results', 'group' => 'review']
+    );
+    $role->permissions()->attach($permission);
+    $user->assignRole($role, $project);
+}
+
 it('returns task result data for authorized user', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantReviewViewPermission($user, $project);
 
     $task = Task::factory()->create([
         'project_id' => $project->id,

@@ -2,7 +2,9 @@
 
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
+use App\Models\Permission;
 use App\Models\Project;
+use App\Models\Role;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,6 +16,13 @@ function createQualityPromptVersionUser(): array
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'quality-viewer']);
+    $permission = Permission::firstOrCreate(
+        ['name' => 'review.view'],
+        ['description' => 'Can view review results', 'group' => 'review']
+    );
+    $role->permissions()->attach($permission);
+    $user->assignRole($role, $project);
 
     return [$user, $project];
 }

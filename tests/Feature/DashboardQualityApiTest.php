@@ -2,17 +2,31 @@
 
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
+use App\Models\Permission;
 use App\Models\Project;
+use App\Models\Role;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+function grantQualityReviewView(User $user, Project $project): void
+{
+    $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'quality-viewer']);
+    $permission = Permission::firstOrCreate(
+        ['name' => 'review.view'],
+        ['description' => 'Can view review results', 'group' => 'review']
+    );
+    $role->permissions()->attach($permission);
+    $user->assignRole($role, $project);
+}
+
 it('returns quality stats scoped to user projects', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantQualityReviewView($user, $project);
 
     $otherProject = Project::factory()->enabled()->create();
 
@@ -69,6 +83,7 @@ it('returns correct response structure', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantQualityReviewView($user, $project);
 
     $response = $this->actingAs($user)->getJson('/api/v1/dashboard/quality');
 
@@ -88,6 +103,7 @@ it('returns null acceptance rate (not yet tracked)', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantQualityReviewView($user, $project);
 
     $response = $this->actingAs($user)->getJson('/api/v1/dashboard/quality');
 
@@ -99,6 +115,7 @@ it('returns null avg findings when no reviews exist', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantQualityReviewView($user, $project);
 
     $response = $this->actingAs($user)->getJson('/api/v1/dashboard/quality');
 
@@ -114,8 +131,11 @@ it('returns 401 for unauthenticated users', function (): void {
 
 it('excludes tasks from disabled projects', function (): void {
     $user = User::factory()->create();
+    $enabledProject = Project::factory()->enabled()->create();
     $disabledProject = Project::factory()->create(['enabled' => false]);
+    $enabledProject->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
     $disabledProject->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantQualityReviewView($user, $enabledProject);
 
     Task::factory()->create([
         'project_id' => $disabledProject->id,
@@ -140,6 +160,7 @@ it('excludes non-code-review tasks from quality metrics', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantQualityReviewView($user, $project);
 
     // Feature dev task — should NOT be counted
     Task::factory()->create([
@@ -168,6 +189,7 @@ it('handles reviews with zero findings', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantQualityReviewView($user, $project);
 
     Task::factory()->create([
         'project_id' => $project->id,
@@ -198,6 +220,7 @@ it('uses pre-aggregated metrics from task_metrics when available', function (): 
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantQualityReviewView($user, $project);
 
     $task = Task::factory()->create(['project_id' => $project->id]);
 
@@ -238,6 +261,7 @@ it('uses pre-aggregated metrics across multiple code review task_metrics rows', 
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantQualityReviewView($user, $project);
 
     $task1 = Task::factory()->create(['project_id' => $project->id]);
     $task2 = Task::factory()->create(['project_id' => $project->id]);
@@ -298,6 +322,7 @@ it('filters quality metrics by prompt_version skill', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantQualityReviewView($user, $project);
 
     // Task with matching prompt version
     Task::factory()->create([
@@ -341,6 +366,7 @@ it('skips materialized view path when prompt_version filter is active', function
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantQualityReviewView($user, $project);
 
     $task = Task::factory()->create([
         'project_id' => $project->id,

@@ -167,7 +167,7 @@ it('returns 503 when queue worker heartbeat is missing', function (): void {
             'checks' => [
                 'queue_worker' => [
                     'status' => 'fail',
-                    'error' => 'No queue worker heartbeat detected',
+                    'error' => 'Check failed',
                 ],
             ],
         ]);

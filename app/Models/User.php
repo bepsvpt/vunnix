@@ -169,6 +169,26 @@ class User extends Authenticatable
     }
 
     /**
+     * Global admin means holding admin.global_config on all enabled projects.
+     */
+    public function isGlobalAdmin(): bool
+    {
+        $enabledProjects = Project::query()->where('enabled', true)->get();
+
+        if ($enabledProjects->isEmpty()) {
+            return false;
+        }
+
+        foreach ($enabledProjects as $project) {
+            if (! $this->hasPermission('admin.global_config', $project)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Get all permission names the user has on a specific project.
      *
      * @return Collection<int, Permission>

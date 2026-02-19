@@ -4,7 +4,9 @@ use App\Enums\TaskStatus;
 use App\Enums\TaskType;
 use App\Jobs\ProcessTask;
 use App\Models\FindingAcceptance;
+use App\Models\Permission;
 use App\Models\Project;
+use App\Models\Role;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\ApiKeyService;
@@ -13,6 +15,21 @@ use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
+function grantExternalReviewPermissions(User $user, Project $project): void
+{
+    $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'external-reviewer']);
+    $reviewView = Permission::firstOrCreate(
+        ['name' => 'review.view'],
+        ['description' => 'Can view review results', 'group' => 'review']
+    );
+    $reviewTrigger = Permission::firstOrCreate(
+        ['name' => 'review.trigger'],
+        ['description' => 'Can trigger code reviews', 'group' => 'review']
+    );
+    $role->permissions()->attach([$reviewView->id, $reviewTrigger->id]);
+    $user->assignRole($role, $project);
+}
+
 beforeEach(function (): void {
     $this->user = User::factory()->create();
     $this->project = Project::factory()->create(['enabled' => true]);
@@ -20,6 +37,7 @@ beforeEach(function (): void {
         'gitlab_access_level' => 30,
         'synced_at' => now(),
     ]);
+    grantExternalReviewPermissions($this->user, $this->project);
 
     $this->otherProject = Project::factory()->create(['enabled' => true]);
 
@@ -74,6 +92,7 @@ it('filters tasks by project_id', function (): void {
         'gitlab_access_level' => 30,
         'synced_at' => now(),
     ]);
+    grantExternalReviewPermissions($this->user, $secondProject);
 
     Task::factory()->create(['project_id' => $this->project->id]);
     Task::factory()->create(['project_id' => $secondProject->id]);

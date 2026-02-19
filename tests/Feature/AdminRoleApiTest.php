@@ -314,7 +314,7 @@ it('rejects duplicate role assignment', function (): void {
         ->assertJsonPath('success', false);
 });
 
-it('rejects assigning role from wrong project', function (): void {
+it('rejects assigning role to an unauthorized project', function (): void {
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
     $admin = createRoleAdmin($projectA);
@@ -328,8 +328,7 @@ it('rejects assigning role from wrong project', function (): void {
             'role_id' => $role->id,
             'project_id' => $projectB->id,
         ])
-        ->assertStatus(422)
-        ->assertJsonPath('success', false);
+        ->assertStatus(403);
 });
 
 it('revokes a role assignment', function (): void {

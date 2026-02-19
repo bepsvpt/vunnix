@@ -57,7 +57,14 @@ beforeEach(function (): void {
 function createAdminUser(Project $project): User
 {
     $user = User::factory()->create();
-    $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantGlobalConfigPermission($user, $project);
+
+    return $user;
+}
+
+function grantGlobalConfigPermission(User $user, Project $project): void
+{
+    $project->users()->syncWithoutDetaching([$user->id => ['gitlab_access_level' => 30, 'synced_at' => now()]]);
 
     $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'admin']);
     $perm = Permission::firstOrCreate(
@@ -66,8 +73,6 @@ function createAdminUser(Project $project): User
     );
     $role->permissions()->attach($perm);
     $user->assignRole($role, $project);
-
-    return $user;
 }
 
 /**
@@ -222,7 +227,7 @@ it('returns cost grouped by project', function (): void {
     $projectA = Project::factory()->enabled()->create(['name' => 'Project Alpha']);
     $projectB = Project::factory()->enabled()->create(['name' => 'Project Beta']);
     $user = createAdminUser($projectA);
-    $projectB->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantGlobalConfigPermission($user, $projectB);
 
     Task::factory()->create([
         'project_id' => $projectA->id,
@@ -255,7 +260,7 @@ it('returns cost grouped by project', function (): void {
 
 // ─── Project Scoping ──────────────────────────────────────────
 
-it('excludes tasks from projects the user does not have access to', function (): void {
+it('denies cost dashboard when user is not global admin', function (): void {
     $project = Project::factory()->enabled()->create();
     $otherProject = Project::factory()->enabled()->create();
     $user = createAdminUser($project);
@@ -279,9 +284,7 @@ it('excludes tasks from projects the user does not have access to', function ():
 
     $response = $this->actingAs($user)->getJson('/api/v1/dashboard/cost');
 
-    $response->assertOk();
-    $response->assertJsonPath('data.total_cost', 1);
-    $response->assertJsonPath('data.total_tokens', 10000);
+    $response->assertForbidden();
 });
 
 it('excludes tasks from disabled projects', function (): void {
@@ -540,7 +543,7 @@ it('returns correct monthly trend from task_metrics data', function (): void {
     expect($data['monthly_trend'][1]['task_count'])->toBe(1);
 });
 
-it('scopes task_metrics data to user projects only', function (): void {
+it('denies task_metrics-backed cost dashboard when user is not global admin', function (): void {
     $project = Project::factory()->enabled()->create();
     $otherProject = Project::factory()->enabled()->create();
     $user = createAdminUser($project);
@@ -588,9 +591,5 @@ it('scopes task_metrics data to user projects only', function (): void {
 
     $response = $this->actingAs($user)->getJson('/api/v1/dashboard/cost');
 
-    $response->assertOk();
-    // Only the user's project cost should appear
-    $data = $response->json('data');
-    expect((float) $data['total_cost'])->toEqual(1.0);
-    expect($data['total_tokens'])->toBe(7000);
+    $response->assertForbidden();
 });

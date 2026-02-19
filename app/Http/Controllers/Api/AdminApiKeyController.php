@@ -55,11 +55,8 @@ class AdminApiKeyController extends Controller
         if ($user === null) {
             abort(401);
         }
-        $hasAdminPerm = $user->roles()
-            ->whereHas('permissions', fn ($q) => $q->where('name', 'admin.global_config'))
-            ->exists();
 
-        if (! $hasAdminPerm) {
+        if (! $user->isGlobalAdmin()) {
             abort(403, 'Admin permission required.');
         }
     }

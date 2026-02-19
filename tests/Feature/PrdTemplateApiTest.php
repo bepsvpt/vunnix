@@ -60,7 +60,7 @@ function createUnprivilegedUser(Project $project): User
 // ─── GET /admin/projects/{project}/prd-template ──────────────
 
 it('returns default PRD template when no override exists', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createConfigManager($project);
 
     $response = $this->actingAs($user)
@@ -74,7 +74,7 @@ it('returns default PRD template when no override exists', function (): void {
 });
 
 it('returns project-level PRD template override', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
         'settings' => ['prd_template' => '# Custom Template'],
@@ -90,7 +90,7 @@ it('returns project-level PRD template override', function (): void {
 });
 
 it('returns global PRD template when set and no project override', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     GlobalSetting::set('prd_template', '# Global Template', 'string', 'PRD template');
     $user = createConfigManager($project);
 
@@ -103,7 +103,7 @@ it('returns global PRD template when set and no project override', function (): 
 });
 
 it('rejects PRD template read for user without config.manage', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createUnprivilegedUser($project);
 
     $this->actingAs($user)
@@ -112,7 +112,7 @@ it('rejects PRD template read for user without config.manage', function (): void
 });
 
 it('rejects PRD template read for unauthenticated user', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
 
     $this->getJson("/api/v1/admin/projects/{$project->id}/prd-template")
         ->assertUnauthorized();
@@ -121,7 +121,7 @@ it('rejects PRD template read for unauthenticated user', function (): void {
 // ─── PUT /admin/projects/{project}/prd-template ──────────────
 
 it('saves project-level PRD template override', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     ProjectConfig::factory()->create(['project_id' => $project->id, 'settings' => []]);
     $user = createConfigManager($project);
 
@@ -139,7 +139,7 @@ it('saves project-level PRD template override', function (): void {
 });
 
 it('removes project PRD template override when template is null', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     ProjectConfig::factory()->create([
         'project_id' => $project->id,
         'settings' => ['prd_template' => '# Old Template'],
@@ -158,7 +158,7 @@ it('removes project PRD template override when template is null', function (): v
 });
 
 it('rejects PRD template update for user without config.manage', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createUnprivilegedUser($project);
 
     $this->actingAs($user)
@@ -169,7 +169,7 @@ it('rejects PRD template update for user without config.manage', function (): vo
 });
 
 it('validates template must be a string or null', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createConfigManager($project);
 
     $this->actingAs($user)
@@ -182,7 +182,7 @@ it('validates template must be a string or null', function (): void {
 // ─── GET /admin/prd-template (global) ────────────────────────
 
 it('returns global default PRD template', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $admin = createTemplateAdmin($project);
 
     $response = $this->actingAs($admin)
@@ -196,7 +196,7 @@ it('returns global default PRD template', function (): void {
 });
 
 it('returns global PRD template override when set', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     GlobalSetting::set('prd_template', '# Global Custom', 'string', 'PRD template');
     $admin = createTemplateAdmin($project);
 
@@ -209,7 +209,7 @@ it('returns global PRD template override when set', function (): void {
 });
 
 it('rejects global PRD template read without admin.global_config', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createConfigManager($project);
 
     $this->actingAs($user)
@@ -220,7 +220,7 @@ it('rejects global PRD template read without admin.global_config', function (): 
 // ─── PUT /admin/prd-template (global) ────────────────────────
 
 it('saves global PRD template override', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $admin = createTemplateAdmin($project);
 
     $response = $this->actingAs($admin)
@@ -235,7 +235,7 @@ it('saves global PRD template override', function (): void {
 });
 
 it('resets global PRD template to default when null', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     GlobalSetting::set('prd_template', '# Old Global', 'string', 'PRD');
     $admin = createTemplateAdmin($project);
 
@@ -250,7 +250,7 @@ it('resets global PRD template to default when null', function (): void {
 });
 
 it('rejects global PRD template update without admin.global_config', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createConfigManager($project);
 
     $this->actingAs($user)

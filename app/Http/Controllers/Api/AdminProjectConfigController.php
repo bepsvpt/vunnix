@@ -21,7 +21,7 @@ class AdminProjectConfigController extends Controller
 
     public function show(Request $request, Project $project): JsonResponse
     {
-        $this->authorizeAdmin($request);
+        $this->authorizeProjectAdmin($request, $project);
 
         $config = $project->projectConfig;
         if ($config === null) {
@@ -35,7 +35,7 @@ class AdminProjectConfigController extends Controller
 
     public function update(UpdateProjectConfigRequest $request, Project $project): JsonResponse
     {
-        $this->authorizeAdmin($request);
+        $this->authorizeProjectAdmin($request, $project);
 
         $oldSettings = $project->projectConfig->settings ?? [];
         $overrides = $request->validated()['settings'];
@@ -74,18 +74,14 @@ class AdminProjectConfigController extends Controller
         ]);
     }
 
-    private function authorizeAdmin(Request $request): void
+    private function authorizeProjectAdmin(Request $request, Project $project): void
     {
         $user = $request->user();
         if ($user === null) {
             abort(401);
         }
 
-        $hasAdmin = $user->projects()
-            ->get()
-            ->contains(fn ($project) => $user->hasPermission('admin.global_config', $project));
-
-        if (! $hasAdmin) {
+        if (! $user->hasPermission('admin.global_config', $project)) {
             abort(403, 'Admin access required.');
         }
     }

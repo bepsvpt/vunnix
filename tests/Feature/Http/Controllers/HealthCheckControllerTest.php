@@ -68,7 +68,7 @@ it('returns unhealthy when Redis ping returns falsy', function (): void {
     $response->assertStatus(503);
     $data = $response->json();
     expect($data['checks']['redis']['status'])->toBe('fail');
-    expect($data['checks']['redis']['error'])->toBe('Redis ping returned falsy');
+    expect($data['checks']['redis']['error'])->toBe('Check failed');
 });
 
 it('returns unhealthy when queue worker heartbeat is stale', function (): void {
@@ -84,7 +84,7 @@ it('returns unhealthy when queue worker heartbeat is stale', function (): void {
     $response->assertStatus(503);
     $data = $response->json();
     expect($data['checks']['queue_worker']['status'])->toBe('fail');
-    expect($data['checks']['queue_worker']['error'])->toBe('Queue worker heartbeat is stale');
+    expect($data['checks']['queue_worker']['error'])->toBe('Check failed');
 });
 
 it('returns unhealthy when queue worker heartbeat is missing', function (): void {
@@ -98,7 +98,7 @@ it('returns unhealthy when queue worker heartbeat is missing', function (): void
     $response->assertStatus(503);
     $data = $response->json();
     expect($data['checks']['queue_worker']['status'])->toBe('fail');
-    expect($data['checks']['queue_worker']['error'])->toBe('No queue worker heartbeat detected');
+    expect($data['checks']['queue_worker']['error'])->toBe('Check failed');
 });
 
 it('returns unhealthy when Reverb check throws an exception', function (): void {
@@ -119,7 +119,7 @@ it('returns unhealthy when Reverb check throws an exception', function (): void 
     $response->assertStatus(503);
     $data = $response->json();
     expect($data['checks']['reverb']['status'])->toBe('fail');
-    expect($data['checks']['reverb']['error'])->toContain('Connection refused');
+    expect($data['checks']['reverb']['error'])->toBe('Check failed');
 });
 
 it('returns unhealthy when disk usage threshold is exceeded', function (): void {
@@ -137,6 +137,5 @@ it('returns unhealthy when disk usage threshold is exceeded', function (): void 
     $response->assertStatus(503);
     $data = $response->json();
     expect($data['checks']['disk']['status'])->toBe('fail');
-    expect($data['checks']['disk']['error'])->toContain('Disk usage at');
-    expect($data['checks']['disk']['error'])->toContain('threshold: 0.1%');
+    expect($data['checks']['disk']['error'])->toBe('Check failed');
 });

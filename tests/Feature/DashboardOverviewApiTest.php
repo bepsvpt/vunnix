@@ -2,17 +2,31 @@
 
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
+use App\Models\Permission;
 use App\Models\Project;
+use App\Models\Role;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+function grantDashboardReviewView(User $user, Project $project): void
+{
+    $role = Role::factory()->create(['project_id' => $project->id, 'name' => 'dashboard-viewer']);
+    $permission = Permission::firstOrCreate(
+        ['name' => 'review.view'],
+        ['description' => 'Can view review results', 'group' => 'review']
+    );
+    $role->permissions()->attach($permission);
+    $user->assignRole($role, $project);
+}
+
 it('returns overview stats scoped to user projects', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantDashboardReviewView($user, $project);
 
     $otherProject = Project::factory()->enabled()->create();
 
@@ -57,6 +71,7 @@ it('returns correct response structure', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantDashboardReviewView($user, $project);
 
     $response = $this->actingAs($user)->getJson('/api/v1/dashboard/overview');
 
@@ -77,6 +92,7 @@ it('returns null success rate when no completed or failed tasks', function (): v
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantDashboardReviewView($user, $project);
 
     $response = $this->actingAs($user)->getJson('/api/v1/dashboard/overview');
 
@@ -92,8 +108,11 @@ it('returns 401 for unauthenticated users', function (): void {
 
 it('excludes tasks from disabled projects', function (): void {
     $user = User::factory()->create();
+    $enabledProject = Project::factory()->enabled()->create();
     $disabledProject = Project::factory()->create(['enabled' => false]);
+    $enabledProject->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
     $disabledProject->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantDashboardReviewView($user, $enabledProject);
 
     Task::factory()->create([
         'project_id' => $disabledProject->id,
@@ -113,6 +132,7 @@ it('includes queued and running tasks in active count', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantDashboardReviewView($user, $project);
 
     Task::factory()->create([
         'project_id' => $project->id,
@@ -140,6 +160,7 @@ it('returns recent activity timestamp', function (): void {
     $user = User::factory()->create();
     $project = Project::factory()->enabled()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    grantDashboardReviewView($user, $project);
 
     $task = Task::factory()->create([
         'project_id' => $project->id,

@@ -79,7 +79,7 @@ function createNonSettingsAdmin(Project $project): User
 // ─── GET /admin/settings ────────────────────────────────────────
 
 it('returns settings list for admin', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     GlobalSetting::set('ai_model', 'opus', 'string', 'Default AI model');
@@ -98,7 +98,7 @@ it('returns settings list for admin', function (): void {
 });
 
 it('includes api_key_configured status', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     $response = $this->actingAs($user)->getJson('/api/v1/admin/settings');
@@ -108,7 +108,7 @@ it('includes api_key_configured status', function (): void {
 });
 
 it('includes defaults for reference', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     $response = $this->actingAs($user)->getJson('/api/v1/admin/settings');
@@ -121,7 +121,7 @@ it('includes defaults for reference', function (): void {
 });
 
 it('returns 403 for non-admin user', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createNonSettingsAdmin($project);
 
     $response = $this->actingAs($user)->getJson('/api/v1/admin/settings');
@@ -138,7 +138,7 @@ it('returns 401 for unauthenticated request', function (): void {
 // ─── PUT /admin/settings ────────────────────────────────────────
 
 it('updates a single setting', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
@@ -154,7 +154,7 @@ it('updates a single setting', function (): void {
 });
 
 it('updates multiple settings at once', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
@@ -174,7 +174,7 @@ it('updates multiple settings at once', function (): void {
 });
 
 it('updates json-type settings', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
@@ -192,7 +192,7 @@ it('updates json-type settings', function (): void {
 });
 
 it('updates bot_pat_created_at via settings', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
@@ -208,7 +208,7 @@ it('updates bot_pat_created_at via settings', function (): void {
 });
 
 it('updates team chat webhook settings', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
@@ -224,7 +224,7 @@ it('updates team chat webhook settings', function (): void {
 });
 
 it('rejects update with empty settings array', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
@@ -235,7 +235,7 @@ it('rejects update with empty settings array', function (): void {
 });
 
 it('rejects update without settings key', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', []);
@@ -244,7 +244,7 @@ it('rejects update without settings key', function (): void {
 });
 
 it('returns 403 for non-admin on update', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createNonSettingsAdmin($project);
 
     $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
@@ -257,7 +257,7 @@ it('returns 403 for non-admin on update', function (): void {
 });
 
 it('returns updated settings list after update', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     $response = $this->actingAs($user)->putJson('/api/v1/admin/settings', [
@@ -279,7 +279,7 @@ it('returns updated settings list after update', function (): void {
 // ─── Integration: settings update → config reads ────────────────
 
 it('change AI model → GlobalSetting::get returns new value', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     // Set initial value
@@ -297,7 +297,7 @@ it('change AI model → GlobalSetting::get returns new value', function (): void
 });
 
 it('change language → GlobalSetting::get returns new language', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     GlobalSetting::set('ai_language', 'en', 'string');
@@ -312,7 +312,7 @@ it('change language → GlobalSetting::get returns new language', function (): v
 });
 
 it('settings persist across index calls', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createSettingsAdmin($project);
 
     // Set settings

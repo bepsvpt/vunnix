@@ -42,12 +42,21 @@ class ConversationController extends Controller
             abort(401);
         }
 
+        $chatProjectIds = $user->projects()
+            ->get()
+            ->filter(fn (Project $project): bool => $user->hasPermission('chat.access', $project))
+            ->pluck('id')
+            ->map(fn (mixed $id): int => (int) $id)
+            ->values()
+            ->all();
+
         $conversations = $this->conversationService->listForUser(
             user: $user,
             projectId: $request->integer('project_id') !== 0 ? $request->integer('project_id') : null,
             search: $request->input('search'),
             archived: $request->boolean('archived'),
             perPage: $request->integer('per_page', 25),
+            allowedPrimaryProjectIds: $chatProjectIds,
         );
 
         return ConversationResource::collection($conversations);

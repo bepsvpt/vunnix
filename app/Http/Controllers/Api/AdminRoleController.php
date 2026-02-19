@@ -19,12 +19,20 @@ class AdminRoleController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $this->authorizeRoleAdmin($request);
+        $user = $this->requireRoleAdmin($request);
+        $managedProjectIds = $this->managedProjectIds($user);
 
         $query = Role::with(['project', 'permissions'])->withCount('users');
+        $query->whereIn('project_id', $managedProjectIds);
 
         if ($request->has('project_id')) {
-            $query->where('project_id', $request->integer('project_id'));
+            $projectId = $request->integer('project_id');
+
+            if (! in_array($projectId, $managedProjectIds, true)) {
+                abort(403, 'Role management access required.');
+            }
+
+            $query->where('project_id', $projectId);
         }
 
         $roles = $query->orderBy('project_id')->orderBy('name')->get();
@@ -36,7 +44,7 @@ class AdminRoleController extends Controller
 
     public function permissions(Request $request): JsonResponse
     {
-        $this->authorizeRoleAdmin($request);
+        $this->requireRoleAdmin($request);
 
         $permissions = Permission::orderBy('group')->orderBy('name')->get();
 
@@ -51,7 +59,9 @@ class AdminRoleController extends Controller
 
     public function store(CreateRoleRequest $request): JsonResponse
     {
-        $this->authorizeRoleAdmin($request);
+        $user = $this->requireRoleAdmin($request);
+        $project = Project::findOrFail($request->integer('project_id'));
+        $this->authorizeRoleAdminOnProject($user, $project);
 
         $role = Role::create($request->only(['project_id', 'name', 'description', 'is_default']));
 
@@ -71,7 +81,9 @@ class AdminRoleController extends Controller
 
     public function update(UpdateRoleRequest $request, Role $role): JsonResponse
     {
-        $this->authorizeRoleAdmin($request);
+        $user = $this->requireRoleAdmin($request);
+        $project = Project::findOrFail($role->project_id);
+        $this->authorizeRoleAdminOnProject($user, $project);
 
         $role->update($request->only(['name', 'description', 'is_default']));
 
@@ -91,7 +103,9 @@ class AdminRoleController extends Controller
 
     public function destroy(Request $request, Role $role): JsonResponse
     {
-        $this->authorizeRoleAdmin($request);
+        $user = $this->requireRoleAdmin($request);
+        $project = Project::findOrFail($role->project_id);
+        $this->authorizeRoleAdminOnProject($user, $project);
 
         $userCount = $role->users()->count();
 
@@ -112,7 +126,8 @@ class AdminRoleController extends Controller
 
     public function assignments(Request $request): JsonResponse
     {
-        $this->authorizeRoleAdmin($request);
+        $user = $this->requireRoleAdmin($request);
+        $managedProjectIds = $this->managedProjectIds($user);
 
         $query = DB::table('role_user')
             ->join('users', 'role_user.user_id', '=', 'users.id')
@@ -131,9 +146,16 @@ class AdminRoleController extends Controller
                 'role_user.assigned_by',
                 'role_user.created_at as assigned_at',
             ]);
+        $query->whereIn('role_user.project_id', $managedProjectIds);
 
         if ($request->has('project_id')) {
-            $query->where('role_user.project_id', $request->integer('project_id'));
+            $projectId = $request->integer('project_id');
+
+            if (! in_array($projectId, $managedProjectIds, true)) {
+                abort(403, 'Role management access required.');
+            }
+
+            $query->where('role_user.project_id', $projectId);
         }
 
         if ($request->has('user_id')) {
@@ -152,11 +174,19 @@ class AdminRoleController extends Controller
 
     public function assign(AssignRoleRequest $request): JsonResponse
     {
-        $this->authorizeRoleAdmin($request);
+        $currentUser = $this->requireRoleAdmin($request);
 
-        $user = User::findOrFail($request->integer('user_id'));
+        $targetUser = User::findOrFail($request->integer('user_id'));
         $role = Role::findOrFail($request->integer('role_id'));
         $project = Project::findOrFail($request->integer('project_id'));
+        $this->authorizeRoleAdminOnProject($currentUser, $project);
+
+        if (! $targetUser->projects()->where('projects.id', $project->id)->exists()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Target user is not a member of the specified project.',
+            ], 422);
+        }
 
         // Verify role belongs to the target project
         if ($role->project_id !== $project->id) {
@@ -168,7 +198,7 @@ class AdminRoleController extends Controller
 
         // Check if assignment already exists
         $exists = DB::table('role_user')
-            ->where('user_id', $user->id)
+            ->where('user_id', $targetUser->id)
             ->where('role_id', $role->id)
             ->where('project_id', $project->id)
             ->exists();
@@ -176,11 +206,11 @@ class AdminRoleController extends Controller
         if ($exists) {
             return response()->json([
                 'success' => false,
-                'error' => "User '{$user->name}' already has role '{$role->name}' on project '{$project->name}'.",
+                'error' => "User '{$targetUser->name}' already has role '{$role->name}' on project '{$project->name}'.",
             ], 422);
         }
 
-        $user->assignRole($role, $project, $request->user());
+        $targetUser->assignRole($role, $project, $currentUser);
 
         return response()->json([
             'success' => true,
@@ -189,7 +219,7 @@ class AdminRoleController extends Controller
 
     public function revoke(Request $request): JsonResponse
     {
-        $this->authorizeRoleAdmin($request);
+        $currentUser = $this->requireRoleAdmin($request);
 
         $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
@@ -200,6 +230,7 @@ class AdminRoleController extends Controller
         $user = User::findOrFail($request->integer('user_id'));
         $role = Role::findOrFail($request->integer('role_id'));
         $project = Project::findOrFail($request->integer('project_id'));
+        $this->authorizeRoleAdminOnProject($currentUser, $project);
 
         $user->removeRole($role, $project);
 
@@ -210,9 +241,13 @@ class AdminRoleController extends Controller
 
     public function users(Request $request): JsonResponse
     {
-        $this->authorizeRoleAdmin($request);
+        $user = $this->requireRoleAdmin($request);
+        $managedProjectIds = $this->managedProjectIds($user);
 
-        $users = User::orderBy('name')
+        $users = User::whereHas('projects', function ($query) use ($managedProjectIds): void {
+            $query->whereIn('projects.id', $managedProjectIds);
+        })
+            ->orderBy('name')
             ->get(['id', 'name', 'email', 'username']);
 
         return response()->json([
@@ -220,18 +255,37 @@ class AdminRoleController extends Controller
         ]);
     }
 
-    private function authorizeRoleAdmin(Request $request): void
+    private function requireRoleAdmin(Request $request): User
     {
         $user = $request->user();
-        if ($user === null) {
+        if (! $user instanceof User) {
             abort(401);
         }
 
-        $hasRoleAdmin = $user->projects()
-            ->get()
-            ->contains(fn ($project) => $user->hasPermission('admin.roles', $project));
+        if ($this->managedProjectIds($user) === []) {
+            abort(403, 'Role management access required.');
+        }
 
-        if (! $hasRoleAdmin) {
+        return $user;
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private function managedProjectIds(User $user): array
+    {
+        return $user->projects()
+            ->get()
+            ->filter(fn (Project $project): bool => $user->hasPermission('admin.roles', $project))
+            ->pluck('id')
+            ->map(fn (mixed $id): int => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    private function authorizeRoleAdminOnProject(User $user, Project $project): void
+    {
+        if (! $user->hasPermission('admin.roles', $project)) {
             abort(403, 'Role management access required.');
         }
     }

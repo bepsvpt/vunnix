@@ -40,12 +40,7 @@ class InfrastructureAlertController extends Controller
             abort(401);
         }
 
-        $hasAdmin = $user->projects()
-            ->where('enabled', true)
-            ->get()
-            ->contains(fn ($project) => $user->hasPermission('admin.global_config', $project));
-
-        if (! $hasAdmin) {
+        if (! $user->isGlobalAdmin()) {
             abort(403, 'Infrastructure alerts are restricted to administrators.');
         }
     }

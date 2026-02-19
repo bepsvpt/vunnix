@@ -6,6 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class HealthCheckController extends Controller
@@ -37,7 +38,7 @@ class HealthCheckController extends Controller
 
             return ['status' => 'ok'];
         } catch (Throwable $e) {
-            return ['status' => 'fail', 'error' => $e->getMessage()];
+            return $this->failCheck('postgresql', $e);
         }
     }
 
@@ -53,9 +54,9 @@ class HealthCheckController extends Controller
                 return ['status' => 'ok'];
             }
 
-            return ['status' => 'fail', 'error' => 'Redis ping returned falsy'];
+            return $this->failCheck('redis', 'Redis ping returned falsy');
         } catch (Throwable $e) {
-            return ['status' => 'fail', 'error' => $e->getMessage()];
+            return $this->failCheck('redis', $e);
         }
     }
 
@@ -67,19 +68,19 @@ class HealthCheckController extends Controller
             $heartbeat = Cache::get($cacheKey);
 
             if ($heartbeat === null) {
-                return ['status' => 'fail', 'error' => 'No queue worker heartbeat detected'];
+                return $this->failCheck('queue_worker', 'No queue worker heartbeat detected');
             }
 
             $lastBeat = \Carbon\Carbon::parse($heartbeat);
             $staleThreshold = now()->subMinutes(5);
 
             if ($lastBeat->lt($staleThreshold)) {
-                return ['status' => 'fail', 'error' => 'Queue worker heartbeat is stale'];
+                return $this->failCheck('queue_worker', 'Queue worker heartbeat is stale');
             }
 
             return ['status' => 'ok'];
         } catch (Throwable $e) {
-            return ['status' => 'fail', 'error' => $e->getMessage()];
+            return $this->failCheck('queue_worker', $e);
         }
     }
 
@@ -96,9 +97,9 @@ class HealthCheckController extends Controller
                 return ['status' => 'ok'];
             }
 
-            return ['status' => 'fail', 'error' => "Reverb returned HTTP {$response->status()}"];
+            return $this->failCheck('reverb', "Reverb returned HTTP {$response->status()}");
         } catch (Throwable $e) {
-            return ['status' => 'fail', 'error' => $e->getMessage()];
+            return $this->failCheck('reverb', $e);
         }
     }
 
@@ -111,17 +112,14 @@ class HealthCheckController extends Controller
             $totalBytes = disk_total_space($path);
 
             if ($freeBytes === false || $totalBytes === false) {
-                return ['status' => 'fail', 'error' => 'Unable to read disk space'];
+                return $this->failCheck('disk', 'Unable to read disk space');
             }
 
             $usedPercent = round((1 - $freeBytes / $totalBytes) * 100, 1);
             $threshold = (float) config('health.disk_usage_threshold', 90);
 
             if ($usedPercent >= $threshold) {
-                return [
-                    'status' => 'fail',
-                    'error' => "Disk usage at {$usedPercent}% (threshold: {$threshold}%)",
-                ];
+                return $this->failCheck('disk', "Disk usage at {$usedPercent}% (threshold: {$threshold}%)");
             }
 
             return [
@@ -129,7 +127,20 @@ class HealthCheckController extends Controller
                 'usage_percent' => $usedPercent,
             ];
         } catch (Throwable $e) {
-            return ['status' => 'fail', 'error' => $e->getMessage()];
+            return $this->failCheck('disk', $e);
         }
+    }
+
+    /** @return array{status: 'fail', error: 'Check failed'} */
+    private function failCheck(string $check, Throwable|string $reason): array
+    {
+        $errorMessage = $reason instanceof Throwable ? $reason->getMessage() : $reason;
+
+        Log::warning('Health check failed', [
+            'check' => $check,
+            'error' => $errorMessage,
+        ]);
+
+        return ['status' => 'fail', 'error' => 'Check failed'];
     }
 }

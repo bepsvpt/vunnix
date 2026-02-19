@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
 use App\Http\Controllers\Controller;
+use App\Models\Project;
 use App\Models\Task;
 use App\Services\MetricsQueryService;
 use Illuminate\Http\JsonResponse;
@@ -31,7 +32,13 @@ class DashboardQualityController extends Controller
 
         $projectIds = $user->projects()
             ->where('enabled', true)
-            ->pluck('projects.id');
+            ->get()
+            ->filter(fn (Project $project): bool => $user->hasPermission('review.view', $project))
+            ->pluck('id');
+
+        if ($projectIds->isEmpty()) {
+            abort(403, 'Dashboard view access required.');
+        }
 
         // Try materialized view first for pre-aggregated severity data
         // Skip materialized view when prompt_version filter is active (can't filter pre-aggregated data)

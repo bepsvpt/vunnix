@@ -9,6 +9,7 @@ use App\Enums\TaskType;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ExternalTaskResource;
 use App\Jobs\ProcessTask;
+use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,16 +35,18 @@ class ExternalTaskController extends Controller
             abort(401);
         }
 
-        $accessibleProjectIds = $user->accessibleProjects()->pluck('id');
+        $reviewableProjectIds = $user->accessibleProjects()
+            ->filter(fn (Project $project): bool => $user->hasPermission('review.view', $project))
+            ->pluck('id');
 
         $query = Task::with(['project:id,name', 'user:id,name'])
-            ->whereIn('project_id', $accessibleProjectIds)
+            ->whereIn('project_id', $reviewableProjectIds)
             ->orderByDesc('created_at')
             ->orderByDesc('id');
 
         $projectId = $request->input('project_id');
         if ($projectId !== null && $projectId !== '') {
-            if ($accessibleProjectIds->contains((int) $projectId)) {
+            if ($reviewableProjectIds->contains((int) $projectId)) {
                 $query->where('project_id', (int) $projectId);
             } else {
                 $query->whereRaw('1 = 0');
@@ -89,8 +92,13 @@ class ExternalTaskController extends Controller
             abort(401);
         }
 
-        if (! $user->accessibleProjects()->pluck('id')->contains($task->project_id)) {
+        $project = $task->project;
+        if ($project === null || ! $user->accessibleProjects()->pluck('id')->contains($task->project_id)) {
             abort(403, 'You do not have access to this task.');
+        }
+
+        if (! $user->hasPermission('review.view', $project)) {
+            abort(403, 'Review view permission required.');
         }
 
         $task->load(['project:id,name', 'user:id,name']);
@@ -110,17 +118,22 @@ class ExternalTaskController extends Controller
             abort(401);
         }
 
+        $project = Project::findOrFail((int) $validated['project_id']);
         $accessibleProjectIds = $user->accessibleProjects()->pluck('id');
 
-        if (! $accessibleProjectIds->contains((int) $validated['project_id'])) {
+        if (! $accessibleProjectIds->contains($project->id)) {
             abort(403, 'You do not have access to this project.');
+        }
+
+        if (! $user->hasPermission('review.trigger', $project)) {
+            abort(403, 'Review trigger permission required.');
         }
 
         $task = Task::create([
             'type' => TaskType::CodeReview,
             'origin' => TaskOrigin::Webhook,
             'user_id' => $user->id,
-            'project_id' => (int) $validated['project_id'],
+            'project_id' => $project->id,
             'priority' => TaskPriority::Normal,
             'status' => TaskStatus::Received,
             'mr_iid' => (int) $validated['mr_iid'],

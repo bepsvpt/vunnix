@@ -14,6 +14,11 @@ class ConversationPolicy
     public function view(User $user, Conversation $conversation): bool
     {
         $userProjectIds = $user->projects()->pluck('projects.id')->toArray();
+        $primaryProject = $conversation->project;
+
+        if ($primaryProject === null || ! $user->hasPermission('chat.access', $primaryProject)) {
+            return false;
+        }
 
         // Check primary project
         if (in_array($conversation->project_id, $userProjectIds, true)) {

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Conversation;
+use App\Models\ApiKey;
 use App\Models\Permission;
 use App\Models\Project;
 use App\Models\Task;
@@ -62,9 +63,20 @@ class AppServiceProvider extends ServiceProvider
     {
         RateLimiter::for('api_key', function (\Illuminate\Http\Request $request) {
             $bearer = $request->bearerToken();
-            $keyHash = $bearer !== null ? hash('sha256', $bearer) : $request->ip();
+            $clientIp = (string) ($request->ip() ?? 'unknown');
 
-            return Limit::perMinute(60)->by('api_key:'.$keyHash);
+            if ($bearer === null || $bearer === '') {
+                return Limit::perMinute(60)->by('api_key:ip:'.$clientIp);
+            }
+
+            $tokenHash = hash('sha256', $bearer);
+            $isValidApiKey = ApiKey::active()->where('key', $tokenHash)->exists();
+
+            if (! $isValidApiKey) {
+                return Limit::perMinute(60)->by('api_key:ip:'.$clientIp);
+            }
+
+            return Limit::perMinute(60)->by('api_key:key:'.$tokenHash.':ip:'.$clientIp);
         });
     }
 

@@ -42,7 +42,7 @@ Route::prefix('v1')->group(function (): void {
 
     // Auth state endpoint (T62)
     // Returns authenticated user's profile, projects, roles, and permissions
-    Route::middleware('auth')->group(function (): void {
+    Route::middleware(['auth', 'revalidate'])->group(function (): void {
         Route::get('/user', function (): \App\Http\Resources\UserResource {
             return new UserResource(request()->user());
         })->name('api.user');
@@ -50,7 +50,7 @@ Route::prefix('v1')->group(function (): void {
 
     // Chat API (T47)
     // Session-authenticated routes for conversation management
-    Route::middleware('auth')->group(function (): void {
+    Route::middleware(['auth', 'revalidate'])->group(function (): void {
         Route::get('/conversations', [ConversationController::class, 'index'])
             ->name('api.conversations.index');
         Route::post('/conversations', [ConversationController::class, 'store'])
@@ -227,7 +227,7 @@ Route::prefix('v1')->group(function (): void {
     // External API (T100) — accepts session auth OR API key
     // Rate-limited per API key (60 req/min). Session auth not rate-limited here.
     Route::prefix('ext')
-        ->middleware(['auth.api_key_or_session', 'throttle:api_key'])
+        ->middleware(['auth.api_key_or_session', 'revalidate', 'throttle:api_key'])
         ->group(function (): void {
             Route::get('/tasks', [ExternalTaskController::class, 'index'])
                 ->name('api.ext.tasks.index');

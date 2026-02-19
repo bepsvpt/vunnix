@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateSettingsRequest;
 use App\Http\Resources\GlobalSettingResource;
 use App\Models\GlobalSetting;
+use App\Rules\NotPrivateUrl;
 use App\Services\AuditLogService;
 use App\Services\TeamChat\TeamChatNotificationService;
 use Illuminate\Http\JsonResponse;
@@ -80,7 +81,7 @@ class AdminSettingsController extends Controller
         $this->authorizeSettingsAdmin($request);
 
         $request->validate([
-            'webhook_url' => ['required', 'url', 'max:1000'],
+            'webhook_url' => ['required', 'url', 'max:1000', new NotPrivateUrl],
             'platform' => ['required', 'string', 'in:slack,mattermost,google_chat,generic'],
         ]);
 
@@ -100,11 +101,7 @@ class AdminSettingsController extends Controller
             abort(401);
         }
 
-        $hasAdmin = $user->projects()
-            ->get()
-            ->contains(fn ($project) => $user->hasPermission('admin.global_config', $project));
-
-        if (! $hasAdmin) {
+        if (! $user->isGlobalAdmin()) {
             abort(403, 'Settings management access required.');
         }
     }

@@ -163,7 +163,7 @@
 | D156 | Project enablement auto-creates CI trigger token (extends D26) | impl | Active |
 | D157 | Push events ignored when MR exists — MR update event handles review | impl | Active |
 | D158 | Trust all proxies — required for reverse proxy/tunnel deployments | impl | Active |
-| D159 | SPA authenticates via session cookies, CSRF excluded for API routes | impl | Active |
+| D159 | ~~SPA authenticates via session cookies, CSRF excluded for API routes~~ — superseded by D203 | impl | Superseded |
 | D160 | Database backup — pg_dump -Z 9, 30-day retention, stored in storage/backups/ | impl | Active |
 | D161 | Executor turn limit — --max-turns 30 per CLI invocation | impl | Active |
 | D162 | Vunnix development hosted on GitHub (public) — unlimited free CI via GitHub Actions | ext-001 | Active |
@@ -205,3 +205,13 @@
 | D198 | Memory entries are confidence-scored and auto-archived after retention TTL (default 90 days) to prevent stale guidance | ext-012 | Active |
 | D199 | Project Memory is feature-flagged per sub-capability (`review_learning`, `conversation_continuity`, `cross_mr_patterns`) | ext-012 | Active |
 | D200 | Injected memory context is token-capped (default 2000 tokens) with confidence-ranked selection to control prompt bloat | ext-012 | Active |
+| D201 | Global admin is defined as `admin.global_config` on all enabled projects, without introducing a separate super-admin flag | ext-013 | Active |
+| D202 | Project-scoped admin endpoints authorize against the target project context, not any-project membership | ext-013 | Active |
+| D203 | Session-authenticated API routes enforce CSRF; bearer-token (API key/task token) requests bypass CSRF via dedicated middleware | ext-014 | Active |
+| D204 | Vue SPA uses Laravel XSRF cookie/header convention (`withXSRFToken`, `XSRF-TOKEN`, `X-XSRF-TOKEN`) for API requests | ext-014 | Active |
+| D205 | Authenticated endpoints enforce both project membership and feature-specific RBAC permissions (`chat.access`, `review.view`, `review.trigger`) | ext-015 | Active |
+| D206 | Conversation access is authorized against the conversation's primary project using `chat.access`, not membership-only checks | ext-015 | Active |
+| D207 | Proxy trust is configured via `TRUSTED_PROXIES` env var (default `*` for compatibility; production should pin specific proxy IPs/CIDRs) | ext-017 | Active |
+| D208 | API key rate limiter keys by valid token hash + client IP, and falls back to IP-only buckets for missing/invalid tokens | ext-017 | Active |
+| D209 | Health endpoint reports generic `Check failed` errors without exposing raw infrastructure exception details | ext-017 | Active |
+| D210 | Admin webhook test endpoint blocks private/internal targets (RFC1918, loopback, link-local/metadata, localhost) to prevent SSRF | ext-017 | Active |

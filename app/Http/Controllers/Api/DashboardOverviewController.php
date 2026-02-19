@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
 use App\Http\Controllers\Controller;
+use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,13 @@ class DashboardOverviewController extends Controller
 
         $projectIds = $user->projects()
             ->where('enabled', true)
-            ->pluck('projects.id');
+            ->get()
+            ->filter(fn (Project $project): bool => $user->hasPermission('review.view', $project))
+            ->pluck('id');
+
+        if ($projectIds->isEmpty()) {
+            abort(403, 'Dashboard view access required.');
+        }
 
         $tasksByType = Task::whereIn('project_id', $projectIds)
             ->select('type', DB::raw('count(*) as count'))

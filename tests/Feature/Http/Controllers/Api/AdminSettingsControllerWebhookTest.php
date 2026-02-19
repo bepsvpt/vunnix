@@ -66,7 +66,7 @@ function createWebhookAdmin(Project $project): User
 }
 
 it('sends test webhook successfully', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createWebhookAdmin($project);
 
     $response = $this->actingAs($user)->postJson('/api/v1/admin/settings/test-webhook', [
@@ -85,14 +85,14 @@ it('sends test webhook successfully', function (): void {
 
 it('returns failure for bad webhook URL', function (): void {
     Http::fake([
-        'failing-webhook.example.com/*' => Http::response('not found', 404),
+        '8.8.8.8/*' => Http::response('not found', 404),
     ]);
 
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createWebhookAdmin($project);
 
     $response = $this->actingAs($user)->postJson('/api/v1/admin/settings/test-webhook', [
-        'webhook_url' => 'https://failing-webhook.example.com/bad',
+        'webhook_url' => 'https://8.8.8.8/fail',
         'platform' => 'slack',
     ]);
 
@@ -101,7 +101,7 @@ it('returns failure for bad webhook URL', function (): void {
 });
 
 it('validates webhook_url is required', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createWebhookAdmin($project);
 
     $response = $this->actingAs($user)->postJson('/api/v1/admin/settings/test-webhook', [
@@ -112,7 +112,7 @@ it('validates webhook_url is required', function (): void {
 });
 
 it('validates platform must be valid', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = createWebhookAdmin($project);
 
     $response = $this->actingAs($user)->postJson('/api/v1/admin/settings/test-webhook', [
@@ -124,7 +124,7 @@ it('validates platform must be valid', function (): void {
 });
 
 it('returns 403 for non-admin', function (): void {
-    $project = Project::factory()->create();
+    $project = Project::factory()->enabled()->create();
     $user = User::factory()->create();
     $project->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
 

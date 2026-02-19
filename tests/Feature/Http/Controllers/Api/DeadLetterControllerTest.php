@@ -182,6 +182,14 @@ it('filters DLQ entries by project_id from task_record', function (): void {
     $user = createDlqAdmin($project);
 
     $project2 = Project::factory()->enabled()->create();
+    $roleOnProject2 = Role::factory()->create(['project_id' => $project2->id, 'name' => 'admin']);
+    $permission = Permission::firstOrCreate(
+        ['name' => 'admin.global_config'],
+        ['description' => 'Can edit global Vunnix settings', 'group' => 'admin']
+    );
+    $roleOnProject2->permissions()->attach($permission);
+    $project2->users()->attach($user->id, ['gitlab_access_level' => 30, 'synced_at' => now()]);
+    $user->assignRole($roleOnProject2, $project2);
 
     // Entry with project_id matching filter
     $matchingEntry = createDlqEntryWithTask($project);

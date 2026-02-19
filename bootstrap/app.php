@@ -17,16 +17,16 @@ return Application::configure(basePath: dirname(__DIR__))
         ['middleware' => ['web', 'auth']],
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->trustProxies(at: '*');
+        $middleware->trustProxies(at: env('TRUSTED_PROXIES', '*'));
         $middleware->redirectGuestsTo('/auth/redirect');
         $middleware->validateCsrfTokens(except: [
             'webhook',
-            'api/*',
         ]);
         $middleware->api(prepend: [
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\VerifyCsrfUnlessTokenAuth::class,
         ]);
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,
@@ -34,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'task.token' => \App\Http\Middleware\AuthenticateTaskToken::class,
             'api.key' => \App\Http\Middleware\AuthenticateApiKey::class,
             'auth.api_key_or_session' => \App\Http\Middleware\AuthenticateSessionOrApiKey::class,
+            'revalidate' => \App\Http\Middleware\RevalidateGitLabMembership::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

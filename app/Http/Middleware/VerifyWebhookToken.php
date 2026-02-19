@@ -58,8 +58,11 @@ class VerifyWebhookToken
      * Find the ProjectConfig whose decrypted webhook_secret matches the token.
      *
      * Since webhook_secret uses Laravel's `encrypted` cast, we cannot query by
-     * value — each row must be loaded and decrypted for comparison. This is
-     * acceptable for the self-hosted GitLab Free use case (limited projects).
+     * value in SQL — each row must be loaded and decrypted for comparison.
+     *
+     * This O(n) scan is an accepted design tradeoff for GitLab Free scale:
+     * typical self-hosted installations have low project counts (<100), making
+     * per-request overhead negligible while preserving encrypted-at-rest secrets.
      */
     private function findProjectConfigByToken(string $token): ?ProjectConfig
     {

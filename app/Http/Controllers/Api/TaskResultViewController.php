@@ -21,6 +21,11 @@ class TaskResultViewController extends Controller
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
+        $project = $task->project;
+        if ($project === null || ! $user->hasPermission('review.view', $project)) {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+
         $result = $task->result ?? [];
 
         return response()->json([

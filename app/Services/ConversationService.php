@@ -25,9 +25,14 @@ class ConversationService
         ?string $search = null,
         bool $archived = false,
         int $perPage = 25,
+        ?array $allowedPrimaryProjectIds = null,
     ): CursorPaginator {
         $query = Conversation::accessibleBy($user)
             ->with(['latestMessage', 'projects']);
+
+        if ($allowedPrimaryProjectIds !== null) {
+            $query->whereIn('project_id', $allowedPrimaryProjectIds);
+        }
 
         if ($archived) {
             $query->archived();
