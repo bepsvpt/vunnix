@@ -1,5 +1,5 @@
 import { getEcho, whenConnected } from '@/composables/useEcho';
-import { useDashboardStore } from '@/stores/dashboard';
+import { useDashboardStore } from '@/features/dashboard';
 
 /**
  * Composable for dashboard real-time subscriptions.

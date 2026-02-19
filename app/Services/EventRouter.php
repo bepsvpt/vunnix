@@ -10,7 +10,12 @@ use App\Events\Webhook\NoteOnIssue;
 use App\Events\Webhook\NoteOnMR;
 use App\Events\Webhook\PushToMRBranch;
 use App\Events\Webhook\WebhookEvent;
-use App\Jobs\PostHelpResponse;
+use App\Modules\TaskOrchestration\Application\Registries\IntentClassifierRegistry;
+use App\Modules\WebhookIntake\Application\Classifiers\IssueLabelClassifier;
+use App\Modules\WebhookIntake\Application\Classifiers\IssueNoteClassifier;
+use App\Modules\WebhookIntake\Application\Classifiers\MergeRequestLifecycleClassifier;
+use App\Modules\WebhookIntake\Application\Classifiers\MergeRequestNoteClassifier;
+use App\Modules\WebhookIntake\Application\Classifiers\PushToMergeRequestClassifier;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -27,17 +32,11 @@ use Illuminate\Support\Facades\Log;
  */
 class EventRouter
 {
-    /**
-     * Recognized @ai commands on MR notes.
-     */
-    private const COMMANDS = [
-        'review' => 'on_demand_review',
-        'improve' => 'improve',
-    ];
-
     private ?int $botAccountId;
 
-    public function __construct(?int $botAccountId = null)
+    private IntentClassifierRegistry $intentClassifierRegistry;
+
+    public function __construct(?int $botAccountId = null, ?IntentClassifierRegistry $intentClassifierRegistry = null)
     {
         // Accept explicit value (for testing) or read from config
         if ($botAccountId !== null) {
@@ -46,6 +45,15 @@ class EventRouter
             $botId = config('services.gitlab.bot_account_id');
             $this->botAccountId = in_array($botId, [null, '', 0], true) ? null : (int) $botId;
         }
+
+        // Fallback for tests that instantiate EventRouter directly (without container).
+        $this->intentClassifierRegistry = $intentClassifierRegistry ?? new IntentClassifierRegistry([
+            new MergeRequestLifecycleClassifier,
+            new MergeRequestNoteClassifier,
+            new IssueNoteClassifier,
+            new IssueLabelClassifier,
+            new PushToMergeRequestClassifier,
+        ]);
     }
 
     /**
@@ -76,7 +84,7 @@ class EventRouter
             return null;
         }
 
-        return $this->classifyIntent($event);
+        return $this->intentClassifierRegistry->classify($event);
     }
 
     /**
@@ -241,132 +249,5 @@ class EventRouter
         }
 
         return false;
-    }
-
-    // ------------------------------------------------------------------
-    //  Intent classification
-    // ------------------------------------------------------------------
-
-    /**
-     * Classify the intent of a parsed webhook event per the §3.1 routing table.
-     */
-    private function classifyIntent(WebhookEvent $event): ?RoutingResult
-    {
-        return match (true) {
-            $event instanceof MergeRequestOpened,
-            $event instanceof MergeRequestUpdated => new RoutingResult('auto_review', 'normal', $event),
-
-            $event instanceof MergeRequestMerged => new RoutingResult('acceptance_tracking', 'normal', $event),
-
-            $event instanceof NoteOnMR => $this->classifyMRNote($event),
-
-            $event instanceof NoteOnIssue => $this->classifyIssueNote($event),
-
-            $event instanceof IssueLabelChanged => $this->classifyIssueLabelChange($event),
-
-            $event instanceof PushToMRBranch => new RoutingResult('incremental_review', 'normal', $event),
-
-            default => null,
-        };
-    }
-
-    /**
-     * Classify a Note on MR — parse @ai commands per the routing table.
-     *
-     * - @ai review → on_demand_review (high priority)
-     * - @ai improve → improve (normal priority)
-     * - @ai ask "..." → ask_command (normal priority)
-     * - @ai (unrecognized) → help_response (D155)
-     * - No @ai mention → null (ignored)
-     */
-    private function classifyMRNote(NoteOnMR $event): ?RoutingResult
-    {
-        $note = $event->note;
-
-        if (! $this->containsAiMention($note)) {
-            return null;
-        }
-
-        // Check for @ai ask "..." pattern — extract quoted question
-        if (preg_match('/@ai\s+ask\s+"([^"]+)"/', $note, $matches) === 1) {
-            return new RoutingResult('ask_command', 'normal', $event, [
-                'question' => $matches[1],
-            ]);
-        }
-
-        // Check recognized commands: @ai review, @ai improve
-        foreach (self::COMMANDS as $command => $intent) {
-            if (preg_match('/@ai\s+'.preg_quote($command, '/').'\b/i', $note) === 1) {
-                $priority = $intent === 'on_demand_review' ? 'high' : 'normal';
-
-                return new RoutingResult($intent, $priority, $event);
-            }
-        }
-
-        // D155: Unrecognized @ai command → dispatch help response
-        $unrecognized = $this->extractUnrecognizedCommand($note);
-        $this->dispatchHelpResponse($event, $unrecognized);
-
-        return new RoutingResult('help_response', 'normal', $event);
-    }
-
-    /**
-     * Classify a Note on Issue — any @ai mention triggers issue discussion.
-     */
-    private function classifyIssueNote(NoteOnIssue $event): ?RoutingResult
-    {
-        if (! $this->containsAiMention($event->note)) {
-            return null;
-        }
-
-        return new RoutingResult('issue_discussion', 'normal', $event);
-    }
-
-    /**
-     * Classify an Issue label change — ai::develop label triggers feature dev.
-     */
-    private function classifyIssueLabelChange(IssueLabelChanged $event): ?RoutingResult
-    {
-        if ($event->hasLabel('ai::develop')) {
-            return new RoutingResult('feature_dev', 'low', $event);
-        }
-
-        return null;
-    }
-
-    // ------------------------------------------------------------------
-    //  Helpers
-    // ------------------------------------------------------------------
-
-    /**
-     * Check if text contains an @ai mention.
-     */
-    private function containsAiMention(string $text): bool
-    {
-        return (bool) preg_match('/@ai\b/i', $text);
-    }
-
-    /**
-     * Extract the unrecognized command text after @ai for the help response.
-     */
-    private function extractUnrecognizedCommand(string $note): string
-    {
-        if (preg_match('/@ai\s+(\S+)/', $note, $matches) === 1) {
-            return '@ai '.$matches[1];
-        }
-
-        return '@ai';
-    }
-
-    /**
-     * Dispatch a queued job to post the help response on the MR (D155).
-     */
-    private function dispatchHelpResponse(NoteOnMR $event, string $unrecognizedCommand): void
-    {
-        PostHelpResponse::dispatch(
-            $event->gitlabProjectId,
-            $event->mergeRequestIid,
-            $unrecognizedCommand,
-        );
     }
 }

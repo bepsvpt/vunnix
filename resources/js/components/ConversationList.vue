@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useConversationsStore } from '@/features/chat';
 import { useAuthStore } from '@/stores/auth';
-import { useConversationsStore } from '@/stores/conversations';
 import ConversationListItem from './ConversationListItem.vue';
 import NewConversationDialog from './NewConversationDialog.vue';
 import BaseButton from './ui/BaseButton.vue';

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
-import { useConversationsStore } from '@/stores/conversations';
+import { useConversationsStore } from '@/features/chat';
 import ActionPreviewCard from './ActionPreviewCard.vue';
 import MarkdownContent from './MarkdownContent.vue';
 import MessageBubble from './MessageBubble.vue';

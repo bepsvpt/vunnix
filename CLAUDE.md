@@ -20,6 +20,8 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 |---|---|
 | `composer setup` | Full setup: install deps, create .env, generate key, build frontend |
 | `composer dev` | Start dev environment (server + queue + logs + Vite, all concurrent) |
+| `composer dev:fast` | Fast local loop (server + Vite only) |
+| `composer dev:parity` | Parity local loop (server + queue topology + Reverb + Vite) |
 | `composer test` | Run PHP tests (clears config cache first) |
 | `php artisan test --parallel` | Run full PHP suite (required — single-process OOMs at 900+ tests) |
 | `php artisan test --filter=ClassName` | Run a specific test file |
@@ -67,6 +69,7 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 app/
 ├── Agents/              # AI SDK Agent classes (Conversation Engine)
 │   └── Tools/           # AI SDK Tool classes (GitLab browse, search, etc.)
+├── Modules/             # ext-019 modular architecture seams (capability-oriented)
 ├── Http/Controllers/    # API + webhook controllers
 │   └── Api/             # /api/v1/ resource controllers
 ├── Http/Requests/       # FormRequest validation classes
@@ -76,6 +79,7 @@ app/
 ├── Models/              # Eloquent models
 └── Policies/            # Authorization policies
 resources/js/
+├── features/            # ext-019 feature slices (chat/admin/dashboard/activity/shared)
 ├── components/          # Reusable Vue components
 ├── pages/               # Page-level components (Chat, Dashboard, Admin)
 ├── stores/              # Pinia stores
@@ -105,6 +109,7 @@ tests/
 ## CI/CD
 
 GitHub Actions (`.github/workflows/`):
+- **`tests-fast.yml`** — Fast Lane changed-path checks + architecture fitness checks
 - **`tests.yml`** — Pint formatting check, ESLint, PHPStan (level 8), PHP tests (parallel, real PostgreSQL 18, pcov coverage), JS tests (Vitest with coverage)
 - **`build-app.yml`** — Docker image build & publish to GHCR (`ghcr.io/bepsvpt/vunnix/app`) on release
 - **`build-executor.yml`** — Executor Docker image build & publish on release

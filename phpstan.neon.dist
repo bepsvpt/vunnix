@@ -2,8 +2,10 @@ includes:
     - phpstan-baseline.neon
 
 parameters:
+    # ext-019 modular architecture guardrail scope
     paths:
         - app/
+        - app/Modules/
     level: 8
     ignoreErrors:
         # Larastan limitation: Eloquent's __callStatic forwarding (e.g., Model::where(),

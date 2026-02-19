@@ -31,6 +31,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Orchestration Migration Flags (ext-019)
+    |--------------------------------------------------------------------------
+    |
+    | Feature gates for the orchestration kernel and outbox migration.
+    | - kernel_enabled: enable registry-driven routing/dispatch selection.
+    | - outbox_enabled: enable outbox delivery worker path.
+    | - outbox_shadow_mode: write outbox events while still executing the
+    |   existing direct-dispatch path (dual-path migration mode).
+    |
+    */
+
+    'orchestration' => [
+        'kernel_enabled' => (bool) env('VUNNIX_ORCHESTRATION_KERNEL_ENABLED', true),
+    ],
+
+    'events' => [
+        'outbox_enabled' => (bool) env('VUNNIX_EVENTS_OUTBOX_ENABLED', false),
+        'outbox_shadow_mode' => (bool) env('VUNNIX_EVENTS_OUTBOX_SHADOW_MODE', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Project Memory (D195-D200)
     |--------------------------------------------------------------------------
     |

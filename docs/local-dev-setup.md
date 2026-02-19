@@ -168,6 +168,22 @@ curl -f https://<TUNNEL_URL>/up
 
 ## 6. Development Workflow
 
+### Runtime Profiles (ext-019)
+
+Use these profiles depending on speed vs parity needs:
+
+```bash
+# Fast inner loop (no queue/reverb workers)
+composer dev:fast
+
+# Parity loop (server + queue topology + reverb + vite)
+composer dev:parity
+```
+
+Guidance:
+- Use `dev:fast` during UI and isolated service iteration.
+- Use `dev:parity` before merge or when validating real-time/queue behavior.
+
 ### Code Changes
 
 FrankenPHP (Octane) and queue workers cache the application in memory. After modifying PHP code:

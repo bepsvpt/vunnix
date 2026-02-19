@@ -129,6 +129,17 @@ These variables are set automatically when Vunnix triggers the pipeline. **Do no
 
 ## Troubleshooting
 
+## Local Runtime Profiles (ext-019)
+
+When testing integration changes locally:
+
+```bash
+composer dev:fast    # fastest inner loop
+composer dev:parity  # queue/reverb parity validation
+```
+
+Use `dev:parity` when validating webhook-to-task execution and real-time updates.
+
 ### Image Pull Failure
 
 **Symptom:** CI job fails with `image pull failed` or `manifest unknown`.

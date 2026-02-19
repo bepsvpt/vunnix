@@ -3,7 +3,7 @@ import { watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import ConversationList from '@/components/ConversationList.vue';
 import MessageThread from '@/components/MessageThread.vue';
-import { useConversationsStore } from '@/stores/conversations';
+import { useConversationsStore } from '@/features/chat';
 
 const store = useConversationsStore();
 const route = useRoute();

@@ -3,9 +3,9 @@ import ActivityFeedItem from '@/components/ActivityFeedItem.vue';
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue';
 import BaseFilterChips from '@/components/ui/BaseFilterChips.vue';
 import BaseSpinner from '@/components/ui/BaseSpinner.vue';
-import { useDashboardStore } from '@/stores/dashboard';
+import { useActivityStore } from '@/features/activity';
 
-const dashboard = useDashboardStore();
+const dashboard = useActivityStore();
 
 const chips: Array<{ label: string; value: string | null }> = [
     { label: 'All', value: null },

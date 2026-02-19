@@ -1,4 +1,4 @@
-# Run PHP and JavaScript test suites.
+# Run PHP and JavaScript full regression suites (Full Lane for ext-019).
 #
 # Triggers:
 #   - Pull requests (validate before merge)
@@ -25,6 +25,16 @@ permissions:
   contents: read
 
 jobs:
+  architecture:
+    name: Architecture Fitness
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check module/feature boundaries
+        run: scripts/architecture/check-boundaries.sh
+
   pint:
     name: Pint
     runs-on: ubuntu-latest

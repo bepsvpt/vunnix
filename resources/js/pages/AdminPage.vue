@@ -10,7 +10,7 @@ import AdminRoleList from '@/components/AdminRoleList.vue';
 import ProjectMemoryPanel from '@/components/ProjectMemoryPanel.vue';
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue';
 import BaseTabGroup from '@/components/ui/BaseTabGroup.vue';
-import { useAdminStore } from '@/stores/admin';
+import { useAdminStore } from '@/features/admin';
 
 interface ProjectRef {
     id: number;

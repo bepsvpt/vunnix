@@ -222,3 +222,9 @@
 | D215 | Health threshold violations reuse AlertEvent with health alert types and optional auto-created GitLab issues | ext-018 | Active |
 | D216 | Significant health findings are bridged into Project Memory as `health_signal` entries for review guidance injection | ext-018 | Active |
 | D217 | Health is feature-flagged at global and per-dimension levels (`health.*`) with per-project overrides | ext-018 | Active |
+| D218 | Vunnix stays a single deployable modular monolith with capability modules and explicit cross-module contracts | ext-019 | Active |
+| D219 | Orchestration uses registry-driven workflow kernel (`IntentClassifierRegistry`, `TaskHandlerRegistry`, `ResultPublisherRegistry`) | ext-019 | Active |
+| D220 | Cross-module async side effects use versioned internal event envelopes with outbox persistence and replay | ext-019 | Active |
+| D221 | Frontend architecture moves to feature slices under `resources/js/features/*` with compatibility exports during migration | ext-019 | Active |
+| D222 | CI verification model adds Fast Lane changed-path checks plus Full Lane regression gate with architecture fitness checks | ext-019 | Active |
+| D223 | Local runtime profiles are explicit: `dev:fast` for inner loop, `dev:parity` for queue/reverb parity validation | ext-019 | Active |

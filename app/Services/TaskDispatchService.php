@@ -17,18 +17,18 @@ use App\Events\Webhook\WebhookEvent;
 use App\Jobs\ProcessTask;
 use App\Models\Task;
 use App\Models\User;
+use App\Modules\TaskOrchestration\Application\Registries\TaskHandlerRegistry;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class TaskDispatchService
 {
     /**
-     * Intent → TaskType mapping.
+     * Legacy intent mapping retained for dual-path migration fallback.
      *
-     * Intents not listed here are non-dispatchable (e.g., help_response
-     * is handled inline by PostHelpResponse, acceptance_tracking is T86).
+     * @var array<string, TaskType>
      */
-    private const INTENT_TO_TYPE = [
+    private const LEGACY_INTENT_TO_TYPE = [
         'auto_review' => TaskType::CodeReview,
         'on_demand_review' => TaskType::CodeReview,
         'incremental_review' => TaskType::CodeReview,
@@ -38,6 +38,10 @@ class TaskDispatchService
         'feature_dev' => TaskType::FeatureDev,
     ];
 
+    public function __construct(
+        private readonly TaskHandlerRegistry $taskHandlerRegistry,
+    ) {}
+
     /**
      * Dispatch a routing result as a queued task.
      *
@@ -45,9 +49,12 @@ class TaskDispatchService
      */
     public function dispatch(RoutingResult $routingResult): ?Task
     {
-        $taskType = self::INTENT_TO_TYPE[$routingResult->intent] ?? null;
+        $kernelEnabled = (bool) config('vunnix.orchestration.kernel_enabled', true);
+        $taskType = $kernelEnabled
+            ? $this->taskHandlerRegistry->resolveTaskType($routingResult)
+            : $this->resolveLegacyTaskType($routingResult->intent);
 
-        if ($taskType === null) {
+        if (! $taskType instanceof \App\Enums\TaskType) {
             Log::debug('TaskDispatchService: non-dispatchable intent, skipping', [
                 'intent' => $routingResult->intent,
             ]);
@@ -106,6 +113,11 @@ class TaskDispatchService
         ]);
 
         return $task;
+    }
+
+    private function resolveLegacyTaskType(string $intent): ?TaskType
+    {
+        return self::LEGACY_INTENT_TO_TYPE[$intent] ?? null;
     }
 
     private function resolveUserId(WebhookEvent $event): ?int

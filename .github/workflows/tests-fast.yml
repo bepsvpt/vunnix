@@ -1,0 +1,100 @@
+name: Tests Fast
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    name: Detect Changed Paths
+    runs-on: ubuntu-latest
+    outputs:
+      php_changed: ${{ steps.matrix.outputs.php_changed }}
+      js_changed: ${{ steps.matrix.outputs.js_changed }}
+      docs_only: ${{ steps.matrix.outputs.docs_only }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Compute changed-path matrix
+        id: matrix
+        run: scripts/ci/changed-path-matrix.sh origin/main
+
+  architecture-check:
+    name: Architecture Fitness
+    needs: detect
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Boundary checks
+        run: scripts/architecture/check-boundaries.sh
+
+  php-fast:
+    name: PHP Fast Lane
+    needs: detect
+    if: needs.detect.outputs.php_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_pgsql, pgsql, zip, intl, pcntl, redis
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Unit tests (fast scope)
+        run: php artisan test tests/Unit --parallel
+
+      - name: Static analysis
+        run: composer analyse
+
+  js-fast:
+    name: JS Fast Lane
+    needs: detect
+    if: needs.detect.outputs.js_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Vitest
+        run: npm test
+
+  docs-only:
+    name: Docs Only
+    needs: detect
+    if: needs.detect.outputs.docs_only == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Nothing to run
+        run: echo "Docs-only change detected; Fast Lane skipped."

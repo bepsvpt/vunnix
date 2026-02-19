@@ -2,10 +2,12 @@
 
 namespace App\Jobs;
 
-use App\Enums\TaskType;
 use App\Exceptions\GitLabApiException;
 use App\Jobs\Middleware\RetryWithBackoff;
 use App\Models\Task;
+use App\Modules\Shared\Domain\InternalEvent;
+use App\Modules\TaskOrchestration\Application\Registries\ResultPublisherRegistry;
+use App\Modules\TaskOrchestration\Infrastructure\Outbox\OutboxWriter;
 use App\Services\FailureHandler;
 use App\Services\ResultProcessor;
 use App\Support\QueueNames;
@@ -52,8 +54,10 @@ class ProcessTaskResult implements ShouldQueue
         return [new RetryWithBackoff];
     }
 
-    public function handle(ResultProcessor $processor): void
+    public function handle(ResultProcessor $processor, ?ResultPublisherRegistry $resultPublisherRegistry = null): void
     {
+        $resultPublisherRegistry ??= app(ResultPublisherRegistry::class);
+
         $task = Task::find($this->taskId);
 
         if ($task === null) {
@@ -84,40 +88,19 @@ class ProcessTaskResult implements ShouldQueue
             return;
         }
 
-        if ($this->shouldPostSummaryComment($task)) {
-            PostSummaryComment::dispatch($task->id);
+        $outboxEnabled = (bool) config('vunnix.events.outbox_enabled', false);
+        $shadowMode = (bool) config('vunnix.events.outbox_shadow_mode', false);
+
+        if ($outboxEnabled && ! $shadowMode) {
+            $this->mirrorToOutbox($task, true);
+
+            return;
         }
 
-        if ($this->shouldPostInlineThreads($task)) {
-            PostInlineThreads::dispatch($task->id);
-        }
+        $resultPublisherRegistry->publish($task);
 
-        if ($this->shouldPostLabelsAndStatus($task)) {
-            PostLabelsAndStatus::dispatch($task->id);
-        }
-
-        // T42: Post answer comment for @ai ask commands
-        if ($this->shouldPostAnswerComment($task)) {
-            PostAnswerComment::dispatch($task->id);
-        }
-
-        // T43: Post response comment for @ai on Issue
-        if ($this->shouldPostIssueComment($task)) {
-            PostIssueComment::dispatch($task->id);
-        }
-
-        // T44: Create MR and post summary for feature development
-        if ($this->shouldPostFeatureDevResult($task)) {
-            PostFeatureDevResult::dispatch($task->id);
-        }
-
-        // T56: Create GitLab Issue for server-side PrdCreation
-        if ($this->shouldCreateGitLabIssue($task)) {
-            CreateGitLabIssue::dispatch($task->id);
-        }
-
-        if ($this->shouldExtractMemory($task)) {
-            ExtractReviewPatterns::dispatch($task->id);
+        if ($outboxEnabled || $shadowMode) {
+            $this->mirrorToOutbox($task, $outboxEnabled);
         }
     }
 
@@ -156,85 +139,29 @@ class ProcessTaskResult implements ShouldQueue
         );
     }
 
-    private function shouldPostSummaryComment(Task $task): bool
+    private function mirrorToOutbox(Task $task, bool $dispatchDelivery): void
     {
-        return $task->mr_iid !== null
-            && in_array($task->type, [TaskType::CodeReview, TaskType::SecurityAudit], true);
-    }
+        /** @var OutboxWriter $outboxWriter */
+        $outboxWriter = app(OutboxWriter::class);
 
-    private function shouldPostInlineThreads(Task $task): bool
-    {
-        return $task->mr_iid !== null
-            && in_array($task->type, [TaskType::CodeReview, TaskType::SecurityAudit], true);
-    }
+        $event = InternalEvent::make(
+            eventType: 'task.result.processed',
+            aggregateType: 'task',
+            aggregateId: (string) $task->id,
+            payload: [
+                'task_id' => $task->id,
+                'task_type' => $task->type->value,
+                'task_status' => $task->status->value,
+            ],
+        );
 
-    private function shouldPostLabelsAndStatus(Task $task): bool
-    {
-        return $task->mr_iid !== null
-            && in_array($task->type, [TaskType::CodeReview, TaskType::SecurityAudit], true);
-    }
+        $outboxWriter->write(
+            event: $event,
+            idempotencyKey: 'task-result-processed:'.$task->id,
+        );
 
-    /**
-     * T42: Post an answer comment for @ai ask commands.
-     *
-     * Only fires for IssueDiscussion tasks with an MR (ask_command on MR note)
-     * and an ask_command intent in the result metadata.
-     */
-    private function shouldPostAnswerComment(Task $task): bool
-    {
-        return $task->mr_iid !== null
-            && $task->type === TaskType::IssueDiscussion
-            && ($task->result['intent'] ?? null) === 'ask_command';
-    }
-
-    /**
-     * T43: Post an issue discussion response for @ai on Issue.
-     *
-     * Only fires for IssueDiscussion tasks with an Issue (issue_discussion intent)
-     * and no MR context (distinguishes from ask_command on MRs).
-     */
-    private function shouldPostIssueComment(Task $task): bool
-    {
-        return $task->issue_iid !== null
-            && $task->type === TaskType::IssueDiscussion
-            && ($task->result['intent'] ?? null) === 'issue_discussion';
-    }
-
-    /**
-     * T44/T72: Create MR and post summary for feature development / UI adjustment tasks.
-     *
-     * Fires for FeatureDev and UiAdjustment tasks with either an Issue context
-     * (triggered by ai::develop label) or a conversation context (designer iteration).
-     */
-    private function shouldPostFeatureDevResult(Task $task): bool
-    {
-        return in_array($task->type, [TaskType::FeatureDev, TaskType::UiAdjustment], true)
-            && ($task->issue_iid !== null || $task->conversation_id !== null);
-    }
-
-    /**
-     * T56: Create GitLab Issue for PrdCreation tasks (server-side execution).
-     *
-     * Fires for PrdCreation tasks dispatched from conversation. These bypass
-     * the CI pipeline — the job calls GitLabClient::createIssue() directly.
-     */
-    private function shouldCreateGitLabIssue(Task $task): bool
-    {
-        return $task->type === TaskType::PrdCreation;
-    }
-
-    private function shouldExtractMemory(Task $task): bool
-    {
-        if (! (bool) config('vunnix.memory.enabled', true) || ! (bool) config('vunnix.memory.review_learning', true)) {
-            return false;
+        if ($dispatchDelivery) {
+            DeliverOutboxEvents::dispatch();
         }
-
-        if (! in_array($task->type, [TaskType::CodeReview, TaskType::SecurityAudit], true)) {
-            return false;
-        }
-
-        $findings = $task->result['findings'] ?? [];
-
-        return is_array($findings) && count($findings) > 0;
     }
 }
