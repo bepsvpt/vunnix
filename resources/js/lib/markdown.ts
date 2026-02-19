@@ -5,6 +5,8 @@ let md: MarkdownIt | null = null;
 let shikiReady = false;
 let shikiPromise: Promise<void> | null = null;
 let onHighlightReady: (() => void) | null = null;
+let shikiInitGeneration = 0;
+let shikiHighlighter: { dispose?: () => void } | null = null;
 
 /**
  * Fence languages that are machine-readable protocol blocks (e.g. action_preview)
@@ -71,6 +73,8 @@ function initShiki(): Promise<void> {
     if (shikiPromise)
         return shikiPromise;
 
+    const generation = shikiInitGeneration;
+
     shikiPromise = (async () => {
         const [
             { createHighlighterCore },
@@ -83,6 +87,7 @@ function initShiki(): Promise<void> {
         ]);
 
         const highlighter = await createHighlighterCore({
+            warnings: false,
             themes: [
                 import('@shikijs/themes/github-light'),
                 import('@shikijs/themes/github-dark'),
@@ -124,14 +129,22 @@ function initShiki(): Promise<void> {
             engine: createOnigurumaEngine(import('shiki/wasm')),
         });
 
+        // If state was reset while async init was in flight, drop this stale instance.
+        if (generation !== shikiInitGeneration || !md) {
+            highlighter.dispose?.();
+            return;
+        }
+
+        shikiHighlighter = highlighter;
+
         const plugin = fromHighlighter(highlighter, {
             themes: {
                 light: 'github-light',
                 dark: 'github-dark',
             },
         });
-        md!.use(plugin);
-        applyHiddenFences(md!); // Re-apply after Shiki overwrites the fence rule
+        md.use(plugin);
+        applyHiddenFences(md); // Re-apply after Shiki overwrites the fence rule
         shikiReady = true;
         if (onHighlightReady)
             onHighlightReady();
@@ -176,6 +189,9 @@ export function onHighlightLoaded(callback: () => void): void {
  * Reset for testing — clears the singleton.
  */
 export function _resetForTesting(): void {
+    shikiInitGeneration += 1;
+    shikiHighlighter?.dispose?.();
+    shikiHighlighter = null;
     md = null;
     shikiReady = false;
     shikiPromise = null;

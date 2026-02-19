@@ -30,6 +30,7 @@ vi.mock('@/lib/markdown', () => ({
 const mockedAxios = vi.mocked(axios, true);
 
 let pinia: ReturnType<typeof createPinia>;
+const RouterLinkStub = { template: '<a :href="to" :data-testid="$attrs[\'data-testid\']"><slot /></a>', props: ['to'] };
 
 function setUpAdminUser() {
     const auth = useAuthStore();
@@ -87,7 +88,10 @@ beforeEach(() => {
 
 function mountDashboard() {
     return mount(DashboardPage, {
-        global: { plugins: [pinia] },
+        global: {
+            plugins: [pinia],
+            stubs: { RouterLink: RouterLinkStub },
+        },
     });
 }
 

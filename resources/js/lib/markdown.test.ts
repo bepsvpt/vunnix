@@ -14,6 +14,14 @@ import {
 vi.mock('shiki/core', () => ({
     createHighlighterCore: vi.fn().mockResolvedValue({
         // Minimal highlighter stub
+        dispose: vi.fn(),
+    }),
+}));
+
+vi.mock('@shikijs/core', () => ({
+    createHighlighterCore: vi.fn().mockResolvedValue({
+        // Some runtime paths resolve to @shikijs/core directly.
+        dispose: vi.fn(),
     }),
 }));
 
@@ -69,7 +77,7 @@ vi.mock('@shikijs/langs/nginx', () => ({ default: {} }));
 describe('markdown', () => {
     beforeEach(() => {
         _resetForTesting();
-        vi.restoreAllMocks();
+        vi.clearAllMocks();
     });
 
     // ─── getMarkdownRenderer ─────────────────────────────────────
