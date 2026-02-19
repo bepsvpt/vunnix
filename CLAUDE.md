@@ -163,10 +163,16 @@ PHP tests in CI run against real PostgreSQL 18 (not SQLite). Coverage reports up
 ### Format
 
 ```
-{imperative description}
+{type}: {imperative description}
 
-Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+Co-Authored-By: {tool model (explicit)} <{tool noreply email}>
 ```
+
+Where `{type}` is one of: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`, `build`, `perf`, `revert`.
+
+If an AI tool authored or co-authored the commit, use that tool's actual model + noreply email in the trailer (not a hardcoded provider).
+Model naming must be explicit and include variant/effort when applicable.
+Example: `Co-Authored-By: gpt-5.3-codex high <noreply@openai.com>`.
 
 ### Rules
 
