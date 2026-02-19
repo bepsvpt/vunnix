@@ -314,9 +314,11 @@ describe('markdown', () => {
 
             // Initialize and wait for shiki to load
             getMarkdownRenderer();
-            await vi.waitFor(() => {
-                expect(isHighlightReady()).toBe(true);
-            }, { timeout: 8000 });
+            await new Promise<void>(resolve => {
+                onHighlightLoaded(resolve);
+            });
+
+            expect(isHighlightReady()).toBe(true);
 
             // Now register a callback after shiki is already ready
             const lateCallback = vi.fn();

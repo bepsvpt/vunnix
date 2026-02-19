@@ -25,10 +25,15 @@ class DeadLetterController extends Controller
             ->orderByDesc('dead_lettered_at')
             ->limit(50);
 
-        // Filter by project — task_record is JSONB with project_id
+        // Filter by project using task relation when present, with JSON snapshot fallback.
         if ($request->filled('project_id')) {
             $projectId = (int) $request->input('project_id');
-            $query->where('task_record', 'like', '%"project_id":'.$projectId.'%');
+            $query->where(function ($projectQuery) use ($projectId): void {
+                $projectQuery
+                    ->whereHas('task', fn ($taskQuery) => $taskQuery->where('project_id', $projectId))
+                    ->orWhere('task_record->project_id', $projectId)
+                    ->orWhere('task_record->project_id', (string) $projectId);
+            });
         }
 
         return response()->json(['data' => $query->get()]);
