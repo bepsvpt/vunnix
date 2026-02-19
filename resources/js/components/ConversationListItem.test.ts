@@ -107,6 +107,17 @@ describe('conversationListItem', () => {
         expect(timeText).toBe('5m ago');
     });
 
+    it('shows "just now" for sub-minute updates', () => {
+        const wrapper = mount(ConversationListItem, {
+            props: {
+                conversation: makeConversation({ updated_at: new Date().toISOString() }),
+            },
+        });
+
+        const timeText = wrapper.find('span.text-zinc-400').text().trim();
+        expect(timeText).toBe('just now');
+    });
+
     it('shows hours for older updates', () => {
         const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
         const wrapper = mount(ConversationListItem, {
@@ -117,6 +128,18 @@ describe('conversationListItem', () => {
 
         const timeText = wrapper.find('span.text-zinc-400').text().trim();
         expect(timeText).toBe('3h ago');
+    });
+
+    it('falls back to locale date for old updates', () => {
+        const oldDate = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000);
+        const wrapper = mount(ConversationListItem, {
+            props: {
+                conversation: makeConversation({ updated_at: oldDate.toISOString() }),
+            },
+        });
+
+        const timeText = wrapper.find('span.text-zinc-400').text().trim();
+        expect(timeText).toBe(oldDate.toLocaleDateString());
     });
 
     it('applies selected styling when isSelected is true', () => {

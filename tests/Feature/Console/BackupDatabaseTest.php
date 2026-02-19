@@ -128,9 +128,18 @@ it('does not pass password on command line', function (): void {
 });
 
 it('cleans up partial file on failure', function (): void {
-    Process::fake([
-        '*pg_dump*' => Process::result(errorOutput: 'disk full', exitCode: 1),
-    ]);
+    Process::fake(function ($process) {
+        if (is_string($process->command) && preg_match('/--file=([^\s]+)/', $process->command, $matches) === 1) {
+            $partialPath = $matches[1];
+            $dir = dirname($partialPath);
+            if (! is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            file_put_contents($partialPath, 'partial');
+        }
+
+        return Process::result(errorOutput: 'disk full', exitCode: 1);
+    });
 
     $this->artisan('backup:database', ['--path' => $this->backupDir])
         ->assertFailed();

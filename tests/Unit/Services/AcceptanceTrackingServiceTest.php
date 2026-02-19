@@ -34,6 +34,12 @@ it('classifies unresolved thread as dismissed', function (): void {
     expect($service->classifyThreadState($discussion))->toBe('dismissed');
 });
 
+it('classifies discussion with no notes as dismissed', function (): void {
+    $service = new AcceptanceTrackingService;
+
+    expect($service->classifyThreadState(['id' => 'disc-empty', 'notes' => []]))->toBe('dismissed');
+});
+
 // ─── detectBulkResolution ────────────────────────────────────────
 
 it('detects bulk resolution when all threads resolved within 60 seconds', function (): void {
@@ -66,6 +72,18 @@ it('does not flag bulk resolution with fewer than 3 threads', function (): void 
     $discussions = [
         ['id' => 'disc-1', 'notes' => [['resolved' => true, 'updated_at' => '2026-02-15T10:00:00Z']]],
         ['id' => 'disc-2', 'notes' => [['resolved' => true, 'updated_at' => '2026-02-15T10:00:05Z']]],
+    ];
+
+    expect($service->detectBulkResolution($discussions))->toBeFalse();
+});
+
+it('does not flag bulk resolution when resolved notes are missing timestamps', function (): void {
+    $service = new AcceptanceTrackingService;
+
+    $discussions = [
+        ['id' => 'disc-1', 'notes' => [['resolved' => true]]],
+        ['id' => 'disc-2', 'notes' => [['resolved' => true, 'updated_at' => '2026-02-15T10:00:05Z']]],
+        ['id' => 'disc-3', 'notes' => [['resolved' => true]]],
     ];
 
     expect($service->detectBulkResolution($discussions))->toBeFalse();
@@ -138,4 +156,48 @@ it('identifies AI-created discussions by severity tag markers', function (): voi
 
     expect($service->isAiCreatedDiscussion($aiDiscussion))->toBeTrue();
     expect($service->isAiCreatedDiscussion($humanDiscussion))->toBeFalse();
+});
+
+it('returns false when discussion has no notes', function (): void {
+    $service = new AcceptanceTrackingService;
+
+    expect($service->isAiCreatedDiscussion(['notes' => []]))->toBeFalse();
+});
+
+it('matches finding to discussion by file and title', function (): void {
+    $service = new AcceptanceTrackingService;
+
+    $finding = [
+        'file' => 'src/auth.php',
+        'title' => 'SQL injection risk',
+    ];
+
+    $discussionId = $service->matchFindingToDiscussion($finding, [
+        ['id' => 'disc-1', 'notes' => []],
+        ['id' => 'disc-2', 'notes' => [[
+            'body' => "🔴 **Critical**\n\nSQL injection risk in query builder",
+            'position' => ['new_path' => 'src/auth.php'],
+        ]]],
+    ]);
+
+    expect($discussionId)->toBe('disc-2');
+});
+
+it('returns null when no discussion matches finding', function (): void {
+    $service = new AcceptanceTrackingService;
+
+    $finding = [
+        'file' => 'src/auth.php',
+        'title' => 'SQL injection risk',
+    ];
+
+    $discussionId = $service->matchFindingToDiscussion($finding, [[
+        'id' => 'disc-1',
+        'notes' => [[
+            'body' => 'Different finding',
+            'position' => ['new_path' => 'src/other.php'],
+        ]],
+    ]]);
+
+    expect($discussionId)->toBeNull();
 });

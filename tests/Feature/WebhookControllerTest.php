@@ -6,6 +6,7 @@ use App\Models\ProjectConfig;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\WebhookEventLog;
+use App\Services\AuditLogService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 
@@ -552,4 +553,29 @@ it('drops ai::develop label trigger from user without review.trigger', function 
         ]);
 
     Queue::assertNothingPushed();
+});
+
+it('continues processing when audit log write fails', function (): void {
+    [$project, $token] = webhookProject();
+
+    $this->mock(AuditLogService::class)
+        ->shouldReceive('logWebhookReceived')
+        ->andThrow(new RuntimeException('audit failure'));
+
+    postWebhook($this, $token, 'Merge Request Hook', [
+        'object_kind' => 'merge_request',
+        'object_attributes' => [
+            'iid' => 42,
+            'action' => 'open',
+            'source_branch' => 'feature/login',
+            'target_branch' => 'main',
+            'author_id' => 7,
+            'last_commit' => ['id' => 'abc123def456'],
+        ],
+    ])->assertOk()
+        ->assertJson([
+            'status' => 'accepted',
+            'event_type' => 'merge_request',
+            'project_id' => $project->id,
+        ]);
 });

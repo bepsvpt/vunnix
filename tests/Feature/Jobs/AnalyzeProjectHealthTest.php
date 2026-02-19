@@ -4,6 +4,7 @@ use App\Contracts\HealthAnalyzerContract;
 use App\DTOs\HealthAnalysisResult;
 use App\Enums\HealthDimension;
 use App\Jobs\AnalyzeProjectHealth;
+use App\Jobs\Middleware\RetryWithBackoff;
 use App\Models\HealthSnapshot;
 use App\Models\Project;
 use App\Services\Health\HealthAlertService;
@@ -84,4 +85,28 @@ it('logs and rethrows when analysis fails', function (): void {
 
     expect(fn () => $job->handle(app(HealthAnalysisService::class)))
         ->toThrow(RuntimeException::class);
+});
+
+it('logs and returns when project does not exist', function (): void {
+    $analysis = Mockery::mock(HealthAnalysisService::class);
+    $analysis->shouldNotReceive('analyzeProject');
+    app()->instance(HealthAnalysisService::class, $analysis);
+
+    Log::shouldReceive('warning')
+        ->once()
+        ->withArgs(fn (string $message, array $context): bool => $message === 'AnalyzeProjectHealth: project not found'
+            && $context['project_id'] === 987654);
+
+    $job = new AnalyzeProjectHealth(987654);
+    $job->handle(app(HealthAnalysisService::class));
+
+    expect(true)->toBeTrue();
+});
+
+it('registers retry middleware', function (): void {
+    $job = new AnalyzeProjectHealth(1);
+    $middleware = $job->middleware();
+
+    expect($middleware)->toHaveCount(1)
+        ->and($middleware[0])->toBeInstanceOf(RetryWithBackoff::class);
 });

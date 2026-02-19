@@ -191,11 +191,7 @@ class PruneConversationHistory
                 ],
             );
         } catch (Throwable $e) {
-            Log::warning('PruneConversationHistory: failed to dispatch conversation memory extraction', [
-                'project_id' => $project->id,
-                'conversation_id' => $conversationId,
-                'error' => $e->getMessage(),
-            ]);
+            Log::warning('PruneConversationHistory: failed to dispatch conversation memory extraction', ['error' => $e->getMessage()]);
         }
     }
 }

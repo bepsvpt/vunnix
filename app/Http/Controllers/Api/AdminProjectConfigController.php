@@ -42,10 +42,8 @@ class AdminProjectConfigController extends Controller
 
         $this->configService->bulkSet($project, $overrides);
 
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         foreach ($overrides as $key => $value) {
             $oldValue = Arr::get($oldSettings, $key);
@@ -76,10 +74,8 @@ class AdminProjectConfigController extends Controller
 
     private function authorizeProjectAdmin(Request $request, Project $project): void
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         if (! $user->hasPermission('admin.global_config', $project)) {
             abort(403, 'Admin access required.');

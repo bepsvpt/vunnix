@@ -27,8 +27,9 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 | `php artisan test --filter=ClassName` | Run a specific test file |
 | `npm test` | Run Vue/JS tests (Vitest) |
 | `composer test:coverage` | PHP tests with coverage (HTML + Clover XML in coverage/php/) |
-| `composer coverage:check` | Enforce 90% per-file coverage minimum (requires Clover XML from test:coverage) |
+| `composer coverage:check` | Enforce backend coverage policy: overall >= 97.5% and per-file >= 95% |
 | `npm run test:coverage` | JS tests with coverage (text + HTML report in coverage/js/) |
+| `npm run coverage:check` | Enforce frontend coverage policy: overall >= 97.5% and per-file >= 95% |
 | `npm run dev` | Vite dev server only (frontend) |
 | `npm run build` | Production frontend build |
 | `composer analyse` | Run PHPStan static analysis (level 8 + strict rules) |

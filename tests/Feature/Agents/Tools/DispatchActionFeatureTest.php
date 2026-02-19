@@ -269,3 +269,93 @@ it('maps create_issue to PrdCreation task type', function (): void {
     expect($task->result['assignee_id'])->toBe(7);
     expect($task->result['labels'])->toBe(['feature', 'ai::created']);
 });
+
+it('returns error when project is not found in registry after access check passes', function (): void {
+    $accessChecker = Mockery::mock(ProjectAccessChecker::class);
+    $accessChecker->shouldReceive('check')->once()->with(9999)->andReturnNull();
+    app()->instance(ProjectAccessChecker::class, $accessChecker);
+
+    $tool = new DispatchAction(
+        app(ProjectAccessChecker::class),
+        $this->mockDispatcher,
+    );
+
+    $result = $tool->handle(new Request([
+        'action_type' => 'implement_feature',
+        'project_id' => 9999,
+        'title' => 'Missing project',
+        'description' => 'Should fail',
+    ]));
+
+    expect($result)->toContain('project not found in Vunnix registry');
+});
+
+it('returns error when no authenticated user is present', function (): void {
+    $project = Project::factory()->enabled()->create();
+
+    $accessChecker = Mockery::mock(ProjectAccessChecker::class);
+    $accessChecker->shouldReceive('check')->once()->with($project->gitlab_project_id)->andReturnNull();
+    app()->instance(ProjectAccessChecker::class, $accessChecker);
+
+    Auth::logout();
+
+    $tool = new DispatchAction(
+        app(ProjectAccessChecker::class),
+        $this->mockDispatcher,
+    );
+
+    $result = $tool->handle(new Request([
+        'action_type' => 'implement_feature',
+        'project_id' => $project->gitlab_project_id,
+        'title' => 'Auth test',
+        'description' => 'Should require login',
+    ]));
+
+    expect($result)->toContain('not authenticated');
+});
+
+it('returns degraded success message when dispatch throws', function (): void {
+    $project = Project::factory()->enabled()->create();
+    $user = dispatchTestUser($project);
+    Auth::login($user);
+
+    $failingDispatcher = Mockery::mock(TaskDispatcher::class);
+    $failingDispatcher->shouldReceive('dispatch')
+        ->once()
+        ->andThrow(new RuntimeException('queue unavailable'));
+
+    $tool = new DispatchAction(
+        app(ProjectAccessChecker::class),
+        $failingDispatcher,
+    );
+
+    $result = $tool->handle(new Request([
+        'action_type' => 'implement_feature',
+        'project_id' => $project->gitlab_project_id,
+        'title' => 'Dispatch failure',
+        'description' => 'Simulate dispatcher exception',
+    ]));
+
+    expect($result)->toContain('dispatch failed')
+        ->and($result)->toContain('retried automatically');
+});
+
+it('builds create_mr success message label', function (): void {
+    $project = Project::factory()->enabled()->create();
+    $user = dispatchTestUser($project);
+    Auth::login($user);
+
+    $tool = new DispatchAction(
+        app(ProjectAccessChecker::class),
+        $this->mockDispatcher,
+    );
+
+    $result = $tool->handle(new Request([
+        'action_type' => 'create_mr',
+        'project_id' => $project->gitlab_project_id,
+        'title' => 'Create MR from branch',
+        'description' => 'Open MR',
+    ]));
+
+    expect($result)->toContain('Merge request creation');
+});

@@ -207,6 +207,23 @@ it('follows exact backoff schedule: 30s → 120s → 480s', function (): void {
     expect($delays)->toBe([30, 120, 480]);
 });
 
+it('records attempt history when job provides attemptHistory property', function (): void {
+    $job = new class extends FakeJob
+    {
+        /** @var array<int, array<string, mixed>> */
+        public array $attemptHistory = [];
+    };
+    $job->attemptCount = 1;
+
+    runMiddleware($job, function (): void {
+        throw makeGitLabException(503);
+    });
+
+    expect($job->attemptHistory)->toHaveCount(1)
+        ->and($job->attemptHistory[0]['attempt'])->toBe(1)
+        ->and((string) $job->attemptHistory[0]['error'])->toContain('HTTP 503');
+});
+
 // ─── All jobs have middleware configured ────────────────────────────
 
 it('is configured on ProcessTask', function (): void {

@@ -1,10 +1,12 @@
 <?php
 
 use App\Enums\TaskStatus;
+use App\Http\Controllers\Api\PromptVersionController;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 
 uses(RefreshDatabase::class);
 
@@ -138,4 +140,11 @@ it('returns empty data array when no completed tasks exist', function (): void {
 it('requires authentication', function (): void {
     $this->getJson('/api/v1/prompt-versions')
         ->assertStatus(401);
+});
+
+it('aborts when invoked without authenticated user', function (): void {
+    $controller = new PromptVersionController;
+
+    expect(fn () => $controller(new Request))
+        ->toThrow(Symfony\Component\HttpKernel\Exception\HttpException::class);
 });

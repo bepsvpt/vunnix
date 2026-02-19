@@ -47,6 +47,9 @@ vi.mock('@/composables/useProjectMemory', () => ({
 
 describe('projectMemoryPanel', () => {
     beforeEach(() => {
+        fetchEntries.mockClear();
+        fetchStats.mockClear();
+        archiveEntry.mockClear();
         fetchEntries.mockResolvedValue(undefined);
         fetchStats.mockResolvedValue(undefined);
         archiveEntry.mockResolvedValue(true);
@@ -115,5 +118,98 @@ describe('projectMemoryPanel', () => {
         await wrapper.find('[data-testid="chip-conversation_fact"]').trigger('click');
 
         expect(fetchEntries).toHaveBeenCalledWith({ type: 'conversation_fact' });
+    });
+
+    it('uses fact field when pattern is missing', async () => {
+        state.entries.value = [
+            {
+                id: 11,
+                type: 'conversation_fact',
+                category: 'fact',
+                content: { fact: 'Use PostgreSQL for JSONB queries.' },
+                confidence: 65,
+                applied_count: 0,
+                source_task_id: null,
+                created_at: '2026-02-18T10:00:00Z',
+            },
+        ];
+
+        const wrapper = mount(ProjectMemoryPanel, { props: { projectId: 1 } });
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.find('[data-testid="memory-entry-body-11"]').text()).toContain('Use PostgreSQL for JSONB queries.');
+    });
+
+    it('falls back to JSON string when neither pattern nor fact exists', async () => {
+        state.entries.value = [
+            {
+                id: 12,
+                type: 'cross_mr_pattern',
+                category: 'hotspot',
+                content: { key: 'value' },
+                confidence: 80,
+                applied_count: 0,
+                source_task_id: null,
+                created_at: '2026-02-18T10:00:00Z',
+            },
+        ];
+
+        const wrapper = mount(ProjectMemoryPanel, { props: { projectId: 1 } });
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.find('[data-testid="memory-entry-body-12"]').text()).toContain('"key":"value"');
+    });
+
+    it('maps type labels for conversation and cross-MR entries', async () => {
+        state.entries.value = [
+            {
+                id: 21,
+                type: 'conversation_fact',
+                category: 'fact',
+                content: { fact: 'A' },
+                confidence: 50,
+                applied_count: 0,
+                source_task_id: null,
+                created_at: '2026-02-18T10:00:00Z',
+            },
+            {
+                id: 22,
+                type: 'cross_mr_pattern',
+                category: 'convention',
+                content: { pattern: 'B' },
+                confidence: 60,
+                applied_count: 0,
+                source_task_id: null,
+                created_at: '2026-02-18T10:00:00Z',
+            },
+        ];
+
+        const wrapper = mount(ProjectMemoryPanel, { props: { projectId: 1 } });
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.text()).toContain('Conversation');
+        expect(wrapper.text()).toContain('Cross-MR');
+    });
+
+    it('does not archive when confirmation is canceled', async () => {
+        vi.spyOn(window, 'confirm').mockReturnValue(false);
+        state.entries.value = [
+            {
+                id: 30,
+                type: 'review_pattern',
+                category: 'false_positive',
+                content: { pattern: 'Ignore false positives.' },
+                confidence: 70,
+                applied_count: 0,
+                source_task_id: null,
+                created_at: '2026-02-18T10:00:00Z',
+            },
+        ];
+
+        const wrapper = mount(ProjectMemoryPanel, { props: { projectId: 1 } });
+        await wrapper.vm.$nextTick();
+        await wrapper.find('[data-testid="archive-memory-30"]').trigger('click');
+
+        expect(archiveEntry).not.toHaveBeenCalled();
     });
 });

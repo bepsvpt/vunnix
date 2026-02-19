@@ -4,6 +4,7 @@ use App\Models\Permission;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
@@ -168,4 +169,102 @@ it('is idempotent for permissions and roles', function (): void {
     expect(Permission::count())->toBe(7);
     $project = Project::where('gitlab_project_id', 42)->first();
     expect($project->roles()->count())->toBe(3);
+});
+
+it('fails when APP_URL is not configured', function (): void {
+    config(['app.url' => 'http://localhost']);
+
+    $this->artisan('vunnix:setup', [
+        'gitlab_project_path' => 'mygroup/myproject',
+    ])
+        ->assertFailed()
+        ->expectsOutputToContain('APP_URL is not configured');
+});
+
+it('caches gitlab project web url when available', function (): void {
+    $user = User::factory()->create(['email' => 'admin@example.com']);
+
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/mygroup%2Fmyproject' => Http::response([
+            'id' => 42,
+            'name' => 'myproject',
+            'path_with_namespace' => 'mygroup/myproject',
+            'description' => 'A test project',
+            'default_branch' => 'main',
+            'web_url' => 'https://gitlab.example.com/mygroup/myproject',
+        ]),
+        'gitlab.example.com/api/v4/projects/42/members/all/99' => Http::response([
+            'id' => 99,
+            'access_level' => 40,
+        ]),
+        'gitlab.example.com/api/v4/projects/42/hooks' => Http::response(['id' => 555], 201),
+        'gitlab.example.com/api/v4/projects/42/triggers' => Http::response([
+            'id' => 10,
+            'token' => 'trigger-token-abc123',
+            'description' => 'Vunnix task executor',
+        ], 201),
+        'gitlab.example.com/api/v4/projects/42/labels' => Http::response(['id' => 1], 201),
+    ]);
+
+    $this->artisan('vunnix:setup', [
+        'gitlab_project_path' => 'mygroup/myproject',
+        '--admin-email' => $user->email,
+        '--force' => true,
+    ])->assertSuccessful();
+
+    $project = Project::where('gitlab_project_id', 42)->firstOrFail();
+    expect(Cache::get("project.{$project->id}.gitlab_web_url"))->toBe('https://gitlab.example.com/mygroup/myproject');
+});
+
+it('fails when project enablement fails', function (): void {
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/mygroup%2Fmyproject' => Http::response([
+            'id' => 42,
+            'name' => 'myproject',
+            'path_with_namespace' => 'mygroup/myproject',
+            'description' => 'A test project',
+            'default_branch' => 'main',
+        ]),
+        'gitlab.example.com/api/v4/projects/42/members/all/99' => Http::response([
+            'id' => 99,
+            'access_level' => 40,
+        ]),
+        'gitlab.example.com/api/v4/projects/42/hooks' => Http::response(['message' => 'boom'], 500),
+    ]);
+
+    $this->artisan('vunnix:setup', [
+        'gitlab_project_path' => 'mygroup/myproject',
+        '--force' => true,
+    ])
+        ->assertFailed()
+        ->expectsOutputToContain('Failed: Failed to create GitLab webhook');
+});
+
+it('prints warnings emitted by enablement', function (): void {
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/mygroup%2Fmyproject' => Http::response([
+            'id' => 42,
+            'name' => 'myproject',
+            'path_with_namespace' => 'mygroup/myproject',
+            'description' => 'A test project',
+            'default_branch' => 'main',
+        ]),
+        'gitlab.example.com/api/v4/projects/42/members/all/99' => Http::response([
+            'id' => 99,
+            'access_level' => 40,
+        ]),
+        'gitlab.example.com/api/v4/projects/42/hooks' => Http::response([
+            'id' => 555,
+            'url' => 'https://vunnix.example.com/webhook',
+        ], 201),
+        'gitlab.example.com/api/v4/projects/42/triggers' => Http::response(['message' => 'forbidden'], 403),
+        'gitlab.example.com/api/v4/projects/42/labels' => Http::response(['id' => 1], 201),
+    ]);
+
+    $this->artisan('vunnix:setup', [
+        'gitlab_project_path' => 'mygroup/myproject',
+        '--force' => true,
+    ])
+        ->assertSuccessful()
+        ->expectsOutputToContain('[!] Failed to create CI pipeline trigger token:');
 });

@@ -21,6 +21,11 @@ beforeEach(function (): void {
         '/api/test-permission-param',
         fn () => response()->json(['ok' => true])
     );
+
+    Route::middleware(['auth', \Illuminate\Routing\Middleware\SubstituteBindings::class, 'permission:review.view'])->get(
+        '/api/test-permission-bound/{project}',
+        fn (Project $project) => response()->json(['project_id' => $project->id])
+    );
 });
 
 it('returns 200 when user has the required permission', function (): void {
@@ -132,9 +137,8 @@ it('resolves project via route model binding and returns it', function (): void 
     $role->permissions()->attach($perm);
     $user->assignRole($role, $project);
 
-    // The /api/test-permission/{project} route uses model binding
-    // so $request->route('project') returns a Project instance
     $this->actingAs($user)
-        ->getJson("/api/test-permission/{$project->id}")
-        ->assertOk();
+        ->getJson("/api/test-permission-bound/{$project->id}")
+        ->assertOk()
+        ->assertJsonPath('project_id', $project->id);
 });

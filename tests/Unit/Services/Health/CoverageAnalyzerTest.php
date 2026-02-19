@@ -63,3 +63,80 @@ it('returns null when coverage is not configured in pipeline', function (): void
 
     expect($result)->toBeNull();
 });
+
+it('returns null when pipeline list is empty', function (): void {
+    $project = Project::factory()->create(['gitlab_project_id' => 123]);
+
+    $gitLab = Mockery::mock(GitLabClient::class);
+    $gitLab->shouldReceive('getProject')
+        ->once()
+        ->with(123)
+        ->andReturn(['default_branch' => 'main']);
+    $gitLab->shouldReceive('listPipelines')
+        ->once()
+        ->with(123, [
+            'ref' => 'main',
+            'status' => 'success',
+            'per_page' => 1,
+        ])
+        ->andReturn([]);
+
+    $analyzer = new CoverageAnalyzer($gitLab);
+    $result = $analyzer->analyze($project);
+
+    expect($result)->toBeNull();
+});
+
+it('returns null when coverage is non numeric', function (): void {
+    $project = Project::factory()->create(['gitlab_project_id' => 123]);
+
+    $gitLab = Mockery::mock(GitLabClient::class);
+    $gitLab->shouldReceive('getProject')
+        ->once()
+        ->with(123)
+        ->andReturn(['default_branch' => 'main']);
+    $gitLab->shouldReceive('listPipelines')
+        ->once()
+        ->with(123, [
+            'ref' => 'main',
+            'status' => 'success',
+            'per_page' => 1,
+        ])
+        ->andReturn([[
+            'id' => 456,
+            'coverage' => 'n/a',
+        ]]);
+
+    $analyzer = new CoverageAnalyzer($gitLab);
+    $result = $analyzer->analyze($project);
+
+    expect($result)->toBeNull();
+});
+
+it('falls back to main branch when project metadata lookup fails', function (): void {
+    $project = Project::factory()->create(['gitlab_project_id' => 123]);
+
+    $gitLab = Mockery::mock(GitLabClient::class);
+    $gitLab->shouldReceive('getProject')
+        ->once()
+        ->with(123)
+        ->andThrow(new RuntimeException('metadata failed'));
+    $gitLab->shouldReceive('listPipelines')
+        ->once()
+        ->with(123, [
+            'ref' => 'main',
+            'status' => 'success',
+            'per_page' => 1,
+        ])
+        ->andReturn([[
+            'id' => 456,
+            'coverage' => '88.0',
+        ]]);
+
+    $analyzer = new CoverageAnalyzer($gitLab);
+    $result = $analyzer->analyze($project);
+
+    expect($result)->not->toBeNull()
+        ->and($result?->sourceRef)->toBe('456')
+        ->and($result?->score)->toBe(88.0);
+});

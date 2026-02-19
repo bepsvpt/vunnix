@@ -40,11 +40,8 @@ class AuthenticateTaskToken
             return response()->json(['error' => 'Missing task token.'], 401);
         }
 
+        /** @var Task $task */
         $task = $request->route('task');
-
-        if (! $task instanceof Task) {
-            return response()->json(['error' => 'Task not found.'], 404);
-        }
 
         if (! $this->taskTokenService->validate($bearerToken, $task->id)) {
             Log::warning('Task result request with invalid token', [

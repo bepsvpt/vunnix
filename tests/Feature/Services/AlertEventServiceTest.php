@@ -17,9 +17,15 @@ beforeEach(function (): void {
         '*' => Http::response('ok', 200),
     ]);
 
+    Cache::flush();
     GlobalSetting::set('team_chat_enabled', true, 'boolean');
     GlobalSetting::set('team_chat_webhook_url', 'https://hooks.slack.com/services/T/B/x', 'string');
     GlobalSetting::set('team_chat_platform', 'slack', 'string');
+    GlobalSetting::set('team_chat_categories', [
+        'task_completed' => true,
+        'task_failed' => true,
+        'alert' => true,
+    ], 'json');
 });
 
 // ─── API Outage Detection ───────────────────────────────────────
@@ -1061,4 +1067,85 @@ it('evaluateAll catches and logs failing individual checks', function (): void {
 
     // Should still return events from other checks that succeeded (or empty if none triggered)
     expect($events)->toBeArray();
+});
+
+it('uses red risk emoji in code review completion notifications for high risk', function (): void {
+    $project = Project::factory()->enabled()->create(['name' => 'Test Project']);
+    $task = Task::factory()->create([
+        'project_id' => $project->id,
+        'type' => TaskType::CodeReview,
+        'status' => TaskStatus::Completed,
+        'mr_iid' => 42,
+        'result' => [
+            'summary' => [
+                'risk_level' => 'high',
+                'total_findings' => 3,
+            ],
+        ],
+    ]);
+
+    $service = app(AlertEventService::class);
+    $service->notifyTaskCompletion($task);
+
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+        $text = (string) ($request['text'] ?? '');
+
+        return str_contains($text, '🔴')
+            && str_contains(strtolower($text), 'high risk');
+    });
+});
+
+it('uses red risk emoji in code review completion notifications for critical risk', function (): void {
+    $project = Project::factory()->enabled()->create(['name' => 'Critical Project']);
+    $task = Task::factory()->create([
+        'project_id' => $project->id,
+        'type' => TaskType::CodeReview,
+        'status' => TaskStatus::Completed,
+        'mr_iid' => 43,
+        'result' => [
+            'summary' => [
+                'risk_level' => 'critical',
+                'total_findings' => 4,
+            ],
+        ],
+    ]);
+
+    $service = app(AlertEventService::class);
+    $service->notifyTaskCompletion($task);
+
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+        $text = (string) ($request['text'] ?? '');
+
+        return str_contains($text, '🔴')
+            && str_contains(strtolower($text), 'critical risk');
+    });
+});
+
+it('handles failed ui adjustment task notifications via failure message path', function (): void {
+    $project = Project::factory()->enabled()->create(['name' => 'Test Project']);
+    $task = Task::factory()->create([
+        'project_id' => $project->id,
+        'type' => TaskType::UiAdjustment,
+        'status' => TaskStatus::Failed,
+        'mr_iid' => 55,
+        'result' => ['title' => 'Fix spacing'],
+        'error_reason' => 'runner timeout',
+    ]);
+
+    $service = app(AlertEventService::class);
+    $service->notifyTaskCompletion($task);
+
+    Http::assertSent(function ($request): bool {
+        return str_contains((string) json_encode($request->data()), 'failed');
+    });
+});
+
+it('returns false for non-api error inputs in helper', function (): void {
+    $service = app(AlertEventService::class);
+
+    $method = new ReflectionMethod(AlertEventService::class, 'isApiError');
+    $method->setAccessible(true);
+
+    expect($method->invoke($service, null))->toBeFalse()
+        ->and($method->invoke($service, 'validation failed'))->toBeFalse();
 });

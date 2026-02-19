@@ -225,6 +225,20 @@ describe('resultCard', () => {
         expect(badge.exists() || wrapper.text()).toBeTruthy();
     });
 
+    it('renders major and default severity findings', async () => {
+        const wrapper = mountCard(makeResult({
+            key_findings: [
+                { title: 'Major issue', description: 'Needs attention', severity: 'major' },
+                { title: 'Minor issue', description: 'FYI', severity: 'minor' },
+            ],
+        }));
+
+        await wrapper.find('button').trigger('click');
+
+        expect(wrapper.text()).toContain('major');
+        expect(wrapper.text()).toContain('minor');
+    });
+
     // -- Full analysis expand (deep_analysis) --
 
     it('shows "View full analysis" button for deep_analysis with summary', () => {

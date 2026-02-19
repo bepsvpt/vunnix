@@ -5,9 +5,15 @@ use App\Services\DeadLetterService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-it('aborts dead letter index when no authenticated user is present', function (): void {
+it('aborts dead letter index when authenticated user is not global admin', function (): void {
     $request = Request::create('/api/v1/admin/dead-letter', 'GET');
-    $request->setUserResolver(static fn () => null);
+    $request->setUserResolver(static fn () => new class
+    {
+        public function isGlobalAdmin(): bool
+        {
+            return false;
+        }
+    });
 
     $controller = new DeadLetterController(new DeadLetterService);
 
@@ -20,5 +26,5 @@ it('aborts dead letter index when no authenticated user is present', function ()
     }
 
     expect($thrown)->not->toBeNull();
-    expect($thrown?->getStatusCode())->toBe(401);
+    expect($thrown?->getStatusCode())->toBe(403);
 });

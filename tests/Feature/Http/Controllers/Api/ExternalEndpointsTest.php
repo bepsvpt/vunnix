@@ -182,6 +182,32 @@ it('returns 403 for task in inaccessible project', function (): void {
         ->assertStatus(403);
 });
 
+it('returns 403 when user lacks review.view permission on accessible project', function (): void {
+    $user = User::factory()->create();
+    $this->project->users()->attach($user->id, [
+        'gitlab_access_level' => 30,
+        'synced_at' => now(),
+    ]);
+
+    $role = Role::factory()->create(['project_id' => $this->project->id, 'name' => 'trigger-only']);
+    $reviewTrigger = Permission::firstOrCreate(
+        ['name' => 'review.trigger'],
+        ['description' => 'Can trigger code reviews', 'group' => 'review']
+    );
+    $role->permissions()->attach($reviewTrigger->id);
+    $user->assignRole($role, $this->project);
+
+    $apiKey = app(ApiKeyService::class)->generate($user, 'No View Key');
+    $headers = ['Authorization' => 'Bearer '.$apiKey['plaintext']];
+
+    $task = Task::factory()->completed()->create([
+        'project_id' => $this->project->id,
+    ]);
+
+    $this->getJson('/api/v1/ext/tasks/'.$task->id, $headers)
+        ->assertStatus(403);
+});
+
 // ─── POST /tasks/review — trigger on-demand review ──────────
 
 it('triggers an on-demand review', function (): void {
@@ -392,6 +418,15 @@ it('filters activity by project_id', function (): void {
 
     $response->assertOk()
         ->assertJsonCount(1, 'data');
+});
+
+it('returns empty activity when filtering by inaccessible project_id', function (): void {
+    Task::factory()->create(['project_id' => $this->project->id]);
+
+    $response = $this->getJson('/api/v1/ext/activity?project_id='.$this->otherProject->id, $this->headers);
+
+    $response->assertOk()
+        ->assertJsonCount(0, 'data');
 });
 
 it('paginates activity with cursor', function (): void {

@@ -158,6 +158,30 @@ describe('conversationList', () => {
         expect(options[2].text()).toBe('Project Beta');
     });
 
+    it('updates project filter when selecting a project', async () => {
+        const auth = useAuthStore();
+        auth.setUser({
+            id: 1,
+            projects: [
+                { id: 1, name: 'Project Alpha', permissions: [] },
+                { id: 2, name: 'Project Beta', permissions: [] },
+            ],
+        });
+
+        const wrapper = mountList();
+        await flushPromises();
+
+        const store = useConversationsStore();
+        const setProjectFilterSpy = vi.spyOn(store, 'setProjectFilter');
+        const select = wrapper.find('select');
+
+        await select.setValue('2');
+        expect(setProjectFilterSpy).toHaveBeenCalledWith(2);
+
+        await select.setValue('');
+        expect(setProjectFilterSpy).toHaveBeenCalledWith(null);
+    });
+
     it('resolves project name for conversation items', async () => {
         const auth = useAuthStore();
         auth.setUser({

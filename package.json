@@ -8,6 +8,7 @@
         "test": "vitest run",
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage",
+        "coverage:check": "php scripts/check-coverage.php --scope=frontend",
         "lint": "eslint resources/js/",
         "lint:fix": "eslint --fix resources/js/",
         "typecheck": "vue-tsc --noEmit"

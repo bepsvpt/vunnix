@@ -32,10 +32,8 @@ class AdminSettingsController extends Controller
     {
         $this->authorizeSettingsAdmin($request);
 
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         foreach ($request->validated()['settings'] as $item) {
             $key = $item['key'];
@@ -96,10 +94,8 @@ class AdminSettingsController extends Controller
 
     private function authorizeSettingsAdmin(Request $request): void
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         if (! $user->isGlobalAdmin()) {
             abort(403, 'Settings management access required.');

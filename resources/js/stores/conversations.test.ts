@@ -254,6 +254,28 @@ describe('useConversationsStore', () => {
 
             expect(store.error).toBe('Page error');
         });
+
+        it('passes active filters when loading more pages', async () => {
+            const store = useConversationsStore();
+            store.nextCursor = 'cursor-abc';
+            store.projectFilter = 42;
+            store.searchQuery = 'auth';
+            store.showArchived = true;
+
+            mockedAxios.get.mockResolvedValue(makeApiResponse([], null));
+
+            await store.loadMore();
+
+            expect(mockedAxios.get).toHaveBeenCalledWith('/api/v1/conversations', {
+                params: {
+                    cursor: 'cursor-abc',
+                    per_page: 25,
+                    project_id: 42,
+                    search: 'auth',
+                    archived: 1,
+                },
+            });
+        });
     });
 
     describe('toggleArchive', () => {
@@ -661,6 +683,17 @@ describe('useConversationsStore', () => {
             await store.sendMessage('Test');
 
             expect(store.messagesError).toBe('Validation error');
+        });
+
+        it('sendMessage is a no-op when no conversation is selected', async () => {
+            const store = useConversationsStore();
+            store.selectedId = null;
+            const callsBefore = mockedAxios.post.mock.calls.length;
+
+            await store.sendMessage('No target');
+
+            expect(mockedAxios.post.mock.calls.length).toBe(callsBefore);
+            expect(store.sending).toBe(false);
         });
     });
 
@@ -1738,6 +1771,91 @@ describe('useConversationsStore', () => {
             // Should only have made one additional call (conversation fetch), not a task view fetch
             expect(mockedAxios.get.mock.calls.length - callsBefore).toBe(1);
             expect(store.completedResults.length).toBe(1);
+        });
+
+        it('hydrates type-specific result fields for different task types', async () => {
+            mockedAxios.get
+                .mockResolvedValueOnce({
+                    data: {
+                        data: {
+                            task_id: 101,
+                            status: 'completed',
+                            type: 'ui_adjustment',
+                            title: 'UI tweak',
+                            mr_iid: null,
+                            issue_iid: null,
+                            project_id: 1,
+                            error_reason: null,
+                            result: { screenshot: 'base64-screenshot', notes: 'UI done' },
+                        },
+                    },
+                })
+                .mockResolvedValueOnce({
+                    data: {
+                        data: {
+                            task_id: 102,
+                            status: 'completed',
+                            type: 'deep_analysis',
+                            title: 'Deep scan',
+                            mr_iid: null,
+                            issue_iid: null,
+                            project_id: 1,
+                            error_reason: null,
+                            result: {
+                                analysis: 'Detailed report',
+                                key_findings: [{ title: 'A' }],
+                                references: ['ref-1'],
+                            },
+                        },
+                    },
+                })
+                .mockResolvedValueOnce({
+                    data: {
+                        data: {
+                            task_id: 103,
+                            status: 'completed',
+                            type: 'issue_discussion',
+                            title: 'Issue response',
+                            mr_iid: null,
+                            issue_iid: 77,
+                            project_id: 1,
+                            error_reason: null,
+                            result: { response: 'Response text', references: ['ref-2'] },
+                        },
+                    },
+                })
+                .mockResolvedValueOnce({
+                    data: {
+                        data: {
+                            task_id: 104,
+                            status: 'completed',
+                            type: 'prd_creation',
+                            title: 'PRD issue',
+                            mr_iid: null,
+                            issue_iid: 88,
+                            project_id: 1,
+                            error_reason: null,
+                            result: { gitlab_issue_url: 'https://gitlab.example.com/-/issues/88' },
+                        },
+                    },
+                });
+
+            const store = useConversationsStore();
+            store.selectedId = 'conv-1';
+            store.messages = [
+                { id: 'm1', role: 'system', content: '[System: Task result delivered] Task #101 "UI tweak" completed.' },
+                { id: 'm2', role: 'system', content: '[System: Task result delivered] Task #102 "Deep scan" completed.' },
+                { id: 'm3', role: 'system', content: '[System: Task result delivered] Task #103 "Issue response" completed.' },
+                { id: 'm4', role: 'system', content: '[System: Task result delivered] Task #104 "PRD issue" completed.' },
+            ];
+
+            await store.hydrateResultCards();
+
+            expect(store.completedResults.find(r => r.task_id === 101)?.result_data.screenshot).toBe('base64-screenshot');
+            expect(store.completedResults.find(r => r.task_id === 102)?.result_data.analysis).toBe('Detailed report');
+            expect(store.completedResults.find(r => r.task_id === 102)?.result_data.references).toEqual(['ref-1']);
+            expect(store.completedResults.find(r => r.task_id === 103)?.result_data.response).toBe('Response text');
+            expect(store.completedResults.find(r => r.task_id === 104)?.result_data.gitlab_issue_url).toBe('https://gitlab.example.com/-/issues/88');
         });
 
         it('silently skips hydration when task API returns error', async () => {

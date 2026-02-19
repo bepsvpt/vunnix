@@ -2,62 +2,120 @@
 <?php
 
 /**
- * Per-file test coverage enforcement.
+ * Coverage policy enforcement for backend/frontend Clover reports.
  *
- * Parses a Clover XML coverage report and fails if any source file's
- * line coverage falls below the minimum threshold (default: 90%).
+ * Enforces both:
+ * - overall line coverage minimum
+ * - per-file line coverage minimum
  *
  * Usage:
- *   php scripts/check-coverage.php [clover.xml path] [--min=90]
+ *   php scripts/check-coverage.php [clover.xml path] [--scope=backend|frontend]
+ *                                  [--min-file=95] [--min-overall=97.5]
  *
- * Exit codes:
- *   0 — All files meet the threshold
- *   1 — One or more files are below the threshold
- *   2 — Usage error (missing file, bad XML, etc.)
+ * Backwards compatibility:
+ *   --min=<value> is accepted as an alias of --min-file=<value>
  */
+$projectRoot = realpath(__DIR__.'/..');
+if ($projectRoot === false) {
+    fwrite(STDERR, "Error: Unable to resolve project root.\n");
+    exit(2);
+}
+$projectRoot .= '/';
 
-// ─── Configuration ──────────────────────────────────────────────────────────
-
-/** @var int Minimum line coverage percentage per file */
-$minCoverage = 90;
-
-/** @var list<string> Glob patterns (relative to project root) to exclude from enforcement */
-$excludePatterns = [
-    // Dual-driver SQL branches (PostgreSQL + SQLite) — one branch is always uncovered
-    // regardless of test environment. Coverage is ~77% in both CI and local.
-    'app/Http/Controllers/Api/PromptVersionController.php',
+/**
+ * @var array<string, array{
+ *   defaultReport: string,
+ *   prefixes: list<string>,
+ *   pathAttributes: list<string>,
+ *   minFile: float,
+ *   minOverall: float
+ * }>
+ */
+$policies = [
+    'backend' => [
+        'defaultReport' => $projectRoot.'coverage/php/clover.xml',
+        'prefixes' => [$projectRoot.'app/'],
+        'pathAttributes' => ['name'],
+        'minFile' => 95.0,
+        'minOverall' => 97.5,
+    ],
+    'frontend' => [
+        'defaultReport' => $projectRoot.'coverage/js/clover.xml',
+        'prefixes' => [$projectRoot.'resources/js/'],
+        'pathAttributes' => ['path', 'name'],
+        'minFile' => 95.0,
+        'minOverall' => 97.5,
+    ],
 ];
 
-// ─── CLI argument parsing ───────────────────────────────────────────────────
-
+$scope = 'backend';
 $cloverPath = null;
+$minFileCoverage = null;
+$minOverallCoverage = null;
 
 foreach (array_slice($argv, 1) as $arg) {
+    if (str_starts_with($arg, '--scope=')) {
+        $scope = substr($arg, 8);
+
+        continue;
+    }
+
+    if (str_starts_with($arg, '--min-file=')) {
+        $minFileCoverage = (float) substr($arg, 11);
+
+        continue;
+    }
+
+    if (str_starts_with($arg, '--min-overall=')) {
+        $minOverallCoverage = (float) substr($arg, 14);
+
+        continue;
+    }
+
     if (str_starts_with($arg, '--min=')) {
-        $minCoverage = (int) substr($arg, 6);
-        if ($minCoverage < 0 || $minCoverage > 100) {
-            fwrite(STDERR, "Error: --min must be between 0 and 100.\n");
-            exit(2);
-        }
-    } elseif (str_starts_with($arg, '-')) {
+        $minFileCoverage = (float) substr($arg, 6);
+
+        continue;
+    }
+
+    if (str_starts_with($arg, '-')) {
         fwrite(STDERR, "Unknown option: {$arg}\n");
         exit(2);
-    } else {
-        $cloverPath = $arg;
     }
+
+    if ($cloverPath !== null) {
+        fwrite(STDERR, "Error: Multiple Clover paths provided.\n");
+        exit(2);
+    }
+
+    $cloverPath = $arg;
 }
 
-if ($cloverPath === null) {
-    $cloverPath = __DIR__.'/../coverage/php/clover.xml';
+if (! isset($policies[$scope])) {
+    fwrite(STDERR, "Error: Invalid --scope value '{$scope}'. Use 'backend' or 'frontend'.\n");
+    exit(2);
+}
+
+$policy = $policies[$scope];
+
+$cloverPath ??= $policy['defaultReport'];
+$minFileCoverage ??= $policy['minFile'];
+$minOverallCoverage ??= $policy['minOverall'];
+
+if ($minFileCoverage < 0 || $minFileCoverage > 100) {
+    fwrite(STDERR, "Error: --min-file must be between 0 and 100.\n");
+    exit(2);
+}
+if ($minOverallCoverage < 0 || $minOverallCoverage > 100) {
+    fwrite(STDERR, "Error: --min-overall must be between 0 and 100.\n");
+    exit(2);
 }
 
 if (! file_exists($cloverPath)) {
     fwrite(STDERR, "Error: Clover XML not found at {$cloverPath}\n");
-    fwrite(STDERR, "Run 'composer test:coverage' first to generate coverage data.\n");
+    fwrite(STDERR, "Run the relevant coverage command first.\n");
     exit(2);
 }
-
-// ─── Parse Clover XML ───────────────────────────────────────────────────────
 
 $xml = simplexml_load_file($cloverPath);
 if ($xml === false) {
@@ -65,15 +123,28 @@ if ($xml === false) {
     exit(2);
 }
 
-// Detect project root (directory containing composer.json)
-$projectRoot = realpath(__DIR__.'/..').'/';
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-function matchesExcludePattern(string $relativePath, array $patterns): bool
+/**
+ * @param  list<string>  $attributes
+ */
+function extractCoveragePath(SimpleXMLElement $fileNode, array $attributes): ?string
 {
-    foreach ($patterns as $pattern) {
-        if (fnmatch($pattern, $relativePath)) {
+    foreach ($attributes as $attribute) {
+        $candidate = (string) ($fileNode[$attribute] ?? '');
+        if ($candidate !== '') {
+            return $candidate;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * @param  list<string>  $prefixes
+ */
+function isWithinPrefixes(string $filePath, array $prefixes): bool
+{
+    foreach ($prefixes as $prefix) {
+        if (str_starts_with($filePath, $prefix)) {
             return true;
         }
     }
@@ -81,55 +152,54 @@ function matchesExcludePattern(string $relativePath, array $patterns): bool
     return false;
 }
 
-function formatCoverage(float $pct): string
+function toRelativePath(string $filePath, string $projectRoot): string
 {
-    return number_format($pct, 1).'%';
+    return str_starts_with($filePath, $projectRoot)
+        ? str_replace($projectRoot, '', $filePath)
+        : $filePath;
 }
 
-// ─── Analyze each file ──────────────────────────────────────────────────────
+function formatCoverage(float $pct): string
+{
+    return number_format($pct, 2).'%';
+}
 
 $failures = [];
-$passed = 0;
+$checked = 0;
 $skipped = 0;
-$total = 0;
+$fileNodesSeen = 0;
+$totalStatements = 0;
+$totalCoveredStatements = 0;
 
-// XPath finds <file> elements at any depth (they nest inside <package> nodes)
-$fileNodes = $xml->xpath('//file[@name]') ?: [];
+$fileNodes = $xml->xpath('//file') ?: [];
 
 foreach ($fileNodes as $fileNode) {
-    $filePath = (string) $fileNode['name'];
-    $total++;
+    $filePath = extractCoveragePath($fileNode, $policy['pathAttributes']);
+    if ($filePath === null) {
+        continue;
+    }
 
-    // Only check files under app/
-    if (! str_starts_with($filePath, $projectRoot.'app/')) {
+    $fileNodesSeen++;
+
+    if (! isWithinPrefixes($filePath, $policy['prefixes'])) {
         $skipped++;
 
         continue;
     }
 
-    $relativePath = str_replace($projectRoot, '', $filePath);
+    $relativePath = toRelativePath($filePath, $projectRoot);
 
-    // Check exclusions
-    if (matchesExcludePattern($relativePath, $excludePatterns)) {
-        $skipped++;
-
-        continue;
-    }
-
-    // Each <file> has multiple <metrics> nodes: one per <class> + one file-level.
-    // The file-level <metrics> is the last direct child and contains the aggregate.
     $allMetrics = $fileNode->metrics;
     if (! $allMetrics || count($allMetrics) === 0) {
         $skipped++;
 
         continue;
     }
-    $metrics = $allMetrics[count($allMetrics) - 1];
 
+    $metrics = $allMetrics[count($allMetrics) - 1];
     $statements = (int) ($metrics['statements'] ?? 0);
     $coveredStatements = (int) ($metrics['coveredstatements'] ?? 0);
 
-    // Skip files with no executable statements
     if ($statements === 0) {
         $skipped++;
 
@@ -137,57 +207,61 @@ foreach ($fileNodes as $fileNode) {
     }
 
     $coverage = ($coveredStatements / $statements) * 100;
+    $totalStatements += $statements;
+    $totalCoveredStatements += $coveredStatements;
+    $checked++;
 
-    if ($coverage < $minCoverage) {
+    if ($coverage < $minFileCoverage) {
         $failures[] = [
             'file' => $relativePath,
             'coverage' => $coverage,
             'statements' => $statements,
-            'covered' => $coveredStatements,
             'missing' => $statements - $coveredStatements,
         ];
-    } else {
-        $passed++;
     }
 }
 
-// ─── Report ─────────────────────────────────────────────────────────────────
+if ($checked === 0 || $totalStatements === 0) {
+    fwrite(STDERR, "Error: No executable files found for scope '{$scope}'.\n");
+    exit(2);
+}
+
+$overallCoverage = ($totalCoveredStatements / $totalStatements) * 100;
+$overallFailed = $overallCoverage < $minOverallCoverage;
+
+usort($failures, fn ($a, $b) => $a['coverage'] <=> $b['coverage']);
 
 echo "\n";
-echo "╔══════════════════════════════════════════════════════════════╗\n";
-echo "║           Per-File Coverage Check (min: {$minCoverage}%)              ║\n";
-echo "╚══════════════════════════════════════════════════════════════╝\n\n";
+echo "Coverage Policy Check ({$scope})\n";
+echo "Report: {$cloverPath}\n";
+echo 'Overall minimum: '.formatCoverage($minOverallCoverage)."\n";
+echo 'Per-file minimum: '.formatCoverage($minFileCoverage)."\n\n";
 
-if (count($failures) === 0) {
-    echo "  ✅ All {$passed} files meet the {$minCoverage}% minimum coverage threshold.\n";
-    echo "     ({$skipped} files skipped — excluded or no executable statements)\n\n";
+echo 'Overall coverage: '.formatCoverage($overallCoverage)." ({$totalCoveredStatements}/{$totalStatements})";
+echo $overallFailed ? "  [FAIL]\n" : "  [PASS]\n";
+echo "Files checked: {$checked}, skipped: {$skipped}, file nodes seen: {$fileNodesSeen}\n\n";
+
+if (count($failures) > 0) {
+    $maxFileLen = max(4, max(array_map(fn ($f) => strlen($f['file']), $failures)));
+    echo count($failures)." file(s) below per-file minimum:\n\n";
+    echo sprintf("  %-{$maxFileLen}s  %10s  %10s  %10s\n", 'File', 'Coverage', 'Stmts', 'Missing');
+    echo '  '.str_repeat('-', $maxFileLen + 36)."\n";
+    foreach ($failures as $failure) {
+        echo sprintf(
+            "  %-{$maxFileLen}s  %9s  %10d  %10d\n",
+            $failure['file'],
+            formatCoverage($failure['coverage']),
+            $failure['statements'],
+            $failure['missing'],
+        );
+    }
+    echo "\n";
+}
+
+if (! $overallFailed && count($failures) === 0) {
+    echo "PASS: Coverage policy satisfied.\n\n";
     exit(0);
 }
 
-// Sort failures by coverage ascending (worst first)
-usort($failures, fn ($a, $b) => $a['coverage'] <=> $b['coverage']);
-
-echo '  ❌ '.count($failures)." file(s) below {$minCoverage}% coverage:\n\n";
-
-// Calculate column widths
-$maxFileLen = max(array_map(fn ($f) => strlen($f['file']), $failures));
-$maxFileLen = max($maxFileLen, 4); // minimum "File" header width
-
-echo sprintf("  %-{$maxFileLen}s  %10s  %10s  %10s\n", 'File', 'Coverage', 'Stmts', 'Missing');
-echo '  '.str_repeat('─', $maxFileLen + 36)."\n";
-
-foreach ($failures as $failure) {
-    echo sprintf(
-        "  %-{$maxFileLen}s  %9s  %10d  %10d\n",
-        $failure['file'],
-        formatCoverage($failure['coverage']),
-        $failure['statements'],
-        $failure['missing'],
-    );
-}
-
-echo "\n";
-echo "  Summary: {$passed} passed, ".count($failures)." failed, {$skipped} skipped\n";
-echo "  Threshold: {$minCoverage}% minimum line coverage per file\n\n";
-
+echo "FAIL: Coverage policy violation detected.\n\n";
 exit(1);

@@ -155,10 +155,10 @@ jobs:
           DB_DATABASE: vunnix_test
           DB_USERNAME: postgres
           DB_PASSWORD: postgres
-        run: php artisan test --parallel --coverage --coverage-clover=coverage/php/clover.xml
+        run: php -d memory_limit=-1 artisan test --parallel --coverage --coverage-clover=coverage/php/clover.xml
 
-      - name: Check per-file coverage threshold
-        run: php scripts/check-coverage.php coverage/php/clover.xml --min=90
+      - name: Check backend coverage policy
+        run: php scripts/check-coverage.php --scope=backend
 
       - name: Upload PHP coverage
         if: always()
@@ -185,6 +185,9 @@ jobs:
 
       - name: Run JS tests with coverage
         run: npx vitest run --coverage --reporter=default --reporter=github-actions
+
+      - name: Check frontend coverage policy
+        run: php scripts/check-coverage.php --scope=frontend
 
       - name: Upload JS coverage
         if: always()

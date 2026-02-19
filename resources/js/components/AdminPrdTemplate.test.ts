@@ -77,6 +77,18 @@ describe('adminPrdTemplate', () => {
         expect(wrapper.find('[data-testid="template-source"]').text()).toBe('Default');
     });
 
+    it('shows Global source badge when global template is active', () => {
+        admin.prdTemplate = { template: '# Global', source: 'global' };
+        admin.prdTemplateLoading = false;
+
+        const wrapper = mount(AdminPrdTemplate, {
+            props: defaultProps,
+            global: { plugins: [pinia] },
+        });
+
+        expect(wrapper.find('[data-testid="template-source"]').text()).toBe('Global');
+    });
+
     it('shows textarea with template content', async () => {
         admin.prdTemplate = { template: '# My Template', source: 'default' };
         admin.prdTemplateLoading = false;
@@ -145,6 +157,30 @@ describe('adminPrdTemplate', () => {
         await wrapper.vm.$nextTick();
 
         expect(wrapper.find('[data-testid="template-success"]').exists()).toBe(true);
+    });
+
+    it('auto-hides success message after timeout', async () => {
+        vi.useFakeTimers();
+        vi.spyOn(admin, 'updatePrdTemplate').mockResolvedValue({ success: true });
+
+        admin.prdTemplate = { template: '# Test', source: 'default' };
+        admin.prdTemplateLoading = false;
+
+        const wrapper = mount(AdminPrdTemplate, {
+            props: defaultProps,
+            global: { plugins: [pinia] },
+        });
+        await wrapper.vm.$nextTick();
+
+        await wrapper.find('[data-testid="save-template-btn"]').trigger('click');
+        await wrapper.vm.$nextTick();
+        expect(wrapper.find('[data-testid="template-success"]').exists()).toBe(true);
+
+        vi.advanceTimersByTime(3000);
+        await wrapper.vm.$nextTick();
+        expect(wrapper.find('[data-testid="template-success"]').exists()).toBe(false);
+
+        vi.useRealTimers();
     });
 
     it('shows error on save failure', async () => {

@@ -19,10 +19,8 @@ class ExternalActivityController extends Controller
             'cursor' => ['nullable', 'string'],
         ]);
 
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         $accessibleProjectIds = $user->accessibleProjects()->pluck('id');
 

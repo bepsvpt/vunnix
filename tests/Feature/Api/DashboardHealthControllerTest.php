@@ -89,6 +89,52 @@ it('returns summary with latest metric values', function (): void {
         ->assertJsonPath('data.coverage.trend_direction', 'up');
 });
 
+it('returns down trend when latest score drops significantly', function (): void {
+    $project = Project::factory()->create();
+    $user = memberUser($project);
+
+    HealthSnapshot::factory()->create([
+        'project_id' => $project->id,
+        'dimension' => 'coverage',
+        'score' => 90,
+        'created_at' => now()->subDays(10),
+    ]);
+    HealthSnapshot::factory()->create([
+        'project_id' => $project->id,
+        'dimension' => 'coverage',
+        'score' => 80,
+        'created_at' => now()->subDay(),
+    ]);
+
+    $this->actingAs($user)
+        ->getJson("/api/v1/projects/{$project->id}/health/summary")
+        ->assertOk()
+        ->assertJsonPath('data.coverage.trend_direction', 'down');
+});
+
+it('returns stable trend when score change is within threshold', function (): void {
+    $project = Project::factory()->create();
+    $user = memberUser($project);
+
+    HealthSnapshot::factory()->create([
+        'project_id' => $project->id,
+        'dimension' => 'coverage',
+        'score' => 80,
+        'created_at' => now()->subDays(10),
+    ]);
+    HealthSnapshot::factory()->create([
+        'project_id' => $project->id,
+        'dimension' => 'coverage',
+        'score' => 80.5,
+        'created_at' => now()->subDay(),
+    ]);
+
+    $this->actingAs($user)
+        ->getJson("/api/v1/projects/{$project->id}/health/summary")
+        ->assertOk()
+        ->assertJsonPath('data.coverage.trend_direction', 'stable');
+});
+
 it('returns active project health alerts only', function (): void {
     $project = Project::factory()->create();
     $otherProject = Project::factory()->create();

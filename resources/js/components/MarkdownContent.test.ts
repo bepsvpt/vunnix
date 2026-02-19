@@ -1,8 +1,12 @@
 import { mount } from '@vue/test-utils';
 import MarkdownIt from 'markdown-it';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { applyHiddenFences } from '@/lib/markdown';
 import MarkdownContent from './MarkdownContent.vue';
+
+const { onHighlightLoadedMock } = vi.hoisted(() => ({
+    onHighlightLoadedMock: vi.fn(),
+}));
 
 // Mock the markdown module to avoid async Shiki loading in tests
 const testMd = new MarkdownIt({ html: false, linkify: true, typographer: true });
@@ -27,11 +31,15 @@ vi.mock('@/lib/markdown', async (importOriginal) => {
         ...actual,
         getMarkdownRenderer: () => testMd,
         isHighlightReady: (): boolean => false,
-        onHighlightLoaded: vi.fn(),
+        onHighlightLoaded: onHighlightLoadedMock,
     };
 });
 
 describe('markdownContent', () => {
+    beforeEach(() => {
+        onHighlightLoadedMock.mockClear();
+    });
+
     function mountContent(content: string) {
         return mount(MarkdownContent, {
             props: { content },
@@ -120,5 +128,16 @@ describe('markdownContent', () => {
         expect(html).toContain('const x = 1;');
         expect(html).toContain('Text.');
         expect(html).not.toContain('"hidden"');
+    });
+
+    it('registers highlight-ready callback and handles callback invocation', async () => {
+        const wrapper = mountContent('**hello**');
+        expect(onHighlightLoadedMock).toHaveBeenCalledTimes(1);
+
+        const callback = onHighlightLoadedMock.mock.calls[0][0] as () => void;
+        callback();
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.find('strong').text()).toBe('hello');
     });
 });

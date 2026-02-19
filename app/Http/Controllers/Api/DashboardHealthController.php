@@ -18,7 +18,9 @@ class DashboardHealthController extends Controller
 {
     public function trends(Request $request, Project $project): AnonymousResourceCollection
     {
-        $this->authorizeProjectMember($request->user(), $project);
+        /** @var User $user */
+        $user = $request->user();
+        $this->authorizeProjectMember($user, $project);
 
         $validated = $request->validate([
             'dimension' => ['nullable', 'string', 'in:coverage,dependency,complexity'],
@@ -44,7 +46,9 @@ class DashboardHealthController extends Controller
 
     public function summary(Request $request, Project $project): JsonResponse
     {
-        $this->authorizeProjectMember($request->user(), $project);
+        /** @var User $user */
+        $user = $request->user();
+        $this->authorizeProjectMember($user, $project);
 
         $data = [];
         $comparisonCutoff = now()->subDays(7);
@@ -86,7 +90,9 @@ class DashboardHealthController extends Controller
 
     public function alerts(Request $request, Project $project): JsonResponse
     {
-        $this->authorizeProjectMember($request->user(), $project);
+        /** @var User $user */
+        $user = $request->user();
+        $this->authorizeProjectMember($user, $project);
 
         $alerts = AlertEvent::query()
             ->active()
@@ -112,12 +118,8 @@ class DashboardHealthController extends Controller
         ]);
     }
 
-    private function authorizeProjectMember(?User $user, Project $project): void
+    private function authorizeProjectMember(User $user, Project $project): void
     {
-        if (! $user instanceof User) {
-            abort(401);
-        }
-
         if (! $user->projects()->where('projects.id', $project->id)->exists()) {
             abort(403, 'Project membership required.');
         }

@@ -8,6 +8,7 @@ use App\Models\Task;
 use App\Services\GitLabClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
 
@@ -222,4 +223,45 @@ it('produces correct acceptance rate from stored records', function (): void {
 
     // 1 accepted, 1 dismissed → 50%
     expect($rate)->toBe(50.0);
+});
+
+it('skips non critical and non major findings', function (): void {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::response(fakeGitLabDiscussions(), 200),
+    ]);
+
+    $task = createReviewTaskWithFindings(42, [
+        ['id' => 10, 'severity' => 'minor', 'category' => 'style', 'file' => 'src/style.py', 'line' => 1, 'end_line' => 2, 'title' => 'Style issue', 'description' => 'Desc', 'suggestion' => 'Fix', 'labels' => []],
+    ]);
+
+    $job = new ProcessAcceptanceTracking(
+        projectId: $task->project_id,
+        gitlabProjectId: $task->project->gitlab_project_id,
+        mrIid: 42,
+    );
+    $job->handle(app(GitLabClient::class));
+
+    expect(FindingAcceptance::count())->toBe(0);
+});
+
+it('logs and rethrows when discussions cannot be fetched', function (): void {
+    $task = createReviewTaskWithFindings();
+
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/42/discussions*' => Http::response(['message' => 'error'], 500),
+    ]);
+
+    Log::shouldReceive('warning')
+        ->withAnyArgs()
+        ->atLeast()
+        ->once();
+
+    $job = new ProcessAcceptanceTracking(
+        projectId: $task->project_id,
+        gitlabProjectId: $task->project->gitlab_project_id,
+        mrIid: 42,
+    );
+
+    expect(fn () => $job->handle(app(GitLabClient::class)))
+        ->toThrow(\App\Exceptions\GitLabApiException::class);
 });

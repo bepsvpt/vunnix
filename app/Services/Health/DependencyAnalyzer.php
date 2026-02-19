@@ -115,11 +115,15 @@ class DependencyAnalyzer implements HealthAnalyzerContract
         $vulnerabilities = [];
 
         foreach (array_chunk($packageNames, 40) as $chunk) {
-            $response = Http::retry(2, 250)
-                ->acceptJson()
-                ->get('https://packagist.org/api/security-advisories/', [
-                    'packages' => $chunk,
-                ]);
+            try {
+                $response = Http::retry(2, 250)
+                    ->acceptJson()
+                    ->get('https://packagist.org/api/security-advisories/', [
+                        'packages' => $chunk,
+                    ]);
+            } catch (Throwable) {
+                continue;
+            }
 
             if (! $response->successful()) {
                 continue;

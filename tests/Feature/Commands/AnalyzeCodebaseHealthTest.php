@@ -44,3 +44,51 @@ it('queues a single project when --project is provided', function (): void {
 
     Queue::assertPushed(AnalyzeProjectHealth::class, 1);
 });
+
+it('returns early when health analysis is disabled globally', function (): void {
+    config(['health.enabled' => false]);
+    Queue::fake([AnalyzeProjectHealth::class]);
+
+    $this->artisan('health:analyze')
+        ->expectsOutput('Health analysis is disabled by feature flag.')
+        ->assertSuccessful();
+
+    Queue::assertNothingPushed();
+});
+
+it('fails when provided project does not exist', function (): void {
+    Queue::fake([AnalyzeProjectHealth::class]);
+
+    $this->artisan('health:analyze', ['--project' => 999999])
+        ->expectsOutput('Project not found.')
+        ->assertFailed();
+
+    Queue::assertNothingPushed();
+});
+
+it('fails when provided project is disabled', function (): void {
+    Queue::fake([AnalyzeProjectHealth::class]);
+    $project = Project::factory()->create(['enabled' => false]);
+
+    $this->artisan('health:analyze', ['--project' => $project->id])
+        ->expectsOutput('Project is disabled.')
+        ->assertFailed();
+
+    Queue::assertNothingPushed();
+});
+
+it('skips single project when project-level health flag is disabled', function (): void {
+    Queue::fake([AnalyzeProjectHealth::class]);
+    $project = Project::factory()->enabled()->create();
+    $project->projectConfig()->create([
+        'settings' => [
+            'health' => ['enabled' => false],
+        ],
+    ]);
+
+    $this->artisan('health:analyze', ['--project' => $project->id])
+        ->expectsOutput("Project {$project->id} has health.enabled = false. Skipping.")
+        ->assertSuccessful();
+
+    Queue::assertNothingPushed();
+});

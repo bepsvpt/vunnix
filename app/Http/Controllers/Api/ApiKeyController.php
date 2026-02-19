@@ -18,10 +18,8 @@ class ApiKeyController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         $keys = $user
             ->apiKeys()
@@ -42,10 +40,8 @@ class ApiKeyController extends Controller
 
     public function store(CreateApiKeyRequest $request): JsonResponse
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         $validatedExpiresAt = $request->validated('expires_at');
         $expiresAt = $validatedExpiresAt !== null && $validatedExpiresAt !== ''
@@ -70,10 +66,8 @@ class ApiKeyController extends Controller
 
     public function destroy(Request $request, int $id): JsonResponse
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         $apiKey = ApiKey::findOrFail($id);
 

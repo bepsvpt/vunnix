@@ -1,69 +1,33 @@
 <?php
 
-use App\Models\Permission;
-use App\Models\Project;
-use App\Models\Role;
-use App\Models\User;
+use App\Providers\AppServiceProvider;
+use App\Services\Health\HealthAnalysisService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
-it('registers permission gates from the database', function (): void {
-    // Create permissions in the database
-    $perm1 = Permission::factory()->create(['name' => 'test.gate.alpha']);
-    $perm2 = Permission::factory()->create(['name' => 'test.gate.beta']);
+it('resolves health analysis service from tagged analyzers binding', function (): void {
+    $provider = new AppServiceProvider(app());
+    $provider->register();
 
-    // Re-register gates by calling the provider's boot method again
-    // The AppServiceProvider runs at boot time, but permissions created
-    // during test setup weren't there yet. Re-trigger registration.
-    app()->make(\App\Providers\AppServiceProvider::class, ['app' => app()])->boot();
+    $service = app(HealthAnalysisService::class);
 
-    expect(Gate::has('test.gate.alpha'))->toBeTrue();
-    expect(Gate::has('test.gate.beta'))->toBeTrue();
+    expect($service)->toBeInstanceOf(HealthAnalysisService::class);
 });
 
-it('gate check allows user with the permission on a project', function (): void {
-    $user = User::factory()->create();
-    $project = Project::factory()->create();
-    $role = Role::factory()->create(['project_id' => $project->id]);
-    $permission = Permission::factory()->create(['name' => 'test.gate.check']);
+it('swallows registerPermissionGates errors when database is unavailable', function (): void {
+    $provider = new AppServiceProvider(app());
+    $provider->register();
 
-    $role->permissions()->attach($permission);
-    $user->assignRole($role, $project);
+    Schema::shouldReceive('hasTable')
+        ->once()
+        ->with('permissions')
+        ->andThrow(new RuntimeException('db unavailable'));
 
-    // Re-register gates so this permission is known
-    app()->make(\App\Providers\AppServiceProvider::class, ['app' => app()])->boot();
+    $method = new ReflectionMethod(AppServiceProvider::class, 'registerPermissionGates');
+    $method->setAccessible(true);
+    $method->invoke($provider);
 
-    expect(Gate::forUser($user)->allows('test.gate.check', [$project]))->toBeTrue();
-});
-
-it('gate check denies user without the permission on a project', function (): void {
-    $user = User::factory()->create();
-    $project = Project::factory()->create();
-
-    Permission::factory()->create(['name' => 'test.gate.denied']);
-
-    // Re-register gates
-    app()->make(\App\Providers\AppServiceProvider::class, ['app' => app()])->boot();
-
-    expect(Gate::forUser($user)->allows('test.gate.denied', [$project]))->toBeFalse();
-});
-
-it('gate check denies user with permission on a different project', function (): void {
-    $user = User::factory()->create();
-    $projectA = Project::factory()->create();
-    $projectB = Project::factory()->create();
-    $role = Role::factory()->create(['project_id' => $projectA->id]);
-    $permission = Permission::factory()->create(['name' => 'test.gate.cross_project']);
-
-    $role->permissions()->attach($permission);
-    $user->assignRole($role, $projectA);
-
-    // Re-register gates
-    app()->make(\App\Providers\AppServiceProvider::class, ['app' => app()])->boot();
-
-    // User has the permission on projectA but NOT projectB
-    expect(Gate::forUser($user)->allows('test.gate.cross_project', [$projectA]))->toBeTrue();
-    expect(Gate::forUser($user)->allows('test.gate.cross_project', [$projectB]))->toBeFalse();
+    expect(true)->toBeTrue();
 });

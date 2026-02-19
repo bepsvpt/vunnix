@@ -85,3 +85,16 @@ it('archives expired entries via memory:archive-expired', function (): void {
 
     expect($entry->fresh()?->archived_at)->not->toBeNull();
 });
+
+it('prints no-op message when there are no expired memory entries', function (): void {
+    config([
+        'vunnix.memory.enabled' => true,
+        'vunnix.memory.retention_days' => 30,
+    ]);
+
+    Project::factory()->create();
+
+    $this->artisan('memory:archive-expired')
+        ->expectsOutput('No expired memory entries to archive.')
+        ->assertSuccessful();
+});

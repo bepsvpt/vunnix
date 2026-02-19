@@ -5,9 +5,11 @@ use App\Enums\TaskType;
 use App\Events\TaskStatusChanged;
 use App\Models\CostAlert;
 use App\Models\Task;
+use App\Services\CostAlertService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
 
@@ -136,4 +138,35 @@ test('does not create cost alert when task has zero cost', function (): void {
     $task->transitionTo(TaskStatus::Completed);
 
     expect(CostAlert::where('rule', 'single_task_outlier')->count())->toBe(0);
+});
+
+test('logs warning when single-task outlier evaluation throws', function (): void {
+    $task = Task::factory()->create([
+        'status' => TaskStatus::Running,
+        'type' => TaskType::CodeReview,
+        'cost' => 2.5,
+        'duration_seconds' => 30,
+        'result' => [
+            'summary' => [
+                'total_findings' => 0,
+                'findings_by_severity' => ['critical' => 0, 'major' => 0, 'minor' => 0],
+            ],
+        ],
+    ]);
+
+    $costAlert = Mockery::mock(CostAlertService::class);
+    $costAlert->shouldReceive('evaluateSingleTaskOutlier')
+        ->once()
+        ->andThrow(new RuntimeException('boom'));
+    app()->instance(CostAlertService::class, $costAlert);
+
+    Log::shouldReceive('warning')
+        ->once()
+        ->withArgs(fn (string $message, array $context): bool => $message === 'TaskObserver: cost alert evaluation failed'
+            && $context['task_id'] === $task->id
+            && str_contains((string) $context['error'], 'boom'));
+
+    $task->transitionTo(TaskStatus::Completed);
+
+    expect(DB::table('task_metrics')->where('task_id', $task->id)->exists())->toBeTrue();
 });

@@ -37,10 +37,8 @@ class ConversationController extends Controller
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         $chatProjectIds = $user->projects()
             ->get()
@@ -68,10 +66,8 @@ class ConversationController extends Controller
      */
     public function store(CreateConversationRequest $request): JsonResponse
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
         $project = Project::where('id', $request->validated('project_id'))->firstOrFail();
 
         // Verify user has chat.access permission on this project
@@ -111,10 +107,8 @@ class ConversationController extends Controller
     {
         $this->authorize('sendMessage', $conversation);
 
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         $message = $this->conversationService->addUserMessage(
             conversation: $conversation,
@@ -142,10 +136,8 @@ class ConversationController extends Controller
     {
         $this->authorize('stream', $conversation);
 
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         return ResilientStreamResponse::from(
             $this->conversationService->streamResponse(
@@ -165,10 +157,8 @@ class ConversationController extends Controller
     {
         $this->authorize('addProject', $conversation);
 
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         $this->conversationService->addProject(
             conversation: $conversation,

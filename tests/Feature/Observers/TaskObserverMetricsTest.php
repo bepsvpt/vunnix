@@ -5,8 +5,11 @@ use App\Enums\TaskType;
 use App\Events\TaskStatusChanged;
 use App\Models\Task;
 use App\Models\TaskMetric;
+use App\Observers\TaskObserver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
 
@@ -249,4 +252,66 @@ test('extracts severities from security audit results', function (): void {
         ->and($metric->severity_high)->toBe(1)
         ->and($metric->severity_medium)->toBe(0)
         ->and($metric->findings_count)->toBe(3);
+});
+
+test('recordMetricsOnTerminal returns early when metric already exists for the task', function (): void {
+    $task = Task::factory()->create([
+        'status' => TaskStatus::Completed,
+        'type' => TaskType::CodeReview,
+        'cost' => 0,
+        'result' => [
+            'summary' => [
+                'total_findings' => 1,
+                'findings_by_severity' => ['critical' => 0, 'major' => 1, 'minor' => 0],
+            ],
+        ],
+    ]);
+
+    DB::table('task_metrics')->insert([
+        'task_id' => $task->id,
+        'project_id' => $task->project_id,
+        'task_type' => 'code_review',
+        'input_tokens' => 1,
+        'output_tokens' => 1,
+        'cost' => 0.01,
+        'duration' => 1,
+        'severity_critical' => 0,
+        'severity_high' => 1,
+        'severity_medium' => 0,
+        'severity_low' => 0,
+        'findings_count' => 1,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $observer = app(TaskObserver::class);
+    $method = new ReflectionMethod(TaskObserver::class, 'recordMetricsOnTerminal');
+    $method->setAccessible(true);
+    $method->invoke($observer, $task);
+
+    expect(TaskMetric::where('task_id', $task->id)->count())->toBe(1);
+});
+
+test('recordMetricsOnTerminal logs and swallows metric persistence failures', function (): void {
+    Log::shouldReceive('error')
+        ->once()
+        ->withArgs(fn (string $message, array $context): bool => $message === 'TaskObserver: failed to record metrics'
+            && array_key_exists('error', $context));
+
+    $task = Task::factory()->make([
+        'status' => TaskStatus::Completed,
+        'type' => TaskType::CodeReview,
+        'cost' => 0,
+        'result' => [
+            'summary' => [
+                'total_findings' => 0,
+                'findings_by_severity' => ['critical' => 0, 'major' => 0, 'minor' => 0],
+            ],
+        ],
+    ]);
+
+    $observer = app(TaskObserver::class);
+    $method = new ReflectionMethod(TaskObserver::class, 'recordMetricsOnTerminal');
+    $method->setAccessible(true);
+    $method->invoke($observer, $task);
 });

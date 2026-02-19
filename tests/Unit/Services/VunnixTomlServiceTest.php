@@ -198,3 +198,60 @@ TOML;
         ->and($result['ui_adjustment.screenshot_wait_ms'])->toBe(3000)
         ->and($result['labels.auto_label'])->toBe(true);
 });
+
+it('returns empty array when base64 content is invalid', function (): void {
+    $gitLabClient = Mockery::mock(GitLabClient::class);
+    $gitLabClient->shouldReceive('getFile')
+        ->once()
+        ->andReturn([
+            'content' => '%%invalid-base64%%',
+            'encoding' => 'base64',
+        ]);
+
+    $service = new VunnixTomlService($gitLabClient);
+    $result = $service->read(100, 'main');
+
+    expect($result)->toBe([]);
+});
+
+it('parses non-base64 raw TOML content', function (): void {
+    $tomlContent = <<<'TOML'
+[general]
+model = "sonnet"
+TOML;
+
+    $gitLabClient = Mockery::mock(GitLabClient::class);
+    $gitLabClient->shouldReceive('getFile')
+        ->once()
+        ->andReturn([
+            'content' => $tomlContent,
+            'encoding' => 'text',
+        ]);
+
+    $service = new VunnixTomlService($gitLabClient);
+    $result = $service->read(100, 'main');
+
+    expect($result)->toBe(['ai_model' => 'sonnet']);
+});
+
+it('ignores non-table TOML sections while parsing', function (): void {
+    $tomlContent = <<<'TOML'
+general = "invalid"
+
+[code_review]
+auto_review = true
+TOML;
+
+    $gitLabClient = Mockery::mock(GitLabClient::class);
+    $gitLabClient->shouldReceive('getFile')
+        ->once()
+        ->andReturn([
+            'content' => base64_encode($tomlContent),
+            'encoding' => 'base64',
+        ]);
+
+    $service = new VunnixTomlService($gitLabClient);
+    $result = $service->read(100, 'main');
+
+    expect($result)->toBe(['code_review.auto_review' => true]);
+});

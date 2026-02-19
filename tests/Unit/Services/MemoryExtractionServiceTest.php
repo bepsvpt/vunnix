@@ -193,3 +193,96 @@ it('does not duplicate an existing extracted review pattern', function (): void 
 
     expect($entries->where('category', 'false_positive'))->toHaveCount(0);
 });
+
+it('skips findings groups below minimum sample size', function (): void {
+    $project = Project::factory()->create();
+    $task = Task::factory()->create(['project_id' => $project->id]);
+
+    config(['vunnix.memory.min_sample_size' => 5]);
+
+    FindingAcceptance::factory()->count(4)->create([
+        'task_id' => $task->id,
+        'project_id' => $project->id,
+        'category' => 'style',
+        'status' => 'dismissed',
+        'severity' => 'minor',
+    ]);
+
+    $service = app(MemoryExtractionService::class);
+    $entries = $service->extractFromFindings($project, FindingAcceptance::where('project_id', $project->id)->get());
+
+    expect($entries)->toHaveCount(0);
+});
+
+it('filters non-technical or too-short conversation sentences', function (): void {
+    $project = Project::factory()->create();
+    $summary = "   \nUse Redis.\nWe also talked about lunch.";
+
+    $service = app(MemoryExtractionService::class);
+    $entries = $service->extractFromConversationSummary($project, $summary, []);
+
+    expect($entries)->toHaveCount(0);
+});
+
+it('avoids duplicating existing cross-MR hotspot and convention patterns', function (): void {
+    $project = Project::factory()->create();
+    $task = Task::factory()->create(['project_id' => $project->id]);
+
+    foreach ([1, 2, 3] as $mrIid) {
+        FindingAcceptance::factory()->create([
+            'task_id' => $task->id,
+            'project_id' => $project->id,
+            'mr_iid' => $mrIid,
+            'file' => 'app/Services/TaskDispatcher.php',
+            'category' => 'performance',
+            'title' => 'Inefficient loop',
+            'status' => 'dismissed',
+        ]);
+    }
+
+    // Add one repeated dismissal title with only one MR to exercise the <2 guard.
+    FindingAcceptance::factory()->create([
+        'task_id' => $task->id,
+        'project_id' => $project->id,
+        'mr_iid' => 99,
+        'file' => 'app/Models/Task.php',
+        'category' => 'style',
+        'title' => 'Single dismissal',
+        'status' => 'dismissed',
+    ]);
+
+    \App\Models\MemoryEntry::factory()->create([
+        'project_id' => $project->id,
+        'type' => 'cross_mr_pattern',
+        'category' => 'hotspot',
+        'confidence' => 60,
+        'content' => [
+            'pattern' => 'File hotspot detected: app/Services/TaskDispatcher.php was flagged 3 times across 3 merge requests.',
+        ],
+    ]);
+
+    \App\Models\MemoryEntry::factory()->create([
+        'project_id' => $project->id,
+        'type' => 'cross_mr_pattern',
+        'category' => 'convention',
+        'confidence' => 60,
+        'content' => [
+            'pattern' => 'Category cluster: "performance" appears across 3 merge requests (3 findings).',
+        ],
+    ]);
+
+    \App\Models\MemoryEntry::factory()->create([
+        'project_id' => $project->id,
+        'type' => 'cross_mr_pattern',
+        'category' => 'convention',
+        'confidence' => 60,
+        'content' => [
+            'pattern' => 'Repeated dismissal pattern: "Inefficient loop" was dismissed in 3 merge requests.',
+        ],
+    ]);
+
+    $service = app(MemoryExtractionService::class);
+    $entries = $service->detectCrossMRPatterns($project, 60);
+
+    expect($entries)->toHaveCount(0);
+});

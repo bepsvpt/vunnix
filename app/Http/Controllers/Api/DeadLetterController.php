@@ -7,7 +7,6 @@ use App\Models\DeadLetterEntry;
 use App\Services\DeadLetterService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use LogicException;
 
 class DeadLetterController extends Controller
@@ -29,11 +28,7 @@ class DeadLetterController extends Controller
         // Filter by project — task_record is JSONB with project_id
         if ($request->filled('project_id')) {
             $projectId = (int) $request->input('project_id');
-            if (DB::connection()->getDriverName() === 'sqlite') {
-                $query->where('task_record', 'like', '%"project_id":'.$projectId.'%');
-            } else {
-                $query->whereRaw("(task_record->>'project_id')::int = ?", [$projectId]);
-            }
+            $query->where('task_record', 'like', '%"project_id":'.$projectId.'%');
         }
 
         return response()->json(['data' => $query->get()]);
@@ -53,10 +48,8 @@ class DeadLetterController extends Controller
         $this->authorizeAdmin($request);
 
         try {
+            /** @var \App\Models\User $user */
             $user = $request->user();
-            if ($user === null) {
-                abort(401);
-            }
             $newTask = $this->service->retry($deadLetterEntry, $user);
 
             return response()->json(['success' => true, 'data' => $newTask]);
@@ -70,10 +63,8 @@ class DeadLetterController extends Controller
         $this->authorizeAdmin($request);
 
         try {
+            /** @var \App\Models\User $user */
             $user = $request->user();
-            if ($user === null) {
-                abort(401);
-            }
             $this->service->dismiss($deadLetterEntry, $user);
 
             return response()->json(['success' => true]);
@@ -84,10 +75,8 @@ class DeadLetterController extends Controller
 
     private function authorizeAdmin(Request $request): void
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         if (! $user->isGlobalAdmin()) {
             abort(403, 'Dead letter queue access is restricted to administrators.');

@@ -5,6 +5,7 @@ use App\Models\Project;
 use App\Models\ProjectConfig;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\AuditLogService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 
@@ -248,4 +249,24 @@ it('validates settings must be an array', function (): void {
             'settings' => 'not-an-array',
         ])
         ->assertUnprocessable();
+});
+
+it('continues update when audit logging fails', function (): void {
+    $project = Project::factory()->create();
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'settings' => [],
+    ]);
+    $admin = createProjectConfigAdmin($project);
+
+    $this->mock(AuditLogService::class)
+        ->shouldReceive('logConfigurationChange')
+        ->andThrow(new RuntimeException('audit failed'));
+
+    $this->actingAs($admin)
+        ->putJson("/api/v1/admin/projects/{$project->id}/config", [
+            'settings' => ['ai_model' => 'sonnet'],
+        ])
+        ->assertOk()
+        ->assertJsonPath('success', true);
 });

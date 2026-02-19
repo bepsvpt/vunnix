@@ -231,6 +231,21 @@ describe('dashboardCost', () => {
         expect(wrapper.find('[data-testid="monthly-trend-empty"]').exists()).toBe(true);
     });
 
+    it('falls back to empty sections when optional datasets are missing', () => {
+        const store = useDashboardStore();
+        store.cost = {
+            total_cost: 10,
+            total_tokens: 1234,
+        } as unknown as typeof sampleCost;
+
+        const wrapper = mountCost();
+
+        expect(wrapper.find('[data-testid="token-usage-empty"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="cost-per-type-empty"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="cost-per-project-empty"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="monthly-trend-empty"]').exists()).toBe(true);
+    });
+
     // -- Zero values --
 
     it('displays $0.00 for zero total cost', () => {

@@ -2,6 +2,7 @@
 
 use App\Services\GitLabClient;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 uses(Tests\TestCase::class);
 
@@ -171,4 +172,75 @@ it('lists project labels via listProjectLabels', function (): void {
 
     expect($result)->toHaveCount(2);
     expect($result[1]['name'])->toBe('ai::reviewed');
+});
+
+it('searches code blobs with expected query parameters', function (): void {
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/42/search*' => Http::response([
+            ['path' => 'app/Services/Foo.php', 'data' => 'match'],
+        ], 200),
+    ]);
+
+    $client = new GitLabClient;
+    $result = $client->searchCode(42, 'TODO');
+
+    expect($result)->toHaveCount(1);
+
+    Http::assertSent(fn ($req): bool => str_contains($req->url(), '/api/v4/projects/42/search')
+        && str_contains($req->url(), 'scope=blobs')
+        && str_contains($req->url(), 'search=TODO')
+        && str_contains($req->url(), 'per_page=20')
+    );
+});
+
+it('lists project members using members/all endpoint', function (): void {
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/42/members/all*' => Http::response([
+            ['id' => 1, 'username' => 'dev1'],
+        ], 200),
+    ]);
+
+    $client = new GitLabClient;
+    $result = $client->listProjectMembers(42, ['query' => 'dev']);
+
+    expect($result)->toHaveCount(1)
+        ->and($result[0]['username'])->toBe('dev1');
+});
+
+it('lists pipelines with default pagination', function (): void {
+    Http::fake([
+        'gitlab.example.com/api/v4/projects/42/pipelines*' => Http::response([
+            ['id' => 9001, 'status' => 'success'],
+        ], 200),
+    ]);
+
+    $client = new GitLabClient;
+    $result = $client->listPipelines(42);
+
+    expect($result)->toHaveCount(1)
+        ->and($result[0]['id'])->toBe(9001);
+
+    Http::assertSent(fn ($req): bool => str_contains($req->url(), 'per_page=20'));
+});
+
+it('returns response from handleResponse fallback path when throw does not raise', function (): void {
+    $client = new class extends GitLabClient
+    {
+        public function passthrough(\Illuminate\Http\Client\Response $response): \Illuminate\Http\Client\Response
+        {
+            return $this->handleResponse($response, 'fallback-test');
+        }
+    };
+
+    $response = Mockery::mock(\Illuminate\Http\Client\Response::class);
+    $response->shouldReceive('successful')->once()->andReturnFalse();
+    $response->shouldReceive('status')->once()->andReturn(500);
+    $response->shouldReceive('body')->once()->andReturn('error');
+    $response->shouldReceive('throw')->once()->andReturnSelf();
+
+    Log::shouldReceive('warning')->once();
+
+    $result = $client->passthrough($response);
+
+    expect($result)->toBe($response);
 });

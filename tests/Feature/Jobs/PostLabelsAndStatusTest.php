@@ -394,6 +394,32 @@ it('logs warning and rethrows when addMergeRequestLabels fails', function (): vo
         ->toThrow(\App\Exceptions\GitLabApiException::class);
 });
 
+it('logs warning and rethrows when getMergeRequest fails', function (): void {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/42' => Http::response('Internal Server Error', 500),
+    ]);
+
+    Log::shouldReceive('warning')
+        ->once()
+        ->withArgs(function (string $message, array $context): bool {
+            return str_contains($message, 'PostLabelsAndStatus: failed to fetch MR')
+                && $context['task_id'] > 0;
+        });
+
+    Log::shouldReceive('warning')
+        ->withArgs(function (string $message): bool {
+            return str_contains($message, 'GitLab API error');
+        })
+        ->zeroOrMoreTimes();
+    Log::shouldReceive('info')->zeroOrMoreTimes();
+
+    $task = labelsTaskNoFindings();
+    $job = new PostLabelsAndStatus($task->id);
+
+    expect(fn () => $job->handle(app(GitLabClient::class)))
+        ->toThrow(\App\Exceptions\GitLabApiException::class);
+});
+
 // ─── Exception: setCommitStatus fails → logs warning, rethrows ──
 
 it('logs warning and rethrows when setCommitStatus fails', function (): void {

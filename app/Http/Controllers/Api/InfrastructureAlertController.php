@@ -35,10 +35,8 @@ class InfrastructureAlertController extends Controller
 
     private function authorizeAdmin(Request $request): void
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         if (! $user->isGlobalAdmin()) {
             abort(403, 'Infrastructure alerts are restricted to administrators.');

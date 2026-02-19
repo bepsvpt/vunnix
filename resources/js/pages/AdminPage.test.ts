@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import ProjectMemoryPanel from '@/components/ProjectMemoryPanel.vue';
 import { useAdminStore } from '@/stores/admin';
 import { useAuthStore } from '@/stores/auth';
 import AdminPage from './AdminPage.vue';
@@ -180,6 +181,40 @@ describe('adminPage', () => {
         await wrapper.vm.$nextTick();
 
         expect(wrapper.find('[data-testid="project-memory-panel"]').exists()).toBe(true);
+    });
+
+    it('uses configuring project as memory project when opening Memory tab from config', async () => {
+        const admin = useAdminStore();
+        admin.projects = [
+            { id: 42, name: 'ConfigProject', slug: 'config-project', enabled: true, webhook_configured: true, recent_task_count: 0, active_conversation_count: 0 },
+        ];
+        vi.spyOn(admin, 'fetchProjects').mockResolvedValue();
+        vi.spyOn(admin, 'fetchProjectConfig').mockResolvedValue();
+
+        const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
+        await wrapper.vm.$nextTick();
+
+        await wrapper.find('[data-testid="configure-btn-42"]').trigger('click');
+        await wrapper.vm.$nextTick();
+        await wrapper.find('[data-testid="tab-memory"]').trigger('click');
+        await wrapper.vm.$nextTick();
+
+        const panel = wrapper.findComponent(ProjectMemoryPanel);
+        expect(panel.exists()).toBe(true);
+        expect(panel.props('projectId')).toBe(42);
+    });
+
+    it('shows memory empty state when no memory project is available', async () => {
+        const admin = useAdminStore();
+        admin.projects = [];
+        vi.spyOn(admin, 'fetchProjects').mockResolvedValue();
+
+        const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
+        await wrapper.find('[data-testid="tab-memory"]').trigger('click');
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.text()).toContain('No project selected');
+        expect(wrapper.text()).toContain('inspect learned memory entries');
     });
 
     it('highlights the active tab with distinct styling', async () => {

@@ -30,10 +30,8 @@ class ExternalTaskController extends Controller
             'cursor' => ['nullable', 'string'],
         ]);
 
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         $reviewableProjectIds = $user->accessibleProjects()
             ->filter(fn (Project $project): bool => $user->hasPermission('review.view', $project))
@@ -87,10 +85,8 @@ class ExternalTaskController extends Controller
 
     public function show(Request $request, Task $task): ExternalTaskResource
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         $projectId = $task->project_id;
         if (! $user->accessibleProjects()->pluck('id')->contains($projectId)) {
@@ -98,10 +94,7 @@ class ExternalTaskController extends Controller
         }
 
         $project = Project::query()->find($projectId);
-        if ($project === null) {
-            abort(403, 'You do not have access to this task.');
-        }
-
+        /** @var Project $project */
         if (! $user->hasPermission('review.view', $project)) {
             abort(403, 'Review view permission required.');
         }
@@ -118,10 +111,8 @@ class ExternalTaskController extends Controller
             'mr_iid' => ['required', 'integer'],
         ]);
 
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        if ($user === null) {
-            abort(401);
-        }
 
         $project = Project::findOrFail((int) $validated['project_id']);
         $accessibleProjectIds = $user->accessibleProjects()->pluck('id');

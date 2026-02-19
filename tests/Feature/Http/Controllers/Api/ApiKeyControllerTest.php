@@ -48,6 +48,24 @@ it('creates a new API key and returns plaintext', function (): void {
     expect(ApiKey::where('user_id', $this->user->id)->count())->toBe(1);
 });
 
+it('creates a new API key with expiration date', function (): void {
+    $expiresAt = now()->addDays(7)->toDateTimeString();
+
+    $response = $this->postJson('/api/v1/api-keys', [
+        'name' => 'Expiring Key',
+        'expires_at' => $expiresAt,
+    ]);
+
+    $response->assertStatus(201);
+
+    $apiKey = ApiKey::query()
+        ->where('user_id', $this->user->id)
+        ->where('name', 'Expiring Key')
+        ->firstOrFail();
+
+    expect($apiKey->expires_at)->not->toBeNull();
+});
+
 it('validates name is required', function (): void {
     $this->postJson('/api/v1/api-keys', [])
         ->assertStatus(422)

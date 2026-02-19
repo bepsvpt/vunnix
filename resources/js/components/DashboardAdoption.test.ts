@@ -196,4 +196,41 @@ describe('dashboardAdoption', () => {
         const wrapper = mountAdoption();
         expect(wrapper.find('[data-testid="ai-reviewed-mr-value"]').text()).toBe('100%');
     });
+
+    it('computes fallback displays when adoption payload is missing', () => {
+        const store = useDashboardStore();
+        store.adoption = null;
+        const wrapper = mountAdoption();
+
+        const vm = wrapper.vm as unknown as {
+            mrCountDisplay: string;
+            activeUsersDisplay: string;
+        };
+
+        expect(vm.mrCountDisplay).toBe('');
+        expect(vm.activeUsersDisplay).toBe('—');
+    });
+
+    it('returns empty arrays when optional adoption datasets are absent', () => {
+        const store = useDashboardStore();
+        store.adoption = {
+            ai_reviewed_mr_percent: 50,
+            reviewed_mr_count: 1,
+            total_mr_count: 2,
+            chat_active_users: 1,
+            tasks_by_type_over_time: null,
+            ai_mentions_per_week: null,
+        } as unknown as typeof sampleAdoption;
+
+        const wrapper = mountAdoption();
+        const vm = wrapper.vm as unknown as {
+            tasksByTypeMonths: unknown[];
+            allTypeKeys: unknown[];
+            aiMentions: unknown[];
+        };
+
+        expect(vm.tasksByTypeMonths).toEqual([]);
+        expect(vm.allTypeKeys).toEqual([]);
+        expect(vm.aiMentions).toEqual([]);
+    });
 });

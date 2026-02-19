@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\HealthSnapshot;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
@@ -48,4 +49,16 @@ it('can find a project by gitlab_project_id', function (): void {
 
     $found = Project::where('gitlab_project_id', 42)->first();
     expect($found->id)->toBe($project->id);
+});
+
+it('has a health snapshots relationship', function (): void {
+    $project = Project::factory()->create();
+    HealthSnapshot::factory()->create([
+        'project_id' => $project->id,
+        'dimension' => 'coverage',
+    ]);
+
+    expect($project->healthSnapshots)->toBeInstanceOf(Collection::class)
+        ->and($project->healthSnapshots)->toHaveCount(1)
+        ->and($project->healthSnapshots->first()->project_id)->toBe($project->id);
 });

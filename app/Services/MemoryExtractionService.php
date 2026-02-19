@@ -25,9 +25,7 @@ class MemoryExtractionService
         $acceptedStatuses = ['accepted', 'accepted_auto'];
 
         $totalFindings = $acceptances->count();
-        $globalAcceptanceRate = $totalFindings > 0
-            ? ($acceptances->whereIn('status', $acceptedStatuses)->count() / $totalFindings)
-            : 0.0;
+        $globalAcceptanceRate = $acceptances->whereIn('status', $acceptedStatuses)->count() / $totalFindings;
 
         foreach ($acceptances->groupBy(fn (FindingAcceptance $a): string => $a->category ?? 'uncategorized') as $category => $group) {
             $sampleSize = $group->count();

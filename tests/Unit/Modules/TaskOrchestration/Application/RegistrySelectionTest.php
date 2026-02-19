@@ -162,6 +162,32 @@ it('selects intent classifier deterministically by priority and class name', fun
     expect($result?->intent)->toBe('alpha');
 });
 
+it('returns null from intent registry when no classifier supports the event', function (): void {
+    $event = makeRegistrySelectionWebhookEvent();
+    $classifier = new class implements IntentClassifier
+    {
+        public function priority(): int
+        {
+            return 100;
+        }
+
+        public function supports(WebhookEvent $event): bool
+        {
+            return false;
+        }
+
+        public function classify(WebhookEvent $event): RoutingResult
+        {
+            return new RoutingResult('never', 'normal', $event);
+        }
+    };
+
+    $registry = new IntentClassifierRegistry([$classifier]);
+
+    expect($registry->resolve($event))->toBeNull()
+        ->and($registry->classify($event))->toBeNull();
+});
+
 it('selects task handler by highest priority when multiple handlers support', function (): void {
     $event = makeRegistrySelectionWebhookEvent();
     $routingResult = new RoutingResult('auto_review', 'normal', $event);

@@ -5,6 +5,7 @@ use App\Models\Permission;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\AuditLogService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 
@@ -333,4 +334,19 @@ it('settings persist across index calls', function (): void {
 
     expect($model['value'])->toBe('haiku');
     expect($timeout['value'])->toBe(20);
+});
+
+it('continues settings update when audit logging fails', function (): void {
+    $project = Project::factory()->enabled()->create();
+    $user = createSettingsAdmin($project);
+
+    $this->mock(AuditLogService::class)
+        ->shouldReceive('logConfigurationChange')
+        ->andThrow(new RuntimeException('audit failed'));
+
+    $this->actingAs($user)->putJson('/api/v1/admin/settings', [
+        'settings' => [
+            ['key' => 'ai_model', 'value' => 'sonnet', 'type' => 'string'],
+        ],
+    ])->assertOk()->assertJsonPath('success', true);
 });
