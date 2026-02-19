@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,7 @@ class TaskResultViewController extends Controller
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
-        $project = $task->project;
+        $project = Project::query()->find($task->project_id);
         if ($project === null || ! $user->hasPermission('review.view', $project)) {
             return response()->json(['error' => 'Forbidden'], 403);
         }
@@ -41,7 +42,7 @@ class TaskResultViewController extends Controller
                 'pipeline_status' => $task->pipeline_status,
                 'started_at' => $task->started_at?->toIso8601String(),
                 'conversation_id' => $task->conversation_id,
-                'gitlab_url' => $task->project->gitlabWebUrl(),
+                'gitlab_url' => $project->gitlabWebUrl(),
                 'error_reason' => $task->error_reason,
                 'result' => $task->result,
             ],

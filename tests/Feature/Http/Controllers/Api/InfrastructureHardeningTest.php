@@ -35,9 +35,6 @@ function createGlobalAdminUser(): array
     return [$user, $project];
 }
 
-/**
- * @return Limit
- */
 function resolveRateLimit(Request $request): Limit
 {
     $limiter = RateLimiter::limiter('api_key');

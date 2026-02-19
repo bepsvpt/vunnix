@@ -76,6 +76,7 @@ vi.mock('@shikijs/langs/nginx', () => ({ default: {} }));
 
 describe('markdown', () => {
     beforeEach(() => {
+        vi.useRealTimers();
         _resetForTesting();
         vi.clearAllMocks();
     });

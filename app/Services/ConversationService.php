@@ -17,6 +17,7 @@ class ConversationService
     /**
      * List conversations accessible by the user with filters and cursor pagination.
      *
+     * @param  array<int, int>|null  $allowedPrimaryProjectIds
      * @return CursorPaginator<int, Conversation>
      */
     public function listForUser(

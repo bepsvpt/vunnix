@@ -92,8 +92,13 @@ class ExternalTaskController extends Controller
             abort(401);
         }
 
-        $project = $task->project;
-        if ($project === null || ! $user->accessibleProjects()->pluck('id')->contains($task->project_id)) {
+        $projectId = $task->project_id;
+        if (! $user->accessibleProjects()->pluck('id')->contains($projectId)) {
+            abort(403, 'You do not have access to this task.');
+        }
+
+        $project = Project::query()->find($projectId);
+        if ($project === null) {
             abort(403, 'You do not have access to this task.');
         }
 

@@ -18,6 +18,11 @@ class VerifyCsrfUnlessTokenAuth extends Middleware
         return parent::handle($request, $next);
     }
 
+    protected function runningUnitTests(): bool
+    {
+        return parent::runningUnitTests() && ! (bool) config('security.force_csrf_validation_in_tests', false);
+    }
+
     private function shouldBypassCsrf(Request $request): bool
     {
         if (($request->bearerToken() ?? '') !== '') {
@@ -27,10 +32,5 @@ class VerifyCsrfUnlessTokenAuth extends Middleware
         $route = $request->route();
 
         return $route !== null && in_array('task.token', $route->gatherMiddleware(), true);
-    }
-
-    protected function runningUnitTests(): bool
-    {
-        return parent::runningUnitTests() && ! (bool) config('security.force_csrf_validation_in_tests', false);
     }
 }
