@@ -314,7 +314,7 @@ describe('markdown', () => {
 
             // Initialize and wait for shiki to load
             getMarkdownRenderer();
-            await new Promise<void>(resolve => {
+            await new Promise<void>((resolve) => {
                 onHighlightLoaded(resolve);
             });
 
@@ -327,26 +327,27 @@ describe('markdown', () => {
         }, 15000);
 
         it('handles shiki loading failure gracefully', async () => {
-            // Wait for any in-flight Shiki promises from previous tests to settle
-            // (they close over module-level state and can race with our reset)
-            await new Promise(resolve => setTimeout(resolve, 300));
+            _resetForTesting();
 
-            // Make createHighlighterCore reject
+            // Make createHighlighterCore reject for this initialization attempt
             const { createHighlighterCore } = await import('shiki/core');
             vi.mocked(createHighlighterCore).mockRejectedValueOnce(new Error('Shiki load failed'));
 
-            _resetForTesting();
-
             const renderer = getMarkdownRenderer();
 
-            // Wait for the rejection to settle
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Wait for initShiki to start and process the mocked rejection.
+            await vi.waitFor(() => {
+                expect(createHighlighterCore).toHaveBeenCalled();
+            }, { timeout: 1000 });
+
+            // Flush the catch handler microtask.
+            await Promise.resolve();
 
             // Shiki failed — renderer still works (plain <pre><code>), highlight stays not-ready
             expect(renderer).toBeDefined();
             expect(renderer.render('# test')).toContain('<h1>');
             expect(isHighlightReady()).toBe(false);
-        });
+        }, 15000);
 
         it('re-applies hidden fences after shiki loads', async () => {
             // Track if the plugin's use() was called, then verify hidden fences still work

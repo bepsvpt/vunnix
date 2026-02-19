@@ -829,3 +829,70 @@ it('passes VUNNIX_MEMORY_CONTEXT when review guidance exists', function (): void
             && ($request->data()['variables[VUNNIX_MEMORY_CONTEXT]'] ?? null) === 'Focus on logic defects over style.',
     );
 });
+
+it('uses description as VUNNIX_QUESTION when question is missing', function (): void {
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::FeatureDev,
+        'project_id' => $project->id,
+        'result' => [
+            'description' => 'Implement missing pagination support.',
+        ],
+    ]);
+
+    app(TaskDispatcher::class)->dispatch($task);
+
+    Http::assertSent(
+        fn ($request): bool => str_contains($request->url(), '/trigger/pipeline')
+            && ($request->data()['variables[VUNNIX_QUESTION]'] ?? null) === 'Implement missing pagination support.',
+    );
+});
+
+it('passes existing MR variables for feature iteration tasks', function (): void {
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    Http::fake([
+        '*/api/v4/projects/100/merge_requests/123' => Http::response([
+            'iid' => 123,
+            'source_branch' => 'ai/feature-iteration',
+            'target_branch' => 'main',
+        ]),
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::FeatureDev,
+        'project_id' => $project->id,
+        'mr_iid' => 123,
+        'result' => [
+            'branch_name' => 'ai/feature-iteration',
+        ],
+    ]);
+
+    app(TaskDispatcher::class)->dispatch($task);
+
+    Http::assertSent(
+        fn ($request): bool => str_contains($request->url(), '/trigger/pipeline')
+            && ($request->data()['variables[VUNNIX_EXISTING_MR_IID]'] ?? null) === '123'
+            && ($request->data()['variables[VUNNIX_EXISTING_BRANCH]'] ?? null) === 'ai/feature-iteration',
+    );
+});
