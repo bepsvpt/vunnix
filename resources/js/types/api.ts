@@ -195,6 +195,25 @@ export const AuditLogSchema = z.object({
     created_at: z.string().nullable(),
 });
 
+export const MemoryEntrySchema = z.object({
+    id: z.number(),
+    type: z.enum(['review_pattern', 'conversation_fact', 'cross_mr_pattern']),
+    category: z.string().nullable(),
+    content: z.record(z.unknown()),
+    confidence: z.number(),
+    applied_count: z.number(),
+    source_task_id: z.number().nullable(),
+    created_at: z.string().nullable(),
+});
+
+export const MemoryStatsSchema = z.object({
+    total_entries: z.number(),
+    by_type: z.record(z.number()),
+    by_category: z.record(z.number()),
+    average_confidence: z.number(),
+    last_created_at: z.string().nullable(),
+});
+
 // --- Inferred types ---
 
 export type User = z.infer<typeof UserSchema>;
@@ -210,5 +229,7 @@ export type AdminRole = z.infer<typeof AdminRoleSchema>;
 export type GlobalSetting = z.infer<typeof GlobalSettingSchema>;
 export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
 export type AuditLog = z.infer<typeof AuditLogSchema>;
+export type MemoryEntry = z.infer<typeof MemoryEntrySchema>;
+export type MemoryStats = z.infer<typeof MemoryStatsSchema>;
 export type ProjectRef = z.infer<typeof ProjectRefSchema>;
 export type ApiError = z.infer<typeof ApiErrorSchema>;

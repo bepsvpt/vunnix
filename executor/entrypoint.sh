@@ -13,6 +13,7 @@
 #   VUNNIX_SKILLS     — Comma-separated skill names to activate
 #   VUNNIX_TOKEN      — Task-scoped HMAC-SHA256 bearer token (TTL = task budget)
 #   VUNNIX_API_URL    — Vunnix API base URL for result posting
+#   VUNNIX_MEMORY_CONTEXT — Optional learned project guidance from Project Memory
 #
 # @see §3.4 Task Dispatcher & Task Executor
 # @see §6.7 Executor Image
@@ -367,9 +368,11 @@ run_claude() {
 # ── Build task prompt ────────────────────────────────────────────────
 # Prompts MUST explicitly request JSON-only output. --json-schema validates but doesn't enforce.
 build_prompt() {
+    local prompt
+
     case "$VUNNIX_TASK_TYPE" in
         code_review)
-            cat <<EOF
+            prompt=$(cat <<EOF
 Review the code in this repository using the ${VUNNIX_STRATEGY} strategy.
 
 CRITICAL: Your output MUST be ONLY a valid JSON object matching the provided schema.
@@ -391,9 +394,10 @@ Set labels to ["ai::approved"] if approved, ["ai::needs-work"] if not.
 
 Remember: Output ONLY the JSON object, nothing else.
 EOF
+)
             ;;
         security_audit)
-            cat <<EOF
+            prompt=$(cat <<EOF
 Perform a security audit of the code in this repository.
 
 CRITICAL: Your output MUST be ONLY a valid JSON object matching the provided schema.
@@ -413,36 +417,40 @@ Set commit_status to "success" if no findings, "failed" otherwise.
 
 Remember: Output ONLY the JSON object, nothing else.
 EOF
+)
             ;;
         feature_dev)
-            cat <<EOF
+            prompt=$(cat <<EOF
 Implement the feature described in the task parameters. Follow project conventions from CLAUDE.md. Create clean, tested code.
 
 CRITICAL: Your output MUST be ONLY a valid JSON object matching the provided schema.
 Do NOT include any markdown fencing, explanations, or commentary outside the JSON.
 Output the raw JSON object directly with no wrapper text.
 EOF
+)
             ;;
         ui_adjustment)
-            cat <<EOF
+            prompt=$(cat <<EOF
 Make the UI adjustment described in the task parameters using the ${VUNNIX_STRATEGY} strategy.
 
 CRITICAL: Your output MUST be ONLY a valid JSON object matching the provided schema.
 Do NOT include any markdown fencing, explanations, or commentary outside the JSON.
 Output the raw JSON object directly with no wrapper text.
 EOF
+)
             ;;
         issue_discussion)
-            cat <<EOF
+            prompt=$(cat <<EOF
 Answer the question from the issue context. Reference relevant code from the repository with specific file paths and line numbers. Keep your response concise and actionable.
 
 CRITICAL: Your output MUST be ONLY a valid JSON object matching the provided schema.
 Do NOT include any markdown fencing, explanations, or commentary outside the JSON.
 Output the raw JSON object directly with no wrapper text.
 EOF
+)
             ;;
         deep_analysis)
-            cat <<EOF
+            prompt=$(cat <<EOF
 Perform a deep analysis of this repository. Thoroughly explore the codebase structure, architecture, patterns, and implementation details relevant to the task description.
 
 Focus on:
@@ -457,11 +465,21 @@ CRITICAL: Your output MUST be ONLY a valid JSON object matching the provided sch
 Do NOT include any markdown fencing, explanations, or commentary outside the JSON.
 Output the raw JSON object directly with no wrapper text.
 EOF
+)
             ;;
         *)
-            echo "Execute the ${VUNNIX_TASK_TYPE} task using the ${VUNNIX_STRATEGY} strategy. Follow CLAUDE.md instructions. Output as structured JSON."
+            prompt="Execute the ${VUNNIX_TASK_TYPE} task using the ${VUNNIX_STRATEGY} strategy. Follow CLAUDE.md instructions. Output as structured JSON."
             ;;
     esac
+
+    if [[ -n "${VUNNIX_MEMORY_CONTEXT:-}" ]]; then
+        prompt="${prompt}
+
+[Project Memory — Learned Patterns]
+${VUNNIX_MEMORY_CONTEXT}"
+    fi
+
+    printf '%s' "$prompt"
 }
 
 # ── Post results to Vunnix API ───────────────────────────────────────

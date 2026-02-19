@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import AdminDeadLetterQueue from '@/components/AdminDeadLetterQueue.vue';
 import AdminGlobalSettings from '@/components/AdminGlobalSettings.vue';
 import AdminPrdTemplate from '@/components/AdminPrdTemplate.vue';
@@ -7,6 +7,8 @@ import AdminProjectConfig from '@/components/AdminProjectConfig.vue';
 import AdminProjectList from '@/components/AdminProjectList.vue';
 import AdminRoleAssignments from '@/components/AdminRoleAssignments.vue';
 import AdminRoleList from '@/components/AdminRoleList.vue';
+import ProjectMemoryPanel from '@/components/ProjectMemoryPanel.vue';
+import BaseEmptyState from '@/components/ui/BaseEmptyState.vue';
 import BaseTabGroup from '@/components/ui/BaseTabGroup.vue';
 import { useAdminStore } from '@/stores/admin';
 
@@ -20,14 +22,25 @@ const admin = useAdminStore();
 const activeTab = ref('projects');
 const configuringProject = ref<ProjectRef | null>(null);
 const editingTemplate = ref<ProjectRef | null>(null);
+const memoryEnabled = true;
 
 const tabs = [
     { key: 'projects', label: 'Projects' },
+    ...(memoryEnabled ? [{ key: 'memory', label: 'Memory' }] : []),
     { key: 'roles', label: 'Roles' },
     { key: 'assignments', label: 'Assignments' },
     { key: 'settings', label: 'Settings' },
     { key: 'dlq', label: 'Dead Letter' },
 ];
+
+const memoryProject = computed<ProjectRef | null>(() => {
+    if (configuringProject.value)
+        return configuringProject.value;
+    if (editingTemplate.value)
+        return editingTemplate.value;
+    const first = admin.projects[0];
+    return first ? { id: first.id, name: first.name } : null;
+});
 
 onMounted(() => {
     admin.fetchProjects();
@@ -64,6 +77,18 @@ onMounted(() => {
                 @edit-template="editingTemplate = configuringProject"
             />
             <AdminProjectList v-else-if="activeTab === 'projects'" @configure="configuringProject = $event" />
+            <ProjectMemoryPanel
+                v-else-if="activeTab === 'memory' && memoryProject"
+                :project-id="memoryProject.id"
+            />
+            <BaseEmptyState v-else-if="activeTab === 'memory'">
+                <template #title>
+                    No project selected
+                </template>
+                <template #description>
+                    Enable or select a project to inspect learned memory entries.
+                </template>
+            </BaseEmptyState>
             <AdminRoleList v-else-if="activeTab === 'roles'" />
             <AdminRoleAssignments v-else-if="activeTab === 'assignments'" />
             <AdminGlobalSettings v-else-if="activeTab === 'settings'" />

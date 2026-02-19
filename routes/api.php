@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\ExternalTaskController;
 use App\Http\Controllers\Api\InfrastructureAlertController;
 use App\Http\Controllers\Api\OverrelianceAlertController;
 use App\Http\Controllers\Api\PrdTemplateController;
+use App\Http\Controllers\Api\ProjectMemoryController;
 use App\Http\Controllers\Api\PromptVersionController;
 use App\Http\Controllers\Api\TaskResultViewController;
 use App\Http\Controllers\TaskResultController;
@@ -213,6 +214,14 @@ Route::prefix('v1')->group(function (): void {
             ->name('api.admin.api-keys.index');
         Route::delete('/admin/api-keys/{apiKey}', [AdminApiKeyController::class, 'destroy'])
             ->name('api.admin.api-keys.destroy');
+
+        // Project memory management (ext-012)
+        Route::get('/projects/{project}/memory', [ProjectMemoryController::class, 'index'])
+            ->name('api.projects.memory.index');
+        Route::get('/projects/{project}/memory/stats', [ProjectMemoryController::class, 'stats'])
+            ->name('api.projects.memory.stats');
+        Route::delete('/projects/{project}/memory/{memoryEntry}', [ProjectMemoryController::class, 'destroy'])
+            ->name('api.projects.memory.destroy');
     });
 
     // External API (T100) — accepts session auth OR API key

@@ -29,4 +29,26 @@ return [
 
     'api_url' => env('VUNNIX_API_URL', env('APP_URL', 'http://localhost:8000')),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Project Memory (D195-D200)
+    |--------------------------------------------------------------------------
+    |
+    | Learned per-project guidance extracted from review outcomes and
+    | conversation summaries. Feature-flagged per sub-capability for safe
+    | rollout and quick disablement.
+    |
+    */
+
+    'memory' => [
+        'enabled' => (bool) env('VUNNIX_MEMORY_ENABLED', true),
+        'review_learning' => (bool) env('VUNNIX_MEMORY_REVIEW_LEARNING', true),
+        'conversation_continuity' => (bool) env('VUNNIX_MEMORY_CONVERSATION_CONTINUITY', true),
+        'cross_mr_patterns' => (bool) env('VUNNIX_MEMORY_CROSS_MR_PATTERNS', true),
+        'retention_days' => (int) env('VUNNIX_MEMORY_RETENTION_DAYS', 90),
+        'max_context_tokens' => (int) env('VUNNIX_MEMORY_MAX_CONTEXT_TOKENS', 2000),
+        'min_confidence' => (int) env('VUNNIX_MEMORY_MIN_CONFIDENCE', 40),
+        'min_sample_size' => (int) env('VUNNIX_MEMORY_MIN_SAMPLE_SIZE', 20),
+    ],
+
 ];

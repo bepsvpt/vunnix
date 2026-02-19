@@ -98,6 +98,12 @@ describe('dashboardPage', () => {
         expect(wrapper.text()).toContain('Dashboard');
     });
 
+    it('renders memory stats widget in overview', () => {
+        setUpAdminUser();
+        const wrapper = mountDashboard();
+        expect(wrapper.find('[data-testid="memory-stats-widget"]').exists()).toBe(true);
+    });
+
     it('shows base view tabs for all users', () => {
         setUpRegularUser();
         const wrapper = mountDashboard();

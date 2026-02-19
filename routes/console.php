@@ -38,3 +38,14 @@ Schedule::command('backup:database')
     ->withoutOverlapping()
     ->runInBackground()
     ->onOneServer();
+
+Schedule::command('memory:analyze-patterns')
+    ->weekly()
+    ->mondays()
+    ->at('03:00')
+    ->withoutOverlapping()
+    ->when(fn (): bool => (bool) config('vunnix.memory.enabled', true) && (bool) config('vunnix.memory.cross_mr_patterns', true));
+
+Schedule::command('memory:archive-expired')
+    ->dailyAt('04:00')
+    ->withoutOverlapping();

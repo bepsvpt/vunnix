@@ -22,6 +22,8 @@ use Throwable;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\ProjectConfig|null $projectConfig
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\MemoryEntry> $memoryEntries
+ * @property-read int|null $memory_entries_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Role> $roles
  * @property-read int|null $roles_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
@@ -69,6 +71,12 @@ class Project extends Model
     public function roles(): HasMany
     {
         return $this->hasMany(Role::class);
+    }
+
+    /** @return HasMany<MemoryEntry, $this> */
+    public function memoryEntries(): HasMany
+    {
+        return $this->hasMany(MemoryEntry::class);
     }
 
     public function defaultRole(): ?Role

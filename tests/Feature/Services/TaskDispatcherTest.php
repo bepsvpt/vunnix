@@ -6,6 +6,7 @@ use App\Jobs\PostPlaceholderComment;
 use App\Models\Project;
 use App\Models\ProjectConfig;
 use App\Models\Task;
+use App\Services\MemoryInjectionService;
 use App\Services\TaskDispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -787,4 +788,44 @@ it('does not read .vunnix.toml for server-side tasks', function (): void {
     Http::assertNotSent(function ($request): bool {
         return str_contains($request->url(), '.vunnix.toml');
     });
+});
+
+it('passes VUNNIX_MEMORY_CONTEXT when review guidance exists', function (): void {
+    $project = Project::factory()->create(['gitlab_project_id' => 100]);
+    ProjectConfig::factory()->create([
+        'project_id' => $project->id,
+        'ci_trigger_token' => 'test-trigger-token',
+    ]);
+
+    $memoryInjection = \Mockery::mock(MemoryInjectionService::class);
+    $memoryInjection->shouldReceive('buildReviewGuidance')
+        ->once()
+        ->andReturn('Focus on logic defects over style.');
+    app()->instance(MemoryInjectionService::class, $memoryInjection);
+
+    Http::fake([
+        '*/api/v4/projects/100/merge_requests/1/changes' => Http::response([
+            'changes' => [['new_path' => 'app/Services/TaskDispatcher.php']],
+        ]),
+        '*/api/v4/projects/100/merge_requests/1' => Http::response([
+            'source_branch' => 'feat/memory',
+        ]),
+        '*/api/v4/projects/100/trigger/pipeline' => Http::response([
+            'id' => 1000,
+            'status' => 'pending',
+        ]),
+    ]);
+
+    $task = Task::factory()->queued()->create([
+        'type' => TaskType::CodeReview,
+        'project_id' => $project->id,
+        'mr_iid' => 1,
+    ]);
+
+    app(TaskDispatcher::class)->dispatch($task);
+
+    Http::assertSent(
+        fn ($request): bool => str_contains($request->url(), '/trigger/pipeline')
+            && ($request->data()['variables[VUNNIX_MEMORY_CONTEXT]'] ?? null) === 'Focus on logic defects over style.',
+    );
 });

@@ -28,6 +28,7 @@ class TaskDispatcher
         private readonly StrategyResolver $strategyResolver,
         private readonly TaskTokenService $taskTokenService,
         private readonly VunnixTomlService $vunnixTomlService,
+        private readonly MemoryInjectionService $memoryInjectionService,
     ) {}
 
     /**
@@ -102,10 +103,18 @@ class TaskDispatcher
         ]);
 
         // T92: Read optional .vunnix.toml from repo
-        $fileConfig = $this->vunnixTomlService->read(
-            $task->project->gitlab_project_id,
-            $task->commit_sha ?? 'main',
-        );
+        try {
+            $fileConfig = $this->vunnixTomlService->read(
+                $task->project->gitlab_project_id,
+                $task->commit_sha ?? 'main',
+            );
+        } catch (Throwable $e) {
+            Log::warning('TaskDispatcher: failed to read .vunnix.toml, continuing with defaults', [
+                'task_id' => $task->id,
+                'error' => $e->getMessage(),
+            ]);
+            $fileConfig = [];
+        }
 
         if ($fileConfig !== []) {
             $task->result = array_merge($task->result ?? [], [
@@ -155,6 +164,11 @@ class TaskDispatcher
             // T43: Pass Issue IID for issue_discussion tasks
             if ($task->issue_iid !== null) {
                 $variables['VUNNIX_ISSUE_IID'] = (string) $task->issue_iid;
+            }
+
+            $memoryContext = $this->memoryInjectionService->buildReviewGuidance($task->project);
+            if ($memoryContext !== '') {
+                $variables['VUNNIX_MEMORY_CONTEXT'] = $memoryContext;
             }
 
             // T72: Pass existing MR IID for designer iteration (push to same branch)

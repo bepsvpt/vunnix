@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\TaskType;
+use App\Jobs\ExtractReviewPatterns;
 use App\Jobs\PostInlineThreads;
 use App\Jobs\PostLabelsAndStatus;
 use App\Jobs\PostSummaryComment;
@@ -134,6 +135,54 @@ it('does not dispatch PostSummaryComment for tasks without mr_iid', function ():
     $job->handle(app(\App\Services\ResultProcessor::class));
 
     Queue::assertNotPushed(PostSummaryComment::class);
+});
+
+it('dispatches ExtractReviewPatterns for review tasks with findings', function (): void {
+    config([
+        'vunnix.memory.enabled' => true,
+        'vunnix.memory.review_learning' => true,
+    ]);
+
+    Queue::fake([
+        PostSummaryComment::class,
+        PostInlineThreads::class,
+        PostLabelsAndStatus::class,
+        ExtractReviewPatterns::class,
+    ]);
+
+    $task = Task::factory()->running()->create([
+        'type' => TaskType::CodeReview,
+        'mr_iid' => 42,
+        'result' => [
+            'version' => '1.0',
+            'summary' => [
+                'risk_level' => 'medium',
+                'total_findings' => 1,
+                'findings_by_severity' => ['critical' => 0, 'major' => 1, 'minor' => 0],
+                'walkthrough' => [
+                    ['file' => 'app/Services/Example.php', 'change_summary' => 'Updated'],
+                ],
+            ],
+            'findings' => [[
+                'id' => 1,
+                'severity' => 'major',
+                'category' => 'bug',
+                'file' => 'app/Services/Example.php',
+                'line' => 10,
+                'end_line' => 10,
+                'title' => 'Null check missing',
+                'description' => 'Potential null access.',
+                'suggestion' => 'Add guard.',
+                'labels' => [],
+            ]],
+            'labels' => ['ai::needs-work'],
+            'commit_status' => 'failed',
+        ],
+    ]);
+
+    (new ProcessTaskResult($task->id))->handle(app(\App\Services\ResultProcessor::class));
+
+    Queue::assertPushed(ExtractReviewPatterns::class, fn ($job): bool => $job->taskId === $task->id);
 });
 
 // ─── PostInlineThreads dispatch tests ───────────────────────────
@@ -417,7 +466,12 @@ it('dispatches CreateGitLabIssue after successful PrdCreation processing', funct
 });
 
 it('does not dispatch CreateGitLabIssue for non-PrdCreation task types', function (): void {
-    Queue::fake([\App\Jobs\CreateGitLabIssue::class]);
+    Queue::fake([
+        \App\Jobs\CreateGitLabIssue::class,
+        PostSummaryComment::class,
+        PostInlineThreads::class,
+        PostLabelsAndStatus::class,
+    ]);
 
     $task = Task::factory()->running()->create([
         'type' => TaskType::CodeReview,

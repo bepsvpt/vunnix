@@ -3,6 +3,7 @@
 use App\Agents\VunnixAgent;
 use App\Models\Conversation;
 use App\Models\GlobalSetting;
+use App\Models\MemoryEntry;
 use App\Models\Message;
 use App\Models\Permission;
 use App\Models\Project;
@@ -678,6 +679,33 @@ it('includes additional cross-project context when set', function (): void {
     expect($instructions)->toContain('10');
     expect($instructions)->toContain('Backend API');
     expect($instructions)->toContain('20');
+});
+
+it('includes project memory section when learned entries exist', function (): void {
+    config([
+        'vunnix.memory.enabled' => true,
+        'vunnix.memory.review_learning' => true,
+        'vunnix.memory.conversation_continuity' => true,
+    ]);
+
+    $project = Project::factory()->create();
+    MemoryEntry::factory()->create([
+        'project_id' => $project->id,
+        'type' => 'review_pattern',
+        'content' => ['pattern' => 'Logic findings are more actionable than style issues.'],
+    ]);
+    MemoryEntry::factory()->create([
+        'project_id' => $project->id,
+        'type' => 'conversation_fact',
+        'content' => ['fact' => 'Project uses Redis Streams for event fan-out.'],
+    ]);
+
+    $agent = new VunnixAgent;
+    $agent->setProject($project);
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('[Project Memory — Learned Patterns]');
+    expect($instructions)->toContain('[Project Memory — Key Facts]');
 });
 
 it('places project context section between identity and capabilities', function (): void {

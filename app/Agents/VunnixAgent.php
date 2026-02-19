@@ -15,6 +15,7 @@ use App\Agents\Tools\ResolveGitLabUser;
 use App\Agents\Tools\SearchCode;
 use App\Models\GlobalSetting;
 use App\Models\Project;
+use App\Services\MemoryInjectionService;
 use App\Services\ProjectConfigService;
 use Laravel\Ai\Attributes\MaxTokens;
 use Laravel\Ai\Concerns\RemembersConversations;
@@ -88,6 +89,16 @@ class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
     public function setProject(Project $project): void
     {
         $this->project = $project;
+    }
+
+    public function getProject(): ?Project
+    {
+        return $this->project;
+    }
+
+    public function getConversationId(): ?string
+    {
+        return $this->conversationId;
     }
 
     /**
@@ -213,6 +224,7 @@ class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
         $sections = [
             $this->identitySection(),
             $this->projectContextSection(),
+            $this->memorySection(),
             $this->capabilitiesSection(),
             $this->qualityGateSection(),
             $this->prdTemplateSection(),
@@ -264,6 +276,31 @@ PROMPT;
         }
 
         return implode("\n", $lines);
+    }
+
+    protected function memorySection(): string
+    {
+        if (! $this->project instanceof Project || ! (bool) config('vunnix.memory.enabled', true)) {
+            return '';
+        }
+
+        $service = app(MemoryInjectionService::class);
+        $guidance = $service->buildReviewGuidance($this->project);
+        $facts = $service->buildConversationContext($this->project);
+
+        if ($guidance === '' && $facts === '') {
+            return '';
+        }
+
+        $sections = [];
+        if ($guidance !== '') {
+            $sections[] = "[Project Memory — Learned Patterns]\n{$guidance}";
+        }
+        if ($facts !== '') {
+            $sections[] = "[Project Memory — Key Facts]\n{$facts}";
+        }
+
+        return implode("\n\n", $sections);
     }
 
     protected function capabilitiesSection(): string

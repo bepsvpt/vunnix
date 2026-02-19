@@ -89,6 +89,11 @@ describe('adminPage', () => {
         expect(wrapper.find('[data-testid="tab-roles"]').exists()).toBe(true);
     });
 
+    it('shows Memory tab', () => {
+        const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
+        expect(wrapper.find('[data-testid="tab-memory"]').exists()).toBe(true);
+    });
+
     it('shows Assignments tab', () => {
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
         expect(wrapper.find('[data-testid="tab-assignments"]').exists()).toBe(true);
@@ -153,13 +158,28 @@ describe('adminPage', () => {
         expect(wrapper.text()).toContain('Dead Letter');
     });
 
-    it('shows all five tabs', () => {
+    it('shows all six tabs', () => {
         const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
         expect(wrapper.find('[data-testid="tab-projects"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="tab-memory"]').exists()).toBe(true);
         expect(wrapper.find('[data-testid="tab-roles"]').exists()).toBe(true);
         expect(wrapper.find('[data-testid="tab-assignments"]').exists()).toBe(true);
         expect(wrapper.find('[data-testid="tab-settings"]').exists()).toBe(true);
         expect(wrapper.find('[data-testid="tab-dlq"]').exists()).toBe(true);
+    });
+
+    it('renders ProjectMemoryPanel when memory tab is selected', async () => {
+        const admin = useAdminStore();
+        admin.projects = [
+            { id: 1, name: 'Alpha', slug: 'alpha', enabled: true, webhook_configured: true, recent_task_count: 0, active_conversation_count: 0 },
+        ];
+        vi.spyOn(admin, 'fetchProjects').mockResolvedValue();
+
+        const wrapper = mount(AdminPage, { global: { plugins: [pinia] } });
+        await wrapper.find('[data-testid="tab-memory"]').trigger('click');
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.find('[data-testid="project-memory-panel"]').exists()).toBe(true);
     });
 
     it('highlights the active tab with distinct styling', async () => {

@@ -2,10 +2,17 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function (): void {
+    Http::fake([
+        'https://gitlab.com/api/v4/projects*' => Http::response([], 200, ['x-next-page' => '']),
+    ]);
+});
 
 it('redirects to gitlab oauth with correct scopes', function (): void {
     config([

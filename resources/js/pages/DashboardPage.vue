@@ -9,6 +9,7 @@ import DashboardInfrastructure from '@/components/DashboardInfrastructure.vue';
 import DashboardOverview from '@/components/DashboardOverview.vue';
 import DashboardPMActivity from '@/components/DashboardPMActivity.vue';
 import DashboardQuality from '@/components/DashboardQuality.vue';
+import MemoryStatsWidget from '@/components/MemoryStatsWidget.vue';
 import BaseTabGroup from '@/components/ui/BaseTabGroup.vue';
 import { useDashboardRealtime } from '@/composables/useDashboardRealtime';
 import { useAuthStore } from '@/stores/auth';
@@ -38,6 +39,11 @@ const views = computed(() => {
     }
     v.push({ key: 'activity', label: 'Activity' });
     return v;
+});
+
+const activeProjectId = computed<number | null>(() => {
+    const project = auth.projects[0];
+    return project ? project.id : null;
 });
 
 onMounted(() => {
@@ -73,7 +79,10 @@ watch(() => dashboard.metricsUpdates.length, () => {
 
         <!-- Tab content -->
         <div class="px-6 lg:px-8 py-6">
-            <DashboardOverview v-if="activeView === 'overview'" />
+            <div v-if="activeView === 'overview'" class="space-y-6">
+                <DashboardOverview />
+                <MemoryStatsWidget v-if="activeProjectId !== null" :project-id="activeProjectId" />
+            </div>
             <DashboardQuality v-else-if="activeView === 'quality'" />
             <DashboardPMActivity v-else-if="activeView === 'pm-activity'" />
             <DashboardDesignerActivity v-else-if="activeView === 'designer-activity'" />

@@ -3,7 +3,10 @@
 namespace App\Agents\Middleware;
 
 use App\Agents\VunnixAgent;
+use App\Jobs\ExtractConversationFacts;
 use Closure;
+use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Providers\TextProvider;
 use Laravel\Ai\Messages\UserMessage;
@@ -99,6 +102,7 @@ class PruneConversationHistory
 
         try {
             $summary = $this->summarize($olderMessages, $provider);
+            $this->dispatchConversationExtraction($agent, $summary);
 
             $summaryMessage = new UserMessage(
                 "[Conversation Summary — earlier messages have been condensed]\n\n{$summary}"
@@ -156,5 +160,42 @@ class PruneConversationHistory
         }
 
         return implode("\n\n", $lines);
+    }
+
+    protected function dispatchConversationExtraction(VunnixAgent $agent, string $summary): void
+    {
+        try {
+            $memoryEnabled = (bool) config('vunnix.memory.enabled', true);
+            $continuityEnabled = (bool) config('vunnix.memory.conversation_continuity', true);
+        } catch (Throwable) {
+            return;
+        }
+
+        if (! $memoryEnabled || ! $continuityEnabled) {
+            return;
+        }
+
+        $project = $agent->getProject();
+        if (! $project instanceof \App\Models\Project) {
+            return;
+        }
+
+        $conversationId = Context::get('vunnix_conversation_id');
+
+        try {
+            ExtractConversationFacts::dispatch(
+                $summary,
+                $project->id,
+                [
+                    'conversation_id' => is_string($conversationId) ? $conversationId : null,
+                ],
+            );
+        } catch (Throwable $e) {
+            Log::warning('PruneConversationHistory: failed to dispatch conversation memory extraction', [
+                'project_id' => $project->id,
+                'conversation_id' => $conversationId,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

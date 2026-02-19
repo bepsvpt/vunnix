@@ -199,3 +199,9 @@
 | D192 | Three-state empty model for Dashboard — error → retry CTA, all-zeros → onboarding CTAs, data present → normal render | ext-010 | Active |
 | D193 | Base UI component library at `components/ui/` — 7 primitives (BaseCard, BaseBadge, BaseButton, BaseTabGroup, BaseFilterChips, BaseEmptyState, BaseSpinner) with typed props and design-token-backed styling | ext-010 | Active |
 | D194 | Unauthenticated users see a branded `/sign-in` page instead of auto-redirecting to GitLab OAuth; logout redirects to `/sign-in` | ext-011 | Active |
+| D195 | Project Memory storage uses PostgreSQL `memory_entries` table rather than `.vunnix.toml`; learned guidance remains dynamic DB data | ext-012 | Active |
+| D196 | Project Memory uses structured JSON extraction (review patterns, conversation facts, cross-MR signals) instead of pgvector embeddings | ext-012 | Active |
+| D197 | Learned memory is injected as Layer 2.5 guidance between executor skills and project config, without overriding safety or schema rules | ext-012 | Active |
+| D198 | Memory entries are confidence-scored and auto-archived after retention TTL (default 90 days) to prevent stale guidance | ext-012 | Active |
+| D199 | Project Memory is feature-flagged per sub-capability (`review_learning`, `conversation_continuity`, `cross_mr_patterns`) | ext-012 | Active |
+| D200 | Injected memory context is token-capped (default 2000 tokens) with confidence-ranked selection to control prompt bloat | ext-012 | Active |

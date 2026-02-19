@@ -115,6 +115,10 @@ class ProcessTaskResult implements ShouldQueue
         if ($this->shouldCreateGitLabIssue($task)) {
             CreateGitLabIssue::dispatch($task->id);
         }
+
+        if ($this->shouldExtractMemory($task)) {
+            ExtractReviewPatterns::dispatch($task->id);
+        }
     }
 
     /**
@@ -217,5 +221,20 @@ class ProcessTaskResult implements ShouldQueue
     private function shouldCreateGitLabIssue(Task $task): bool
     {
         return $task->type === TaskType::PrdCreation;
+    }
+
+    private function shouldExtractMemory(Task $task): bool
+    {
+        if (! (bool) config('vunnix.memory.enabled', true) || ! (bool) config('vunnix.memory.review_learning', true)) {
+            return false;
+        }
+
+        if (! in_array($task->type, [TaskType::CodeReview, TaskType::SecurityAudit], true)) {
+            return false;
+        }
+
+        $findings = $task->result['findings'] ?? [];
+
+        return is_array($findings) && count($findings) > 0;
     }
 }

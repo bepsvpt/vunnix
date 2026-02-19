@@ -2,6 +2,8 @@
 
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
+use App\Exceptions\GitLabApiException;
+use App\Jobs\Middleware\RetryWithBackoff;
 use App\Jobs\PostSummaryComment;
 use App\Models\Task;
 use App\Services\GitLabClient;
@@ -231,4 +233,26 @@ it('does not POST a new comment when updating placeholder in-place', function ()
         return $request->method() === 'POST'
             && str_contains($request->url(), '/notes');
     });
+});
+
+it('registers RetryWithBackoff middleware', function (): void {
+    $job = new PostSummaryComment(123);
+
+    $middleware = $job->middleware();
+
+    expect($middleware)->toHaveCount(1);
+    expect($middleware[0])->toBeInstanceOf(RetryWithBackoff::class);
+});
+
+it('rethrows and logs when posting the summary fails', function (): void {
+    Http::fake([
+        '*/api/v4/projects/*/merge_requests/*/notes' => Http::response(['message' => 'boom'], 500),
+    ]);
+
+    $task = completedCodeReviewTask();
+
+    $job = new PostSummaryComment($task->id);
+
+    expect(fn () => $job->handle(app(GitLabClient::class)))
+        ->toThrow(GitLabApiException::class);
 });

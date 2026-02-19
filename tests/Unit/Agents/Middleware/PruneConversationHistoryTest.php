@@ -2,6 +2,9 @@
 
 use App\Agents\Middleware\PruneConversationHistory;
 use App\Agents\VunnixAgent;
+use App\Jobs\ExtractConversationFacts;
+use App\Models\Project;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Ai\Contracts\Gateway\TextGateway;
 use Laravel\Ai\Contracts\Providers\TextProvider;
 use Laravel\Ai\Messages\Message;
@@ -12,6 +15,8 @@ use Laravel\Ai\Responses\Data\Meta;
 use Laravel\Ai\Responses\Data\Usage;
 use Laravel\Ai\Responses\TextResponse;
 
+uses(Tests\TestCase::class);
+
 // ─── Helper: Build message array of N turns ────────────────────
 function buildMessages(int $turns): array
 {
@@ -19,6 +24,24 @@ function buildMessages(int $turns): array
     for ($i = 1; $i <= $turns; $i++) {
         $messages[] = new Message('user', "User message {$i}");
         $messages[] = new Message('assistant', "Assistant response {$i}");
+    }
+
+    return $messages;
+}
+
+function buildPlainObjectMessages(int $turns): array
+{
+    $messages = [];
+    for ($i = 1; $i <= $turns; $i++) {
+        $user = new stdClass;
+        $user->role = 'user';
+        $user->content = "User message {$i}";
+        $messages[] = $user;
+
+        $assistant = new stdClass;
+        $assistant->role = 'assistant';
+        $assistant->content = "Assistant response {$i}";
+        $messages[] = $assistant;
     }
 
     return $messages;
@@ -194,6 +217,43 @@ it('keeps exactly the last 10 turns when pruning', function (): void {
     expect($recentMessages[19]->content)->toBe('Assistant response 30');
 });
 
+it('dispatches ExtractConversationFacts when memory continuity is enabled', function (): void {
+    config([
+        'vunnix.memory.enabled' => true,
+        'vunnix.memory.conversation_continuity' => true,
+    ]);
+
+    Queue::fake([ExtractConversationFacts::class]);
+
+    $messages = buildMessages(25);
+    $project = new Project;
+    $project->id = 1;
+    $project->name = 'Test Project';
+    $project->gitlab_project_id = 123;
+    $agent = Mockery::mock(VunnixAgent::class)->makePartial();
+    $agent->setProject($project);
+    $agent->shouldReceive('messages')->andReturn($messages);
+    $agent->shouldReceive('setPrunedMessages');
+
+    $gateway = Mockery::mock(TextGateway::class);
+    $gateway->shouldReceive('generateText')->once()->andReturn(
+        new TextResponse('Summary for extraction.', new Usage, new Meta)
+    );
+
+    $provider = Mockery::mock(TextProvider::class);
+    $provider->shouldReceive('textGateway')->andReturn($gateway);
+    $provider->shouldReceive('cheapestTextModel')->andReturn('claude-haiku-4-5-20251001');
+
+    $middleware = new PruneConversationHistory($provider);
+
+    $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
+    $next = fn ($p): \Laravel\Ai\Responses\AgentResponse => new AgentResponse('test-id', 'response text', new Usage, new Meta);
+
+    $middleware->handle($prompt, $next);
+
+    Queue::assertPushed(ExtractConversationFacts::class);
+});
+
 // ─── Summary content ───────────────────────────────────────────
 
 it('sends older messages to the summarizer', function (): void {
@@ -317,4 +377,131 @@ it('triggers pruning at exactly 21 turns', function (): void {
     $recentMessages = array_slice($prunedMessages, 1);
     expect($recentMessages[0]->content)->toBe('User message 12');
     expect($recentMessages[19]->content)->toBe('Assistant response 21');
+});
+
+it('converts iterable message history to array before counting turns', function (): void {
+    $messages = new ArrayIterator(buildMessages(21));
+    $agent = Mockery::mock(VunnixAgent::class)->makePartial();
+    $agent->shouldReceive('messages')->andReturn($messages);
+    $agent->shouldReceive('setPrunedMessages')->once();
+
+    $gateway = Mockery::mock(TextGateway::class);
+    $gateway->shouldReceive('generateText')->once()->andReturn(
+        new TextResponse('Summary from iterator.', new Usage, new Meta)
+    );
+
+    $provider = Mockery::mock(TextProvider::class);
+    $provider->shouldReceive('textGateway')->andReturn($gateway);
+    $provider->shouldReceive('cheapestTextModel')->andReturn('claude-haiku-4-5-20251001');
+
+    $middleware = new PruneConversationHistory($provider);
+    $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
+    $next = fn ($p): \Laravel\Ai\Responses\AgentResponse => new AgentResponse('test-id', 'response text', new Usage, new Meta);
+
+    $result = $middleware->handle($prompt, $next);
+
+    expect($result)->toBeInstanceOf(AgentResponse::class);
+});
+
+it('does not dispatch extraction when conversation continuity feature is disabled', function (): void {
+    config([
+        'vunnix.memory.enabled' => true,
+        'vunnix.memory.conversation_continuity' => false,
+    ]);
+
+    Queue::fake([ExtractConversationFacts::class]);
+
+    $messages = buildMessages(25);
+    $project = new Project;
+    $project->id = 5;
+    $project->name = 'Test Project';
+    $project->gitlab_project_id = 123;
+
+    $agent = Mockery::mock(VunnixAgent::class)->makePartial();
+    $agent->setProject($project);
+    $agent->shouldReceive('messages')->andReturn($messages);
+    $agent->shouldReceive('setPrunedMessages');
+
+    $gateway = Mockery::mock(TextGateway::class);
+    $gateway->shouldReceive('generateText')->once()->andReturn(
+        new TextResponse('Summary but no extraction dispatch.', new Usage, new Meta)
+    );
+
+    $provider = Mockery::mock(TextProvider::class);
+    $provider->shouldReceive('textGateway')->andReturn($gateway);
+    $provider->shouldReceive('cheapestTextModel')->andReturn('claude-haiku-4-5-20251001');
+
+    $middleware = new PruneConversationHistory($provider);
+    $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
+    $next = fn ($p): \Laravel\Ai\Responses\AgentResponse => new AgentResponse('test-id', 'response text', new Usage, new Meta);
+
+    $middleware->handle($prompt, $next);
+
+    Queue::assertNotPushed(ExtractConversationFacts::class);
+});
+
+it('handles plain string message roles during turn counting and summary formatting', function (): void {
+    $messages = buildPlainObjectMessages(21);
+    $agent = Mockery::mock(VunnixAgent::class)->makePartial();
+    $agent->shouldReceive('messages')->andReturn($messages);
+    $agent->shouldReceive('setPrunedMessages')->once();
+
+    $gateway = Mockery::mock(TextGateway::class);
+    $gateway->shouldReceive('generateText')->once()->andReturn(
+        new TextResponse('Summary from plain object messages.', new Usage, new Meta)
+    );
+
+    $provider = Mockery::mock(TextProvider::class);
+    $provider->shouldReceive('textGateway')->andReturn($gateway);
+    $provider->shouldReceive('cheapestTextModel')->andReturn('claude-haiku-4-5-20251001');
+
+    $middleware = new PruneConversationHistory($provider);
+    $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
+    $next = fn ($p): \Laravel\Ai\Responses\AgentResponse => new AgentResponse('test-id', 'response text', new Usage, new Meta);
+
+    $result = $middleware->handle($prompt, $next);
+
+    expect($result)->toBeInstanceOf(AgentResponse::class);
+});
+
+it('swallows config lookup exceptions while dispatching conversation extraction', function (): void {
+    Queue::fake([ExtractConversationFacts::class]);
+
+    $messages = buildMessages(25);
+    $project = new Project;
+    $project->id = 9;
+    $project->name = 'Config Fail Project';
+    $project->gitlab_project_id = 900;
+
+    $agent = Mockery::mock(VunnixAgent::class)->makePartial();
+    $agent->setProject($project);
+    $agent->shouldReceive('messages')->andReturn($messages);
+    $agent->shouldReceive('setPrunedMessages');
+
+    $gateway = Mockery::mock(TextGateway::class);
+    $gateway->shouldReceive('generateText')->once()->andReturn(
+        new TextResponse('Summary with config failure.', new Usage, new Meta)
+    );
+
+    $provider = Mockery::mock(TextProvider::class);
+    $provider->shouldReceive('textGateway')->andReturn($gateway);
+    $provider->shouldReceive('cheapestTextModel')->andReturn('claude-haiku-4-5-20251001');
+
+    $originalConfig = app('config');
+    $throwingConfig = Mockery::mock(\Illuminate\Contracts\Config\Repository::class);
+    $throwingConfig->shouldReceive('get')->andThrow(new RuntimeException('config unavailable'));
+    app()->instance('config', $throwingConfig);
+
+    try {
+        $middleware = new PruneConversationHistory($provider);
+        $prompt = new AgentPrompt($agent, 'test', [], $provider, 'claude-opus-4-20250514');
+        $next = fn ($p): \Laravel\Ai\Responses\AgentResponse => new AgentResponse('test-id', 'response text', new Usage, new Meta);
+
+        $result = $middleware->handle($prompt, $next);
+
+        expect($result)->toBeInstanceOf(AgentResponse::class);
+        Queue::assertNotPushed(ExtractConversationFacts::class);
+    } finally {
+        app()->instance('config', $originalConfig);
+    }
 });
