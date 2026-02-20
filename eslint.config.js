@@ -1,18 +1,6 @@
 import antfu from '@antfu/eslint-config';
 
 const FEATURE_ROOT_SEGMENT = '/resources/js/features/';
-const LEGACY_STORE_IMPORTS = [
-    '@/stores/conversations',
-    '@/stores/conversations/*',
-    '@/stores/admin',
-    '@/stores/admin/*',
-    '@/stores/dashboard',
-    '@/stores/dashboard/*',
-    '@/stores/auth',
-    '@/stores/auth/*',
-    '@/stores/health',
-    '@/stores/health/*',
-];
 
 const featureBoundaryPlugin = {
     rules: {
@@ -94,6 +82,7 @@ export default antfu({
         boundaries: featureBoundaryPlugin,
     },
     files: ['resources/js/features/**/*.{ts,js,vue}'],
+    ignores: ['**/*.test.*', '**/*.spec.*'],
     rules: {
         'boundaries/no-cross-feature-imports': 'error',
         'max-lines': ['error', {
@@ -124,7 +113,7 @@ export default antfu({
                     message: 'Import from the feature index (e.g., @/features/chat) instead of deep store paths.',
                 },
                 {
-                    group: LEGACY_STORE_IMPORTS,
+                    group: ['@/stores/*'],
                     message: 'UI layers must import stores from feature slices (e.g., @/features/chat), not legacy @/stores paths.',
                 },
             ],

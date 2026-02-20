@@ -11,7 +11,7 @@ Use colocated `__tests__` folders near the code they validate.
 Examples:
 
 - `resources/js/components/__tests__/MessageThread.test.ts`
-- `resources/js/stores/__tests__/auth.test.ts`
+- `resources/js/features/auth/stores/__tests__/auth.test.ts`
 - `resources/js/features/activity/stores/__tests__/activity.test.ts`
 
 ## Import Style

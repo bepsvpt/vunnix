@@ -202,18 +202,18 @@ jobs:
           for feature in "${features[@]}"; do
             case "$feature" in
               chat)
-                add_glob_targets "resources/js/stores/__tests__/conversations.test.ts"
+                add_glob_targets "resources/js/features/chat/stores/__tests__/conversations.test.ts"
                 add_glob_targets "resources/js/pages/__tests__/ChatPage.test.ts"
                 add_glob_targets "resources/js/components/__tests__/Conversation*.test.ts"
                 add_glob_targets "resources/js/components/__tests__/Message*.test.ts"
                 ;;
               admin)
-                add_glob_targets "resources/js/stores/__tests__/admin*.test.ts"
+                add_glob_targets "resources/js/features/admin/stores/__tests__/admin*.test.ts"
                 add_glob_targets "resources/js/pages/__tests__/AdminPage.test.ts"
                 add_glob_targets "resources/js/components/__tests__/Admin*.test.ts"
                 ;;
               dashboard)
-                add_glob_targets "resources/js/stores/__tests__/dashboard*.test.ts"
+                add_glob_targets "resources/js/features/dashboard/stores/__tests__/dashboard*.test.ts"
                 add_glob_targets "resources/js/pages/__tests__/DashboardPage.test.ts"
                 add_glob_targets "resources/js/components/__tests__/Dashboard*.test.ts"
                 add_glob_targets "resources/js/composables/__tests__/useDashboardRealtime.test.ts"
@@ -221,6 +221,16 @@ jobs:
               activity)
                 add_glob_targets "resources/js/components/__tests__/ActivityFeed*.test.ts"
                 add_glob_targets "resources/js/features/activity/stores/__tests__/activity.test.ts"
+                ;;
+              auth)
+                add_glob_targets "resources/js/features/auth/stores/__tests__/auth.test.ts"
+                add_glob_targets "resources/js/pages/__tests__/SignInPage.test.ts"
+                add_glob_targets "resources/js/components/__tests__/AppNavigation.test.ts"
+                add_glob_targets "resources/js/components/__tests__/NewConversationDialog.test.ts"
+                ;;
+              health)
+                add_glob_targets "resources/js/features/health/stores/__tests__/health.test.ts"
+                add_glob_targets "resources/js/components/__tests__/DashboardHealthPanel.test.ts"
                 ;;
             esac
           done
