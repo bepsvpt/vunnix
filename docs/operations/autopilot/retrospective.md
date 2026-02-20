@@ -171,5 +171,5 @@ If `--max-budget-usd` is set, track cumulative spend across sessions. Claude Cod
 ## Data Sources
 
 - `runner.log` — 1,356 lines of structured session events
-- `verify/logs/*.jsonl` — 241 session files, 146 MB total (full Claude Code transcripts)
+- `docs/operations/autopilot/logs/*.jsonl` — 241 session files, 146 MB total (full Claude Code transcripts)
 - Analysis performed on 2026-02-15

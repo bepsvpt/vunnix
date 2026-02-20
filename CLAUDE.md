@@ -275,8 +275,7 @@ Persistent lessons discovered during development. Write each as an actionable ru
 | `docs/work/extensions/` | Tier 2-3 extension artifacts (`assessment.md` + `plan.md` per extension) |
 | `docs/work/tier1/` | Tier 1 assessments (no plan required) |
 | `docs/archive/plans-legacy/` | Historical plan documents (legacy format) |
-| `verify/verify_m{N}.py` | Per-milestone verification scripts |
-| `verify/helpers.py` | Shared verification utilities |
+| `scripts/docs/check-work-items.sh` | Validates extension work-item structure |
 | `docker-compose.yml` | Development services |
 | `docker-compose.production.yml` | Standalone production compose (GHCR images, resource limits, log rotation) |
 | `.env.production.example` | Production environment template |

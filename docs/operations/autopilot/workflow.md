@@ -53,17 +53,21 @@ A single task may require multiple sessions — that's fine. Use `handoff.md` to
 Run in this order:
 
 ```bash
-# 1. Laravel tests (when applicable — after T1 scaffold exists)
-php artisan test
+# 1. Backend tests
+php artisan test --parallel
 
-# 2. Milestone structural checks
-python3 verify/verify_m1.py   # (use verify_m{N}.py for current milestone)
+# 2. Frontend tests
+npm test
+
+# 3. Static analysis and docs consistency checks
+composer analyse
+scripts/docs/check-work-items.sh
 ```
 
-- **Both must pass** before committing and marking the task done
+- **All checks must pass** before committing and marking the task done
 - If tests fail → fix the issue, do not skip
-- If structural checks fail → investigate and fix
-- The verification scripts are the gatekeeper — not self-assessment
+- If analysis/consistency checks fail → investigate and fix
+- The automated checks are the gatekeeper — not self-assessment
 
 ## Session Handoff Protocol
 
@@ -121,7 +125,7 @@ The file system is the source of truth, not conversation context:
 - `handoff.md` — shows sub-step progress, errors, and context from the previous session
 - `git log` — shows what was last committed
 - `git status` — shows uncommitted work from interrupted sessions
-- `verify/verify_m{N}.py` — confirms what actually works
+- `php artisan test --parallel`, `npm test`, `composer analyse`, `scripts/docs/check-work-items.sh` — confirms what actually works
 
 ## Handling Interrupted Tasks
 
