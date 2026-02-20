@@ -5,7 +5,7 @@
 - Frontend (Vue 3 + TypeScript) lives in `resources/js/` (`components/`, `pages/`, `stores/`, `features/`).
 - Tests are split into `tests/Feature` and `tests/Unit`; frontend tests are colocated as `*.test.ts` under `resources/js/`.
 - Database migrations/factories/seeders are under `database/`; static/public assets are in `public/`.
-- Module boundaries are tracked in `app/Modules/` and enforced by `scripts/architecture/check-boundaries.sh`.
+- Module boundaries are tracked in `app/Modules/` and enforced by `tests/Arch/ArchTest.php` and `eslint.config.js`.
 
 ## Build, Test, and Development Commands
 - `composer setup`: install PHP/Node deps, create `.env`, generate app key, and build frontend.

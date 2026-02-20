@@ -33,8 +33,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Boundary checks
-        run: scripts/architecture/check-boundaries.sh
+
+      - name: Setup PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run architecture tests
+        run: php artisan test tests/Arch --parallel
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Lint architecture boundaries
+        run: npm run lint
 
   php-fast:
     name: PHP Fast Lane
@@ -173,24 +202,25 @@ jobs:
           for feature in "${features[@]}"; do
             case "$feature" in
               chat)
-                add_glob_targets "resources/js/stores/conversations.test.ts"
-                add_glob_targets "resources/js/pages/ChatPage.test.ts"
-                add_glob_targets "resources/js/components/Conversation*.test.ts"
-                add_glob_targets "resources/js/components/Message*.test.ts"
+                add_glob_targets "resources/js/stores/__tests__/conversations.test.ts"
+                add_glob_targets "resources/js/pages/__tests__/ChatPage.test.ts"
+                add_glob_targets "resources/js/components/__tests__/Conversation*.test.ts"
+                add_glob_targets "resources/js/components/__tests__/Message*.test.ts"
                 ;;
               admin)
-                add_glob_targets "resources/js/stores/admin*.test.ts"
-                add_glob_targets "resources/js/pages/AdminPage.test.ts"
-                add_glob_targets "resources/js/components/Admin*.test.ts"
+                add_glob_targets "resources/js/stores/__tests__/admin*.test.ts"
+                add_glob_targets "resources/js/pages/__tests__/AdminPage.test.ts"
+                add_glob_targets "resources/js/components/__tests__/Admin*.test.ts"
                 ;;
               dashboard)
-                add_glob_targets "resources/js/stores/dashboard*.test.ts"
-                add_glob_targets "resources/js/pages/DashboardPage.test.ts"
-                add_glob_targets "resources/js/components/Dashboard*.test.ts"
-                add_glob_targets "resources/js/composables/useDashboardRealtime.test.ts"
+                add_glob_targets "resources/js/stores/__tests__/dashboard*.test.ts"
+                add_glob_targets "resources/js/pages/__tests__/DashboardPage.test.ts"
+                add_glob_targets "resources/js/components/__tests__/Dashboard*.test.ts"
+                add_glob_targets "resources/js/composables/__tests__/useDashboardRealtime.test.ts"
                 ;;
               activity)
-                add_glob_targets "resources/js/components/ActivityFeed*.test.ts"
+                add_glob_targets "resources/js/components/__tests__/ActivityFeed*.test.ts"
+                add_glob_targets "resources/js/features/activity/stores/__tests__/activity.test.ts"
                 ;;
             esac
           done

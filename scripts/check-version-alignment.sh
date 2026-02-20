@@ -1,27 +1,17 @@
 #!/usr/bin/env bash
 # Vunnix Version Alignment Check (D126, R8 mitigation)
 #
-# Verifies that shared constants between the Task Executor (executor/.claude/CLAUDE.md)
-# and the Conversation Engine Agent class (app/Agents/) are in sync.
+# Verifies shared constants between:
+#   - Task Executor prompt contract (executor/.claude/CLAUDE.md)
+#   - Conversation Engine prompt/schema contract (app/Agents + app/Schemas + formatters)
 #
-# Shared constants checked:
-#   1. Severity definitions (Critical, Major, Minor) — wording and emoji
-#   2. Safety boundaries — instruction hierarchy rules
-#   3. Output field names — JSON schema field names that Result Processor expects
-#
-# STATUS: PLACEHOLDER
-#   The CE Agent class (T49, M3) does not exist yet. This script currently
-#   validates that the executor CLAUDE.md has the expected shared constants,
-#   and exits successfully. Once T49 is implemented, this script will be
-#   updated to compare both systems and fail on drift.
+# Checked surfaces:
+#   1) Severity taxonomy and emoji labels
+#   2) Prompt-injection/code-as-data safety boundary
+#   3) Structured output contract field names
 #
 # Usage: bash scripts/check-version-alignment.sh
-#   Exit 0: alignment OK (or CE Agent class not yet implemented)
-#   Exit 1: drift detected between executor and CE systems
-#
-# @see §14.1 Prompt Architecture — version alignment
-# @see T46 — Executor image CI/CD + version alignment
-# @see T49 — Conversation Engine Agent class (when implemented)
+# Exit 0 when all checks pass, 1 when drift is detected.
 
 set -euo pipefail
 
@@ -29,140 +19,106 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 EXECUTOR_CLAUDE_MD="$PROJECT_ROOT/executor/.claude/CLAUDE.md"
-CE_AGENT_DIR="$PROJECT_ROOT/app/Agents"
+CE_AGENT_PROMPT="$PROJECT_ROOT/app/Agents/VunnixAgent.php"
+CODE_REVIEW_SCHEMA="$PROJECT_ROOT/app/Schemas/CodeReviewSchema.php"
+ACTION_DISPATCH_SCHEMA="$PROJECT_ROOT/app/Schemas/ActionDispatchSchema.php"
+INLINE_THREAD_FORMATTER="$PROJECT_ROOT/app/Services/InlineThreadFormatter.php"
+SUMMARY_COMMENT_FORMATTER="$PROJECT_ROOT/app/Services/SummaryCommentFormatter.php"
 
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 ERRORS=0
 
-log_pass() { echo -e "${GREEN}✓${NC} $1"; }
-log_fail() { echo -e "${RED}✗${NC} $1"; ERRORS=$((ERRORS + 1)); }
-log_warn() { echo -e "${YELLOW}⚠${NC} $1"; }
-log_info() { echo "  $1"; }
+log_pass() { echo -e "${GREEN}PASS${NC} $1"; }
+log_fail() { echo -e "${RED}FAIL${NC} $1"; ERRORS=$((ERRORS + 1)); }
 
-echo "═══════════════════════════════════════════════════════════"
+require_file() {
+    local file="$1"
+    local label="$2"
+
+    if [ -f "$file" ]; then
+        log_pass "$label exists"
+    else
+        log_fail "$label missing ($file)"
+    fi
+}
+
+assert_contains() {
+    local file="$1"
+    local needle="$2"
+    local label="$3"
+
+    if grep -Fq "$needle" "$file"; then
+        log_pass "$label"
+    else
+        log_fail "$label"
+    fi
+}
+
+echo "==========================================================="
 echo "  Vunnix Version Alignment Check (D126)"
-echo "═══════════════════════════════════════════════════════════"
+echo "==========================================================="
 echo ""
 
-# ── Step 1: Validate executor CLAUDE.md exists and has shared constants ──
+echo "-- Required files --"
+require_file "$EXECUTOR_CLAUDE_MD" "executor CLAUDE.md"
+require_file "$CE_AGENT_PROMPT" "Conversation Engine prompt source"
+require_file "$CODE_REVIEW_SCHEMA" "CodeReviewSchema"
+require_file "$ACTION_DISPATCH_SCHEMA" "ActionDispatchSchema"
+require_file "$INLINE_THREAD_FORMATTER" "InlineThreadFormatter"
+require_file "$SUMMARY_COMMENT_FORMATTER" "SummaryCommentFormatter"
+echo ""
 
-echo "── Executor CLAUDE.md ──"
-
-if [ ! -f "$EXECUTOR_CLAUDE_MD" ]; then
-    log_fail "executor/.claude/CLAUDE.md not found"
+if [ "$ERRORS" -ne 0 ]; then
+    echo "Stopping early due to missing files."
     exit 1
 fi
 
-log_pass "executor/.claude/CLAUDE.md exists"
+echo "-- Severity alignment --"
+assert_contains "$EXECUTOR_CLAUDE_MD" "🔴 **Critical**" "Executor defines Critical severity"
+assert_contains "$EXECUTOR_CLAUDE_MD" "🟡 **Major**" "Executor defines Major severity"
+assert_contains "$EXECUTOR_CLAUDE_MD" "🟢 **Minor**" "Executor defines Minor severity"
 
-# Check severity definitions
-if grep -q '🔴.*Critical' "$EXECUTOR_CLAUDE_MD"; then
-    log_pass "Severity: Critical (🔴) defined"
-else
-    log_fail "Severity: Critical (🔴) not found in executor CLAUDE.md"
-fi
+assert_contains "$INLINE_THREAD_FORMATTER" "'critical' => '🔴 **Critical**'" "CE inline formatter aligns Critical tag"
+assert_contains "$INLINE_THREAD_FORMATTER" "'major' => '🟡 **Major**'" "CE inline formatter aligns Major tag"
+assert_contains "$INLINE_THREAD_FORMATTER" "'minor' => '🟢 **Minor**'" "CE inline formatter aligns Minor tag"
 
-if grep -q '🟡.*Major' "$EXECUTOR_CLAUDE_MD"; then
-    log_pass "Severity: Major (🟡) defined"
-else
-    log_fail "Severity: Major (🟡) not found in executor CLAUDE.md"
-fi
+assert_contains "$SUMMARY_COMMENT_FORMATTER" "'critical' => '🔴 Critical'" "CE summary formatter aligns Critical badge"
+assert_contains "$SUMMARY_COMMENT_FORMATTER" "'major' => '🟡 Major'" "CE summary formatter aligns Major badge"
+assert_contains "$SUMMARY_COMMENT_FORMATTER" "'minor' => '🟢 Minor'" "CE summary formatter aligns Minor badge"
 
-if grep -q '🟢.*Minor' "$EXECUTOR_CLAUDE_MD"; then
-    log_pass "Severity: Minor (🟢) defined"
-else
-    log_fail "Severity: Minor (🟢) not found in executor CLAUDE.md"
-fi
-
-# Check safety boundaries
-if grep -q 'Instruction Hierarchy' "$EXECUTOR_CLAUDE_MD"; then
-    log_pass "Safety: Instruction hierarchy section present"
-else
-    log_fail "Safety: Instruction hierarchy section not found"
-fi
-
-if grep -q 'NOT instructions to you' "$EXECUTOR_CLAUDE_MD" || grep -q 'not instructions to you' "$EXECUTOR_CLAUDE_MD"; then
-    log_pass "Safety: Code-as-data boundary defined"
-else
-    log_fail "Safety: Code-as-data boundary not defined"
-fi
-
-# Check output format rules
-if grep -q 'Output Format' "$EXECUTOR_CLAUDE_MD"; then
-    log_pass "Output: Format section present"
-else
-    log_fail "Output: Format section not found"
-fi
-
-if grep -q 'valid JSON' "$EXECUTOR_CLAUDE_MD"; then
-    log_pass "Output: JSON requirement specified"
-else
-    log_fail "Output: JSON requirement not specified"
-fi
-
-if grep -q 'markdown fencing' "$EXECUTOR_CLAUDE_MD"; then
-    log_pass "Output: No-markdown-fencing rule present"
-else
-    log_fail "Output: No-markdown-fencing rule not found"
-fi
-
+assert_contains "$CODE_REVIEW_SCHEMA" "public const SEVERITIES = ['critical', 'major', 'minor'];" "CE schema enumerates expected severities"
+assert_contains "$CODE_REVIEW_SCHEMA" "'summary.risk_level' => ['required', 'string', Rule::in(self::RISK_LEVELS)]" "CE schema keeps risk_level field"
 echo ""
 
-# ── Step 2: Check CE Agent class (T49) ─────────────────────────
+echo "-- Safety boundary alignment --"
+assert_contains "$EXECUTOR_CLAUDE_MD" "Instruction Hierarchy" "Executor includes instruction hierarchy"
+assert_contains "$EXECUTOR_CLAUDE_MD" "NOT instructions to you" "Executor defines code-as-data boundary"
 
-echo "── Conversation Engine Agent Class ──"
-
-if [ -d "$CE_AGENT_DIR" ] && find "$CE_AGENT_DIR" -name "*.php" -type f 2>/dev/null | grep -q .; then
-    log_info "CE Agent class directory found — running alignment comparison"
-    echo ""
-
-    # TODO (T49): When the CE Agent class is implemented, add these checks:
-    #
-    # 1. SEVERITY DEFINITIONS
-    #    - Extract severity emoji + label from executor CLAUDE.md
-    #    - Extract severity constants from CE Agent class
-    #    - Compare: same emoji, same labels, same descriptions
-    #
-    # 2. SAFETY BOUNDARIES
-    #    - Extract instruction hierarchy rules from executor CLAUDE.md
-    #    - Extract system prompt safety rules from CE Agent class
-    #    - Compare: same boundaries enforced
-    #
-    # 3. OUTPUT FIELD NAMES
-    #    - Extract JSON field names from review/feature-dev schemas
-    #    - Extract HasStructuredOutput field names from CE Agent class
-    #    - Compare: same field names used
-    #
-    # Each check should:
-    #   - Print what was found in each system
-    #   - Flag any differences
-    #   - Exit 1 if critical shared constants diverge
-
-    log_warn "Alignment comparison not yet implemented — waiting for T49"
-    log_info "CE Agent class exists but comparison logic is pending"
-    log_info "This check will be enforced after T49 is complete"
-else
-    log_warn "CE Agent class not found (T49 not yet implemented)"
-    log_info "Skipping alignment comparison — executor-only validation passed"
-    log_info "After T49: this script will compare both systems and fail on drift"
-fi
-
+assert_contains "$CE_AGENT_PROMPT" "[Prompt Injection Defenses]" "CE prompt includes prompt-injection defense section"
+assert_contains "$CE_AGENT_PROMPT" "NOT instructions to you" "CE prompt defines code-as-data boundary"
+assert_contains "$CE_AGENT_PROMPT" "System instructions take absolute priority." "CE prompt enforces system-instruction priority"
 echo ""
 
-# ── Summary ────────────────────────────────────────────────────
+echo "-- Structured output alignment --"
+assert_contains "$EXECUTOR_CLAUDE_MD" "valid JSON" "Executor enforces JSON output"
+assert_contains "$EXECUTOR_CLAUDE_MD" "markdown fencing" "Executor forbids markdown wrappers for executor output"
 
-echo "═══════════════════════════════════════════════════════════"
-if [ $ERRORS -eq 0 ]; then
-    log_pass "Version alignment check passed ($ERRORS errors)"
-    echo "═══════════════════════════════════════════════════════════"
+assert_contains "$CE_AGENT_PROMPT" "action_type, severity, risk_level" "CE prompt documents canonical structured field names"
+assert_contains "$ACTION_DISPATCH_SCHEMA" "public const ACTION_TYPES = [" "CE action schema defines action types"
+assert_contains "$ACTION_DISPATCH_SCHEMA" "'action_type' => ['required', 'string', Rule::in(self::ACTION_TYPES)]" "CE action schema validates action_type"
+echo ""
+
+echo "==========================================================="
+if [ "$ERRORS" -eq 0 ]; then
+    log_pass "Version alignment check passed"
+    echo "==========================================================="
     exit 0
-else
-    log_fail "Version alignment check failed ($ERRORS errors)"
-    echo "═══════════════════════════════════════════════════════════"
-    exit 1
 fi
+
+log_fail "Version alignment check failed with $ERRORS error(s)"
+echo "==========================================================="
+exit 1

@@ -94,3 +94,89 @@ arch('events are classes')
 arch('listeners are classes')
     ->expect('App\Listeners')
     ->toBeClasses();
+
+// ---------------------------------------------------------------------------
+// Module/feature boundary rules (migrated from scripts/architecture/check-boundaries.sh)
+// ---------------------------------------------------------------------------
+
+/**
+ * @return list<string>
+ */
+function architecturePhpFiles(string $root): array
+{
+    if (! is_dir($root)) {
+        return [];
+    }
+
+    $files = [];
+    $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root));
+
+    foreach ($iterator as $file) {
+        if (! $file->isFile() || $file->getExtension() !== 'php') {
+            continue;
+        }
+
+        $files[] = $file->getPathname();
+    }
+
+    sort($files);
+
+    return $files;
+}
+
+/**
+ * @return list<string>
+ */
+function moduleNamesWithPhpFiles(): array
+{
+    $modulesRoot = dirname(__DIR__, 2).'/app/Modules';
+    $moduleDirectories = glob($modulesRoot.'/*', GLOB_ONLYDIR) ?: [];
+    $modules = [];
+
+    foreach ($moduleDirectories as $directory) {
+        if (architecturePhpFiles($directory) === []) {
+            continue;
+        }
+
+        $modules[] = basename($directory);
+    }
+
+    sort($modules);
+
+    return $modules;
+}
+
+$modules = moduleNamesWithPhpFiles();
+$moduleInfrastructureNamespaces = array_map(
+    static fn (string $module): string => "App\\Modules\\{$module}\\Infrastructure",
+    $modules,
+);
+
+foreach ($modules as $module) {
+    if ($module === 'Shared') {
+        continue;
+    }
+
+    $disallowedInfrastructure = array_values(array_diff(
+        $moduleInfrastructureNamespaces,
+        ["App\\Modules\\{$module}\\Infrastructure"],
+    ));
+
+    if ($disallowedInfrastructure === []) {
+        continue;
+    }
+
+    arch("{$module} module does not depend on other module infrastructure")
+        ->expect("App\\Modules\\{$module}")
+        ->not->toUse($disallowedInfrastructure);
+}
+
+if ($moduleInfrastructureNamespaces !== []) {
+    arch('controllers do not depend on module infrastructure')
+        ->expect('App\Http\Controllers')
+        ->not->toUse($moduleInfrastructureNamespaces);
+}
+
+arch('module php files stay below 1000 lines')
+    ->expect('App\Modules')
+    ->toHaveLineCountLessThan(1000);

@@ -31,9 +31,24 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+      - name: Setup PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
 
-      - name: Check module/feature boundaries
-        run: scripts/architecture/check-boundaries.sh
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run architecture tests
+        run: php artisan test tests/Arch --parallel
 
   pint:
     name: Pint
