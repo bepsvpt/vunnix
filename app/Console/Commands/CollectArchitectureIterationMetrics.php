@@ -30,7 +30,7 @@ class CollectArchitectureIterationMetrics extends Command
         $metric = $collector->collect($asOf);
 
         $this->info('Architecture iteration metrics collected.');
-        $this->line('snapshot_date='.$metric->snapshot_date->toDateString());
+        $this->line('snapshot_date='.$metric->snapshot_date);
         $this->line('module_touch_breadth='.$metric->module_touch_breadth);
         $this->line('median_files_changed='.($metric->median_files_changed ?? 'null'));
         $this->line('reopened_regressions_count='.$metric->reopened_regressions_count);

@@ -45,6 +45,7 @@ class IterationMetricsCollector
     }
 
     /**
+     * @param  Collection<int, Task>  $tasks
      * @return array<int, float>
      */
     private function extractFilesChangedCounts(Collection $tasks): array
@@ -67,6 +68,7 @@ class IterationMetricsCollector
     }
 
     /**
+     * @param  Collection<int, Task>  $tasks
      * @return array<int, float>
      */
     private function extractLeadTimes(Collection $tasks): array
@@ -87,6 +89,9 @@ class IterationMetricsCollector
             ->all();
     }
 
+    /**
+     * @param  Collection<int, Task>  $tasks
+     */
     private function countReopenedRegressions(Collection $tasks): int
     {
         $failedTasks = $tasks->filter(fn (Task $task): bool => $task->status === TaskStatus::Failed && $task->mr_iid !== null);

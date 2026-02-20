@@ -1069,6 +1069,69 @@ it('evaluateAll catches and logs failing individual checks', function (): void {
     expect($events)->toBeArray();
 });
 
+it('evaluateAll logs failing registry rules with their key and continues evaluating', function (): void {
+    $teamChat = app(\App\Services\TeamChat\TeamChatNotificationService::class);
+
+    $failingRule = new class implements \App\Modules\Observability\Application\Contracts\AlertRule
+    {
+        public function key(): string
+        {
+            return 'failing_rule';
+        }
+
+        public function priority(): int
+        {
+            return 100;
+        }
+
+        public function evaluate(\App\Services\AlertEventService $service, \Carbon\Carbon $now): ?\App\Models\AlertEvent
+        {
+            throw new RuntimeException('rule exploded');
+        }
+    };
+
+    $passingRule = new class implements \App\Modules\Observability\Application\Contracts\AlertRule
+    {
+        public function key(): string
+        {
+            return 'passing_rule';
+        }
+
+        public function priority(): int
+        {
+            return 90;
+        }
+
+        public function evaluate(\App\Services\AlertEventService $service, \Carbon\Carbon $now): \App\Models\AlertEvent
+        {
+            return new \App\Models\AlertEvent([
+                'alert_type' => 'queue_depth',
+                'status' => 'active',
+                'severity' => 'medium',
+                'message' => 'queue depth test',
+            ]);
+        }
+    };
+
+    $service = new AlertEventService(
+        $teamChat,
+        new \App\Modules\Observability\Application\Registries\AlertRuleRegistry([$failingRule, $passingRule]),
+    );
+
+    \Illuminate\Support\Facades\Log::shouldReceive('warning')
+        ->once()
+        ->with('AlertEventService: check failed', Mockery::on(function (array $context): bool {
+            return ($context['rule'] ?? null) === 'failing_rule'
+                && str_contains((string) ($context['error'] ?? ''), 'rule exploded');
+        }));
+
+    $events = $service->evaluateAll(now());
+
+    expect($events)->toHaveCount(1)
+        ->and($events[0])->toBeInstanceOf(AlertEvent::class)
+        ->and($events[0]->alert_type)->toBe('queue_depth');
+});
+
 it('uses red risk emoji in code review completion notifications for high risk', function (): void {
     $project = Project::factory()->enabled()->create(['name' => 'Test Project']);
     $task = Task::factory()->create([
