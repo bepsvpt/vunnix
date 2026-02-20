@@ -22,7 +22,7 @@ use Laravel\Ai\Promptable;
  * Vunnix Conversation Engine agent.
  *
  * Implements the AI SDK Agent interface set for the Conversation Engine.
- * System prompt follows docs/spec/vunnix-v1.md section 14.2: identity, capabilities, quality gate,
+ * System prompt follows docs/reference/spec/vunnix-v1.md section 14.2: identity, capabilities, quality gate,
  * action dispatch protocol, language configuration, and safety boundaries.
  *
  * Tools (T50-T52) and custom middleware (T58) will be populated by later tasks.
@@ -189,7 +189,7 @@ class VunnixAgent implements Agent, Conversational, HasMiddleware, HasTools
     }
 
     /**
-     * Build the full system prompt per docs/spec/vunnix-v1.md section 14.2.
+     * Build the full system prompt per docs/reference/spec/vunnix-v1.md section 14.2.
      *
      * Sections: Identity, Capabilities, Quality Gate, Action Dispatch,
      * Language, Safety.

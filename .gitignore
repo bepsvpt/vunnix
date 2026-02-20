@@ -55,9 +55,11 @@ __pycache__/
 *.pyc
 
 # Runner session logs (can be large)
+docs/operations/autopilot/logs/
 docs/autopilot/logs/
 
 # Session handoff (ephemeral Claude-to-Claude state)
+docs/operations/autopilot/handoff.md
 docs/autopilot/handoff.md
 
 **/caddy

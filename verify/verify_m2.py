@@ -4733,43 +4733,43 @@ checker.check(
 # T45.9: Project setup documentation
 checker.check(
     "Project setup documentation exists",
-    file_exists("docs/project-setup.md"),
+    file_exists("docs/guides/project-setup.md"),
 )
 checker.check(
     "Docs cover registry access prerequisites",
-    file_contains("docs/project-setup.md", "Registry Access"),
+    file_contains("docs/guides/project-setup.md", "Registry Access"),
 )
 checker.check(
     "Docs cover bot account setup",
-    file_contains("docs/project-setup.md", "Bot Account"),
+    file_contains("docs/guides/project-setup.md", "Bot Account"),
 )
 checker.check(
     "Docs cover pipeline trigger token",
-    file_contains("docs/project-setup.md", "Pipeline Trigger Token"),
+    file_contains("docs/guides/project-setup.md", "Pipeline Trigger Token"),
 )
 checker.check(
     "Docs cover CI template inclusion",
-    file_contains("docs/project-setup.md", "Include the CI Template"),
+    file_contains("docs/guides/project-setup.md", "Include the CI Template"),
 )
 checker.check(
     "Docs provide variable reference",
-    file_contains("docs/project-setup.md", "Variable Reference"),
+    file_contains("docs/guides/project-setup.md", "Variable Reference"),
 )
 checker.check(
     "Docs cover troubleshooting",
-    file_contains("docs/project-setup.md", "Troubleshooting"),
+    file_contains("docs/guides/project-setup.md", "Troubleshooting"),
 )
 checker.check(
     "Docs cover private registry fallback",
-    file_contains("docs/project-setup.md", "Private Registry Fallback"),
+    file_contains("docs/guides/project-setup.md", "Private Registry Fallback"),
 )
 checker.check(
     "Docs cover project reference include option",
-    file_contains("docs/project-setup.md", "include:"),
+    file_contains("docs/guides/project-setup.md", "include:"),
 )
 checker.check(
     "Docs cover remote URL include option",
-    file_contains("docs/project-setup.md", "remote:"),
+    file_contains("docs/guides/project-setup.md", "remote:"),
 )
 
 # ============================================================

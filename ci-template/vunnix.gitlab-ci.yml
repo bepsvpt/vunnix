@@ -16,7 +16,7 @@
 # This job only runs when triggered by the Vunnix Task Dispatcher via
 # the Pipeline Triggers API. It will NOT run on regular pushes or MR events.
 #
-# @see docs/project-setup.md for full integration guide
+# @see docs/guides/project-setup.md for full integration guide
 
 .vunnix-executor:
   stage: test

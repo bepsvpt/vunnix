@@ -10,7 +10,7 @@ Codebase feature-complete (107/107 code tasks across M1–M5). Remaining tasks (
 
 ## Specification
 
-Complete specification: **`docs/spec/vunnix-v1.md`** (155 decisions, 116 tasks, 7 milestones, ~3,900 lines).
+Complete specification: **`docs/reference/spec/vunnix-v1.md`** (155 decisions, 116 tasks, 7 milestones, ~3,900 lines).
 
 All task descriptions, dependencies, acceptance criteria, and verification specs are in §21 (Implementation Roadmap). Test strategy is in §22. The Discussion Log contains rationale for all 155 decisions.
 
@@ -47,7 +47,7 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 | `docker compose up -d` | Start Docker services (PostgreSQL, Redis) |
 | `docker compose down && docker compose up -d` | Full restart (required after code changes — see Learnings) |
 
-**Prerequisites:** Docker services must be running. See `docs/local-dev-setup.md` for first-time setup.
+**Prerequisites:** Docker services must be running. See `docs/guides/local-dev-setup.md` for first-time setup.
 
 ## Tech Stack
 
@@ -196,8 +196,8 @@ Example: `Co-Authored-By: gpt-5.3-codex high <noreply@openai.com>`.
 | **D228** | Fast Lane is scope-aware and contract-aware; Full Lane remains the protected-branch gate |
 | **D229** | Weekly architecture iteration metrics are persisted and collected via artisan command |
 
-For v1 baseline decisions (D1-D155), see the Discussion Log in `docs/spec/vunnix-v1.md`.  
-For extension decisions (including D224-D229), see `docs/spec/decisions-index.md`.
+For v1 baseline decisions (D1-D155), see the Discussion Log in `docs/reference/spec/vunnix-v1.md`.  
+For extension decisions (including D224-D229), see `docs/reference/spec/decisions-index.md`.
 
 ## Learnings
 
@@ -270,9 +270,11 @@ Persistent lessons discovered during development. Write each as an actionable ru
 
 | File | Purpose |
 |---|---|
-| `docs/spec/vunnix-v1.md` | Complete specification — source of truth for all requirements |
-| `docs/autopilot/` | Autonomous development workflow (runner, progress, handoff, workflow docs) |
-| `docs/plans/` | Implementation plans for individual tasks |
+| `docs/reference/spec/vunnix-v1.md` | Complete specification — source of truth for all requirements |
+| `docs/operations/autopilot/` | Autonomous development workflow (runner, progress, handoff, workflow docs) |
+| `docs/work/extensions/` | Tier 2-3 extension artifacts (`assessment.md` + `plan.md` per extension) |
+| `docs/work/tier1/` | Tier 1 assessments (no plan required) |
+| `docs/archive/plans-legacy/` | Historical plan documents (legacy format) |
 | `verify/verify_m{N}.py` | Per-milestone verification scripts |
 | `verify/helpers.py` | Shared verification utilities |
 | `docker-compose.yml` | Development services |
@@ -280,7 +282,6 @@ Persistent lessons discovered during development. Write each as an actionable ru
 | `.env.production.example` | Production environment template |
 | `executor/` | Docker image for GitLab Runner |
 | `.env` | Environment configuration (secrets, API keys) |
-| `docs/spec/decisions-index.md` | Decision lookup table — D1–D155 one-line summaries |
-| `docs/assessments/` | Extension assessment artifacts (output of assessing-extensions skill) |
-| `docs/extensions/` | Extension planning documents (output of planning-extensions skill) |
-| `docs/spikes/` | Spike research results (from spike-required modifier) |
+| `docs/reference/spec/decisions-index.md` | Decision lookup table — D1–D155 one-line summaries |
+| `docs/work/extensions/` | Extension assessment + planning artifacts (output of extension skills) |
+| `docs/archive/spikes/` | Spike research results (from spike-required modifier) |

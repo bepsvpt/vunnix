@@ -15,14 +15,14 @@ Transform an extension assessment into an actionable, right-sized planning docum
 
 ```dot
 digraph when_to_use {
-    "Assessment exists in docs/assessments/?" [shape=diamond];
+    "Assessment exists in docs/work/extensions/ext-*/assessment.md?" [shape=diamond];
     "Run assessing-extensions first" [shape=box];
     "Recommendation says proceed?" [shape=diamond];
     "planning-extensions" [shape=box, style=filled, fillcolor=lightgreen];
     "No planning needed (Tier 1 or spike first)" [shape=box];
 
-    "Assessment exists in docs/assessments/?" -> "Run assessing-extensions first" [label="no"];
-    "Assessment exists in docs/assessments/?" -> "Recommendation says proceed?" [label="yes"];
+    "Assessment exists in docs/work/extensions/ext-*/assessment.md?" -> "Run assessing-extensions first" [label="no"];
+    "Assessment exists in docs/work/extensions/ext-*/assessment.md?" -> "Recommendation says proceed?" [label="yes"];
     "Recommendation says proceed?" -> "planning-extensions" [label="yes"];
     "Recommendation says proceed?" -> "No planning needed (Tier 1 or spike first)" [label="no"];
 }
@@ -32,7 +32,7 @@ digraph when_to_use {
 
 ## The Process
 
-1. **Read the assessment** from `docs/assessments/YYYY-MM-DD-{name}.md`
+1. **Read the assessment** from `docs/work/extensions/ext-{NNN}-{name}/assessment.md`
 2. **Determine the tier** from the Classification section
 3. **Check modifiers** from the modifier checkboxes
 4. **Select base template** — see `./tier2-template.md` or `./tier3-template.md`
@@ -40,7 +40,7 @@ digraph when_to_use {
 6. **Fill the template** using data from the assessment's Impact Analysis
 7. **Write the atomic task list** — flat, T-numbered, with dependencies and verification
 8. **Assign new D-numbers** — continue from the highest existing decision number
-9. **Save to** `docs/extensions/ext-{NNN}-{name}.md`
+9. **Save to** `docs/work/extensions/ext-{NNN}-{name}/plan.md` (same folder as the assessment)
 10. **Offer execution handoff**
 
 ## Template Selection
@@ -53,15 +53,15 @@ digraph when_to_use {
 
 ## Numbering Conventions
 
-- **Decisions:** Continue D-numbering from the highest existing number. Check `docs/spec/decisions-index.md` and any existing `docs/extensions/` docs.
+- **Decisions:** Continue D-numbering from the highest existing number. Check `docs/reference/spec/decisions-index.md` and any existing `docs/work/extensions/` docs.
 - **Tasks:** Continue T-numbering from the highest existing number. Check `progress.md`.
-- **Extensions:** Number sequentially: `ext-001`, `ext-002`, etc. Check existing `docs/extensions/` directory.
+- **Extensions:** Number sequentially: `ext-001`, `ext-002`, etc. Check existing `docs/work/extensions/` directory.
 
 ## Execution Handoff
 
 After saving the plan, offer:
 
-**"Plan saved to `docs/extensions/ext-{NNN}-{name}.md`. Ready to implement?"**
+**"Plan saved to `docs/work/extensions/ext-{NNN}-{name}/plan.md`. Ready to implement?"**
 
 **REQUIRED NEXT SKILL:** Use `implementing-extensions` to execute the plan.
 

@@ -71,7 +71,11 @@ See `./exploration-prompts.md` for subagent prompt templates.
 
 ### Stage 4: Write Assessment
 
-Write to `docs/assessments/YYYY-MM-DD-{name}.md` using the output template below.
+Write to one of:
+- **Tier 2-3:** `docs/work/extensions/ext-{NNN}-{name}/assessment.md` (allocate the next `ext-{NNN}` sequentially)
+- **Tier 1:** `docs/work/tier1/{name}/assessment.md`
+
+Use the output template below.
 
 ## Output Template
 
@@ -134,4 +138,4 @@ Write to `docs/assessments/YYYY-MM-DD-{name}.md` using the output template below
 - **Skipping exploration** — Don't classify from gut feel. Dispatch subagents.
 - **Overclassifying** — A 3-file change isn't Tier 3 just because it's in a critical path. Tier is about planning rigor needed, not importance.
 - **Missing modifiers** — Always check for `breaking`. A small change that alters the API contract needs a migration plan regardless of tier.
-- **Not writing the artifact** — The assessment must be written to `docs/assessments/`, not just discussed in conversation. Written artifacts survive context boundaries.
+- **Not writing the artifact** — The assessment must be written to `docs/work/extensions/` (Tier 2-3) or `docs/work/tier1/` (Tier 1), not just discussed in conversation. Written artifacts survive context boundaries.

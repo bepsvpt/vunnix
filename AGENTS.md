@@ -40,4 +40,4 @@
 
 ## Security & Configuration Tips
 - Never commit real secrets; start from `.env.example` or `.env.production.example`.
-- Use Docker workflows from `docs/local-dev-setup.md` and `docs/deployment.md` for environment parity.
+- Use Docker workflows from `docs/guides/local-dev-setup.md` and `docs/guides/deployment.md` for environment parity.

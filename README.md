@@ -68,7 +68,7 @@ docker compose exec app composer setup
 docker compose exec app php artisan migrate
 ```
 
-A **reverse proxy tunnel** (cloudflared or ngrok) is needed for GitLab webhooks to reach your machine. See [`docs/local-dev-setup.md`](docs/local-dev-setup.md) for the complete walkthrough.
+A **reverse proxy tunnel** (cloudflared or ngrok) is needed for GitLab webhooks to reach your machine. See [`docs/guides/local-dev-setup.md`](docs/guides/local-dev-setup.md) for the complete walkthrough.
 
 ### Register a GitLab Project
 
@@ -76,7 +76,7 @@ A **reverse proxy tunnel** (cloudflared or ngrok) is needed for GitLab webhooks 
 docker compose exec app php artisan vunnix:setup <GROUP/PROJECT>
 ```
 
-See [`docs/project-setup.md`](docs/project-setup.md) for CI template integration.
+See [`docs/guides/project-setup.md`](docs/guides/project-setup.md) for CI template integration.
 
 ## Development
 
@@ -111,7 +111,7 @@ docker compose exec app php artisan migrate --seed
 
 **Requirements:** Linux with 2+ CPU, 4+ GB RAM, Docker Engine 24.0+.
 
-See [`docs/deployment.md`](docs/deployment.md) for backup/restore, upgrades, and production configuration.
+See [`docs/guides/deployment.md`](docs/guides/deployment.md) for backup/restore, upgrades, and production configuration.
 
 ## Testing
 
@@ -127,7 +127,7 @@ Local tests run against SQLite `:memory:` (fast, no services needed). CI tests r
 
 | Document | Description |
 |----------|-------------|
-| [`docs/spec/vunnix-v1.md`](docs/spec/vunnix-v1.md) | Complete specification (155 decisions, 116 tasks) |
-| [`docs/local-dev-setup.md`](docs/local-dev-setup.md) | Local development setup |
-| [`docs/deployment.md`](docs/deployment.md) | Production deployment |
-| [`docs/project-setup.md`](docs/project-setup.md) | Integrating GitLab projects |
+| [`docs/reference/spec/vunnix-v1.md`](docs/reference/spec/vunnix-v1.md) | Complete specification (155 decisions, 116 tasks) |
+| [`docs/guides/local-dev-setup.md`](docs/guides/local-dev-setup.md) | Local development setup |
+| [`docs/guides/deployment.md`](docs/guides/deployment.md) | Production deployment |
+| [`docs/guides/project-setup.md`](docs/guides/project-setup.md) | Integrating GitLab projects |

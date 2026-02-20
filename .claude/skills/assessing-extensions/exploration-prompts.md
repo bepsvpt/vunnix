@@ -22,10 +22,10 @@ Return a structured list of affected components with estimated file counts.
 Search the specification and decision log for decisions related to: "{description}"
 
 Look in:
-- docs/spec/vunnix-v1.md (the full specification — especially the Discussion Log section)
-- docs/spec/decisions-index.md (one-line summary of every D-numbered decision)
-- Any existing extension documents in docs/extensions/
-- Any existing assessment documents in docs/assessments/
+- docs/reference/spec/vunnix-v1.md (the full specification — especially the Discussion Log section)
+- docs/reference/spec/decisions-index.md (one-line summary of every D-numbered decision)
+- Any existing extension folders in docs/work/extensions/
+- Any existing Tier 1 assessments in docs/work/tier1/
 
 For each relevant decision found, return:
 - Decision number (D{N})
@@ -63,8 +63,8 @@ For the proposed change: "{description}"
 
 Search for similar past work:
 1. Check git log for commits that suggest similar extensions were done before
-2. Look in docs/extensions/ for similar extension plans
-3. Look in docs/assessments/ for similar assessments
+2. Look in docs/work/extensions/ for similar extension plans
+3. Look in docs/work/tier1/ and docs/work/extensions/*/assessment.md for similar assessments
 4. Check the codebase for patterns that suggest how similar changes were implemented
 
 If similar work exists, return:

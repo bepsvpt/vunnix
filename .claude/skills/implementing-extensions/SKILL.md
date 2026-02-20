@@ -1,6 +1,6 @@
 ---
 name: implementing-extensions
-description: Use when a planning-extensions document exists at docs/extensions/ and you are ready to implement it. Also use when the user says "implement ext-NNN" or asks to execute an extension plan. Handles session resumption after context compacting.
+description: Use when a planning-extensions document exists at docs/work/extensions/ext-{NNN}-{name}/plan.md and you are ready to implement it. Also use when the user says "implement ext-NNN" or asks to execute an extension plan. Handles session resumption after context compacting.
 ---
 
 # Implementing Extensions
@@ -15,23 +15,23 @@ Execute an extension plan with per-task verification, decisions tracking, and te
 
 ```dot
 digraph when_to_use {
-    "Plan exists in docs/extensions/?" [shape=diamond];
+    "Plan exists in docs/work/extensions/?" [shape=diamond];
     "Run planning-extensions first" [shape=box];
     "implementing-extensions" [shape=box, style=filled, fillcolor=lightgreen];
 
-    "Plan exists in docs/extensions/?" -> "implementing-extensions" [label="yes"];
-    "Plan exists in docs/extensions/?" -> "Run planning-extensions first" [label="no"];
+    "Plan exists in docs/work/extensions/?" -> "implementing-extensions" [label="yes"];
+    "Plan exists in docs/work/extensions/?" -> "Run planning-extensions first" [label="no"];
 }
 ```
 
-**Prerequisite:** A plan document must exist at `docs/extensions/ext-{NNN}-{name}.md`. Do NOT implement without a plan.
+**Prerequisite:** A plan document must exist at `docs/work/extensions/ext-{NNN}-{name}/plan.md`. Do NOT implement without a plan.
 
 ## The Process
 
 ### Step 1: Load and Detect Progress
 
-1. Read the plan from `docs/extensions/ext-{NNN}-{name}.md`
-2. Verify the assessment exists in `docs/assessments/`
+1. Read the plan from `docs/work/extensions/ext-{NNN}-{name}/plan.md`
+2. Verify the assessment exists at `docs/work/extensions/ext-{NNN}-{name}/assessment.md`
 3. List all T-numbered tasks, new D-numbered decisions, and superseded decisions
 4. **Resume detection:** For each task, run its Verification criterion against the current codebase:
    - Passes → task already complete, skip
@@ -75,7 +75,7 @@ Both must pass. If tests fail, fix before proceeding.
 
 ### Step 5: Completion
 
-1. Update `docs/spec/decisions-index.md` — this should already be done as a tracked task, but verify:
+1. Update `docs/reference/spec/decisions-index.md` — this should already be done as a tracked task, but verify:
    - New D-numbers are present with correct summaries and source `ext-{NNN}`
    - Superseded decisions are marked with strikethrough and `Superseded` status
 2. Report final status to user with verification evidence

@@ -42,7 +42,7 @@ class GlobalSetting extends Model
 
     /**
      * Default PRD template used when no project or global override exists.
-     * Matches the template structure from docs/spec/vunnix-v1.md §4.4.
+     * Matches the template structure from docs/reference/spec/vunnix-v1.md §4.4.
      */
     public static function defaultPrdTemplate(): string
     {
