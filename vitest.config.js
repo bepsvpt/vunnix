@@ -7,7 +7,7 @@ export default defineConfig({
     plugins: [vue()],
     test: {
         environment: 'jsdom',
-        include: ['resources/js/**/*.test.ts'],
+        include: ['resources/js/**/__tests__/**/*.{test,spec}.ts'],
         globals: true,
         execArgv: [`--localstorage-file=${resolve(tmpdir(), 'vunnix-vitest-localstorage')}`],
         coverage: {
@@ -15,7 +15,7 @@ export default defineConfig({
             reportsDirectory: 'coverage/js',
             include: ['resources/js/**/*.{ts,vue}'],
             exclude: [
-                'resources/js/**/*.test.ts',
+                'resources/js/**/*.{test,spec}.ts',
                 'resources/js/env.d.ts',
                 'resources/js/types/**',
                 'resources/js/app.ts',
