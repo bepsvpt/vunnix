@@ -54,7 +54,7 @@ while IFS= read -r file; do
   [ -z "$file" ] && continue
 
   case "$file" in
-    app/*|bootstrap/*|config/*|database/*|routes/*|tests/*|composer.json|composer.lock|phpstan*|phpunit.xml|pest.php|artisan)
+    app/*|bootstrap/*|config/*|database/*|routes/*|tests/*|composer.json|composer.lock|phpstan*|phpunit.xml*|pest.php|artisan)
       php_changed=true
       docs_only=false
       ;;

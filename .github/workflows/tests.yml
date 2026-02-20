@@ -6,7 +6,7 @@
 #   - Callable via workflow_call (reusable by build workflows)
 #
 # PHP tests run against PostgreSQL 18 to match production (D172).
-# phpunit.xml defaults to SQLite but CI env vars override via
+# phpunit.xml.dist defaults to SQLite but CI env vars override via
 # PHPUnit's <env force="false"> behavior — no config changes needed.
 #
 # @see docs/extensions/ext-004-ci-test-workflows.md (D172, D173)
