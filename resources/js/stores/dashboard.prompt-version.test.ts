@@ -37,6 +37,35 @@ describe('dashboard store — prompt version filter', () => {
         expect(mockedAxios.get).toHaveBeenCalledWith('/api/v1/prompt-versions');
     });
 
+    it('fetchPromptVersions normalizes strings and drops invalid entries', async () => {
+        mockedAxios.get.mockResolvedValueOnce({
+            data: {
+                data: [
+                    'backend-review:1.0',
+                    { skill: 'frontend-review:1.2', schema: 'review:1.2' },
+                    123,
+                    { skill: 999 },
+                ],
+            },
+        });
+
+        await store.fetchPromptVersions();
+
+        expect(store.promptVersions).toEqual([
+            { skill: 'backend-review:1.0' },
+            { skill: 'frontend-review:1.2', schema: 'review:1.2' },
+        ]);
+    });
+
+    it('fetchPromptVersions clears promptVersions when API payload is not an array', async () => {
+        store.promptVersions = [{ skill: 'stale:1.0' }];
+        mockedAxios.get.mockResolvedValueOnce({ data: { data: { skill: 'invalid-shape' } } });
+
+        await store.fetchPromptVersions();
+
+        expect(store.promptVersions).toEqual([]);
+    });
+
     it('fetchQuality passes prompt_version param when filter is set', async () => {
         store.promptVersionFilter = 'frontend-review:1.0';
         mockedAxios.get.mockResolvedValueOnce({ data: { data: {} } });

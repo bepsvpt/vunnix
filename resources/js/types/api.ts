@@ -31,7 +31,7 @@ export function PaginatedResponseSchema<T extends z.ZodTypeAny>(itemSchema: T) {
 
 export const ApiErrorSchema = z.object({
     message: z.string(),
-    errors: z.record(z.array(z.string())).optional(),
+    errors: z.record(z.string(), z.array(z.string())).optional(),
 });
 
 // --- Resource schemas (matching Laravel API Resources) ---
@@ -125,13 +125,13 @@ export const ExternalTaskSchema = z.object({
     mr_iid: z.number().nullable(),
     issue_iid: z.number().nullable(),
     commit_sha: z.string().nullable(),
-    result: z.record(z.unknown()).nullable().optional(),
+    result: z.record(z.string(), z.unknown()).nullable().optional(),
     cost: z.number().nullable(),
     tokens_used: z.number().nullable(),
     duration_seconds: z.number().nullable(),
     error_reason: z.string().nullable(),
     retry_count: z.number(),
-    prompt_version: z.record(z.unknown()).nullable(),
+    prompt_version: z.record(z.string(), z.unknown()).nullable(),
     started_at: z.string().nullable(),
     completed_at: z.string().nullable(),
     created_at: z.string().nullable(),
@@ -175,8 +175,8 @@ export const GlobalSettingSchema = z.object({
 });
 
 export const ProjectConfigSchema = z.object({
-    settings: z.record(z.unknown()),
-    effective: z.record(z.unknown()),
+    settings: z.record(z.string(), z.unknown()),
+    effective: z.record(z.string(), z.unknown()),
     setting_keys: z.array(z.string()),
 });
 
@@ -190,7 +190,7 @@ export const AuditLogSchema = z.object({
     task_id: z.number().nullable(),
     conversation_id: z.string().nullable(),
     summary: z.string(),
-    properties: z.record(z.unknown()).nullable(),
+    properties: z.record(z.string(), z.unknown()).nullable(),
     ip_address: z.string().nullable(),
     created_at: z.string().nullable(),
 });
@@ -199,7 +199,7 @@ export const MemoryEntrySchema = z.object({
     id: z.number(),
     type: z.enum(['review_pattern', 'conversation_fact', 'cross_mr_pattern', 'health_signal']),
     category: z.string().nullable(),
-    content: z.record(z.unknown()),
+    content: z.record(z.string(), z.unknown()),
     confidence: z.number(),
     applied_count: z.number(),
     source_task_id: z.number().nullable(),
@@ -208,8 +208,8 @@ export const MemoryEntrySchema = z.object({
 
 export const MemoryStatsSchema = z.object({
     total_entries: z.number(),
-    by_type: z.record(z.number()),
-    by_category: z.record(z.number()),
+    by_type: z.record(z.string(), z.number()),
+    by_category: z.record(z.string(), z.number()),
     average_confidence: z.number(),
     last_created_at: z.string().nullable(),
 });
@@ -220,7 +220,7 @@ export const HealthSnapshotSchema = z.object({
     id: z.number(),
     dimension: HealthDimensionSchema,
     score: z.number(),
-    details: z.record(z.unknown()),
+    details: z.record(z.string(), z.unknown()),
     source_ref: z.string().nullable(),
     created_at: z.string().nullable(),
 });
@@ -243,7 +243,7 @@ export const HealthAlertSchema = z.object({
     status: z.string(),
     severity: z.string(),
     message: z.string(),
-    context: z.record(z.unknown()).nullable(),
+    context: z.record(z.string(), z.unknown()).nullable(),
     detected_at: z.string().nullable(),
     resolved_at: z.string().nullable(),
     created_at: z.string().nullable(),

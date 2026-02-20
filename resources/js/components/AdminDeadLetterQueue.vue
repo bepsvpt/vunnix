@@ -11,8 +11,14 @@ interface DeadLetterEntry {
     dead_lettered_at: string;
     attempt_count?: number;
     error_details?: string;
-    task_record?: Record<string, unknown>;
-    [key: string]: unknown;
+    task_record?: {
+        type?: string;
+        project_id?: number;
+    };
+    attempt_history?: Array<{
+        attempted_at: string | null;
+        error: string | null;
+    }>;
 }
 
 const admin = useAdminStore();

@@ -10,6 +10,59 @@ interface ActionResult {
     data?: unknown;
 }
 
+interface Permission {
+    name: string;
+    description?: string;
+    group?: string;
+}
+
+interface RoleAssignment {
+    user_id: number;
+    role_id: number;
+    project_id: number;
+    user_name: string;
+    username: string;
+    role_name: string;
+    project_name: string;
+}
+
+interface AdminUserLite {
+    id: number;
+    name: string;
+    username: string;
+}
+
+interface DashboardAlert {
+    id: number;
+    severity: string;
+    rule: string;
+    message: string;
+    created_at: string;
+}
+
+interface DeadLetterTaskRecord {
+    type?: string;
+    project_id?: number;
+}
+
+interface DeadLetterAttempt {
+    attempted_at: string | null;
+    error: string | null;
+}
+
+interface DeadLetterEntry {
+    id: number;
+    failure_reason: string;
+    dead_lettered_at: string;
+    attempt_count?: number;
+    error_details?: string;
+    task_record?: DeadLetterTaskRecord;
+}
+
+interface DeadLetterDetail extends DeadLetterEntry {
+    attempt_history?: DeadLetterAttempt[];
+}
+
 function extractError(e: unknown, fallback: string): string {
     const axiosError = e as { response?: { data?: { error?: string; message?: string } } };
     return axiosError?.response?.data?.error || axiosError?.response?.data?.message || fallback;
@@ -65,9 +118,9 @@ export const useAdminStore = defineStore('admin', () => {
 
     // ─── Role management state (T89) ────────────────────────────
     const roles = ref<AdminRole[]>([]);
-    const permissions = ref<string[]>([]);
-    const roleAssignments = ref<Array<Record<string, unknown>>>([]);
-    const users = ref<Array<Record<string, unknown>>>([]);
+    const permissions = ref<Permission[]>([]);
+    const roleAssignments = ref<RoleAssignment[]>([]);
+    const users = ref<AdminUserLite[]>([]);
     const rolesLoading = ref(false);
     const rolesError = ref<string | null>(null);
 
@@ -322,7 +375,7 @@ export const useAdminStore = defineStore('admin', () => {
     }
 
     // ─── Cost alerts (T94) ─────────────────────────────────────
-    const costAlerts = ref<Array<Record<string, unknown>>>([]);
+    const costAlerts = ref<DashboardAlert[]>([]);
     const costAlertsLoading = ref(false);
     const costAlertsError = ref<string | null>(null);
 
@@ -350,7 +403,7 @@ export const useAdminStore = defineStore('admin', () => {
     }
 
     // ─── Over-reliance alerts (T95) ──────────────────────────────
-    const overrelianceAlerts = ref<Array<Record<string, unknown>>>([]);
+    const overrelianceAlerts = ref<DashboardAlert[]>([]);
     const overrelianceAlertsLoading = ref(false);
     const overrelianceAlertsError = ref<string | null>(null);
 
@@ -388,10 +441,10 @@ export const useAdminStore = defineStore('admin', () => {
     }
 
     // ─── Dead letter queue (T97) ─────────────────────────────────
-    const deadLetterEntries = ref<Array<Record<string, unknown>>>([]);
+    const deadLetterEntries = ref<DeadLetterEntry[]>([]);
     const deadLetterLoading = ref(false);
     const deadLetterError = ref<string | null>(null);
-    const deadLetterDetail = ref<Record<string, unknown> | null>(null);
+    const deadLetterDetail = ref<DeadLetterDetail | null>(null);
     const deadLetterDetailLoading = ref(false);
 
     async function fetchDeadLetterEntries(filters: Record<string, unknown> = {}) {

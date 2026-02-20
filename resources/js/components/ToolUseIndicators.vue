@@ -45,21 +45,25 @@ const indicators = computed(() =>
 function formatContext(tool: string, input: Record<string, unknown> | undefined): string {
     if (!input)
         return '';
+
+    const asString = (value: unknown): string | null =>
+        typeof value === 'string' ? value : null;
+
     switch (tool) {
         case 'BrowseRepoTree':
-            return input.path ? `${input.path}…` : '';
+            return asString(input.path) ? `${asString(input.path)}…` : '';
         case 'ReadFile':
-            return input.file_path ? `${input.file_path.split('/').pop()}…` : '';
+            return asString(input.file_path) ? `${asString(input.file_path)?.split('/').pop()}…` : '';
         case 'SearchCode':
-            return input.query ? `"${input.query}" across repo…` : '';
+            return asString(input.query) ? `"${asString(input.query)}" across repo…` : '';
         case 'ListIssues':
-            return input.state ? `(${input.state})…` : '';
+            return asString(input.state) ? `(${asString(input.state)})…` : '';
         case 'ReadIssue':
-            return input.issue_iid ? `#${input.issue_iid}…` : '';
+            return typeof input.issue_iid === 'number' ? `#${input.issue_iid}…` : '';
         case 'ReadMergeRequest':
-            return input.merge_request_iid ? `!${input.merge_request_iid}…` : '';
+            return typeof input.merge_request_iid === 'number' ? `!${input.merge_request_iid}…` : '';
         case 'ReadMRDiff':
-            return input.merge_request_iid ? `!${input.merge_request_iid}…` : '';
+            return typeof input.merge_request_iid === 'number' ? `!${input.merge_request_iid}…` : '';
         default:
             return '';
     }

@@ -24,7 +24,9 @@ interface ToolCall {
 
 interface ActionPreview {
     id: string;
+    action_type: string;
     title: string;
+    project_id: number;
     [key: string]: unknown;
 }
 
@@ -72,6 +74,27 @@ interface TaskDispatchInfo {
     typeLabel: string;
     title: string;
     taskId: number;
+}
+
+function normalizeActionPreview(raw: unknown): ActionPreview | null {
+    if (typeof raw !== 'object' || raw === null)
+        return null;
+
+    const record = raw as Record<string, unknown>;
+    const action_type = typeof record.action_type === 'string' ? record.action_type : null;
+    const title = typeof record.title === 'string' ? record.title : null;
+    const project_id = typeof record.project_id === 'number' ? record.project_id : null;
+
+    if (!action_type || !title || project_id === null)
+        return null;
+
+    return {
+        id: `preview-${Date.now()}`,
+        ...record,
+        action_type,
+        title,
+        project_id,
+    };
 }
 
 function getErrorMessage(err: unknown, fallback: string): string {
@@ -436,10 +459,7 @@ export const useConversationsStore = defineStore('conversations', () => {
         if (!match)
             return;
         try {
-            pendingAction.value = {
-                id: `preview-${Date.now()}`,
-                ...JSON.parse(match[1].trim()),
-            };
+            pendingAction.value = normalizeActionPreview(JSON.parse(match[1].trim()));
         } catch { /* malformed JSON — ignore */ }
     }
 
@@ -666,10 +686,7 @@ export const useConversationsStore = defineStore('conversations', () => {
                             const match = accumulated.match(ACTION_PREVIEW_REGEX);
                             if (match) {
                                 try {
-                                    pendingAction.value = {
-                                        id: `preview-${Date.now()}`,
-                                        ...JSON.parse(match[1].trim()),
-                                    };
+                                    pendingAction.value = normalizeActionPreview(JSON.parse(match[1].trim()));
                                 } catch {
                                     // Malformed JSON — user will see raw text
                                 }

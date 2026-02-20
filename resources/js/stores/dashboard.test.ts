@@ -250,6 +250,42 @@ describe('dashboard store', () => {
         });
     });
 
+    describe('fetchInfrastructureAlerts', () => {
+        it('sets degraded status when active alerts exist', async () => {
+            mockedAxios.get.mockResolvedValueOnce({
+                data: {
+                    data: [
+                        { id: 1, alert_type: 'cpu_usage', severity: 'warning', message: 'CPU high', created_at: '2026-02-20T10:00:00Z' },
+                    ],
+                },
+            });
+
+            const store = useDashboardStore();
+            await store.fetchInfrastructureAlerts();
+
+            expect(mockedAxios.get).toHaveBeenCalledWith('/api/v1/dashboard/infrastructure-alerts');
+            expect(store.infrastructureAlerts).toHaveLength(1);
+            expect(store.infrastructureStatus).toEqual({
+                overall_status: 'degraded',
+                active_alerts_count: 1,
+            });
+        });
+
+        it('sets healthy status when there are no active alerts', async () => {
+            mockedAxios.get.mockResolvedValueOnce({
+                data: { data: [] },
+            });
+
+            const store = useDashboardStore();
+            await store.fetchInfrastructureAlerts();
+
+            expect(store.infrastructureStatus).toEqual({
+                overall_status: 'healthy',
+                active_alerts_count: 0,
+            });
+        });
+    });
+
     describe('$reset', () => {
         it('clears all state', () => {
             const store = useDashboardStore();

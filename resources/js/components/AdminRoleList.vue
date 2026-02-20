@@ -40,7 +40,7 @@ const projectOptions = computed(() => admin.projects);
 
 const permissionsByGroup = computed(() => {
     const groups: Record<string, Permission[]> = {};
-    for (const p of admin.permissions as Permission[]) {
+    for (const p of admin.permissions) {
         const group = p.group || 'other';
         if (!groups[group])
             groups[group] = [];

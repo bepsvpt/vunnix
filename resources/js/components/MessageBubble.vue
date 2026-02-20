@@ -1,10 +1,16 @@
 <script setup lang="ts">
-import type { Message } from '@/types';
 import { computed } from 'vue';
 import MarkdownContent from './MarkdownContent.vue';
 
+interface ChatMessage {
+    id: string;
+    role: string;
+    content: string;
+    created_at: string | null;
+}
+
 interface Props {
-    message: Message;
+    message: ChatMessage;
 }
 
 const props = defineProps<Props>();
@@ -12,7 +18,7 @@ const props = defineProps<Props>();
 const isUser = computed(() => props.message.role === 'user');
 
 const formattedTime = computed(() => {
-    const date = new Date(props.message.created_at);
+    const date = new Date(props.message.created_at ?? Date.now());
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 });
 </script>

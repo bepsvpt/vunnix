@@ -64,6 +64,13 @@ function severityPercent(count: number) {
         return 0;
     return Math.round((count / severityTotal.value) * 100);
 }
+
+function handlePromptVersionChange(event: Event) {
+    const target = event.target;
+    if (!(target instanceof HTMLSelectElement))
+        return;
+    dashboard.promptVersionFilter = target.value || null;
+}
 </script>
 
 <template>
@@ -88,7 +95,7 @@ function severityPercent(count: number) {
                     data-testid="prompt-version-filter"
                     class="text-sm rounded-[var(--radius-card)] border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-3 py-1.5 focus:ring-2 focus:ring-zinc-400 focus:border-zinc-400"
                     :value="dashboard.promptVersionFilter"
-                    @change="dashboard.promptVersionFilter = $event.target.value || null"
+                    @change="handlePromptVersionChange"
                 >
                     <option value="">
                         All Versions

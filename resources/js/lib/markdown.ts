@@ -27,7 +27,8 @@ export function applyHiddenFences(instance: MarkdownIt): void {
     const prevFence: RenderRule | undefined = instance.renderer.rules.fence;
 
     instance.renderer.rules.fence = function (tokens, idx, options, env, self) {
-        if (HIDDEN_FENCE_LANGUAGES.has(tokens[idx].info.trim())) {
+        const token = tokens[idx] as { info?: string } | undefined;
+        if (token?.info && HIDDEN_FENCE_LANGUAGES.has(token.info.trim())) {
             return '';
         }
         if (prevFence) {
@@ -137,7 +138,7 @@ function initShiki(): Promise<void> {
 
         shikiHighlighter = highlighter;
 
-        const plugin = fromHighlighter(highlighter, {
+        const plugin = fromHighlighter(highlighter as unknown as Parameters<typeof fromHighlighter>[0], {
             themes: {
                 light: 'github-light',
                 dark: 'github-dark',

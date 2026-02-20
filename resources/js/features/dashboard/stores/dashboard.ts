@@ -3,12 +3,98 @@ import axios from 'axios';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
+interface MetricsUpdate {
+    project_id: number;
+    [key: string]: unknown;
+}
+
+interface DashboardOverview {
+    active_tasks: number;
+    total_completed: number;
+    total_failed: number;
+    success_rate: number | null;
+    recent_activity: string | null;
+    tasks_by_type: Record<string, number>;
+}
+
+interface DashboardSeverityDistribution {
+    critical: number;
+    major: number;
+    minor: number;
+}
+
+interface DashboardQuality {
+    acceptance_rate: number | null;
+    avg_findings_per_review: number | null;
+    severity_distribution: DashboardSeverityDistribution;
+    total_findings: number;
+    total_reviews: number;
+}
+
+interface DashboardCostByType {
+    avg_cost: number;
+    total_cost: number;
+    task_count: number;
+}
+
+interface DashboardCostByProject {
+    project_id: number;
+    project_name: string;
+    total_cost: number;
+    task_count: number;
+}
+
+interface DashboardCostTrend {
+    month: string;
+    total_cost: number;
+    total_tokens: number;
+    task_count: number;
+}
+
+interface DashboardCost {
+    total_cost: number;
+    total_tokens: number;
+    token_usage_by_type: Record<string, number>;
+    cost_per_type: Record<string, DashboardCostByType>;
+    cost_per_project: DashboardCostByProject[];
+    monthly_trend: DashboardCostTrend[];
+}
+
+interface DashboardCostAlert {
+    id: number;
+    severity: string;
+    rule: string;
+    message: string;
+    created_at: string;
+}
+
+interface DashboardInfrastructureAlert {
+    id: number;
+    severity: string;
+    alert_type: string;
+    message: string;
+    created_at: string;
+}
+
+interface DashboardOverrelianceAlert {
+    id: number;
+    severity: string;
+    rule: string;
+    message: string;
+    created_at: string;
+}
+
+interface PromptVersionOption {
+    skill: string;
+    [key: string]: unknown;
+}
+
 export const useDashboardStore = defineStore('dashboard', () => {
     const activityFeed = ref<Activity[]>([]);
-    const metricsUpdates = ref<Array<{ project_id: number; [key: string]: unknown }>>([]);
-    const overview = ref<Record<string, unknown> | null>(null);
+    const metricsUpdates = ref<MetricsUpdate[]>([]);
+    const overview = ref<DashboardOverview | null>(null);
     const overviewLoading = ref(false);
-    const quality = ref<Record<string, unknown> | null>(null);
+    const quality = ref<DashboardQuality | null>(null);
     const qualityLoading = ref(false);
     const pmActivity = ref<Record<string, unknown> | null>(null);
     const pmActivityLoading = ref(false);
@@ -16,12 +102,12 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const designerActivityLoading = ref(false);
     const efficiency = ref<Record<string, unknown> | null>(null);
     const efficiencyLoading = ref(false);
-    const cost = ref<Record<string, unknown> | null>(null);
+    const cost = ref<DashboardCost | null>(null);
     const costLoading = ref(false);
-    const costAlerts = ref<Array<Record<string, unknown>>>([]);
-    const infrastructureAlerts = ref<Array<Record<string, unknown>>>([]);
+    const costAlerts = ref<DashboardCostAlert[]>([]);
+    const infrastructureAlerts = ref<DashboardInfrastructureAlert[]>([]);
     const infrastructureStatus = ref<{ overall_status: string; active_alerts_count: number } | null>(null);
-    const overrelianceAlerts = ref<Array<Record<string, unknown>>>([]);
+    const overrelianceAlerts = ref<DashboardOverrelianceAlert[]>([]);
     const adoption = ref<Record<string, unknown> | null>(null);
     const adoptionLoading = ref(false);
     const isLoading = ref(false);
@@ -40,7 +126,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const activeFilter = ref<string | null>(null); // null = 'All', or: 'code_review', 'feature_dev', 'ui_adjustment', 'prd_creation'
     const projectFilter = ref<number | null>(null); // null = all projects, or project_id
     const promptVersionFilter = ref<string | null>(null); // null = all versions, or skill string like 'frontend-review:1.0'
-    const promptVersions = ref<string[]>([]); // Available prompt versions for filter dropdown
+    const promptVersions = ref<PromptVersionOption[]>([]); // Available prompt versions for filter dropdown
 
     const FEED_CAP = 200;
 
@@ -64,7 +150,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
      * Add or update a metrics snapshot for a project.
      * Keeps one entry per project_id (latest wins).
      */
-    function addMetricsUpdate(update: { project_id: number; [key: string]: unknown }) {
+    function addMetricsUpdate(update: MetricsUpdate) {
         const idx = metricsUpdates.value.findIndex(m => m.project_id === update.project_id);
         if (idx !== -1) {
             metricsUpdates.value.splice(idx, 1, update);
@@ -199,7 +285,24 @@ export const useDashboardStore = defineStore('dashboard', () => {
     async function fetchPromptVersions() {
         try {
             const response = await axios.get('/api/v1/prompt-versions');
-            promptVersions.value = response.data.data;
+            const raw = response.data.data;
+            if (Array.isArray(raw)) {
+                const normalized = raw
+                    .map((item): PromptVersionOption | null => {
+                        if (typeof item === 'string') {
+                            return { skill: item };
+                        }
+                        if (typeof item !== 'object' || item === null || !('skill' in item))
+                            return null;
+                        const record = item as Record<string, unknown>;
+                        if (typeof record.skill !== 'string')
+                            return null;
+                        return { ...record, skill: record.skill };
+                    });
+                promptVersions.value = normalized.filter((item): item is PromptVersionOption => item !== null);
+            } else {
+                promptVersions.value = [];
+            }
         } catch {
             // Supplementary — don't block dashboard
         }
