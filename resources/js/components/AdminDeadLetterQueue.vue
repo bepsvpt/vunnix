@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { useAdminStore } from '@/stores/admin';
+import { useAdminStore } from '@/features/admin';
 import BaseButton from './ui/BaseButton.vue';
 import BaseCard from './ui/BaseCard.vue';
 import BaseEmptyState from './ui/BaseEmptyState.vue';

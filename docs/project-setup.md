@@ -140,6 +140,30 @@ composer dev:parity  # queue/reverb parity validation
 
 Use `dev:parity` when validating webhook-to-task execution and real-time updates.
 
+## Fast Lane Targeting (ext-020)
+
+`tests-fast.yml` consumes changed-path outputs from `scripts/ci/changed-path-matrix.sh`:
+
+- `backend_scope`
+- `frontend_scope`
+- `contracts_changed`
+
+This enables scope-aware Fast Lane execution plus explicit contract-test runs when contract surfaces change.
+
+## Architecture Metrics Collection (ext-020)
+
+Run weekly architecture KPI collection:
+
+```bash
+php artisan architecture:collect-iteration-metrics
+```
+
+For historical snapshots:
+
+```bash
+php artisan architecture:collect-iteration-metrics --date=2026-02-19
+```
+
 ### Image Pull Failure
 
 **Symptom:** CI job fails with `image pull failed` or `manifest unknown`.

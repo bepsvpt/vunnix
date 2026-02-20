@@ -15,6 +15,9 @@ jobs:
       php_changed: ${{ steps.matrix.outputs.php_changed }}
       js_changed: ${{ steps.matrix.outputs.js_changed }}
       docs_only: ${{ steps.matrix.outputs.docs_only }}
+      contracts_changed: ${{ steps.matrix.outputs.contracts_changed }}
+      backend_scope: ${{ steps.matrix.outputs.backend_scope }}
+      frontend_scope: ${{ steps.matrix.outputs.frontend_scope }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -58,8 +61,67 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
 
+      - name: Determine PHP fast scope
+        id: php_scope
+        run: |
+          scope="${{ needs.detect.outputs.backend_scope }}"
+          targets=""
+
+          add_target() {
+            local path="$1"
+            if [ -e "$path" ]; then
+              targets="$targets $path"
+            fi
+          }
+
+          if [ "$scope" = "all" ]; then
+            add_target tests/Unit
+            add_target tests/Feature/Architecture
+          else
+            IFS=',' read -ra modules <<< "$scope"
+            for module in "${modules[@]}"; do
+              case "$module" in
+                Chat)
+                  add_target tests/Unit/Agents
+                  add_target tests/Feature/Agents
+                  ;;
+                WebhookIntake)
+                  add_target tests/Feature/WebhookControllerTest.php
+                  add_target tests/Feature/Services/EventDeduplicatorTest.php
+                  ;;
+                TaskOrchestration)
+                  add_target tests/Unit/Modules/TaskOrchestration
+                  add_target tests/Feature/Architecture
+                  add_target tests/Feature/Services/TaskDispatcherTest.php
+                  add_target tests/Feature/Jobs/ProcessTaskResultDispatchTest.php
+                  ;;
+                GitLabIntegration)
+                  add_target tests/Feature/Services/GitLabClientTest.php
+                  add_target tests/Feature/Contracts/GitLabPortContractTest.php
+                  ;;
+                Shared)
+                  add_target tests/Unit/Modules/Shared
+                  add_target tests/Feature/Contracts/InternalEventContractTest.php
+                  ;;
+                Observability)
+                  add_target tests/Feature/Services/AlertEventServiceTest.php
+                  ;;
+              esac
+            done
+          fi
+
+          if [ -z "$targets" ]; then
+            add_target tests/Unit
+          fi
+
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+
       - name: Unit tests (fast scope)
-        run: php artisan test tests/Unit --parallel
+        run: php artisan test ${{ steps.php_scope.outputs.targets }} --parallel
+
+      - name: Contract tests (changed contract surfaces)
+        if: needs.detect.outputs.contracts_changed == 'true'
+        run: php artisan test tests/Feature/Contracts --parallel
 
       - name: Static analysis
         run: composer analyse
@@ -87,8 +149,61 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Vitest
-        run: npm test
+      - name: Determine JS test scope
+        id: js_scope
+        run: |
+          scope="${{ needs.detect.outputs.frontend_scope }}"
+          targets=""
+
+          add_glob_targets() {
+            local pattern="$1"
+            for file in $pattern; do
+              if [ -f "$file" ]; then
+                targets="$targets $file"
+              fi
+            done
+          }
+
+          if [ "$scope" = "all" ]; then
+            echo "targets=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          IFS=',' read -ra features <<< "$scope"
+          for feature in "${features[@]}"; do
+            case "$feature" in
+              chat)
+                add_glob_targets "resources/js/stores/conversations.test.ts"
+                add_glob_targets "resources/js/pages/ChatPage.test.ts"
+                add_glob_targets "resources/js/components/Conversation*.test.ts"
+                add_glob_targets "resources/js/components/Message*.test.ts"
+                ;;
+              admin)
+                add_glob_targets "resources/js/stores/admin*.test.ts"
+                add_glob_targets "resources/js/pages/AdminPage.test.ts"
+                add_glob_targets "resources/js/components/Admin*.test.ts"
+                ;;
+              dashboard)
+                add_glob_targets "resources/js/stores/dashboard*.test.ts"
+                add_glob_targets "resources/js/pages/DashboardPage.test.ts"
+                add_glob_targets "resources/js/components/Dashboard*.test.ts"
+                add_glob_targets "resources/js/composables/useDashboardRealtime.test.ts"
+                ;;
+              activity)
+                add_glob_targets "resources/js/components/ActivityFeed*.test.ts"
+                ;;
+            esac
+          done
+
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+
+      - name: Vitest (targeted)
+        run: |
+          if [ -n "${{ steps.js_scope.outputs.targets }}" ]; then
+            npm test -- ${{ steps.js_scope.outputs.targets }}
+          else
+            npm test
+          fi
 
   docs-only:
     name: Docs Only

@@ -184,6 +184,35 @@ Guidance:
 - Use `dev:fast` during UI and isolated service iteration.
 - Use `dev:parity` before merge or when validating real-time/queue behavior.
 
+### Fast Lane Scope Rules (ext-020)
+
+Fast Lane now derives scope from `scripts/ci/changed-path-matrix.sh` and emits:
+
+- `backend_scope` (changed backend modules or `all`)
+- `frontend_scope` (changed frontend features or `all`)
+- `contracts_changed` (`true/false`)
+
+Local dry-run example:
+
+```bash
+CHANGED_FILES_OVERRIDE=$'app/Modules/TaskOrchestration/Application/Contracts/Foo.php\nresources/js/features/chat/stores/conversations.ts' \
+  scripts/ci/changed-path-matrix.sh
+```
+
+### Architecture Iteration Metrics (ext-020)
+
+Collect weekly architecture KPI snapshots with:
+
+```bash
+docker compose exec app php artisan architecture:collect-iteration-metrics
+```
+
+Backfill/specific date snapshot:
+
+```bash
+docker compose exec app php artisan architecture:collect-iteration-metrics --date=2026-02-19
+```
+
 ### Code Changes
 
 FrankenPHP (Octane) and queue workers cache the application in memory. After modifying PHP code:

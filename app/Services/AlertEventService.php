@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AlertEvent;
+use App\Modules\Observability\Application\Registries\AlertRuleRegistry;
 use App\Services\TeamChat\TeamChatNotificationService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -17,6 +18,7 @@ class AlertEventService
 {
     public function __construct(
         private readonly TeamChatNotificationService $teamChat,
+        private readonly ?AlertRuleRegistry $alertRuleRegistry = null,
     ) {}
 
     /**
@@ -28,6 +30,24 @@ class AlertEventService
     {
         $now ??= now();
         $events = [];
+        $alertRuleRegistry = isset($this->alertRuleRegistry) ? $this->alertRuleRegistry : null;
+
+        if ($alertRuleRegistry instanceof AlertRuleRegistry) {
+            foreach ($alertRuleRegistry->all() as $rule) {
+                try {
+                    if (($event = $rule->evaluate($this, $now)) instanceof \App\Models\AlertEvent) {
+                        $events[] = $event;
+                    }
+                } catch (Throwable $e) {
+                    Log::warning('AlertEventService: check failed', [
+                        'rule' => $rule->key(),
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            return $events;
+        }
 
         $checks = [
             'api_outage' => fn (): ?\App\Models\AlertEvent => $this->evaluateApiOutage($now),

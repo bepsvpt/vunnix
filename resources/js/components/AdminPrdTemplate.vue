@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
-import { useAdminStore } from '@/stores/admin';
+import { useAdminStore } from '@/features/admin';
 import BaseButton from './ui/BaseButton.vue';
 
 interface Props {

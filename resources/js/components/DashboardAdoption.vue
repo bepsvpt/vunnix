@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import { useDashboardStore } from '@/stores/dashboard';
+import { useDashboardStore } from '@/features/dashboard';
 import BaseCard from './ui/BaseCard.vue';
 import BaseEmptyState from './ui/BaseEmptyState.vue';
 import BaseSpinner from './ui/BaseSpinner.vue';

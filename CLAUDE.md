@@ -25,6 +25,7 @@ All task descriptions, dependencies, acceptance criteria, and verification specs
 | `composer test` | Run PHP tests (clears config cache first) |
 | `php artisan test --parallel` | Run full PHP suite (required — single-process OOMs at 900+ tests) |
 | `php artisan test --filter=ClassName` | Run a specific test file |
+| `php artisan architecture:collect-iteration-metrics` | Collect weekly X3 architecture iteration KPI snapshot |
 | `npm test` | Run Vue/JS tests (Vitest) |
 | `composer test:coverage` | PHP tests with coverage (HTML + Clover XML in coverage/php/) |
 | `composer coverage:check` | Enforce backend coverage policy: overall >= 97.5% and per-file >= 95% |
@@ -110,7 +111,7 @@ tests/
 ## CI/CD
 
 GitHub Actions (`.github/workflows/`):
-- **`tests-fast.yml`** — Fast Lane changed-path checks + architecture fitness checks
+- **`tests-fast.yml`** — Fast Lane scope-aware changed-path checks + changed-contract checks + architecture fitness checks
 - **`tests.yml`** — Pint formatting check, ESLint, PHPStan (level 8), PHP tests (parallel, real PostgreSQL 18, pcov coverage), JS tests (Vitest with coverage)
 - **`build-app.yml`** — Docker image build & publish to GHCR (`ghcr.io/bepsvpt/vunnix/app`) on release
 - **`build-executor.yml`** — Executor Docker image build & publish on release
@@ -192,8 +193,11 @@ Example: `Co-Authored-By: gpt-5.3-codex high <noreply@openai.com>`.
 | **D105** | Extended thinking always on for Task Executor |
 | **D134** | Separate Redis queues: `vunnix-server` (immediate) + `vunnix-runner` (CI pipeline) |
 | **D153** | Anthropic API key in `.env` only — never stored in database |
+| **D228** | Fast Lane is scope-aware and contract-aware; Full Lane remains the protected-branch gate |
+| **D229** | Weekly architecture iteration metrics are persisted and collected via artisan command |
 
-For all 155 decisions, see the Discussion Log in `docs/spec/vunnix-v1.md`.
+For v1 baseline decisions (D1-D155), see the Discussion Log in `docs/spec/vunnix-v1.md`.  
+For extension decisions (including D224-D229), see `docs/spec/decisions-index.md`.
 
 ## Learnings
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import { useAdminStore } from '@/stores/admin';
-import { useDashboardStore } from '@/stores/dashboard';
+import { useAdminStore } from '@/features/admin';
+import { useDashboardStore } from '@/features/dashboard';
 import BaseCard from './ui/BaseCard.vue';
 import BaseEmptyState from './ui/BaseEmptyState.vue';
 import BaseSpinner from './ui/BaseSpinner.vue';

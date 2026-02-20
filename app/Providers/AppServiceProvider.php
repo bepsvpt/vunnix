@@ -9,12 +9,30 @@ use App\Models\Permission;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Modules\Chat\Application\Contracts\ChatMiddlewareProvider;
+use App\Modules\Chat\Application\Contracts\ChatModelOptionsProvider;
+use App\Modules\Chat\Application\Contracts\ChatPromptProvider;
+use App\Modules\Chat\Application\Contracts\ChatToolsetProvider;
+use App\Modules\Chat\Application\Providers\DefaultChatMiddlewareProvider;
+use App\Modules\Chat\Application\Providers\DefaultChatModelOptionsProvider;
+use App\Modules\Chat\Application\Providers\DefaultChatPromptProvider;
+use App\Modules\Chat\Application\Providers\DefaultChatToolsetProvider;
 use App\Modules\GitLabIntegration\Application\Contracts\GitLabPort;
 use App\Modules\GitLabIntegration\Infrastructure\Adapters\GitLabIssueAdapter;
 use App\Modules\GitLabIntegration\Infrastructure\Adapters\GitLabMergeRequestAdapter;
 use App\Modules\GitLabIntegration\Infrastructure\Adapters\GitLabPipelineAdapter;
 use App\Modules\GitLabIntegration\Infrastructure\Adapters\GitLabPortAdapter;
 use App\Modules\GitLabIntegration\Infrastructure\Adapters\GitLabRepoAdapter;
+use App\Modules\Observability\Application\Registries\AlertRuleRegistry;
+use App\Modules\Observability\Application\Rules\AlertMethodRule;
+use App\Modules\Shared\Application\Contracts\AiProviderPort;
+use App\Modules\Shared\Application\Contracts\NotificationPort;
+use App\Modules\Shared\Application\Contracts\PipelineExecutorPort;
+use App\Modules\Shared\Application\Contracts\RealtimePort;
+use App\Modules\Shared\Infrastructure\Adapters\AiProviderAdapter;
+use App\Modules\Shared\Infrastructure\Adapters\NotificationPortAdapter;
+use App\Modules\Shared\Infrastructure\Adapters\PipelineExecutorAdapter;
+use App\Modules\Shared\Infrastructure\Adapters\RealtimePortAdapter;
 use App\Modules\TaskOrchestration\Application\Handlers\CodeReviewIntentTaskHandler;
 use App\Modules\TaskOrchestration\Application\Handlers\FeatureDevelopmentIntentTaskHandler;
 use App\Modules\TaskOrchestration\Application\Handlers\IssueDiscussionIntentTaskHandler;
@@ -78,7 +96,31 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(GitLabPipelineAdapter::class);
         $this->app->singleton(GitLabPortAdapter::class);
         $this->app->singleton(GitLabPort::class, GitLabPortAdapter::class);
+
+        $this->app->singleton(AiProviderPort::class, AiProviderAdapter::class);
+        $this->app->singleton(PipelineExecutorPort::class, PipelineExecutorAdapter::class);
+        $this->app->singleton(RealtimePort::class, RealtimePortAdapter::class);
+        $this->app->singleton(NotificationPort::class, NotificationPortAdapter::class);
+
         $this->app->singleton(OutboxWriter::class);
+
+        $this->app->singleton(AlertRuleRegistry::class, static function (): AlertRuleRegistry {
+            return new AlertRuleRegistry([
+                new AlertMethodRule('api_outage', 'evaluateApiOutage', 100),
+                new AlertMethodRule('high_failure_rate', 'evaluateHighFailureRate', 90),
+                new AlertMethodRule('queue_depth', 'evaluateQueueDepth', 80),
+                new AlertMethodRule('auth_failure', 'evaluateAuthFailure', 70),
+                new AlertMethodRule('disk_usage', 'evaluateDiskUsage', 60),
+                new AlertMethodRule('container_health', 'evaluateContainerHealth', 50),
+                new AlertMethodRule('cpu_usage', 'evaluateCpuUsage', 40),
+                new AlertMethodRule('memory_usage', 'evaluateMemoryUsage', 30),
+            ]);
+        });
+
+        $this->app->singleton(ChatPromptProvider::class, DefaultChatPromptProvider::class);
+        $this->app->singleton(ChatToolsetProvider::class, DefaultChatToolsetProvider::class);
+        $this->app->singleton(ChatModelOptionsProvider::class, DefaultChatModelOptionsProvider::class);
+        $this->app->singleton(ChatMiddlewareProvider::class, DefaultChatMiddlewareProvider::class);
 
         $this->app->bind(CoverageAnalyzer::class);
         $this->app->bind(DependencyAnalyzer::class);

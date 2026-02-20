@@ -42,7 +42,15 @@ while IFS= read -r file; do
   done < <(rg -n "@/features/[A-Za-z0-9_-]+" "$file" || true)
 done < <(find resources/js/features -type f \( -name '*.ts' -o -name '*.vue' -o -name '*.js' \) | sort)
 
-# 4) File-size guardrails.
+# 4) UI layers should import stores from feature slices, not legacy global store paths.
+while IFS= read -r file; do
+  while IFS= read -r line; do
+    echo "[violation] Legacy store import in UI layer (use feature index): $line"
+    violations=$((violations + 1))
+  done < <(rg -n "@/stores/(conversations|admin|dashboard)" "$file" || true)
+done < <(find resources/js/components resources/js/pages resources/js/composables resources/js/router -type f \( -name '*.ts' -o -name '*.vue' -o -name '*.js' \) ! -name '*.test.*' ! -name '*.spec.*' | sort)
+
+# 5) File-size guardrails.
 while IFS= read -r file; do
   lines="$(wc -l < "$file" | tr -d ' ')"
   if [ "$lines" -gt 1000 ]; then

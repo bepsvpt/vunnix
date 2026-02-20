@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import BaseCard from '@/components/ui/BaseCard.vue';
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue';
 import BaseSpinner from '@/components/ui/BaseSpinner.vue';
-import { useDashboardStore } from '@/stores/dashboard';
+import { useDashboardStore } from '@/features/dashboard';
 
 const dashboard = useDashboardStore();
 

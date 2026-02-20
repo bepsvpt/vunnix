@@ -228,3 +228,9 @@
 | D221 | Frontend architecture moves to feature slices under `resources/js/features/*` with compatibility exports during migration | ext-019 | Active |
 | D222 | CI verification model adds Fast Lane changed-path checks plus Full Lane regression gate with architecture fitness checks | ext-019 | Active |
 | D223 | Local runtime profiles are explicit: `dev:fast` for inner loop, `dev:parity` for queue/reverb parity validation | ext-019 | Active |
+| D224 | Frontend feature slices must own real store/composable logic; legacy `resources/js/stores/*` paths remain compatibility exports only | ext-020 | Active |
+| D225 | Observability alert evaluation uses `AlertRule` plug-ins via `AlertRuleRegistry`, with `AlertEventService` as orchestration facade | ext-020 | Active |
+| D226 | `VunnixAgent` composes prompt/tool/model/middleware providers from module contracts instead of hardcoded assembly paths | ext-020 | Active |
+| D227 | Shared external boundaries are explicit contracts: `AiProviderPort`, `PipelineExecutorPort`, `RealtimePort`, `NotificationPort` | ext-020 | Active |
+| D228 | Fast Lane execution is scope-aware (backend/frontend scope + changed-contract checks); Full Lane remains protected-branch gate | ext-020 | Active |
+| D229 | Weekly architecture iteration metrics are persisted in `architecture_iteration_metrics` and collected via `architecture:collect-iteration-metrics` | ext-020 | Active |

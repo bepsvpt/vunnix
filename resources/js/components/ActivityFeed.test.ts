@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils';
 import axios from 'axios';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useDashboardStore } from '@/stores/dashboard';
+import { useActivityStore } from '@/features/activity';
 import ActivityFeed from './ActivityFeed.vue';
 
 vi.mock('axios');
@@ -49,7 +49,7 @@ describe('activityFeed', () => {
     });
 
     it('highlights the active filter chip', () => {
-        const store = useDashboardStore();
+        const store = useActivityStore();
         store.activeFilter = 'code_review';
         const wrapper = mountFeed();
         const chip = wrapper.find('[data-testid="chip-code_review"]');
@@ -57,7 +57,7 @@ describe('activityFeed', () => {
     });
 
     it('clicking a filter chip calls fetchActivity with correct type', async () => {
-        const store = useDashboardStore();
+        const store = useActivityStore();
         store.fetchActivity = vi.fn();
         const wrapper = mountFeed();
         await wrapper.find('[data-testid="chip-code_review"]').trigger('click');
@@ -65,7 +65,7 @@ describe('activityFeed', () => {
     });
 
     it('clicking All chip calls fetchActivity with null', async () => {
-        const store = useDashboardStore();
+        const store = useActivityStore();
         store.fetchActivity = vi.fn();
         const wrapper = mountFeed();
         await wrapper.find('[data-testid="chip-all"]').trigger('click');
@@ -75,7 +75,7 @@ describe('activityFeed', () => {
     // -- Feed items --
 
     it('renders activity items from store', () => {
-        const store = useDashboardStore();
+        const store = useActivityStore();
         store.activityFeed = [
             { task_id: 1, type: 'code_review', status: 'completed', project_id: 10, project_name: 'proj', summary: 'Review', created_at: new Date().toISOString() },
             { task_id: 2, type: 'feature_dev', status: 'running', project_id: 10, project_name: 'proj', summary: 'Build', created_at: new Date().toISOString() },
@@ -88,7 +88,7 @@ describe('activityFeed', () => {
     // -- Load more --
 
     it('shows Load more button when hasMore is true', () => {
-        const store = useDashboardStore();
+        const store = useActivityStore();
         store.activityFeed = [
             { task_id: 1, type: 'code_review', status: 'completed', project_id: 10, project_name: 'proj', summary: 'A', created_at: new Date().toISOString() },
         ];
@@ -98,7 +98,7 @@ describe('activityFeed', () => {
     });
 
     it('hides Load more button when hasMore is false', () => {
-        const store = useDashboardStore();
+        const store = useActivityStore();
         store.activityFeed = [
             { task_id: 1, type: 'code_review', status: 'completed', project_id: 10, project_name: 'proj', summary: 'A', created_at: new Date().toISOString() },
         ];
@@ -108,7 +108,7 @@ describe('activityFeed', () => {
     });
 
     it('clicking Load more calls store.loadMore', async () => {
-        const store = useDashboardStore();
+        const store = useActivityStore();
         store.activityFeed = [
             { task_id: 1, type: 'code_review', status: 'completed', project_id: 10, project_name: 'proj', summary: 'A', created_at: new Date().toISOString() },
         ];
@@ -122,7 +122,7 @@ describe('activityFeed', () => {
     // -- Empty state --
 
     it('shows empty state when no items and not loading', () => {
-        const store = useDashboardStore();
+        const store = useActivityStore();
         store.activityFeed = [];
         store.isLoading = false;
         const wrapper = mountFeed();
@@ -131,7 +131,7 @@ describe('activityFeed', () => {
     });
 
     it('hides empty state when items exist', () => {
-        const store = useDashboardStore();
+        const store = useActivityStore();
         store.activityFeed = [
             { task_id: 1, type: 'code_review', status: 'completed', project_id: 10, project_name: 'proj', summary: 'A', created_at: new Date().toISOString() },
         ];
@@ -142,7 +142,7 @@ describe('activityFeed', () => {
     // -- Loading state --
 
     it('shows loading indicator when isLoading and feed is empty', () => {
-        const store = useDashboardStore();
+        const store = useActivityStore();
         store.activityFeed = [];
         store.isLoading = true;
         const wrapper = mountFeed();
@@ -150,7 +150,7 @@ describe('activityFeed', () => {
     });
 
     it('hides loading indicator when not loading', () => {
-        const store = useDashboardStore();
+        const store = useActivityStore();
         store.activityFeed = [];
         store.isLoading = false;
         const wrapper = mountFeed();

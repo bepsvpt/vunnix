@@ -1,0 +1,20 @@
+version: 1
+backend:
+  modules:
+    pattern: app/Modules/{module}/**
+  contracts:
+    patterns:
+      - app/Modules/*/Application/Contracts/**
+      - tests/Feature/Contracts/**
+frontend:
+  features:
+    pattern: resources/js/features/{feature}/**
+  legacy_to_feature:
+    - when: resources/js/stores/conversations*
+      feature: chat
+    - when: resources/js/stores/admin*
+      feature: admin
+    - when: resources/js/stores/dashboard*
+      feature: dashboard
+    - when: resources/js/components/ActivityFeed*
+      feature: activity
