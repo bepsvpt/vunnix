@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import axios from 'axios';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useHealthStore } from '@/stores/health';
+import { useHealthStore } from '@/features/health';
 import DashboardHealthPanel from '../DashboardHealthPanel.vue';
 
 vi.mock('axios');

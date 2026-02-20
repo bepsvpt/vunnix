@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAdminStore } from '../admin';
+import { useAdminStore } from '@/features/admin';
 
 vi.mock('axios');
 

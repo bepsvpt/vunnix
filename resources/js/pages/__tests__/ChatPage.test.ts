@@ -4,8 +4,8 @@ import axios from 'axios';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMemoryHistory, createRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import { useConversationsStore } from '@/stores/conversations';
+import { useAuthStore } from '@/features/auth';
+import { useConversationsStore } from '@/features/chat';
 import ChatPage from '../ChatPage.vue';
 
 vi.mock('axios');

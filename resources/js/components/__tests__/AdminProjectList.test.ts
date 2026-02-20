@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAdminStore } from '@/stores/admin';
+import { useAdminStore } from '@/features/admin';
 import AdminProjectList from '../AdminProjectList.vue';
 
 vi.mock('axios');

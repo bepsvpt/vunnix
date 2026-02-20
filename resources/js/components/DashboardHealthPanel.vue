@@ -7,7 +7,7 @@ import BaseCard from '@/components/ui/BaseCard.vue';
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue';
 import BaseSpinner from '@/components/ui/BaseSpinner.vue';
 import { getEcho, whenConnected } from '@/composables/useEcho';
-import { useHealthStore } from '@/stores/health';
+import { useHealthStore } from '@/features/health';
 
 interface Props {
     projectId: number;

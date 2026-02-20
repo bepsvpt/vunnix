@@ -2,7 +2,7 @@ import type { Mock } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useDashboardStore } from '@/stores/dashboard';
+import { useDashboardStore } from '@/features/dashboard';
 import { useDashboardRealtime } from '../useDashboardRealtime';
 
 // Mock Echo (same pattern as useEcho.test.js)

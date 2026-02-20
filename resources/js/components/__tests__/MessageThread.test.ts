@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import axios from 'axios';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useConversationsStore } from '@/stores/conversations';
+import { useConversationsStore } from '@/features/chat';
 import ActionPreviewCard from '../ActionPreviewCard.vue';
 import MessageBubble from '../MessageBubble.vue';
 import MessageComposer from '../MessageComposer.vue';

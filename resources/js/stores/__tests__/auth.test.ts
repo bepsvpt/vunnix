@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAuthStore } from '../auth';
+import { useAuthStore } from '@/features/auth';
 
 vi.mock('axios');
 

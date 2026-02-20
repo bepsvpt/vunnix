@@ -8,6 +8,10 @@ const LEGACY_STORE_IMPORTS = [
     '@/stores/admin/*',
     '@/stores/dashboard',
     '@/stores/dashboard/*',
+    '@/stores/auth',
+    '@/stores/auth/*',
+    '@/stores/health',
+    '@/stores/health/*',
 ];
 
 const featureBoundaryPlugin = {

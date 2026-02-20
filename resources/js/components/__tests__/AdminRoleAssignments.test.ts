@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAdminStore } from '@/stores/admin';
+import { useAdminStore } from '@/features/admin';
 import AdminRoleAssignments from '../AdminRoleAssignments.vue';
 
 vi.mock('axios');

@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useDashboardStore } from '@/stores/dashboard';
+import { useDashboardStore } from '@/features/dashboard';
 import DashboardEfficiency from '../DashboardEfficiency.vue';
 
 vi.mock('axios', () => ({

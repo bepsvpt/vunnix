@@ -1,10 +1,10 @@
 import type { RouteLocationRaw, RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/features/auth';
 import AdminPage from '@/pages/AdminPage.vue';
 import ChatPage from '@/pages/ChatPage.vue';
 import DashboardPage from '@/pages/DashboardPage.vue';
 import SignInPage from '@/pages/SignInPage.vue';
-import { useAuthStore } from '@/stores/auth';
 
 const routes: RouteRecordRaw[] = [
     { path: '/', redirect: '/chat' },

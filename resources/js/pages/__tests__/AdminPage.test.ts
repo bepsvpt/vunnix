@@ -2,8 +2,8 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ProjectMemoryPanel from '@/components/ProjectMemoryPanel.vue';
-import { useAdminStore } from '@/stores/admin';
-import { useAuthStore } from '@/stores/auth';
+import { useAdminStore } from '@/features/admin';
+import { useAuthStore } from '@/features/auth';
 import AdminPage from '../AdminPage.vue';
 
 vi.mock('axios');

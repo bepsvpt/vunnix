@@ -3,7 +3,7 @@ import axios from 'axios';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMemoryHistory, createRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/features/auth';
 import App from '../App.vue';
 import AdminPage from '../pages/AdminPage.vue';
 import ChatPage from '../pages/ChatPage.vue';

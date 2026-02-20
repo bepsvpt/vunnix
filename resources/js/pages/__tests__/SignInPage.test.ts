@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/features/auth';
 import SignInPage from '../SignInPage.vue';
 
 let pinia: ReturnType<typeof createPinia>;

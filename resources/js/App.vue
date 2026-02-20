@@ -3,7 +3,7 @@ import { watch } from 'vue';
 import AppNavigation from '@/components/AppNavigation.vue';
 import BaseSpinner from '@/components/ui/BaseSpinner.vue';
 import { whenConnected } from '@/composables/useEcho';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/features/auth';
 
 const auth = useAuthStore();
 

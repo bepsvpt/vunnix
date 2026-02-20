@@ -13,8 +13,8 @@ import DashboardQuality from '@/components/DashboardQuality.vue';
 import MemoryStatsWidget from '@/components/MemoryStatsWidget.vue';
 import BaseTabGroup from '@/components/ui/BaseTabGroup.vue';
 import { useDashboardRealtime } from '@/composables/useDashboardRealtime';
+import { useAuthStore } from '@/features/auth';
 import { useDashboardStore } from '@/features/dashboard';
-import { useAuthStore } from '@/stores/auth';
 
 const auth = useAuthStore();
 const dashboard = useDashboardStore();

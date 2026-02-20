@@ -2,8 +2,8 @@ import { flushPromises, mount } from '@vue/test-utils';
 import axios from 'axios';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAuthStore } from '@/stores/auth';
-import { useDashboardStore } from '@/stores/dashboard';
+import { useAuthStore } from '@/features/auth';
+import { useDashboardStore } from '@/features/dashboard';
 import DashboardPage from '../DashboardPage.vue';
 
 vi.mock('axios');

@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/features/auth';
 import router from '../index';
 
 describe('router', () => {

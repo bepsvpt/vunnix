@@ -1,7 +1,7 @@
 import type { HealthSummary } from '@/types';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useHealthStore } from '../health';
+import { useHealthStore } from '@/features/health';
 
 const fetchSummaryMock = vi.fn();
 const fetchTrendsMock = vi.fn();

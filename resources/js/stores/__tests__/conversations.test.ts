@@ -3,7 +3,7 @@ import { flushPromises } from '@vue/test-utils';
 import axios from 'axios';
 import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useConversationsStore } from '../conversations';
+import { useConversationsStore } from '@/features/chat';
 
 vi.mock('axios');
 
