@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 it('returns 200 with all checks passing when all services are healthy', function (): void {
-    // DB is already available in test environment (SQLite in-memory)
+    // DB is already available in test environment.
 
     // Set a high disk threshold so the test passes regardless of actual disk usage
     config(['health.disk_usage_threshold' => 99]);

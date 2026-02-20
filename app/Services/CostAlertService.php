@@ -262,26 +262,18 @@ class CostAlertService
     }
 
     /**
-     * SQL expression for extracting month from created_at (SQLite/PG compatible).
+     * SQL expression for extracting month from created_at.
      */
     private function monthExpression(): string
     {
-        $driver = DB::connection()->getDriverName();
-
-        return $driver === 'sqlite'
-            ? "strftime('%Y-%m', created_at)"
-            : "TO_CHAR(created_at, 'YYYY-MM')";
+        return "TO_CHAR(created_at, 'YYYY-MM')";
     }
 
     /**
-     * SQL expression for extracting date from created_at (SQLite/PG compatible).
+     * SQL expression for extracting date from created_at.
      */
     private function dateExpression(): string
     {
-        $driver = DB::connection()->getDriverName();
-
-        return $driver === 'sqlite'
-            ? 'date(created_at)'
-            : 'DATE(created_at)';
+        return 'DATE(created_at)';
     }
 }

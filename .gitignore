@@ -13,6 +13,8 @@
 
 # Environment
 .env
+.env.testing
+.env.testing.local
 .env.backup
 .env.production
 .env.staging

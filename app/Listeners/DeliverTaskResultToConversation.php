@@ -18,8 +18,7 @@ class DeliverTaskResultToConversation
             return;
         }
 
-        // Guard against missing table in SQLite test environment
-        // (agent_conversation_messages is created by Laravel AI SDK migration with PostgreSQL features)
+        // Guard against missing table (created by Laravel AI SDK migrations).
         if (! Schema::hasTable('agent_conversation_messages')) {
             return;
         }

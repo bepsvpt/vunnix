@@ -46,7 +46,7 @@ class ConversationService
         }
 
         if ($search !== null && $search !== '') {
-            // Full-text search on title (LIKE fallback for SQLite in tests)
+            // Case-insensitive title search.
             $query->whereRaw('LOWER(title) LIKE ?', ['%'.Str::lower($search).'%']);
         }
 

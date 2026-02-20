@@ -108,10 +108,7 @@ class MetricsQueryService
                 ->get();
         }
 
-        $driver = DB::connection()->getDriverName();
-        $monthExpr = $driver === 'sqlite'
-            ? "strftime('%Y-%m', created_at)"
-            : "TO_CHAR(created_at, 'YYYY-MM')";
+        $monthExpr = "TO_CHAR(created_at, 'YYYY-MM')";
 
         return DB::table('task_metrics')
             ->whereIn('project_id', $projectIds)

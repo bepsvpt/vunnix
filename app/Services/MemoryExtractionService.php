@@ -319,7 +319,7 @@ class MemoryExtractionService
     private function hasSpecificTechReference(string $text): bool
     {
         return (bool) preg_match(
-            '/\b(laravel|php|vue|typescript|javascript|redis|postgres|mysql|sqlite|docker|queue|api|controller|service|model|migration|pipeline|oauth|gitlab|sse|webhook)\b/i',
+            '/\b(laravel|php|vue|typescript|javascript|redis|postgres|mysql|docker|queue|api|controller|service|model|migration|pipeline|oauth|gitlab|sse|webhook)\b/i',
             $text,
         ) || (bool) preg_match('/\b[\w\/.-]+\.(php|vue|ts|js|sh|md)\b/', $text);
     }

@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -40,18 +39,10 @@ return new class extends Migration
             });
 
             // Add composite index for dedup lookups: find existing tasks for same commit/MR
-            if (DB::connection()->getDriverName() === 'pgsql') {
-                Schema::table('tasks', function (Blueprint $table): void {
-                    $table->index(['project_id', 'mr_iid', 'status']);
-                    $table->index(['project_id', 'commit_sha']);
-                });
-            } else {
-                // SQLite for tests
-                Schema::table('tasks', function (Blueprint $table): void {
-                    $table->index(['project_id', 'mr_iid', 'status']);
-                    $table->index(['project_id', 'commit_sha']);
-                });
-            }
+            Schema::table('tasks', function (Blueprint $table): void {
+                $table->index(['project_id', 'mr_iid', 'status']);
+                $table->index(['project_id', 'commit_sha']);
+            });
         }
     }
 

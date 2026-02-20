@@ -25,8 +25,8 @@ class DashboardAdoptionController extends Controller
             ->where('enabled', true)
             ->pluck('projects.id');
 
-        // AI-reviewed MR % — distinct MRs with completed code review / all distinct MRs with any task
-        // Use concatenation for composite uniqueness (mr_iid + project_id) — works on both SQLite and PostgreSQL
+        // AI-reviewed MR % — distinct MRs with completed code review / all distinct MRs with any task.
+        // Use concatenation for composite uniqueness (mr_iid + project_id).
         $reviewedMrCount = (int) Task::whereIn('project_id', $projectIds)
             ->where('type', TaskType::CodeReview)
             ->where('status', TaskStatus::Completed)
@@ -49,10 +49,7 @@ class DashboardAdoptionController extends Controller
             ->value('cnt');
 
         // Tasks by type over time — monthly breakdown (last 12 months)
-        $driver = DB::connection()->getDriverName();
-        $monthExpr = $driver === 'sqlite'
-            ? "strftime('%Y-%m', created_at)"
-            : "TO_CHAR(created_at, 'YYYY-MM')";
+        $monthExpr = "TO_CHAR(created_at, 'YYYY-MM')";
 
         /** @var \Illuminate\Support\Collection<int, object{month: string, type: TaskType, count: int}> $taskResults @phpstan-ignore varTag.type */
         $taskResults = Task::whereIn('project_id', $projectIds)
@@ -75,9 +72,7 @@ class DashboardAdoptionController extends Controller
             ->all();
 
         // @ai mentions/week — webhook-originated tasks grouped by ISO week (last 12 weeks)
-        $weekExpr = $driver === 'sqlite'
-            ? "strftime('%Y-W%W', created_at)"
-            : "TO_CHAR(created_at, 'IYYY-\"W\"IW')";
+        $weekExpr = "TO_CHAR(created_at, 'IYYY-\"W\"IW')";
 
         /** @var \Illuminate\Support\Collection<int, object{week: string, count: int}> $mentionResults @phpstan-ignore varTag.type */
         $mentionResults = Task::whereIn('project_id', $projectIds)

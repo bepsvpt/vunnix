@@ -17,7 +17,7 @@ uses(RefreshDatabase::class);
 beforeEach(function (): void {
     // Ensure agent_conversations and agent_conversation_messages tables exist with all
     // custom columns. The SDK migration may have a 2026 timestamp that sorts after our
-    // 2024 custom migrations, and PostgreSQL-only migrations skip on SQLite.
+    // 2024 custom migrations.
     if (! Schema::hasTable('agent_conversations')) {
         Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();

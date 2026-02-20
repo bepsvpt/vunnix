@@ -237,15 +237,22 @@ docker compose exec app npm run build
 
 ### Running Tests
 
+Tests run against PostgreSQL (`vunnix_test`) for local/CI parity.
+
 ```bash
-# Full suite (requires --parallel to avoid OOM)
-docker compose exec app php artisan test --parallel
+# One-time only if your postgres volume predates test DB automation
+docker compose exec postgres createdb -U vunnix vunnix_test
+```
+
+```bash
+# Full suite (runs with phpunit test env and DB_DATABASE=vunnix_test)
+docker compose exec app composer test
 
 # Single file
-docker compose exec app php artisan test tests/Feature/Services/TaskDispatcherTest.php
+docker compose exec app composer test -- tests/Feature/Services/TaskDispatcherTest.php
 
 # Filter by name
-docker compose exec app php artisan test --filter="dispatches pipeline"
+docker compose exec app composer test -- --filter="dispatches pipeline"
 ```
 
 ### Useful Commands

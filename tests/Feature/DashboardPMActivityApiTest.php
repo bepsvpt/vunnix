@@ -18,7 +18,7 @@ uses(RefreshDatabase::class);
 beforeEach(function (): void {
     // The SDK migration creates agent_conversations and agent_conversation_messages,
     // but our custom columns (project_id, archived_at) are added by PostgreSQL-only
-    // migrations that skip on SQLite. Create the tables with all columns if they
+    // migrations. Create the tables with all columns if they
     // don't exist yet (SDK migration may have a 2026 timestamp sorting after ours).
     if (! Schema::hasTable('agent_conversations')) {
         Schema::create('agent_conversations', function ($table): void {

@@ -10,16 +10,13 @@ use Illuminate\Support\Facades\Log;
 uses(RefreshDatabase::class);
 
 it('returns zero views refreshed on non-pgsql database', function (): void {
-    if (DB::connection()->getDriverName() === 'pgsql') {
-        $this->markTestSkipped('This test verifies SQLite behavior — PostgreSQL refreshes real MVs');
-    }
-
     Event::fake([MetricsUpdated::class]);
+    DB::shouldReceive('connection')->andReturnSelf();
+    DB::shouldReceive('getDriverName')->andReturn('mysql');
 
     $service = app(MetricsAggregationService::class);
     $result = $service->aggregate();
 
-    // SQLite test environment should return 0 views refreshed
     expect($result)->toHaveKey('views_refreshed', 0)
         ->toHaveKey('duration_ms');
     expect($result['duration_ms'])->toBeGreaterThanOrEqual(0);

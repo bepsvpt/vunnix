@@ -163,10 +163,7 @@ class DashboardCostController extends Controller
             ->values()
             ->all();
 
-        $driver = DB::connection()->getDriverName();
-        $monthExpr = $driver === 'sqlite'
-            ? "strftime('%Y-%m', created_at)"
-            : "TO_CHAR(created_at, 'YYYY-MM')";
+        $monthExpr = "TO_CHAR(created_at, 'YYYY-MM')";
 
         /** @var \Illuminate\Support\Collection<int, object{month: string, total_cost: float|null, total_tokens: int|null, task_count: int}> $monthlyResults @phpstan-ignore varTag.type */
         $monthlyResults = Task::whereIn('project_id', $projectIds)

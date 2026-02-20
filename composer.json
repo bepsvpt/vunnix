@@ -66,7 +66,7 @@
             "npx concurrently -c \"#93c5fd,#c4b5fd,#34d399,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --queue=vunnix-server,vunnix-runner-high,vunnix-runner-normal,vunnix-runner-low --tries=1 --timeout=0\" \"php artisan reverb:start\" \"npm run dev\" --names=server,queue,reverb,vite --kill-others"
         ],
         "test": "php artisan config:clear --ansi && php artisan test --parallel",
-        "test:coverage": "php artisan config:clear --ansi && php -d memory_limit=-1 artisan test --parallel --coverage --coverage-html=coverage/php --coverage-clover=coverage/php/clover.xml",
+        "test:coverage": "php artisan config:clear --ansi && XDEBUG_MODE=coverage php -d memory_limit=-1 artisan test --parallel --coverage --coverage-html=coverage/php --coverage-clover=coverage/php/clover.xml",
         "coverage:check": "php scripts/check-coverage.php --scope=backend",
         "coverage:check:frontend": "php scripts/check-coverage.php --scope=frontend",
         "coverage:check:all": [

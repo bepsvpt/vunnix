@@ -19,7 +19,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     // Ensure agent_conversations and agent_conversation_messages tables exist
-    // with all custom columns (PostgreSQL-only migrations skip on SQLite).
+    // with all custom columns (PostgreSQL-only migrations).
     if (! Schema::hasTable('agent_conversations')) {
         Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();

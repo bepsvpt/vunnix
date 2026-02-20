@@ -17,8 +17,7 @@ return new class extends Migration
 
             $table->unique(['conversation_id', 'project_id']);
 
-            // Only add FK if agent_conversations exists and we're on PostgreSQL
-            // (SQLite test env may not have the SDK table)
+            // Only add FK if agent_conversations exists and we're on PostgreSQL.
             if (DB::connection()->getDriverName() === 'pgsql' && Schema::hasTable('agent_conversations')) {
                 $table->foreign('conversation_id')
                     ->references('id')

@@ -84,8 +84,8 @@ See [`docs/guides/project-setup.md`](docs/guides/project-setup.md) for CI templa
 # Start dev environment (server + queue + logs + Vite, all concurrent)
 composer dev
 
-# Run PHP tests (--parallel required, 1,600+ tests OOM otherwise)
-php artisan test --parallel
+# Run PHP tests (parallel + Postgres test DB)
+composer test
 
 # Run Vue/JS tests
 npm test
@@ -116,12 +116,12 @@ See [`docs/guides/deployment.md`](docs/guides/deployment.md) for backup/restore,
 ## Testing
 
 ```bash
-php artisan test --parallel   # PHP (Pest) — 1,600+ tests
+composer test                 # PHP (Pest) — uses phpunit test env (PostgreSQL vunnix_test)
 npm test                      # Vue (Vitest)
 composer format               # Code style
 ```
 
-Local tests run against SQLite `:memory:` (fast, no services needed). CI tests run against real PostgreSQL 18 to match production. External APIs are faked via `Http::fake()` and AI SDK `HasFakes`.
+Local and CI tests run against PostgreSQL 18 to match production behavior. Local testing uses a dedicated `vunnix_test` database. External APIs are faked via `Http::fake()` and AI SDK `HasFakes`.
 
 ## Documentation
 

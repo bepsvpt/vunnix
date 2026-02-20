@@ -44,9 +44,10 @@ RUN apt-get update && apt-get install -y \
 # Install PHP extensions (opcache is statically compiled in FrankenPHP php8.5)
 RUN docker-php-ext-install pdo_pgsql pgsql zip intl pcntl
 
-# Install Redis PHP extension
-RUN pecl install redis \
-    && docker-php-ext-enable redis
+# Install PECL extensions
+RUN pecl install redis xdebug \
+    && docker-php-ext-enable redis xdebug \
+    && echo "xdebug.mode=off" > /usr/local/etc/php/conf.d/xdebug-mode.ini
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

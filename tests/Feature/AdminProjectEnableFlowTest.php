@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Schema;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    // Ensure agent_conversations table exists (SQLite test env — AI SDK migration sorts after ours)
+    // Ensure agent_conversations table exists (AI SDK migration can sort after ours)
     if (! Schema::hasTable('agent_conversations')) {
         Schema::create('agent_conversations', function ($table): void {
             $table->string('id', 36)->primary();

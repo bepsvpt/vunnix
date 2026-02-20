@@ -9,7 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Guard for SQLite test environment and missing table
+        // Guard for non-PostgreSQL environments and missing table
         if (DB::connection()->getDriverName() !== 'pgsql' || ! Schema::hasTable('agent_conversations')) {
             return;
         }
